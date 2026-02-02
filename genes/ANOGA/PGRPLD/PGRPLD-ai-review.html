@@ -1,0 +1,2576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGRPLD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PGRPLD</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A7UTR2" target="_blank" class="term-link">
+                        A7UTR2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Anopheles gambiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PGRPLD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A7UTR2" data-a="DESCRIPTION: PGRP-LD is a long-form peptidoglycan recognition p..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PGRP-LD is a long-form peptidoglycan recognition protein (PGRP) that functions as a non-catalytic, negative regulator of innate immune responses in the mosquito gut. Despite containing an Amidase_2/PGRP domain, PGRP-LD lacks the conserved residues required for peptidoglycan binding and amidase catalytic activity. Instead, it acts to restrain immune hyper-activation, thereby preserving gut commensal microbiota and maintaining peritrophic matrix integrity. This microbiota-PM barrier axis indirectly limits Plasmodium infection. PGRP-LD is a transmembrane protein localized at the gut epithelial barrier.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002376" target="_blank" class="term-link">
+                                    GO:0002376
+                                </a>
+                            </span>
+                            <span class="term-label">immune system process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A7UTR2" data-a="GO:0002376" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGRP-LD is involved in immune system processes. Deep research synthesis indicates that PGRP-LD modulates gut immunity by restraining hyper-activation of immune effectors, thereby maintaining microbiota homeostasis and peritrophic matrix integrity. This is supported by functional studies in the closely related Anopheles stephensi ortholog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct but very broad. PGRP-LD plays a regulatory role in innate immunity at the gut barrier. The term is appropriately general for an IEA annotation derived from UniProt keyword mapping.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-LD restrains hyper-activation of innate immune effectors (e.g., AMPs, DUOX), thereby protecting commensal bacteria</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="A7UTR2" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The PGRP/Amidase_2 domain family typically coordinates a zinc ion at the active site. However, PGRP-LD lacks the conserved residues required for catalytic activity, raising the question of whether the zinc-binding site is functional. Sequence analysis shows that PGRP-LD lacks most conserved residues for PGN binding and catalytic activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While catalytic PGRPs bind zinc at the active site, the absence of key catalytic residues in PGRP-LD raises uncertainty about whether zinc binding is retained. No direct experimental evidence confirms zinc binding in this non-catalytic PGRP. The annotation may be a case of domain-based over-annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The A. stephensi PGRP-LD lacks most conserved residues required for PGN binding and amidase catalytic activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008745" target="_blank" class="term-link">
+                                    GO:0008745
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylmuramoyl-L-alanine amidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A7UTR2" data-a="GO:0008745" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT. Despite belonging to the Amidase_2/PGRP superfamily, PGRP-LD is a non-catalytic PGRP that lacks the conserved residues required for peptidoglycan binding and amidase catalytic activity. Sequence analysis of the Anopheles stephensi ortholog demonstrated the absence of key catalytic residues. PGRP-LD functions as a regulatory PGRP rather than an enzymatic amidase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a classic example of domain-based over-annotation. The presence of an Amidase_2 domain (IPR002502) led to automatic annotation of amidase activity, but detailed sequence analysis shows PGRP-LD lacks the conserved residues required for catalysis. Not all PGRP family members are enzymatically active; many function as pattern recognition receptors or immune regulators without catalytic activity. The functional evidence clearly indicates PGRP-LD is non-catalytic.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The A. stephensi PGRP-LD lacks most conserved residues required for PGN binding and amidase catalytic activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Current evidence supports a regulatory PGRP model for PGRP-LD, not an enzymatic PGN hydrolase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                    GO:0009253
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A7UTR2" data-a="GO:0009253" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT. Peptidoglycan catabolic process implies enzymatic degradation of peptidoglycan, which requires amidase activity. Since PGRP-LD lacks the conserved catalytic residues and does not function as an active amidase, it cannot be involved in peptidoglycan catabolism. The protein may recognize peptidoglycan as a pattern recognition molecule, but does not degrade it.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation logically follows from the incorrect amidase activity annotation. Since PGRP-LD lacks amidase catalytic activity, it cannot participate in peptidoglycan catabolic processes. The annotation should be removed along with the amidase activity annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">No direct amidase activity or substrate specificity has been demonstrated for PGRP-LD; rather, sequence features argue against catalysis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A7UTR2" data-a="GO:0045087" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGRP-LD is clearly involved in the innate immune response. However, it functions as a NEGATIVE regulator rather than a positive effector. RNAi knockdown of PGRP-LD upregulates multiple immune effectors (cecropin, gambicin, defensin, DUOX), indicating its normal function is to restrain immune activation. This immune tolerance function preserves commensal bacteria and maintains peritrophic matrix integrity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While PGRP-LD is involved in innate immune response, a more accurate annotation would capture its specific role as a negative regulator. The current annotation is not wrong but could be more informative about the direction of regulation.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045824" target="_blank" class="term-link">
+                                    negative regulation of innate immune response
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Knockdown of PGRP-LD upregulates multiple immune effectors (e.g., cecropin, gambicin, defensin, DUOX), consistent with a negative regulatory role constraining immune activation in response to microbiota</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Functions to restrain hyper-activation of immune effectors (negative regulator-like role), thereby limiting overactive Imd/Toll-like responses that deplete commensals</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045824" target="_blank" class="term-link">
+                                    GO:0045824
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29489896" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29489896
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PGRP-LD mediates A. stephensi vector competency by regulatin...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A7UTR2" data-a="GO:0045824" data-r="PMID:29489896" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Functional studies in Anopheles stephensi demonstrate that PGRP-LD negatively regulates innate immune responses. Knockdown leads to upregulation of antimicrobial peptides and DUOX, indicating PGRP-LD normally restrains immune activation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation captures the core function of PGRP-LD as a negative regulator of innate immunity. Evidence is from the closely related A. stephensi ortholog (ISS - inferred from sequence similarity), as direct A. gambiae knockdown data is not available in the literature.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Knockdown of PGRP-LD upregulates multiple immune effectors (e.g., cecropin, gambicin, defensin, DUOX), consistent with a negative regulatory role constraining immune activation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061060" target="_blank" class="term-link">
+                                    GO:0061060
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of peptidoglycan recognition protein signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29489896" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29489896
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PGRP-LD mediates A. stephensi vector competency by regulatin...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A7UTR2" data-a="GO:0061060" data-r="PMID:29489896" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGRP-LD modulates the PGRP signaling pathway as a negative regulator. The protein restrains immune hyper-activation through the Imd/Toll pathways that are canonically activated by peptidoglycan recognition.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term accurately describes the molecular role of PGRP-LD in dampening PGRP-mediated immune signaling. The evidence is from orthologous studies in A. stephensi.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Functional data are most consistent with PGRP-LD acting upstream as a modulator that limits overactive responses commonly associated with the Imd/Toll axes in the gut</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016021" target="_blank" class="term-link">
+                                    GO:0016021
+                                </a>
+                            </span>
+                            <span class="term-label">integral component of membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A7UTR2" data-a="GO:0016021" data-r="GO_REF:0000002" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt annotation and Phobius prediction indicate PGRP-LD has a transmembrane helix (residues 70-94). The protein is described as a transmembrane PGRP in functional studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt entry shows transmembrane domain prediction by Phobius. Functional studies describe PGRP-LD as a transmembrane PGRP at the gut barrier.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Described as a transmembrane PGRP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140678" target="_blank" class="term-link">
+                                    GO:0140678
+                                </a>
+                            </span>
+                            <span class="term-label">molecular function inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29489896" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29489896
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PGRP-LD mediates A. stephensi vector competency by regulatin...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A7UTR2" data-a="GO:0140678" data-r="PMID:29489896" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGRP-LD functions as an inhibitor of immune signaling pathways. By restraining the activity of Imd/Toll signaling, it prevents hyper-activation of downstream immune effectors. This inhibitory molecular function underlies its biological role in negative regulation of innate immunity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This molecular function term captures PGRP-LD&#39;s role as an inhibitor of immune signaling. While the precise molecular mechanism is not fully characterized, the functional evidence clearly demonstrates inhibitory activity on immune pathway components.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Functions to restrain hyper-activation of immune effectors (negative regulator-like role), thereby limiting overactive Imd/Toll-like responses that deplete commensals</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PGRP-LD functions as a negative regulator of innate immunity, restraining immune hyper-activation to preserve gut microbiota and peritrophic matrix integrity.</h3>
+                <span class="vote-buttons" data-g="A7UTR2" data-a="FUNCTION: PGRP-LD functions as a negative regulator of innat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140678" target="_blank" class="term-link">
+                            molecular function inhibitor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045824" target="_blank" class="term-link">
+                                negative regulation of innate immune response
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061060" target="_blank" class="term-link">
+                                negative regulation of peptidoglycan recognition protein signaling pathway
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016021" target="_blank" class="term-link">
+                                integral component of membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Knockdown of PGRP-LD upregulates multiple immune effectors (e.g., cecropin, gambicin, defensin, DUOX), consistent with a negative regulatory role constraining immune activation</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro domain-based annotations can lead to over-annotation when domain presence does not guarantee the associated function, particularly for domains like Amidase_2 where not all family members are enzymatically active.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Keyword-based annotations correctly identify PGRP-LD as involved in immunity, but lack specificity about its regulatory role.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29489896" target="_blank" class="term-link">
+                            PMID:29489896
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PGRP-LD mediates A. stephensi vector competency by regulating homeostasis of microbiota-induced peritrophic matrix synthesis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PGRP-LD is a non-catalytic PGRP that lacks conserved residues for amidase activity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Functions as a negative regulator of innate immunity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maintains gut microbiota homeostasis</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Required for peritrophic matrix integrity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Knockdown increases Plasmodium susceptibility</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31907025" target="_blank" class="term-link">
+                            PMID:31907025
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gut microbiota is essential in PGRP-LA regulated immune protection against Plasmodium berghei infection</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Contextual evidence for PGRP family regulation of immunity and microbiota interactions in Anopheles</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research synthesis for PGRPLD</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PGRP-LD is a non-catalytic PGRP lacking key residues for amidase activity</div>
+                        
+                        <div class="finding-text">"The A. stephensi PGRP-LD lacks most conserved residues required for PGN binding and amidase catalytic activity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Functions as negative regulator of innate immunity</div>
+                        
+                        <div class="finding-text">"Knockdown of PGRP-LD upregulates multiple immune effectors (e.g., cecropin, gambicin, defensin, DUOX), consistent with a negative regulatory role constraining immune activation in response to microbiota"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Transmembrane protein at gut barrier</div>
+                        
+                        <div class="finding-text">"Described as a transmembrane PGRP"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does A. gambiae PGRP-LD retain any zinc-binding capacity despite lacking catalytic residues?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A7UTR2" data-a="Q: Does A. gambiae PGRP-LD retain any zinc-binding ca..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the mechanism by which PGRP-LD inhibits immune signaling?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A7UTR2" data-a="Q: What is the mechanism by which PGRP-LD inhibits im..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Direct biochemical assay for amidase activity in recombinant A. gambiae PGRP-LD. While sequence analysis strongly suggests PGRP-LD is non-catalytic, direct enzymatic assays on the A. gambiae protein would definitively confirm the absence of amidase activity.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A7UTR2" data-a="EXPERIMENT: Direct biochemical assay for amidase activity in r..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> RNAi knockdown of PGRP-LD in A. gambiae to confirm functional conservation. The functional characterization was performed in A. stephensi. Direct knockdown in A. gambiae would confirm the conserved immune regulatory function.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A7UTR2" data-a="EXPERIMENT: RNAi knockdown of PGRP-LD in A. gambiae to confirm..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PGRPLD-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A7UTR2" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-30T16:26:08.455104'<br />
+end_time: '2026-01-30T16:33:01.838649'<br />
+duration_seconds: 413.38<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ANOGA<br />
+  gene_id: PGRPLD<br />
+  gene_symbol: PGRPLD<br />
+  uniprot_accession: A7UTR2<br />
+  protein_description: 'SubName: Full=AGAP005552-PA {ECO:0000313|EMBL:EDO63684.1};'<br />
+  gene_info: Name=PGRPLD {ECO:0000313|EMBL:EDO63684.1}; Synonyms=3289995 {ECO:0000313|EnsemblMetazoa:AGAP005552-PB};<br />
+    ORFNames=AgaP_AGAP005552 {ECO:0000313|EMBL:EDO63684.1};<br />
+  organism_full: Anopheles gambiae (African malaria mosquito).<br />
+  protein_family: Belongs to the N-acetylmuramoyl-L-alanine amidase 2 family.<br />
+  protein_domains: Amidase/PGRP_sf. (IPR036505); Amidase_domain. (IPR002502); PGRP.<br />
+    (IPR015510); PGRP_domain_met/bac. (IPR006619); Amidase_2 (PF01510)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 8</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A7UTR2</li>
+<li><strong>Protein Description:</strong> SubName: Full=AGAP005552-PA {ECO:0000313|EMBL:EDO63684.1};</li>
+<li><strong>Gene Information:</strong> Name=PGRPLD {ECO:0000313|EMBL:EDO63684.1}; Synonyms=3289995 {ECO:0000313|EnsemblMetazoa:AGAP005552-PB}; ORFNames=AgaP_AGAP005552 {ECO:0000313|EMBL:EDO63684.1};</li>
+<li><strong>Organism (full):</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Protein Family:</strong> Belongs to the N-acetylmuramoyl-L-alanine amidase 2 family.</li>
+<li><strong>Key Domains:</strong> Amidase/PGRP_sf. (IPR036505); Amidase_domain. (IPR002502); PGRP. (IPR015510); PGRP_domain_met/bac. (IPR006619); Amidase_2 (PF01510)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "PGRPLD" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'PGRPLD' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>PGRPLD</strong> (gene ID: PGRPLD, UniProt: A7UTR2) in ANOGA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A7UTR2</li>
+<li><strong>Protein Description:</strong> SubName: Full=AGAP005552-PA {ECO:0000313|EMBL:EDO63684.1};</li>
+<li><strong>Gene Information:</strong> Name=PGRPLD {ECO:0000313|EMBL:EDO63684.1}; Synonyms=3289995 {ECO:0000313|EnsemblMetazoa:AGAP005552-PB}; ORFNames=AgaP_AGAP005552 {ECO:0000313|EMBL:EDO63684.1};</li>
+<li><strong>Organism (full):</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Protein Family:</strong> Belongs to the N-acetylmuramoyl-L-alanine amidase 2 family.</li>
+<li><strong>Key Domains:</strong> Amidase/PGRP_sf. (IPR036505); Amidase_domain. (IPR002502); PGRP. (IPR015510); PGRP_domain_met/bac. (IPR006619); Amidase_2 (PF01510)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "PGRPLD" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'PGRPLD' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>PGRPLD</strong> (gene ID: PGRPLD, UniProt: A7UTR2) in ANOGA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research plan and approach<br />
+We verified the target identity and organism, gathered primary and recent literature with emphasis on 2018–2024 sources, extracted mechanistic and phenotypic evidence (function, localization, immune pathways, microbiota–PM interactions), and synthesized findings into a concise report. A compact evidence table is embedded to support traceability.</p>
+<p>Executive summary<br />
+PGRP-LD (AGAP005552; UniProt A7UTR2) in Anopheles gambiae is a long peptidoglycan-recognition protein within the Amidase_2/PGRP superfamily. Cross-species functional evidence from the Anopheles stephensi ortholog indicates PGRP-LD lacks key residues for peptidoglycan binding and amidase catalytic activity and acts as a non-catalytic, negative regulator of immune activation that preserves gut microbiota and peritrophic matrix (PM) integrity. This indirect barrier function limits Plasmodium infection. Recent 2024 literature further highlights PGRP-LD in contemporary discussions of mosquito immunity and vector competence. (song2018pgrpldmediatesa. pages 12-14, song2018pgrpldmediatesa. pages 11-12, song2018pgrpldmediatesa. pages 1-2, daou2024characterizinganophelesgambiae pages 22-26)</p>
+<p>1) Key concepts and definitions<br />
+- Identity and domains: PGRP-LD corresponds to AGAP005552 in A. gambiae and belongs to the PGRP/Amidase_2 family of proteins. Domain analyses in functional work include the A. gambiae PGRP-LD sequence in alignments, consistent with a PGRP fold characteristic of N-acetylmuramoyl-L-alanine amidase-like domains. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 12-14)<br />
+- Catalytic capability vs recognition: The A. stephensi PGRP-LD ortholog lacks most conserved residues required for PGN binding and catalytic activity, implying a non-catalytic recognition/regulatory role rather than an active amidase. This provides a strong inference for A. gambiae PGRP-LD given close sequence conservation. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 11-12)<br />
+- PGRP family context: Anopheles PGRPs diversify into catalytic amidases and non-catalytic receptors/regulators, reflecting immune system adaptation. Foundational analyses documented expanded and diversified immune gene families, including PGRPs, in A. gambiae. (2002, Science, https://doi.org/10.1126/science.1077136) (song2018pgrpldmediatesa. pages 16-17)</p>
+<p>2) Biochemical function and substrate specificity<br />
+- Primary function: Current evidence supports a regulatory PGRP model for PGRP-LD, not an enzymatic PGN hydrolase. No direct amidase activity or substrate specificity has been demonstrated for PGRP-LD; rather, sequence features argue against catalysis. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 11-12)<br />
+- Mechanistic role: PGRP-LD restrains hyper-activation of innate immune effectors (e.g., AMPs, DUOX), thereby protecting commensal bacteria. This immune tolerance maintains microbiota-dependent PM integrity, which in turn restricts Plasmodium ookinete invasion. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 4-6, song2018pgrpldmediatesa. pages 1-2)</p>
+<p>3) Expression, localization, and regulation<br />
+- Localization: The A. stephensi ortholog is described as a transmembrane PGRP, suggesting a membrane-associated role at the gut barrier; detailed subcellular localization for A. gambiae PGRP-LD has not been specified in the retrieved evidence. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 2-4)<br />
+- Regulation and expression context: Knockdown of PGRP-LD upregulates multiple immune effectors (e.g., cecropin, gambicin, defensin, DUOX), consistent with a negative regulatory role constraining immune activation in response to microbiota. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 4-6)</p>
+<p>4) Roles in immune pathways and microbiota–PM interactions<br />
+- Immune pathway positioning: Functional data are most consistent with PGRP-LD acting upstream as a modulator that limits overactive responses commonly associated with the Imd/Toll axes in the gut, thereby maintaining a eubiotic microbiota. (2018, PLOS Pathogens; 2020 review context) (https://doi.org/10.1371/journal.ppat.1006899; https://doi.org/10.1186/s13071-019-3876-y) (song2018pgrpldmediatesa. pages 4-6, gao2020gutmicrobiotais pages 9-9)<br />
+- Microbiota and PM integrity: PGRP-LD is necessary to preserve commensal abundance and spatial segregation from the epithelium. Its knockdown produces approximately a 500-fold reduction of culturable midgut bacteria, disrupts microbiota spatial organization, and fragments the PM, increasing gut permeability. Antibiotic depletion of microbiota reproduces PM loss by 48 h post-blood meal, while recolonization with indigenous Enterobacter restores PM integrity and reduces vector competence. These results place PGRP-LD in a microbiota–immune–PM axis that indirectly limits Plasmodium infection. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 4-6, song2018pgrpldmediatesa. pages 1-2, song2018pgrpldmediatesa. pages 11-12)</p>
+<p>5) Phenotypic evidence from RNAi/CRISPR and infection outcomes<br />
+- RNAi knockdown in An. stephensi: Silencing pgrp-ld increases Plasmodium berghei oocyst numbers (greater susceptibility), decreases midgut bacterial load (~500-fold CFU decrease; reduced 16S copies), perturbs bacterial spatial distribution, and fragments the PM; silencing has no additional effect in mosquitoes lacking a PM, indicating the phenotype is mediated via the microbiota–PM pathway. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 4-6, song2018pgrpldmediatesa. pages 1-2, song2018pgrpldmediatesa. pages 11-12)<br />
+- Recent summaries (2024): Contemporary analyses reiterate that PGRP-LD protects commensals by preventing overactivation of immunity; PM fragmentation after PGRP-LD silencing correlates with increased vector competence. (2024, synthesis/report; URL not provided in excerpt) (daou2024characterizinganophelesgambiae pages 22-26)</p>
+<p>6) Cross-species considerations (An. stephensi → A. gambiae)<br />
+- Orthology and inference: The A. stephensi PGRP-LD study includes alignments featuring A. gambiae PGRP-LD (AGAP005552), supporting cross-species inference given conservation of domain architecture and the reported lack of catalytic residues. While direct A. gambiae loss-of-function phenotypes for AGAP005552 were not captured in the gathered texts, the mechanistic framework is likely conserved across anophelines. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 12-14, song2018pgrpldmediatesa. pages 11-12)</p>
+<p>7) Recent developments and latest research (emphasis 2023–2024)<br />
+- 2024 perspectives and datasets reference PGRP-LD as part of immune modules that modulate vector competence, emphasizing microbiota–immune–barrier interactions. Although detailed new AGAP005552 biochemical assays were not identified in the gathered evidence, the 2024 reporting strengthens the relevance of PGRP-LD to ongoing vector control biology. (2024, contemporary synthesis) (daou2024characterizinganophelesgambiae pages 22-26)<br />
+- Contextual updates: Reviews and primary work continue to highlight PGRP family roles in balancing antimicrobial responses with tolerance to commensals, a balance pivotal for PM integrity and pathogen resistance. (2020, Parasites &amp; Vectors, https://doi.org/10.1186/s13071-019-3876-y) (gao2020gutmicrobiotais pages 9-9)</p>
+<p>8) Applications and real-world implementations<br />
+- Vector control concepts: Findings implicate PGRP-LD as a host factor modulating vector competence via microbiota–PM homeostasis. Potential applications include microbiota engineering or interventions that bolster PM integrity post-blood meal to reduce malaria transmission. The antibiotic–recolonization experiments show that restoring commensals can rescue PM and decrease infection, suggesting feasible microbiota-based strategies in mosquitoes. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 1-2)<br />
+- Immune pathway targeting: Because PGRP-LD limits hyper-immunity, approaches that mimic its tolerance function could preserve beneficial microbiota and gut barriers. This principle aligns with broader Anopheles PGRP literature connecting Imd/Toll signaling, microbiota, and PM. (2018, PLOS Pathogens; 2020 Parasites &amp; Vectors) (https://doi.org/10.1371/journal.ppat.1006899; https://doi.org/10.1186/s13071-019-3876-y) (song2018pgrpldmediatesa. pages 4-6, gao2020gutmicrobiotais pages 9-9)</p>
+<p>9) Expert opinions and authoritative reviews<br />
+- Genome and immunity foundations: The Science 2002 analysis of A. gambiae immunity-related genes highlighted diversification and expansion of recognition and effector gene families, including PGRPs, laying the foundation for understanding specialized roles such as PGRP-LD’s tolerance function. (2002, Science, https://doi.org/10.1126/science.1077136) (song2018pgrpldmediatesa. pages 16-17)<br />
+- Integrative perspectives (2020): Reviews emphasize PGRP-mediated modulation of gut immunity, the central role of microbiota in vector competence, and the PM as a microbiota-driven barrier, situating PGRP-LD within established mechanistic frameworks. (2020, Parasites &amp; Vectors, https://doi.org/10.1186/s13071-019-3876-y) (gao2020gutmicrobiotais pages 9-9)</p>
+<p>10) Relevant statistics and data<br />
+- Microbiota reduction upon PGRP-LD knockdown: Approximately 500-fold decrease in culturable midgut bacteria (CFU) and reduced 16S rRNA gene copy number, despite largely similar taxonomic composition; altered spatial organization with bacteria contacting/penetrating epithelium. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 4-6)<br />
+- PM integrity and permeability: Histological fragmentation of the PM and increased permeability to large FITC-dextran in PGRP-LD knockdown mosquitoes; antibiotic treatment causes PM loss by 48 h post-blood meal; recolonization restores PM integrity. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 4-6, song2018pgrpldmediatesa. pages 1-2, song2018pgrpldmediatesa. pages 11-12)<br />
+- Vector competence: PGRP-LD knockdown increases P. berghei oocyst numbers (quantified in the original study; directionality reported here). (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 1-2)</p>
+<p>Verification of target identity and ambiguity check<br />
+- Symbol/organism: PGRP-LD matches AGAP005552 in A. gambiae; functional evidence references the A. gambiae ortholog in alignments. No conflicting symbol usage was detected in retrieved texts. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 12-14)<br />
+- Domains/family: Evidence is consistent with PGRP/Amidase_2 fold membership, but with lack of key residues for catalytic activity in the studied ortholog, supporting a non-enzymatic regulatory role. (2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899) (song2018pgrpldmediatesa. pages 11-12)</p>
+<p>Limitations and open questions<br />
+- Direct biochemical assays for A. gambiae PGRP-LD have not been identified in the gathered evidence; amidase activity and precise PGN ligand specificity remain unproven experimentally for AGAP005552.<br />
+- Detailed subcellular localization and tissue-specific expression for A. gambiae PGRP-LD were not captured; the transmembrane description comes from the A. stephensi ortholog.<br />
+- While multiple 2024 resources discuss PGRP-LD’s role, additional peer-reviewed primary studies in A. gambiae since 2018 would strengthen species-specific conclusions.</p>
+<p>Embedded evidence table<br />
+| Aspect | Key finding | Species/Context | Methods | Source (year, journal, URL) | Citation ID |<br />
+|---|---|---:|---|---|---:|<br />
+| Identity / domains | PGRP-LD corresponds to AgPGRP-LD (AGAP005552); contains a PGRP/amidase-type domain (Amidase_2 / PGRP domain) consistent with PGRP family membership | Anopheles gambiae (AGAP005552) / An. stephensi ortholog studied | Sequence alignment / conserved-domain analysis referenced in functional study | 2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899 | (song2018pgrpldmediatesa. pages 12-14) |<br />
+| Catalytic residues (non-catalytic inference) | The A. stephensi PGRP-LD lacks most conserved residues required for PGN binding and amidase catalytic activity → inferred non-catalytic/ regulatory PGRP rather than active amidase | An. stephensi (inferred to apply to AgPGRP-LD by alignment) | Conserved-residue inspection / domain alignment reported in functional paper | 2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899 | (song2018pgrpldmediatesa. pages 11-12) |<br />
+| Tissue / cellular localization | Described as a transmembrane PGRP in the An. stephensi study; detailed subcellular localization in An. gambiae not reported in gathered evidence | An. stephensi (functional characterization); inference for An. gambiae | Protein annotation / experimental description (no exhaustive immunolocalization reported) | 2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899 | (song2018pgrpldmediatesa. pages 2-4) |<br />
+| Immune-pathway role (Imd/Toll; regulation) | Functions to restrain hyper-activation of immune effectors (negative regulator-like role), thereby limiting overactive Imd/Toll-like responses that deplete commensals | An. stephensi; contextualized for Anopheles PGRPs | RNAi knockdown and immune gene expression profiling (qPCR of AMPs, DUOX, etc.) | 2018, PLOS Pathogens; review/context from PGRP literature (2020 Parasites &amp; Vectors) | (song2018pgrpldmediatesa. pages 4-6, gao2020gutmicrobiotais pages 9-9) |<br />
+| Microbiota ↔ Peritrophic matrix (PM) relationship | PGRP-LD maintains gut microbiota homeostasis; microbiota promote PM gene expression and structural integrity; loss of PGRP-LD → hyper-immunity → microbiota depletion → PM fragmentation | An. stephensi (mechanistic demonstration); relevant to An. gambiae by sequence alignment | RNAi, CFU and 16S quantification, FISH, PM histology (H&amp;E, PAS), FITC-dextran permeability assays | 2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899 | (song2018pgrpldmediatesa. pages 1-2) |<br />
+| RNAi / phenotypes on Plasmodium infection | Knockdown of PGRP-LD increases susceptibility to Plasmodium berghei (higher oocyst numbers) while reducing culturable midgut bacteria and altering spatial distribution | An. stephensi experimental infections (P. berghei) | dsRNA-mediated knockdown, parasite oocyst counts, microbiota assays | 2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899 | (song2018pgrpldmediatesa. pages 1-2) |<br />
+| Antibiotic depletion and recolonization rescue | Antibiotic removal of microbiota causes PM loss and increased vector competence; recolonization with indigenous Enterobacter restores PM integrity and reduces Plasmodium susceptibility (supports microbiota-mediated effect downstream of PGRP-LD) | An. stephensi recolonization experiments | Antibiotic treatment, oral recolonization, PM assays, infection assays | 2018, PLOS Pathogens, https://doi.org/10.1371/journal.ppat.1006899 | (song2018pgrpldmediatesa. pages 1-2) |<br />
+| 2023–2024 updates &amp; broader context | Recent 2023–2024 work highlights PGRP family members (including PGRP-LD) in vector immune modulation and microbiota interactions; 2024 summaries note PGRP-LD’s role in protecting commensals and impacting vector competence (recent syntheses/reports) | Anopheles spp.; synthesis of recent literature (2024 summaries/reviews) | Transcriptomics / literature syntheses referencing PGRP-LD roles in immunity and microbiota/PM interplay | 2024 (characterizations/reviews; one 2024 report listed as unknown journal), plus earlier PGRP family reviews | (daou2024characterizinganophelesgambiae pages 22-26, song2018pgrpldmediatesa. pages 16-17) |<br />
+| Broader PGRP family context in Anopheles | PGRP gene family in Anopheles includes multiple members with both catalytic (amidase) and non-catalytic regulatory roles; family expansion/diversification underlies varied roles in antibacterial defense and tolerance of commensals | Anopheles gambiae family-level analyses and comparative studies | Genomic surveys, reviews, functional studies of multiple PGRPs | Foundational reviews (2002 Science; 2006 analyses) cited within the collected literature; contextualized in 2018 study | (song2018pgrpldmediatesa. pages 16-17) |</p>
+<p><em>Table: Compact table summarizing experimental and annotation evidence for Anopheles gambiae PGRP-LD (AGAP005552 / A7UTR2) and the An. stephensi ortholog, with methods and sources mapped to gathered context IDs for traceability.</em></p>
+<p>References (URLs and dates)<br />
+- Song X, Wang M, Dong L, Zhu H, Wang J. PGRP-LD mediates A. stephensi vector competency by regulating homeostasis of microbiota-induced peritrophic matrix synthesis. PLOS Pathogens. 2018 Feb;14:e1006899. URL: https://doi.org/10.1371/journal.ppat.1006899 (accessed via publisher) (song2018pgrpldmediatesa. pages 1-2, song2018pgrpldmediatesa. pages 4-6, song2018pgrpldmediatesa. pages 11-12, song2018pgrpldmediatesa. pages 12-14, song2018pgrpldmediatesa. pages 2-4)<br />
+- Daou H. Characterizing Anopheles gambiae susceptibility to oral infections with a panel of human bacterial pathogens. 2024; summary excerpt. URL: N/A in excerpt. (daou2024characterizinganophelesgambiae pages 22-26)<br />
+- Gao L, Song X, Wang J. Gut microbiota is essential in PGRP-LA regulated immune protection against Plasmodium berghei infection. Parasites &amp; Vectors. 2020 Jan;13: Article number not specified in excerpt. URL: https://doi.org/10.1186/s13071-019-3876-y (gao2020gutmicrobiotais pages 9-9)<br />
+- Christophides GK, et al. Immunity-Related Genes and Gene Families in Anopheles gambiae. Science. 2002 Oct;298(5591):159–165. URL: https://doi.org/10.1126/science.1077136 (song2018pgrpldmediatesa. pages 16-17)</p>
+<p>Conclusions<br />
+The available evidence supports that A. gambiae PGRP-LD (AGAP005552; A7UTR2) is a membrane-associated, non-catalytic PGRP that limits gut immune overactivation, preserves commensal microbiota, and thereby sustains a functional PM barrier that constrains Plasmodium infection. While direct biochemical activity and A. gambiae-specific knockdown/knockout data remain to be fully defined, orthologous functional data in A. stephensi and family-level context in Anopheles provide a coherent mechanistic model with clear implications for vector competence and potential microbiota-based interventions. (song2018pgrpldmediatesa. pages 11-12, song2018pgrpldmediatesa. pages 4-6, song2018pgrpldmediatesa. pages 1-2, gao2020gutmicrobiotais pages 9-9, song2018pgrpldmediatesa. pages 16-17, daou2024characterizinganophelesgambiae pages 22-26)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(song2018pgrpldmediatesa. pages 12-14): Xiumei Song, Mengfei Wang, Li Dong, Huaimin Zhu, and Jingwen Wang. Pgrp-ld mediates a. stephensi vector competency by regulating homeostasis of microbiota-induced peritrophic matrix synthesis. PLOS Pathogens, 14:e1006899, Feb 2018. URL: https://doi.org/10.1371/journal.ppat.1006899, doi:10.1371/journal.ppat.1006899. This article has 93 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(song2018pgrpldmediatesa. pages 11-12): Xiumei Song, Mengfei Wang, Li Dong, Huaimin Zhu, and Jingwen Wang. Pgrp-ld mediates a. stephensi vector competency by regulating homeostasis of microbiota-induced peritrophic matrix synthesis. PLOS Pathogens, 14:e1006899, Feb 2018. URL: https://doi.org/10.1371/journal.ppat.1006899, doi:10.1371/journal.ppat.1006899. This article has 93 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(song2018pgrpldmediatesa. pages 1-2): Xiumei Song, Mengfei Wang, Li Dong, Huaimin Zhu, and Jingwen Wang. Pgrp-ld mediates a. stephensi vector competency by regulating homeostasis of microbiota-induced peritrophic matrix synthesis. PLOS Pathogens, 14:e1006899, Feb 2018. URL: https://doi.org/10.1371/journal.ppat.1006899, doi:10.1371/journal.ppat.1006899. This article has 93 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(daou2024characterizinganophelesgambiae pages 22-26): H Daou. Characterizing anopheles gambiae susceptibility to oral infections with a panel of human bacterial pathogens. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(song2018pgrpldmediatesa. pages 16-17): Xiumei Song, Mengfei Wang, Li Dong, Huaimin Zhu, and Jingwen Wang. Pgrp-ld mediates a. stephensi vector competency by regulating homeostasis of microbiota-induced peritrophic matrix synthesis. PLOS Pathogens, 14:e1006899, Feb 2018. URL: https://doi.org/10.1371/journal.ppat.1006899, doi:10.1371/journal.ppat.1006899. This article has 93 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(song2018pgrpldmediatesa. pages 4-6): Xiumei Song, Mengfei Wang, Li Dong, Huaimin Zhu, and Jingwen Wang. Pgrp-ld mediates a. stephensi vector competency by regulating homeostasis of microbiota-induced peritrophic matrix synthesis. PLOS Pathogens, 14:e1006899, Feb 2018. URL: https://doi.org/10.1371/journal.ppat.1006899, doi:10.1371/journal.ppat.1006899. This article has 93 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(song2018pgrpldmediatesa. pages 2-4): Xiumei Song, Mengfei Wang, Li Dong, Huaimin Zhu, and Jingwen Wang. Pgrp-ld mediates a. stephensi vector competency by regulating homeostasis of microbiota-induced peritrophic matrix synthesis. PLOS Pathogens, 14:e1006899, Feb 2018. URL: https://doi.org/10.1371/journal.ppat.1006899, doi:10.1371/journal.ppat.1006899. This article has 93 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gao2020gutmicrobiotais pages 9-9): Li Gao, Xiumei Song, and Jingwen Wang. Gut microbiota is essential in pgrp-la regulated immune protection against plasmodium berghei infection. Parasites &amp; Vectors, Jan 2020. URL: https://doi.org/10.1186/s13071-019-3876-y, doi:10.1186/s13071-019-3876-y. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>daou2024characterizinganophelesgambiae pages 22-26</li>
+<li>gao2020gutmicrobiotais pages 9-9</li>
+<li>https://doi.org/10.1371/journal.ppat.1006899</li>
+<li>https://doi.org/10.1126/science.1077136</li>
+<li>https://doi.org/10.1371/journal.ppat.1006899;</li>
+<li>https://doi.org/10.1186/s13071-019-3876-y</li>
+<li>https://doi.org/10.1371/journal.ppat.1006899,</li>
+<li>https://doi.org/10.1186/s13071-019-3876-y,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A7UTR2
+gene_symbol: PGRPLD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7165
+  label: Anopheles gambiae
+description: &gt;-
+  PGRP-LD is a long-form peptidoglycan recognition protein (PGRP) that functions as a
+  non-catalytic, negative regulator of innate immune responses in the mosquito gut.
+  Despite containing an Amidase_2/PGRP domain, PGRP-LD lacks the conserved residues
+  required for peptidoglycan binding and amidase catalytic activity. Instead, it acts
+  to restrain immune hyper-activation, thereby preserving gut commensal microbiota
+  and maintaining peritrophic matrix integrity. This microbiota-PM barrier axis
+  indirectly limits Plasmodium infection. PGRP-LD is a transmembrane protein localized
+  at the gut epithelial barrier.
+existing_annotations:
+- term:
+    id: GO:0002376
+    label: immune system process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      PGRP-LD is involved in immune system processes. Deep research synthesis indicates
+      that PGRP-LD modulates gut immunity by restraining hyper-activation of immune
+      effectors, thereby maintaining microbiota homeostasis and peritrophic matrix
+      integrity. This is supported by functional studies in the closely related
+      Anopheles stephensi ortholog.
+    action: ACCEPT
+    reason: &gt;-
+      The annotation is correct but very broad. PGRP-LD plays a regulatory role in innate
+      immunity at the gut barrier. The term is appropriately general for an IEA annotation
+      derived from UniProt keyword mapping.
+    additional_reference_ids:
+      - file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+        supporting_text: &#34;PGRP-LD restrains hyper-activation of innate immune effectors (e.g., AMPs, DUOX), thereby protecting commensal bacteria&#34;
+
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      The PGRP/Amidase_2 domain family typically coordinates a zinc ion at the active site.
+      However, PGRP-LD lacks the conserved residues required for catalytic activity, raising
+      the question of whether the zinc-binding site is functional. Sequence analysis shows
+      that PGRP-LD lacks most conserved residues for PGN binding and catalytic activity.
+    action: UNDECIDED
+    reason: &gt;-
+      While catalytic PGRPs bind zinc at the active site, the absence of key catalytic
+      residues in PGRP-LD raises uncertainty about whether zinc binding is retained.
+      No direct experimental evidence confirms zinc binding in this non-catalytic PGRP.
+      The annotation may be a case of domain-based over-annotation.
+    additional_reference_ids:
+      - file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+        supporting_text: &#34;The A. stephensi PGRP-LD lacks most conserved residues required for PGN binding and amidase catalytic activity&#34;
+
+- term:
+    id: GO:0008745
+    label: N-acetylmuramoyl-L-alanine amidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is INCORRECT. Despite belonging to the Amidase_2/PGRP superfamily,
+      PGRP-LD is a non-catalytic PGRP that lacks the conserved residues required for
+      peptidoglycan binding and amidase catalytic activity. Sequence analysis of the
+      Anopheles stephensi ortholog demonstrated the absence of key catalytic residues.
+      PGRP-LD functions as a regulatory PGRP rather than an enzymatic amidase.
+    action: REMOVE
+    reason: &gt;-
+      This is a classic example of domain-based over-annotation. The presence of an
+      Amidase_2 domain (IPR002502) led to automatic annotation of amidase activity,
+      but detailed sequence analysis shows PGRP-LD lacks the conserved residues required
+      for catalysis. Not all PGRP family members are enzymatically active; many function
+      as pattern recognition receptors or immune regulators without catalytic activity.
+      The functional evidence clearly indicates PGRP-LD is non-catalytic.
+    additional_reference_ids:
+      - file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+        supporting_text: &#34;The A. stephensi PGRP-LD lacks most conserved residues required for PGN binding and amidase catalytic activity&#34;
+      - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+        supporting_text: &#34;Current evidence supports a regulatory PGRP model for PGRP-LD, not an enzymatic PGN hydrolase&#34;
+
+- term:
+    id: GO:0009253
+    label: peptidoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is INCORRECT. Peptidoglycan catabolic process implies enzymatic
+      degradation of peptidoglycan, which requires amidase activity. Since PGRP-LD
+      lacks the conserved catalytic residues and does not function as an active amidase,
+      it cannot be involved in peptidoglycan catabolism. The protein may recognize
+      peptidoglycan as a pattern recognition molecule, but does not degrade it.
+    action: REMOVE
+    reason: &gt;-
+      This annotation logically follows from the incorrect amidase activity annotation.
+      Since PGRP-LD lacks amidase catalytic activity, it cannot participate in
+      peptidoglycan catabolic processes. The annotation should be removed along with
+      the amidase activity annotation.
+    additional_reference_ids:
+      - file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+        supporting_text: &#34;No direct amidase activity or substrate specificity has been demonstrated for PGRP-LD; rather, sequence features argue against catalysis&#34;
+
+- term:
+    id: GO:0045087
+    label: innate immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      PGRP-LD is clearly involved in the innate immune response. However, it functions
+      as a NEGATIVE regulator rather than a positive effector. RNAi knockdown of PGRP-LD
+      upregulates multiple immune effectors (cecropin, gambicin, defensin, DUOX),
+      indicating its normal function is to restrain immune activation. This immune
+      tolerance function preserves commensal bacteria and maintains peritrophic matrix
+      integrity.
+    action: MODIFY
+    reason: &gt;-
+      While PGRP-LD is involved in innate immune response, a more accurate annotation
+      would capture its specific role as a negative regulator. The current annotation
+      is not wrong but could be more informative about the direction of regulation.
+    proposed_replacement_terms:
+      - id: GO:0045824
+        label: negative regulation of innate immune response
+    additional_reference_ids:
+      - file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+        supporting_text: &#34;Knockdown of PGRP-LD upregulates multiple immune effectors (e.g., cecropin, gambicin, defensin, DUOX), consistent with a negative regulatory role constraining immune activation in response to microbiota&#34;
+      - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+        supporting_text: &#34;Functions to restrain hyper-activation of immune effectors (negative regulator-like role), thereby limiting overactive Imd/Toll-like responses that deplete commensals&#34;
+
+# NEW annotations based on literature evidence
+- term:
+    id: GO:0045824
+    label: negative regulation of innate immune response
+  evidence_type: ISS
+  original_reference_id: PMID:29489896
+  review:
+    summary: &gt;-
+      Functional studies in Anopheles stephensi demonstrate that PGRP-LD negatively
+      regulates innate immune responses. Knockdown leads to upregulation of antimicrobial
+      peptides and DUOX, indicating PGRP-LD normally restrains immune activation.
+    action: NEW
+    reason: &gt;-
+      This annotation captures the core function of PGRP-LD as a negative regulator
+      of innate immunity. Evidence is from the closely related A. stephensi ortholog
+      (ISS - inferred from sequence similarity), as direct A. gambiae knockdown data
+      is not available in the literature.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+        supporting_text: &#34;Knockdown of PGRP-LD upregulates multiple immune effectors (e.g., cecropin, gambicin, defensin, DUOX), consistent with a negative regulatory role constraining immune activation&#34;
+
+- term:
+    id: GO:0061060
+    label: negative regulation of peptidoglycan recognition protein signaling pathway
+  evidence_type: ISS
+  original_reference_id: PMID:29489896
+  review:
+    summary: &gt;-
+      PGRP-LD modulates the PGRP signaling pathway as a negative regulator. The protein
+      restrains immune hyper-activation through the Imd/Toll pathways that are canonically
+      activated by peptidoglycan recognition.
+    action: NEW
+    reason: &gt;-
+      This term accurately describes the molecular role of PGRP-LD in dampening
+      PGRP-mediated immune signaling. The evidence is from orthologous studies in
+      A. stephensi.
+    additional_reference_ids:
+      - file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+        supporting_text: &#34;Functional data are most consistent with PGRP-LD acting upstream as a modulator that limits overactive responses commonly associated with the Imd/Toll axes in the gut&#34;
+
+- term:
+    id: GO:0016021
+    label: integral component of membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      UniProt annotation and Phobius prediction indicate PGRP-LD has a transmembrane
+      helix (residues 70-94). The protein is described as a transmembrane PGRP in
+      functional studies.
+    action: NEW
+    reason: &gt;-
+      The UniProt entry shows transmembrane domain prediction by Phobius. Functional
+      studies describe PGRP-LD as a transmembrane PGRP at the gut barrier.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+        supporting_text: &#34;Described as a transmembrane PGRP&#34;
+
+- term:
+    id: GO:0140678
+    label: molecular function inhibitor activity
+  evidence_type: ISS
+  original_reference_id: PMID:29489896
+  review:
+    summary: &gt;-
+      PGRP-LD functions as an inhibitor of immune signaling pathways. By restraining
+      the activity of Imd/Toll signaling, it prevents hyper-activation of downstream
+      immune effectors. This inhibitory molecular function underlies its biological
+      role in negative regulation of innate immunity.
+    action: NEW
+    reason: &gt;-
+      This molecular function term captures PGRP-LD&#39;s role as an inhibitor of immune
+      signaling. While the precise molecular mechanism is not fully characterized,
+      the functional evidence clearly demonstrates inhibitory activity on immune
+      pathway components.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+        supporting_text: &#34;Functions to restrain hyper-activation of immune effectors (negative regulator-like role), thereby limiting overactive Imd/Toll-like responses that deplete commensals&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: &gt;-
+        InterPro domain-based annotations can lead to over-annotation when domain presence
+        does not guarantee the associated function, particularly for domains like Amidase_2
+        where not all family members are enzymatically active.
+
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: &gt;-
+        Keyword-based annotations correctly identify PGRP-LD as involved in immunity,
+        but lack specificity about its regulatory role.
+
+- id: PMID:29489896
+  title: PGRP-LD mediates A. stephensi vector competency by regulating homeostasis of microbiota-induced peritrophic matrix synthesis
+  full_text_unavailable: true
+  findings:
+    - statement: PGRP-LD is a non-catalytic PGRP that lacks conserved residues for amidase activity
+    - statement: Functions as a negative regulator of innate immunity
+    - statement: Maintains gut microbiota homeostasis
+    - statement: Required for peritrophic matrix integrity
+    - statement: Knockdown increases Plasmodium susceptibility
+
+- id: PMID:31907025
+  title: Gut microbiota is essential in PGRP-LA regulated immune protection against Plasmodium berghei infection
+  full_text_unavailable: true
+  findings:
+    - statement: Contextual evidence for PGRP family regulation of immunity and microbiota interactions in Anopheles
+
+- id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+  title: Deep research synthesis for PGRPLD
+  findings:
+    - statement: PGRP-LD is a non-catalytic PGRP lacking key residues for amidase activity
+      supporting_text: &#34;The A. stephensi PGRP-LD lacks most conserved residues required for PGN binding and amidase catalytic activity&#34;
+    - statement: Functions as negative regulator of innate immunity
+      supporting_text: &#34;Knockdown of PGRP-LD upregulates multiple immune effectors (e.g., cecropin, gambicin, defensin, DUOX), consistent with a negative regulatory role constraining immune activation in response to microbiota&#34;
+    - statement: Transmembrane protein at gut barrier
+      supporting_text: &#34;Described as a transmembrane PGRP&#34;
+
+core_functions:
+- description: &gt;-
+    PGRP-LD functions as a negative regulator of innate immunity, restraining
+    immune hyper-activation to preserve gut microbiota and peritrophic matrix integrity.
+  molecular_function:
+    id: GO:0140678
+    label: molecular function inhibitor activity
+  directly_involved_in:
+    - id: GO:0045824
+      label: negative regulation of innate immune response
+    - id: GO:0061060
+      label: negative regulation of peptidoglycan recognition protein signaling pathway
+  locations:
+    - id: GO:0016021
+      label: integral component of membrane
+  supported_by:
+    - reference_id: file:ANOGA/PGRPLD/PGRPLD-deep-research-falcon.md
+      supporting_text: &#34;Knockdown of PGRP-LD upregulates multiple immune effectors (e.g., cecropin, gambicin, defensin, DUOX), consistent with a negative regulatory role constraining immune activation&#34;
+
+proposed_new_terms: []
+
+suggested_questions:
+- question: Does A. gambiae PGRP-LD retain any zinc-binding capacity despite lacking catalytic residues?
+
+- question: What is the mechanism by which PGRP-LD inhibits immune signaling?
+
+suggested_experiments:
+- description: &gt;-
+    Direct biochemical assay for amidase activity in recombinant A. gambiae PGRP-LD.
+    While sequence analysis strongly suggests PGRP-LD is non-catalytic, direct
+    enzymatic assays on the A. gambiae protein would definitively confirm the
+    absence of amidase activity.
+
+- description: &gt;-
+    RNAi knockdown of PGRP-LD in A. gambiae to confirm functional conservation.
+    The functional characterization was performed in A. stephensi. Direct knockdown
+    in A. gambiae would confirm the conserved immune regulatory function.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

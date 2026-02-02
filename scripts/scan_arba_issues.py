@@ -15,7 +15,6 @@ Usage:
 import json
 import re
 import subprocess
-import sys
 from typing import Optional
 
 import typer

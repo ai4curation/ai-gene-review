@@ -12,6 +12,7 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
 
 ### Classes
 
+ * [AlternativeProduct](AlternativeProduct.md) - An alternative splicing product (isoform) of the gene. Corresponds to UniProt isoform entries. Use this to document isoform-specific functions where different isoforms have distinct or even antagonistic biological activities. DEPRECATED: Use FunctionalIsoform instead for curated functional classes.
  * [AnnotationExtension](AnnotationExtension.md)
  * [ConditionOverlapAssessment](ConditionOverlapAssessment.md) - Assessment of overlap between rule conditions
  * [CoreFunction](CoreFunction.md) - A core function is a GO-CAM-like annotation of the core evolved functions of a gene. This is a synthesis of the reviewed core annotations, brought together into a unified GO-CAM-like representation.
@@ -19,6 +20,8 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [ExistingAnnotation](ExistingAnnotation.md) - An existing annotation from the GO database, plus a review of the annotation.
  * [Experiment](Experiment.md) - A suggested experiment to answer a question about the gene
  * [Finding](Finding.md) - A finding is a statement about a gene, which is supported by a reference. Similar to "comments" in uniprot
+ * [FunctionalIsoform](FunctionalIsoform.md) - A curated functional isoform class. Unlike AlternativeProduct (which maps 1:1 to UniProt isoforms), this captures FUNCTIONALLY RELEVANT distinctions that may: - Group multiple UniProt isoforms into a functional class (e.g., WT1 +KTS isoforms) - Represent cleavage products from polyproteins (e.g., POMC peptides) - Describe modification states or conformational variants Only create entries when there ARE functionally distinct forms worth documenting.
+ * [FunctionalIsoformMapping](FunctionalIsoformMapping.md) - A mapping from a functional isoform class to underlying UniProt identifiers. Allows grouping multiple UniProt isoforms or chains into a single functional class.
  * [GOSpecificityAssessment](GOSpecificityAssessment.md) - Assessment of GO term specificity
  * [GeneReview](GeneReview.md) - Complete review for a gene
  * [InterPro2GORedundancy](InterPro2GORedundancy.md) - Analysis of whether rule GO annotations are redundant with existing InterPro2GO mappings from the GO Consortium.
@@ -49,6 +52,7 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [action](action.md) - Action to be taken
  * [additional_reference_ids](additional_reference_ids.md) - IDs of the references
  * [aliases](aliases.md)
+ * [alternative_products](alternative_products.md) - Alternative splicing products (isoforms) of the gene. Seeded from UniProt ALTERNATIVE PRODUCTS section. Only populated if there are multiple isoforms. Use this to document isoform-specific functions and biology. DEPRECATED: Use functional_isoforms instead for curated functional classes.
  * [➞assessment](conditionOverlapAssessment__assessment.md) - Overlap assessment value
  * [➞notes](conditionOverlapAssessment__notes.md) - Notes on condition overlap - e.g., "IPR000001 and IPR000002 both represent the same structural domain" or "FunFam subsumes the InterPro entry"
  * [➞supported_by](conditionOverlapAssessment__supported_by.md) - Supporting text from literature for this assessment
@@ -62,6 +66,9 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [➞supported_by](coreFunction__supported_by.md)
  * [core_functions](core_functions.md)
  * [description](description.md) - Description of the entity
+     * [AlternativeProduct➞description](AlternativeProduct_description.md) - Agent-populated description of the isoform's function. Document any isoform-specific functions, expression patterns, or biological activities that differ from other isoforms.
+     * [CoreFunction➞description](CoreFunction_description.md)
+     * [GeneReview➞description](GeneReview_description.md)
  * [➞condition_sets](embeddedRule__condition_sets.md) - List of condition sets (OR-ed together). Each condition set is a conjunction (AND) of conditions. The rule fires if ANY condition set matches.
  * [➞created_date](embeddedRule__created_date.md) - Date the rule was created
  * [➞entries](embeddedRule__entries.md) - Entry-centric view of all entities in the rule (domain conditions and GO terms). Each entry tracks its relationships (PREDICTS, PREDICTED_BY, EQUIV) to other entries.
@@ -79,22 +86,36 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [extensions](extensions.md)
  * [findings](findings.md)
  * [full_text_unavailable](full_text_unavailable.md) - Whether the full text is unavailable
+ * [➞ids](functionalIsoformMapping__ids.md) - UniProt identifiers belonging to this functional class. For UNIPROT_ISOFORM: P19544-1, P19544-2, etc. For UNIPROT_CHAIN: PRO_0000024969, PRO_0000024970, etc.
+ * [➞residues](functionalIsoformMapping__residues.md) - Residue range for cleavage products (e.g., "138-176" for ACTH). Only applicable for UNIPROT_CHAIN type.
+ * [➞type](functionalIsoformMapping__type.md) - Type of identifier (UNIPROT_ISOFORM or UNIPROT_CHAIN)
+ * [➞description](functionalIsoform__description.md) - Detailed description of this functional class. Document the specific functions, how they differ from other classes, tissue specificity, and any antagonistic relationships (e.g., "OREXIGENIC - opposite to alpha-MSH").
+ * [➞id](functionalIsoform__id.md) - Curator-defined identifier for this functional class. Use a descriptive format like GENE_CLASS (e.g., WT1_PLUS_KTS, POMC_ACTH, BCL2L1_XL).
+ * [➞isoform_specific_terms](functionalIsoform__isoform_specific_terms.md) - GO terms that are specific to this functional class. These are terms that should NOT be annotated to the gene as a whole, only to this specific form. Using Term objects enables linkml-term-validator checking.
+ * [➞maps_to](functionalIsoform__maps_to.md) - Mappings to underlying UniProt identifiers. Optional - some functional classes may not map cleanly to specific UniProt IDs.
+ * [➞name](functionalIsoform__name.md) - Human-readable name for this functional class (e.g., "+KTS isoforms", "ACTH/Corticotropin", "Bcl-xL").
+ * [➞type](functionalIsoform__type.md) - Type of functional distinction (SPLICE_VARIANT, SPLICE_CLASS, CLEAVAGE_PRODUCT, MODIFICATION_STATE, CONFORMATIONAL_STATE).
+ * [functional_isoforms](functional_isoforms.md) - Curated functional isoform classes for the gene. Unlike alternative_products (which is seeded from UniProt), this field is purely curator/agent-defined to capture FUNCTIONALLY RELEVANT distinctions. Examples: - Splice classes that group multiple UniProt isoforms (e.g., WT1 +KTS vs -KTS) - Cleavage products from polyproteins (e.g., POMC peptides) - Modification states with distinct functions Only populate when there ARE functionally distinct forms worth documenting.
  * [➞assessment](gOSpecificityAssessment__assessment.md) - Specificity assessment value
  * [➞notes](gOSpecificityAssessment__notes.md) - Notes on specificity - suggested alternative terms if too broad/narrow
  * [➞supported_by](gOSpecificityAssessment__supported_by.md) - Supporting text from literature for this assessment
  * [gene_symbol](gene_symbol.md) - Symbol of the gene
  * [id](id.md)
+     * [AlternativeProduct➞id](AlternativeProduct_id.md) - UniProt isoform ID (e.g., Q07817-1, Q07817-2)
      * [RuleReview➞id](RuleReview_id.md) - The rule ID (e.g., ARBA00026249, UR000000070)
      * [Term➞id](Term_id.md) - An OBO CURIE for a term in GO, CL, CHEBI, etc.
  * [➞novel_annotations](interPro2GORedundancy__novel_annotations.md) - GO IDs not found in InterPro2GO for any rule condition
  * [➞redundant_annotations](interPro2GORedundancy__redundant_annotations.md) - GO annotations that already exist in InterPro2GO
  * [➞summary](interPro2GORedundancy__summary.md) - Human-readable summary of redundancy analysis
  * [is_invalid](is_invalid.md) - Whether the reference is invalid (e.g., retracted or replaced)
+ * [isoform](isoform.md) - UniProt isoform identifier (e.g., "P19544-1" for WT1 isoform 1). Only populated when the annotation is specific to a particular isoform rather than the canonical protein sequence. Note that just because an experiment used a particular isoform doesn't mean the annotation is isoform-specific - it may apply to all isoforms. Use this field only when there is clear evidence the annotation is isoform-specific.
  * [label](label.md) - Human readable name of the entity
      * [Term➞label](Term_label.md) - the term name
  * [➞assessment](literatureSupportAssessment__assessment.md) - Level of literature support
  * [➞notes](literatureSupportAssessment__notes.md) - Notes on literature support - key papers, gaps in evidence
  * [➞supported_by](literatureSupportAssessment__supported_by.md) - Supporting text from literature for this assessment
+ * [name](name.md) - Name of the entity (e.g., isoform name like Bcl-xL)
+     * [AlternativeProduct➞name](AlternativeProduct_name.md) - Common name of the isoform (e.g., Bcl-xL, Bcl-xS)
  * [negated](negated.md) - Whether the term is negated
  * [ontology](ontology.md) - Ontology of the term. E.g `go`, `cl`, `hp`
  * [original_reference_id](original_reference_id.md) - ID of the original reference
@@ -185,6 +206,8 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [➞suggested_modifications](ruleReview__suggested_modifications.md) - Specific modifications suggested if action is MODIFY
  * [➞supported_by](ruleReview__supported_by.md) - Supporting text from literature for this review
  * [➞taxonomic_scope](ruleReview__taxonomic_scope.md) - Assessment of taxonomic restriction appropriateness
+ * [sequence_note](sequence_note.md) - Brief note about sequence characteristics or differences
+     * [AlternativeProduct➞sequence_note](AlternativeProduct_sequence_note.md) - Brief note about sequence differences (e.g., "lacks exon 2", "shorter C-terminus")
  * [statement](statement.md) - Concise statement describing an aspect of the gene
  * [status](status.md) - Overall status of the gene review
  * [suggested_experiments](suggested_experiments.md)
@@ -193,6 +216,7 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [supported_by](supported_by.md)
  * [supporting_entities](supporting_entities.md) - IDs of the supporting entities
  * [supporting_text](supporting_text.md) - Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'
+ * [supporting_text_fulltext](supporting_text_fulltext.md) - Supporting text from the full-text PDF when the full text cannot be committed to the repository. This is an interim solution for cases where we have access to full text but cannot share it publicly. Unlike supporting_text, this field is not validated against cached publication text.
  * [tags](tags.md) - Tags associated with the gene for categorization and organization
  * [taxon](taxon.md)
  * [➞assessment](taxonomicScopeAssessment__assessment.md) - Taxonomic scope assessment value
@@ -211,6 +235,8 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [EntryRelationshipEnum](EntryRelationshipEnum.md) - Type of relationship between entries in a rule
  * [EntryTypeEnum](EntryTypeEnum.md) - Type of entry in a rule review (domain/family condition or GO term target)
  * [EvidenceType](EvidenceType.md) - Gene Ontology evidence codes mapped to Evidence and Conclusion Ontology (ECO) terms
+ * [FunctionalIsoformMappingTypeEnum](FunctionalIsoformMappingTypeEnum.md) - Type of identifier that a functional isoform maps to
+ * [FunctionalIsoformTypeEnum](FunctionalIsoformTypeEnum.md) - Type of functional isoform or product. Distinguishes between different mechanisms that produce functionally distinct forms of a gene product.
  * [GOBiologicalProcessEnum](GOBiologicalProcessEnum.md) - A biological process term in the GO ontology
  * [GOCellularLocationEnum](GOCellularLocationEnum.md) - A cellular location term in the GO ontology (excludes protein-containing complexes)
  * [GOMolecularActivityEnum](GOMolecularActivityEnum.md) - A molecular activity term in the GO ontology

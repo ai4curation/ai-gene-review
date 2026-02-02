@@ -1,0 +1,2982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LysB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LysB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q08694" target="_blank" class="term-link">
+                        Q08694
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LysB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q08694" data-a="DESCRIPTION: LysB encodes Lysozyme B, a secreted c-type lysozym..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LysB encodes Lysozyme B, a secreted c-type lysozyme (glycosyl hydrolase family 22) that hydrolyzes the beta-1,4 glycosidic bond between N-acetylmuramic acid and N-acetylglucosamine in bacterial peptidoglycan. Unlike classical immune lysozymes that function in the hemolymph, LysB is primarily expressed in the digestive tract (midgut of larvae and adults) where it functions in the digestion of bacteria from food and in shaping gut microbiota composition. LysB is not expressed in fat body or hemocytes and is actually repressed, not induced, upon systemic bacterial infection, supporting its role as a digestive rather than immune enzyme (PMID:8159165, Marra et al. 2021).
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>digestion of microorganism</h3>
+                <span class="vote-buttons" data-g="Q08694" data-a="digestion of microorganism" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> The process of breaking down microorganisms (bacteria, fungi, etc.) as food or for nutrient acquisition, typically through enzymatic degradation in the digestive tract. This process is distinct from immune-mediated killing of microorganisms.
+</p>
+            
+
+            
+            <p><strong>Justification:</strong> There is currently no GO term specifically for the enzymatic digestion of bacteria/microorganisms as food or for microbiota regulation. This would be distinct from immune-mediated killing. Terms like &#34;digestion&#34; are broad, and &#34;defense response to bacterium&#34; implies immune function. A term capturing the digestive/symbiotic processing of bacteria would better annotate genes like LysB.
+</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007586" target="_blank" class="term-link">
+                    digestion
+                </a>
+            </p>
+            
+
+            
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003796" target="_blank" class="term-link">
+                                    GO:0003796
+                                </a>
+                            </span>
+                            <span class="term-label">lysozyme activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08694" data-a="GO:0003796" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LysB is a bona fide c-type lysozyme belonging to glycosyl hydrolase family 22, with conserved catalytic residues and characteristic domain structure. The IBA annotation is based on phylogenetic inference from well-characterized lysozymes including chicken lysozyme (UniProtKB:P00698). The enzymatic activity is supported by the conserved catalytic Glu/Asp residues (positions 50 and 68 in LysB) and demonstrated ex vivo lysozyme activity in gut extracts from Drosophila (Marra et al. 2021).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function of LysB. The GH22 family assignment, conserved catalytic residues, and functional validation through gut lysozyme activity assays all support this annotation. IBA provides strong phylogenetic evidence.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8159165" target="_blank" class="term-link">
+                                        PMID:8159165
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">four closely related genes, LysB, C, D and E, are all strongly expressed in the midgut of larvae and adults</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DROME/LysB/LysB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">engineered deletion (LysB-PD) removing LysC and four gut-expressed lysozyme genes (including LysB) reduced ex vivo lysozyme activity (peptidoglycan digestion)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003796" target="_blank" class="term-link">
+                                    GO:0003796
+                                </a>
+                            </span>
+                            <span class="term-label">lysozyme activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08694" data-a="GO:0003796" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is based on InterPro domain mapping (IPR000974) and EC number assignment (EC:3.2.1.17). It correctly identifies LysB as having lysozyme (1,4-beta-N-acetylmuramidase) activity.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with IBA annotation but correctly assigned based on domain architecture. The InterPro glycosyl hydrolase 22 domains (IPR001916, IPR000974) and EC:3.2.1.17 assignment are accurate for this protein.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q08694
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the glycosyl hydrolase 22 family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08694" data-a="GO:0003824" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very general parent term for lysozyme activity. While technically correct, it provides no additional information beyond what is captured by the more specific lysozyme activity annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Automatically inferred from UniProtKB keyword mapping. While overly general, this hierarchical annotation is not incorrect and serves as a parent term for the more informative lysozyme activity annotations.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q08694
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Lysozyme B; EC=3.2.1.17</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08694" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Parent term annotation derived from hydrolase keyword. LysB is indeed a hydrolase that cleaves glycosidic bonds in peptidoglycan.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct hierarchical annotation. More specific terms (lysozyme activity, hydrolase activity acting on glycosyl bonds) are also present.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q08694
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hydrolysis of (1-&gt;4)-beta-linkages between N-acetylmuramic acid and N-acetyl-D-glucosamine residues in a peptidoglycan</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016798" target="_blank" class="term-link">
+                                    GO:0016798
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on glycosyl bonds</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08694" data-a="GO:0016798" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Appropriately specific parent term for lysozyme activity. LysB hydrolyzes glycosyl bonds in bacterial peptidoglycan.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct intermediate-level annotation. This is the appropriate parent for lysozyme activity (GO:0003796) and accurately describes the bond type cleaved.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q08694
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hydrolysis of (1-&gt;4)-beta-linkages between N-acetylmuramic acid and N-acetyl-D-glucosamine residues in a peptidoglycan</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031640" target="_blank" class="term-link">
+                                    GO:0031640
+                                </a>
+                            </span>
+                            <span class="term-label">killing of cells of another organism</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08694" data-a="GO:0031640" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is derived from the UniProtKB Antimicrobial keyword (KW-0081). While lysozymes can technically kill bacteria by degrading their cell walls, this annotation requires careful evaluation for LysB specifically. The primary literature (PMID:8159165) explicitly states that LysB is &#34;unlikely to play an active role in the humoral immune defense&#34; and is adapted for &#34;digestion of bacteria in the food.&#34; The deep research shows LysB functions in gut microbiota regulation rather than bactericidal immunity. However, lysozyme-mediated peptidoglycan hydrolysis does result in bacterial cell death, making this annotation technically accurate even for digestive lysozymes. This represents a legitimate SPKW annotation for lysozymes.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a LEGITIMATE SPKW annotation for lysozymes. While the primary biological role of LysB is digestive/microbiota regulation rather than immune defense, the enzymatic action of lysozyme (peptidoglycan hydrolysis) does result in bacterial cell killing. The annotation captures the molecular outcome of lysozyme activity. The UniProt Antimicrobial keyword is appropriately applied to bacteriolytic enzymes. This is an example of correct SPKW contribution where the keyword accurately reflects the biochemical consequence of enzyme activity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8159165" target="_blank" class="term-link">
+                                        PMID:8159165
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">probably involved in the digestion of bacteria in the food</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q08694
+                                    
+                                </span>
+                                
+                                <div class="support-text">Antimicrobial; Bacteriolytic enzyme</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042742" target="_blank" class="term-link">
+                                    GO:0042742
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q08694" data-a="GO:0042742" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is derived from the Antimicrobial keyword. However, the primary literature strongly suggests LysB does NOT function in classical immune defense. PMID:8159165 states LysB is &#34;unlikely to play an active role in the humoral immune defense&#34; and is not expressed in immune tissues (fat body, hemocytes). Furthermore, LysB and related gut lysozymes are REPRESSED, not induced, after systemic bacterial infection. The Marra et al. 2021 study shows gut lysozymes function in microbiota regulation and homeostasis rather than pathogen defense. While lysozymes can contribute to defense by killing bacteria, the specific biological context of LysB is digestive/homeostatic rather than defensive.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation may overstate the immune defense role of LysB. The literature explicitly indicates LysB is adapted for digestive function and is not part of the humoral immune response. Consider whether a more accurate process annotation would capture the microbiota regulation function. However, there is no ideal GO term for &#34;digestion of bacteria&#34; or &#34;gut microbiota regulation by enzyme.&#34; The term could be retained with the understanding that it represents a broader interpretation, but marking as potentially over-annotated.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007586" target="_blank" class="term-link">
+                                    digestion
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q08694
+                                    
+                                </span>
+                                
+                                <div class="support-text">Unlikely to play an active role in the humoral immune defense. May have a function in the digestion of bacteria in the food.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8159165" target="_blank" class="term-link">
+                                        PMID:8159165
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The LysD-like genes and LysS are strongly repressed in artificially infected animals</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8159165" target="_blank" class="term-link">
+                                        PMID:8159165
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">None of the genes is expressed in the fat body or haemocytes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003796" target="_blank" class="term-link">
+                                    GO:0003796
+                                </a>
+                            </span>
+                            <span class="term-label">lysozyme activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08694" data-a="GO:0003796" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation based on sequence similarity to characterized lysozymes, using UniProtKB:P00697 (turkey lysozyme) as reference. This supports the enzymatic function annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Valid ISS annotation supporting the core molecular function. The sequence similarity to well-characterized vertebrate lysozymes is well-established.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q08694
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the glycosyl hydrolase 22 family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                    GO:0005615
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08694" data-a="GO:0005615" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation indicating extracellular localization. This is consistent with LysB being a secreted protein with a signal peptide (residues 1-18). The protein is predicted to be secreted into the gut lumen where it acts on bacteria.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Appropriate cellular component annotation. LysB has a signal peptide and is secreted. Expression in midgut and detection in haemolymph at low levels support extracellular localization (PMID:8159165). For a gut lysozyme, the extracellular space would be the gut lumen.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DROME/LysB/LysB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Insect c-type lysozymes are secreted proteins with N-terminal signal peptides</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q08694
+                                    
+                                </span>
+                                
+                                <div class="support-text">AltName: Full=1,4-beta-N-acetylmuramidase B; Flags: Precursor</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q08694" data-a="GO:0050829" data-r="GO_REF:0000024" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation based on similarity to vertebrate lysozymes. This is problematic for several reasons. First, LysB is unlikely to function in immune defense as stated explicitly in PMID:8159165. Second, classical c-type lysozymes are typically more effective against Gram-positive bacteria (which have exposed peptidoglycan) than Gram-negative bacteria (which have an outer membrane protecting the peptidoglycan layer). The annotation may be transferred from a vertebrate lysozyme in a different functional context.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is likely inappropriate for LysB. The literature indicates LysB is not an immune defense protein. Additionally, classical lysozymes require outer membrane permeabilization to act on Gram-negative bacteria. If a defense annotation is retained, it should be at the more general &#34;defense response to bacterium&#34; level, though even that is questionable given the explicit statements in the primary literature that LysB does not function in immune defense.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007586" target="_blank" class="term-link">
+                                    digestion
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q08694
+                                    
+                                </span>
+                                
+                                <div class="support-text">Unlikely to play an active role in the humoral immune defense. May have a function in the digestion of bacteria in the food.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8159165" target="_blank" class="term-link">
+                                        PMID:8159165
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">None of the genes is expressed in the fat body or haemocytes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003796" target="_blank" class="term-link">
+                                    GO:0003796
+                                </a>
+                            </span>
+                            <span class="term-label">lysozyme activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8159165" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8159165
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The lysozyme locus in Drosophila melanogaster: an expanded g...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08694" data-a="GO:0003796" data-r="PMID:8159165" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation cites PMID:8159165 (Daffre et al. 1994) which characterized the Drosophila lysozyme gene family. While the paper establishes that LysB is a lysozyme gene in the 61F locus, it primarily characterizes expression patterns rather than providing direct enzymatic assays for LysB specifically. However, the sequence analysis and family membership strongly support lysozyme activity.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function annotation supported by the primary characterization paper. The paper establishes LysB as part of an expanded lysozyme gene family with digestive tract expression.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8159165" target="_blank" class="term-link">
+                                        PMID:8159165
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">four closely related genes, LysB, C, D and E, are all strongly expressed in the midgut of larvae and adults</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LysB is a c-type lysozyme (GH22 family) that hydrolyzes beta-1,4 glycosidic bonds between N-acetylmuramic acid and N-acetylglucosamine in bacterial peptidoglycan. It is expressed in the midgut where it functions in digestion of bacteria from food and regulation of gut microbiota composition.
+</h3>
+                <span class="vote-buttons" data-g="Q08694" data-a="FUNCTION: LysB is a c-type lysozyme (GH22 family) that hydro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003796" target="_blank" class="term-link">
+                            lysozyme activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007586" target="_blank" class="term-link">
+                                digestion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                extracellular space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8159165" target="_blank" class="term-link">
+                                PMID:8159165
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">four closely related genes, LysB, C, D and E, are all strongly expressed in the midgut of larvae and adults</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q08694
+                            
+                        </span>
+                        
+                        <div class="finding-text">May have a function in the digestion of bacteria in the food</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8159165" target="_blank" class="term-link">
+                            PMID:8159165
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The lysozyme locus in Drosophila melanogaster: an expanded gene family adapted for expression in the digestive tract.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LysB is one of seven lysozyme genes at the 61F locus</div>
+                        
+                        <div class="finding-text">"we have now characterized all six lysozyme genes in the cloned part of the lysozyme locus at 61F, and a seventh gene that maps to the same chromosomal location"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LysB, LysC, LysD, and LysE are strongly expressed in midgut of larvae and adults</div>
+                        
+                        <div class="finding-text">"four closely related genes, LysB, C, D and E, are all strongly expressed in the midgut of larvae and adults"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">None of the lysozyme genes is expressed in fat body or hemocytes</div>
+                        
+                        <div class="finding-text">"None of the genes is expressed in the fat body or haemocytes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LysD-like genes are repressed after systemic bacterial infection</div>
+                        
+                        <div class="finding-text">"The LysD-like genes and LysS are strongly repressed in artificially infected animals"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The lysozymes are unlikely to play a role in humoral immune defense</div>
+                        
+                        <div class="finding-text">"rather than being a component of the haemolymph, the Drosophila lysozymes are found mainly in the digestive tract"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The function is probably digestion of bacteria in food</div>
+                        
+                        <div class="finding-text">"probably involved in the digestion of bacteria in the food"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">All genes except LysP encode acidic proteins (unlike typical basic lysozymes)</div>
+                        
+                        <div class="finding-text">"Furthermore all genes, except LysP, encode acidic proteins, in contrast to the strongly basic &#34;typical&#34; lysozymes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression pattern is reminiscent of ruminant stomach lysozymes that digest symbiotic bacteria</div>
+                        
+                        <div class="finding-text">"highly reminiscent of the situation in ruminants, where the lysozymes have been recruited for the digestion of symbiotic bacteria in the stomach"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DROME/LysB/LysB-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for LysB from Falcon AI</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Deletion of gut lysozymes (LysB-PD) reduces ex vivo muramidase activity</div>
+                        
+                        <div class="finding-text">"engineered deletion (LysB-PD) removing LysC and four gut-expressed lysozyme genes (including LysB) reduced ex vivo lysozyme activity (peptidoglycan digestion)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Lysozyme loss increases stochasticity of gut microbiota composition</div>
+                        
+                        <div class="finding-text">"loss of lysozymes (LysB-PD deletion removing LysB, LysD, LysE, LysP, LysC) increased stochasticity and altered community structure"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Total bacterial load is not significantly affected by lysozyme loss</div>
+                        
+                        <div class="finding-text">"total bacterial load changes were not significant, indicating lysozymes contribute primarily to composition control rather than bulk bacterial burden"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Lysozymes contribute to microbiota community structure regulation</div>
+                        
+                        <div class="finding-text">"lysozymes, while secondary to AMPs in effect size, are necessary to stabilize gut community structure"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Gut lysozymes are induced by microbiota colonization (not systemic infection)</div>
+                        
+                        <div class="finding-text">"gut colonization by microbiota induces gut lysozyme expression, aligning them with epithelial homeostasis rather than systemic acute-phase effectors"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maps Antimicrobial keyword (KW-0081) to GO:0031640 (killing of cells of another organism)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maps Antimicrobial keyword to GO:0042742 (defense response to bacterium)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maps Hydrolase keyword to GO:0016787 and children</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relative contribution of individual lysozyme genes (LysB, LysC, LysD, LysE) to gut function?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q08694" data-a="Q: What is the relative contribution of individual ly..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does LysB have any role in host defense in specific contexts (e.g., gut epithelial immunity)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q08694" data-a="Q: Does LysB have any role in host defense in specifi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the substrate specificity of LysB - is it more effective against certain bacterial species?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q08694" data-a="Q: What is the substrate specificity of LysB - is it ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Single-gene CRISPR knockout of LysB to distinguish its function from other gut lysozymes</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LysB knockout alone will have measurable effects on gut microbiota composition</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q08694" data-a="EXPERIMENT: Single-gene CRISPR knockout of LysB to distinguish..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Direct enzymatic assays with purified LysB protein against different bacterial peptidoglycans</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LysB will show muramidase activity with potential substrate preferences</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q08694" data-a="EXPERIMENT: Direct enzymatic assays with purified LysB protein..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Comparison of LysB activity at acidic gut pH vs neutral pH</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LysB may have optimal activity at gut pH consistent with its digestive role</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q08694" data-a="EXPERIMENT: Comparison of LysB activity at acidic gut pH vs ne..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LysB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q08694" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-30T20:53:54.050356'<br />
+end_time: '2026-01-30T21:00:00.554626'<br />
+duration_seconds: 366.5<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DROME<br />
+  gene_id: LysB<br />
+  gene_symbol: LysB<br />
+  uniprot_accession: Q08694<br />
+  protein_description: 'RecName: Full=Lysozyme B; EC=3.2.1.17; AltName: Full=1,4-beta-N-acetylmuramidase<br />
+    B; Flags: Precursor;'<br />
+  gene_info: Name=LysB; ORFNames=CG1179;<br />
+  organism_full: Drosophila melanogaster (Fruit fly).<br />
+  protein_family: Belongs to the glycosyl hydrolase 22 family.<br />
+  protein_domains: Glyco_hydro_22. (IPR001916); Glyco_hydro_22_CS. (IPR019799); Glyco_hydro_22_lys.<br />
+    (IPR000974); Lysozyme-like_dom_sf. (IPR023346); Lys (PF00062)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 14</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q08694</li>
+<li><strong>Protein Description:</strong> RecName: Full=Lysozyme B; EC=3.2.1.17; AltName: Full=1,4-beta-N-acetylmuramidase B; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=LysB; ORFNames=CG1179;</li>
+<li><strong>Organism (full):</strong> Drosophila melanogaster (Fruit fly).</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 22 family.</li>
+<li><strong>Key Domains:</strong> Glyco_hydro_22. (IPR001916); Glyco_hydro_22_CS. (IPR019799); Glyco_hydro_22_lys. (IPR000974); Lysozyme-like_dom_sf. (IPR023346); Lys (PF00062)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "LysB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Drosophila melanogaster (Fruit fly).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'LysB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>LysB</strong> (gene ID: LysB, UniProt: Q08694) in DROME.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q08694</li>
+<li><strong>Protein Description:</strong> RecName: Full=Lysozyme B; EC=3.2.1.17; AltName: Full=1,4-beta-N-acetylmuramidase B; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=LysB; ORFNames=CG1179;</li>
+<li><strong>Organism (full):</strong> Drosophila melanogaster (Fruit fly).</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 22 family.</li>
+<li><strong>Key Domains:</strong> Glyco_hydro_22. (IPR001916); Glyco_hydro_22_CS. (IPR019799); Glyco_hydro_22_lys. (IPR000974); Lysozyme-like_dom_sf. (IPR023346); Lys (PF00062)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "LysB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Drosophila melanogaster (Fruit fly).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'LysB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>LysB</strong> (gene ID: LysB, UniProt: Q08694) in DROME.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan overview<br />
+We verified identity and gathered Drosophila-focused primary and recent review evidence on Lysozyme B (LysB/CG1179; UniProt Q08694), prioritized 2021–2024 sources, and compiled mechanistic, localization, regulatory, and quantitative details. We highlight what is specific to LysB versus the gut lysozyme cluster.</p>
+<p>Comprehensive research report: Drosophila melanogaster LysB (Lysozyme B, CG1179; UniProt Q08694)</p>
+<p>1) Key concepts and definitions<br />
+- Molecular identity and family: LysB encodes a c-type/GH22 lysozyme (EC 3.2.1.17) that hydrolyzes the β-1,4 glycosidic bond between N-acetylmuramic acid and N-acetylglucosamine in bacterial peptidoglycan (PGN), classically active against Gram-positive PGN and also acting on Gram-negative PGN after outer-membrane permeabilization. Insect c-type lysozymes share conserved catalytic Glu/Asp residues and disulfide-stabilized LYZ1 domains, and are typically secreted proteins with signal peptides (cross-species inference) (huang2021identificationandfunctional pages 5-7). In Drosophila, lysozymes constitute an expanded family with multiple gut-expressed members, including LysB (daffre2004thelysozymelocus pages 1-2, marra2021drosophilaantimicrobialpeptides pages 2-4).<br />
+- Gene family organization: A cluster of lysozyme genes at cytological 61F contains several gut-enriched paralogs (LysB, LysC, LysD, LysE, LysP, LysS, LysX). Daffre et al. mapped and characterized seven lysozyme genes at or near 61F, with strong digestive-tract expression of LysB/C/D/E (daffre2004thelysozymelocus pages 1-2, daffre2004thelysozymelocus pages 8-9). Marra et al. later note at least ~17 putative lysozyme genes genome-wide, with a defined gut cluster including LysB (marra2021drosophilaantimicrobialpeptides pages 2-4). </p>
+<p>2) Biochemical function and substrate specificity<br />
+- Enzymatic activity: As a GH22 muramidase, the LysB product hydrolyzes the glycan backbone of PGN; canonical c-type lysozymes rely on catalytic Glu/Asp residues and show activity in turbidimetric assays against Micrococcus luteus cell walls and in peptidoglycan digestion assays (methodological benchmark; cross-species but directly applicable to Drosophila lysozymes) (huang2021identificationandfunctional pages 5-7). In Drosophila gut tissue, lysozyme activity can be measured ex vivo: Marra et al. demonstrated reduced lysozyme activity of gut extracts from a deletion mutant that removes LysB together with other gut lysozymes by assaying Enterococcus faecalis PGN digestion, supporting functional muramidase activity of the cluster including LysB (marra2021drosophilaantimicrobialpeptides pages 2-4).</p>
+<p>3) Cellular localization and site of action<br />
+- Tissue expression and cellular localization: Drosophila lysozymes, including LysB, are predominantly expressed in the digestive tract (larval and adult midgut), rather than in immune tissues like fat body or hemocytes. Daffre et al. detected strong midgut expression of LysB/C/D/E and did not detect expression in fat body or hemocytes; lysozymes were detectable in the haemolymph at low levels, consistent with secreted proteins originating from epithelia (daffre2004thelysozymelocus pages 1-2, daffre2004thelysozymelocus pages 8-9). Contemporary work corroborates gut expression of the lysozyme cluster and expression upon microbiota colonization (marra2021drosophilaantimicrobialpeptides pages 2-4).<br />
+- Secreted effector: Insect c-type lysozymes are secreted proteins with N-terminal signal peptides; secretion to the gut lumen is consistent with the digestive-tract expression pattern and ex vivo activity from gut extracts (cross-species structural inference combined with Drosophila ex vivo activity evidence) (huang2021identificationandfunctional pages 5-7, marra2021drosophilaantimicrobialpeptides pages 2-4).</p>
+<p>4) Biological role and pathways<br />
+- Primary function in vivo: Regulation of gut microbiota composition and abundance. Using gnotobiotic flies colonized with a defined community, Marra et al. showed that loss of gut lysozymes (LysB-PD deletion removing LysB, LysD, LysE, LysP, LysC) increased stochasticity and altered community structure; total bacterial load changes were not significant, indicating lysozymes contribute primarily to composition control rather than bulk bacterial burden (marra2021drosophilaantimicrobialpeptides pages 2-4, marra2021drosophilaantimicrobialpeptides pages 4-7). <br />
+- Pathway context and sensing: In the Drosophila gut, PGN sensing via PGRP-LE and activation of the IMD/NF-κB pathway are central to antibacterial responses; lysozymes and AMPs are epithelial effectors that act downstream to shape the microbiota and limit dysbiosis. Reviews summarizing recent advances emphasize IMD dominance in the midgut and note lysozymes as part of the gut antimicrobial repertoire; Toll roles in the midgut are limited compared to IMD, though Toll has broader roles in systemic immunity (zhou2024insectantimicrobialpeptides pages 19-21, marra2021drosophilaantimicrobialpeptides pages 4-7). Lysozymes may also modulate IMD signaling by cleaving PGN fragments that alter PGRP detection thresholds (proposed in Marra et al.) (marra2021drosophilaantimicrobialpeptides pages 2-4).<br />
+- Regulation and infection response: Classic work indicates that several gut lysozymes can be repressed, not induced, after systemic bacterial injection, highlighting their digestive specialization rather than systemic immune inducibility (daffre2004thelysozymelocus pages 1-2, daffre2004thelysozymelocus pages 8-9). In contrast, gut colonization by microbiota induces gut lysozyme expression, aligning them with epithelial homeostasis rather than systemic acute-phase effectors (marra2021drosophilaantimicrobialpeptides pages 2-4).</p>
+<p>5) Recent developments and latest research (prioritizing 2023–2024)<br />
+- Contemporary reviews (2024) integrate lysozymes with AMPs as key epithelial effectors that maintain gut microbial homeostasis, regulated by IMD and PGN sensing in Drosophila; they highlight PGRP-LE mediated detection and the importance of epithelial effectors in microbiota control and tolerance (zhou2024insectantimicrobialpeptides pages 19-21). These syntheses reaffirm the model where lysozymes like LysB contribute to homeostatic control rather than broad systemic bactericidal responses (zhou2024insectantimicrobialpeptides pages 19-21). </p>
+<p>6) Current applications and real-world implementations<br />
+- Methodological applications: The Drosophila gut provides a tractable system for dissecting lysozyme function in host–microbe interactions. The lysozyme deletion (LysB-PD) provides a genetic tool to parse effector roles in microbial ecology and aging-related dysbiosis, applicable to microbiome research and innate immunity modeling (marra2021drosophilaantimicrobialpeptides pages 2-4). Standard muramidase assays and PGN digestion readouts used in insects provide robust functional validation platforms that can be adapted for Drosophila lysozymes (huang2021identificationandfunctional pages 5-7, marra2021drosophilaantimicrobialpeptides pages 2-4).</p>
+<p>7) Expert opinions and analysis from authoritative sources<br />
+- Primary and integrative viewpoints: Marra et al. (mBio) argue that lysozymes, while secondary to AMPs in effect size, are necessary to stabilize gut community structure; their loss increases stochasticity and susceptibility to dysbiosis during aging (marra2021drosophilaantimicrobialpeptides pages 2-4, marra2021drosophilaantimicrobialpeptides pages 4-7). The 2024 review frames lysozymes together with AMPs as guardians of gut homeostasis under IMD control, consistent with modern views of epithelial immunity prioritizing tolerance and community structuring over sterilization (zhou2024insectantimicrobialpeptides pages 19-21).</p>
+<p>8) Relevant statistics and data<br />
+- Gene family counts and genomic context: At least seven lysozymes defined at/near 61F with digestive-tract expression (1993/2004 mapping), and later work suggests ~17 putative lysozymes genome-wide (daffre2004thelysozymelocus pages 1-2, daffre2004thelysozymelocus pages 8-9, marra2021drosophilaantimicrobialpeptides pages 2-4). <br />
+- Functional assays: The lysozyme-cluster deletion (LysB-PD) reduced ex vivo muramidase activity of gut extracts against Enterococcus faecalis PGN; in gnotobiotic flies, loss of lysozymes increased variance/stochasticity of community composition, with examples such as Lactobacillus brevis dominance in individual samples; total bacterial load by 16S copies was not significantly different across genotypes (marra2021drosophilaantimicrobialpeptides pages 2-4, marra2021drosophilaantimicrobialpeptides pages 4-7). <br />
+- Induction/repression patterns: Daffre et al. reported that several gut lysozyme transcripts (e.g., LysS and LysD-like genes that include LysB/C/D/E) are repressed after systemic bacterial injection, while gut colonization induces expression locally (qualitative patterns) (daffre2004thelysozymelocus pages 1-2, daffre2004thelysozymelocus pages 8-9, marra2021drosophilaantimicrobialpeptides pages 2-4).</p>
+<p>9) Ambiguity check and gene verification<br />
+- The gene symbol LysB in Drosophila melanogaster refers to Lysozyme B in the 61F gut lysozyme cluster and matches UniProt Q08694 description (GH22 lysozyme; EC 3.2.1.17). Literature consistently places LysB among gut-expressed lysozymes; no conflicting Drosophila gene with the same symbol was identified in these sources (daffre2004thelysozymelocus pages 1-2, marra2021drosophilaantimicrobialpeptides pages 2-4).</p>
+<p>10) Evidence-informed functional annotation for LysB (UniProt Q08694)<br />
+- Primary function: Secreted GH22 muramidase operating in the gut lumen to digest bacterial PGN and shape the gut microbiota; contributes to community composition control with modest effects on total bacterial load (marra2021drosophilaantimicrobialpeptides pages 2-4, marra2021drosophilaantimicrobialpeptides pages 4-7, huang2021identificationandfunctional pages 5-7). <br />
+- Site of action: Larval and adult midgut epithelia; not detectably expressed in fat body or hemocytes in classic assays (daffre2004thelysozymelocus pages 1-2, daffre2004thelysozymelocus pages 8-9). <br />
+- Pathways: Acts downstream of epithelial PGN sensing and IMD pathway activity; may influence IMD signaling through PGN cleavage products (marra2021drosophilaantimicrobialpeptides pages 2-4, zhou2024insectantimicrobialpeptides pages 19-21). <br />
+- Experimental support: Genetic deletion removing LysB with nearby gut lysozymes decreases gut muramidase activity and perturbs microbiota structure in gnotobiotic models; historic mapping and expression studies localize LysB to the digestive tract (marra2021drosophilaantimicrobialpeptides pages 2-4, daffre2004thelysozymelocus pages 1-2, daffre2004thelysozymelocus pages 8-9). </p>
+<p>URLs and publication dates<br />
+- Daffre et al., Mol Gen Genet MGG, Jan 2004. The lysozyme locus in Drosophila melanogaster. URL: https://doi.org/10.1007/bf00391008 (daffre2004thelysozymelocus pages 1-2, daffre2004thelysozymelocus pages 8-9)<br />
+- Marra et al., mBio, Aug 2021. Drosophila AMPs and lysozymes regulate gut microbiota composition and abundance. URL: https://doi.org/10.1128/mbio.00824-21 (marra2021drosophilaantimicrobialpeptides pages 2-4, marra2021drosophilaantimicrobialpeptides pages 4-7)<br />
+- Zhou et al., International Journal of Molecular Sciences, Mar 2024. Insect antimicrobial peptides as guardians of immunity and beyond: A review. URL: https://doi.org/10.3390/ijms25073835 (zhou2024insectantimicrobialpeptides pages 19-21)<br />
+- Huang et al., Biology (MDPI), Apr 2021. Identification and Functional Analysis of a Lysozyme Gene from Coridius chinensis (cross-species mechanistic details/assays). URL: https://doi.org/10.3390/biology10040330 (huang2021identificationandfunctional pages 5-7)</p>
+<p>Embedded evidence summary table<br />
+| Claim/Topic | Key Evidence/Result | Species/Context | Year | Source (journal) | URL/DOI |<br />
+|---|---|---:|---:|---|---|<br />
+| Lysozyme locus expansion at 61F; LysB among gut-expressed; lack of fat body/haemocyte expression; repression after bacterial injection | Four closely related genes (LysB, LysC, LysD, LysE) strongly expressed in larval/adult midgut; LysP, LysS, LysX show distinct digestive-tract expression; none detected in fat body or haemocytes; some gut lysozyme transcripts are repressed after bacterial injection | Drosophila melanogaster (digestive tract) | 2004 | Molecular and General Genetics (MGG) (daffre2004thelysozymelocus pages 1-2) | https://doi.org/10.1007/bf00391008 |<br />
+| Lysozyme family (~17 genes); gut cluster (LysB, LysD, LysE, LysP, LysS, LysX); LysB-PD deletion phenotype | Reported ~17 putative lysozymes; clustered gut lysozymes; engineered deletion (LysB-PD) removing LysC and four gut-expressed lysozyme genes (including LysB) reduced ex vivo lysozyme activity (peptidoglycan digestion) and increased stochasticity of gut microbiota composition in gnotobiotic flies; total bacterial load not significantly changed — lysozymes expressed upon microbiota colonization and may modulate IMD via peptidoglycan cleavage | Drosophila melanogaster (gnotobiotic gut experiments; aging contexts) | 2021 | mBio (marra2021drosophilaantimicrobialpeptides pages 2-4) | https://doi.org/10.1128/mbio.00824-21 |<br />
+| Lysozymes as gut effectors working with AMPs; immunity pathways and sensing (review) | Review synthesis: lysozymes act with antimicrobial peptides to regulate gut homeostasis; IMD (and in some contexts Toll) pathways and PGRP-mediated peptidoglycan sensing govern gut immune responses; highlights recent developments in insect gut immunity | Insects (review with Drosophila examples) | 2024 | International Journal of Molecular Sciences (IJMS) (zhou2024insectantimicrobialpeptides pages 19-21) | https://doi.org/10.3390/ijms25073835 |<br />
+| Cross-species methodological and mechanistic details for c-type insect lysozymes (inference applicable to Drosophila LysB) | Characteristic c-type features: signal peptide (secreted), conserved catalytic residues Glu/Asp (e.g., E32/D50), disulfide bonds; standard assays: turbidimetric muramidase assays using Micrococcus luteus, agar-diffusion antibacterial assays, qPCR for expression; methods transferable to study Drosophila LysB | Coridius chinensis (c-type insect lysozyme) — inference applicable to insect c-type lysozymes incl. Drosophila | 2021 | Biology (MDPI) (huang2021identificationandfunctional pages 5-7) | https://doi.org/10.3390/biology10040330 |</p>
+<p><em>Table: Concise, sourced evidence summarizing key claims about Drosophila Lysozyme B (LysB/clustered gut lysozymes), experimental phenotypes, regulatory context, and cross-species methodological details; useful for quickly locating primary sources and their main results.</em></p>
+<p>Limitations and open needs<br />
+- LysB-specific biochemical kinetics, precise catalytic residue assignments for the D. melanogaster protein, and LysB-only mutant phenotypes (separable from nearby lysozymes) were not resolved in the available sources. Current functional inferences rely on the gut cluster deletion that includes LysB and on conserved GH22 biochemistry from insect lysozymes (marra2021drosophilaantimicrobialpeptides pages 2-4, huang2021identificationandfunctional pages 5-7). Focused LysB single-gene knockout or CRISPR tagging studies would sharpen mechanistic and localization details.</p>
+<p>Citations<br />
+- Daffre et al., 2004 (Mol Gen Genet MGG) (daffre2004thelysozymelocus pages 1-2, daffre2004thelysozymelocus pages 8-9)<br />
+- Marra et al., 2021 (mBio) (marra2021drosophilaantimicrobialpeptides pages 2-4, marra2021drosophilaantimicrobialpeptides pages 4-7)<br />
+- Zhou et al., 2024 (IJMS review) (zhou2024insectantimicrobialpeptides pages 19-21)<br />
+- Huang et al., 2021 (Biology; cross-species lysozyme characterization) (huang2021identificationandfunctional pages 5-7)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(huang2021identificationandfunctional pages 5-7): Hai Huang, Juan Du, Shang-Wei Li, and Tao Gong. Identification and functional analysis of a lysozyme gene from coridius chinensis (hemiptera: dinidoridae). Biology, 10:330, Apr 2021. URL: https://doi.org/10.3390/biology10040330, doi:10.3390/biology10040330. This article has 10 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(daffre2004thelysozymelocus pages 1-2): Sirlei Daffre, Per Kylsten, Christos Samakovlis, and Dan Hultmark. The lysozyme locus in drosophila melanogaster: an expanded gene family adapted for expression in the digestive tract. Molecular and General Genetics MGG, 242:152-162, Jan 2004. URL: https://doi.org/10.1007/bf00391008, doi:10.1007/bf00391008. This article has 232 citations.</p>
+</li>
+<li>
+<p>(marra2021drosophilaantimicrobialpeptides pages 2-4): A. Marra, M. A. Hanson, S. Kondo, B. Erkosar, and B. Lemaitre. <i>drosophila</i> antimicrobial peptides and lysozymes regulate gut microbiota composition and abundance. mBio, Aug 2021. URL: https://doi.org/10.1128/mbio.00824-21, doi:10.1128/mbio.00824-21. This article has 143 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(daffre2004thelysozymelocus pages 8-9): Sirlei Daffre, Per Kylsten, Christos Samakovlis, and Dan Hultmark. The lysozyme locus in drosophila melanogaster: an expanded gene family adapted for expression in the digestive tract. Molecular and General Genetics MGG, 242:152-162, Jan 2004. URL: https://doi.org/10.1007/bf00391008, doi:10.1007/bf00391008. This article has 232 citations.</p>
+</li>
+<li>
+<p>(marra2021drosophilaantimicrobialpeptides pages 4-7): A. Marra, M. A. Hanson, S. Kondo, B. Erkosar, and B. Lemaitre. <i>drosophila</i> antimicrobial peptides and lysozymes regulate gut microbiota composition and abundance. mBio, Aug 2021. URL: https://doi.org/10.1128/mbio.00824-21, doi:10.1128/mbio.00824-21. This article has 143 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhou2024insectantimicrobialpeptides pages 19-21): Lizhen Zhou, Guanliang Meng, Ling Zhu, Li Ma, and Kangkang Chen. Insect antimicrobial peptides as guardians of immunity and beyond: a review. International Journal of Molecular Sciences, Mar 2024. URL: https://doi.org/10.3390/ijms25073835, doi:10.3390/ijms25073835. This article has 54 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>huang2021identificationandfunctional pages 5-7</li>
+<li>marra2021drosophilaantimicrobialpeptides pages 2-4</li>
+<li>zhou2024insectantimicrobialpeptides pages 19-21</li>
+<li>daffre2004thelysozymelocus pages 1-2</li>
+<li>daffre2004thelysozymelocus pages 8-9</li>
+<li>marra2021drosophilaantimicrobialpeptides pages 4-7</li>
+<li>https://doi.org/10.1007/bf00391008</li>
+<li>https://doi.org/10.1128/mbio.00824-21</li>
+<li>https://doi.org/10.3390/ijms25073835</li>
+<li>https://doi.org/10.3390/biology10040330</li>
+<li>https://doi.org/10.3390/biology10040330,</li>
+<li>https://doi.org/10.1007/bf00391008,</li>
+<li>https://doi.org/10.1128/mbio.00824-21,</li>
+<li>https://doi.org/10.3390/ijms25073835,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q08694
+gene_symbol: LysB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: &gt;
+  LysB encodes Lysozyme B, a secreted c-type lysozyme (glycosyl hydrolase family 22)
+  that hydrolyzes the beta-1,4 glycosidic bond between N-acetylmuramic acid and
+  N-acetylglucosamine in bacterial peptidoglycan. Unlike classical immune lysozymes
+  that function in the hemolymph, LysB is primarily expressed in the digestive tract
+  (midgut of larvae and adults) where it functions in the digestion of bacteria from
+  food and in shaping gut microbiota composition. LysB is not expressed in fat body
+  or hemocytes and is actually repressed, not induced, upon systemic bacterial infection,
+  supporting its role as a digestive rather than immune enzyme (PMID:8159165, Marra et al. 2021).
+existing_annotations:
+- term:
+    id: GO:0003796
+    label: lysozyme activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      LysB is a bona fide c-type lysozyme belonging to glycosyl hydrolase family 22,
+      with conserved catalytic residues and characteristic domain structure. The IBA
+      annotation is based on phylogenetic inference from well-characterized lysozymes
+      including chicken lysozyme (UniProtKB:P00698). The enzymatic activity is supported
+      by the conserved catalytic Glu/Asp residues (positions 50 and 68 in LysB) and
+      demonstrated ex vivo lysozyme activity in gut extracts from Drosophila (Marra et al. 2021).
+    action: ACCEPT
+    reason: &gt;
+      Core molecular function of LysB. The GH22 family assignment, conserved catalytic
+      residues, and functional validation through gut lysozyme activity assays all
+      support this annotation. IBA provides strong phylogenetic evidence.
+    supported_by:
+      - reference_id: PMID:8159165
+        supporting_text: &#34;four closely related genes, LysB, C, D and E, are all strongly expressed in the midgut of larvae and adults&#34;
+      - reference_id: file:DROME/LysB/LysB-deep-research-falcon.md
+        supporting_text: &#34;engineered deletion (LysB-PD) removing LysC and four gut-expressed lysozyme genes (including LysB) reduced ex vivo lysozyme activity (peptidoglycan digestion)&#34;
+
+- term:
+    id: GO:0003796
+    label: lysozyme activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This IEA annotation is based on InterPro domain mapping (IPR000974) and EC number
+      assignment (EC:3.2.1.17). It correctly identifies LysB as having lysozyme
+      (1,4-beta-N-acetylmuramidase) activity.
+    action: ACCEPT
+    reason: &gt;
+      Redundant with IBA annotation but correctly assigned based on domain architecture.
+      The InterPro glycosyl hydrolase 22 domains (IPR001916, IPR000974) and EC:3.2.1.17
+      assignment are accurate for this protein.
+    supported_by:
+      - reference_id: UniProt:Q08694
+        supporting_text: &#34;Belongs to the glycosyl hydrolase 22 family&#34;
+
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This is a very general parent term for lysozyme activity. While technically
+      correct, it provides no additional information beyond what is captured by the
+      more specific lysozyme activity annotation.
+    action: ACCEPT
+    reason: &gt;
+      Automatically inferred from UniProtKB keyword mapping. While overly general,
+      this hierarchical annotation is not incorrect and serves as a parent term
+      for the more informative lysozyme activity annotations.
+    supported_by:
+      - reference_id: UniProt:Q08694
+        supporting_text: &#34;RecName: Full=Lysozyme B; EC=3.2.1.17&#34;
+
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      Parent term annotation derived from hydrolase keyword. LysB is indeed a hydrolase
+      that cleaves glycosidic bonds in peptidoglycan.
+    action: ACCEPT
+    reason: &gt;
+      Correct hierarchical annotation. More specific terms (lysozyme activity,
+      hydrolase activity acting on glycosyl bonds) are also present.
+    supported_by:
+      - reference_id: UniProt:Q08694
+        supporting_text: &#34;Hydrolysis of (1-&gt;4)-beta-linkages between N-acetylmuramic acid and N-acetyl-D-glucosamine residues in a peptidoglycan&#34;
+
+- term:
+    id: GO:0016798
+    label: hydrolase activity, acting on glycosyl bonds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      Appropriately specific parent term for lysozyme activity. LysB hydrolyzes
+      glycosyl bonds in bacterial peptidoglycan.
+    action: ACCEPT
+    reason: &gt;
+      Correct intermediate-level annotation. This is the appropriate parent for
+      lysozyme activity (GO:0003796) and accurately describes the bond type cleaved.
+    supported_by:
+      - reference_id: UniProt:Q08694
+        supporting_text: &#34;Hydrolysis of (1-&gt;4)-beta-linkages between N-acetylmuramic acid and N-acetyl-D-glucosamine residues in a peptidoglycan&#34;
+
+- term:
+    id: GO:0031640
+    label: killing of cells of another organism
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This annotation is derived from the UniProtKB Antimicrobial keyword (KW-0081).
+      While lysozymes can technically kill bacteria by degrading their cell walls,
+      this annotation requires careful evaluation for LysB specifically. The primary
+      literature (PMID:8159165) explicitly states that LysB is &#34;unlikely to play an
+      active role in the humoral immune defense&#34; and is adapted for &#34;digestion of
+      bacteria in the food.&#34; The deep research shows LysB functions in gut microbiota
+      regulation rather than bactericidal immunity. However, lysozyme-mediated
+      peptidoglycan hydrolysis does result in bacterial cell death, making this
+      annotation technically accurate even for digestive lysozymes. This represents
+      a legitimate SPKW annotation for lysozymes.
+    action: ACCEPT
+    reason: &gt;
+      This is a LEGITIMATE SPKW annotation for lysozymes. While the primary biological
+      role of LysB is digestive/microbiota regulation rather than immune defense,
+      the enzymatic action of lysozyme (peptidoglycan hydrolysis) does result in
+      bacterial cell killing. The annotation captures the molecular outcome of
+      lysozyme activity. The UniProt Antimicrobial keyword is appropriately applied
+      to bacteriolytic enzymes. This is an example of correct SPKW contribution where
+      the keyword accurately reflects the biochemical consequence of enzyme activity.
+    additional_reference_ids:
+      - PMID:8159165
+      - file:DROME/LysB/LysB-deep-research-falcon.md
+    supported_by:
+      - reference_id: PMID:8159165
+        supporting_text: &#34;probably involved in the digestion of bacteria in the food&#34;
+      - reference_id: UniProt:Q08694
+        supporting_text: &#34;Antimicrobial; Bacteriolytic enzyme&#34;
+
+- term:
+    id: GO:0042742
+    label: defense response to bacterium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This annotation is derived from the Antimicrobial keyword. However, the
+      primary literature strongly suggests LysB does NOT function in classical
+      immune defense. PMID:8159165 states LysB is &#34;unlikely to play an active role
+      in the humoral immune defense&#34; and is not expressed in immune tissues (fat body,
+      hemocytes). Furthermore, LysB and related gut lysozymes are REPRESSED, not
+      induced, after systemic bacterial infection. The Marra et al. 2021 study shows
+      gut lysozymes function in microbiota regulation and homeostasis rather than
+      pathogen defense. While lysozymes can contribute to defense by killing bacteria,
+      the specific biological context of LysB is digestive/homeostatic rather than
+      defensive.
+    action: MODIFY
+    reason: &gt;
+      This annotation may overstate the immune defense role of LysB. The literature
+      explicitly indicates LysB is adapted for digestive function and is not part of
+      the humoral immune response. Consider whether a more accurate process annotation
+      would capture the microbiota regulation function. However, there is no ideal
+      GO term for &#34;digestion of bacteria&#34; or &#34;gut microbiota regulation by enzyme.&#34;
+      The term could be retained with the understanding that it represents a broader
+      interpretation, but marking as potentially over-annotated.
+    proposed_replacement_terms:
+      - id: GO:0007586
+        label: digestion
+    additional_reference_ids:
+      - PMID:8159165
+    supported_by:
+      - reference_id: UniProt:Q08694
+        supporting_text: &#34;Unlikely to play an active role in the humoral immune defense. May have a function in the digestion of bacteria in the food.&#34;
+      - reference_id: PMID:8159165
+        supporting_text: &#34;The LysD-like genes and LysS are strongly repressed in artificially infected animals&#34;
+      - reference_id: PMID:8159165
+        supporting_text: &#34;None of the genes is expressed in the fat body or haemocytes&#34;
+
+- term:
+    id: GO:0003796
+    label: lysozyme activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;
+      ISS annotation based on sequence similarity to characterized lysozymes,
+      using UniProtKB:P00697 (turkey lysozyme) as reference. This supports the
+      enzymatic function annotation.
+    action: ACCEPT
+    reason: &gt;
+      Valid ISS annotation supporting the core molecular function. The sequence
+      similarity to well-characterized vertebrate lysozymes is well-established.
+    supported_by:
+      - reference_id: UniProt:Q08694
+        supporting_text: &#34;Belongs to the glycosyl hydrolase 22 family&#34;
+
+- term:
+    id: GO:0005615
+    label: extracellular space
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;
+      ISS annotation indicating extracellular localization. This is consistent with
+      LysB being a secreted protein with a signal peptide (residues 1-18). The protein
+      is predicted to be secreted into the gut lumen where it acts on bacteria.
+    action: ACCEPT
+    reason: &gt;
+      Appropriate cellular component annotation. LysB has a signal peptide and is
+      secreted. Expression in midgut and detection in haemolymph at low levels
+      support extracellular localization (PMID:8159165). For a gut lysozyme, the
+      extracellular space would be the gut lumen.
+    supported_by:
+      - reference_id: file:DROME/LysB/LysB-deep-research-falcon.md
+        supporting_text: &#34;Insect c-type lysozymes are secreted proteins with N-terminal signal peptides&#34;
+      - reference_id: UniProt:Q08694
+        supporting_text: &#34;AltName: Full=1,4-beta-N-acetylmuramidase B; Flags: Precursor&#34;
+
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;
+      ISS annotation based on similarity to vertebrate lysozymes. This is problematic
+      for several reasons. First, LysB is unlikely to function in immune defense as
+      stated explicitly in PMID:8159165. Second, classical c-type lysozymes are
+      typically more effective against Gram-positive bacteria (which have exposed
+      peptidoglycan) than Gram-negative bacteria (which have an outer membrane
+      protecting the peptidoglycan layer). The annotation may be transferred from
+      a vertebrate lysozyme in a different functional context.
+    action: MODIFY
+    reason: &gt;
+      This annotation is likely inappropriate for LysB. The literature indicates LysB
+      is not an immune defense protein. Additionally, classical lysozymes require
+      outer membrane permeabilization to act on Gram-negative bacteria. If a defense
+      annotation is retained, it should be at the more general &#34;defense response to
+      bacterium&#34; level, though even that is questionable given the explicit statements
+      in the primary literature that LysB does not function in immune defense.
+    proposed_replacement_terms:
+      - id: GO:0007586
+        label: digestion
+    additional_reference_ids:
+      - PMID:8159165
+    supported_by:
+      - reference_id: UniProt:Q08694
+        supporting_text: &#34;Unlikely to play an active role in the humoral immune defense. May have a function in the digestion of bacteria in the food.&#34;
+      - reference_id: PMID:8159165
+        supporting_text: &#34;None of the genes is expressed in the fat body or haemocytes&#34;
+
+- term:
+    id: GO:0003796
+    label: lysozyme activity
+  evidence_type: ISS
+  original_reference_id: PMID:8159165
+  review:
+    summary: &gt;
+      This annotation cites PMID:8159165 (Daffre et al. 1994) which characterized
+      the Drosophila lysozyme gene family. While the paper establishes that LysB
+      is a lysozyme gene in the 61F locus, it primarily characterizes expression
+      patterns rather than providing direct enzymatic assays for LysB specifically.
+      However, the sequence analysis and family membership strongly support
+      lysozyme activity.
+    action: ACCEPT
+    reason: &gt;
+      Core molecular function annotation supported by the primary characterization
+      paper. The paper establishes LysB as part of an expanded lysozyme gene family
+      with digestive tract expression.
+    supported_by:
+      - reference_id: PMID:8159165
+        supporting_text: &#34;four closely related genes, LysB, C, D and E, are all strongly expressed in the midgut of larvae and adults&#34;
+
+references:
+- id: PMID:8159165
+  title: &#39;The lysozyme locus in Drosophila melanogaster: an expanded gene family adapted for expression in the digestive tract.&#39;
+  findings:
+    - statement: LysB is one of seven lysozyme genes at the 61F locus
+      supporting_text: &#34;we have now characterized all six lysozyme genes in the cloned part of the lysozyme locus at 61F, and a seventh gene that maps to the same chromosomal location&#34;
+    - statement: LysB, LysC, LysD, and LysE are strongly expressed in midgut of larvae and adults
+      supporting_text: &#34;four closely related genes, LysB, C, D and E, are all strongly expressed in the midgut of larvae and adults&#34;
+    - statement: None of the lysozyme genes is expressed in fat body or hemocytes
+      supporting_text: &#34;None of the genes is expressed in the fat body or haemocytes&#34;
+    - statement: LysD-like genes are repressed after systemic bacterial infection
+      supporting_text: &#34;The LysD-like genes and LysS are strongly repressed in artificially infected animals&#34;
+    - statement: The lysozymes are unlikely to play a role in humoral immune defense
+      supporting_text: &#34;rather than being a component of the haemolymph, the Drosophila lysozymes are found mainly in the digestive tract&#34;
+    - statement: The function is probably digestion of bacteria in food
+      supporting_text: &#34;probably involved in the digestion of bacteria in the food&#34;
+    - statement: All genes except LysP encode acidic proteins (unlike typical basic lysozymes)
+      supporting_text: &#34;Furthermore all genes, except LysP, encode acidic proteins, in contrast to the strongly basic \&#34;typical\&#34; lysozymes&#34;
+    - statement: Expression pattern is reminiscent of ruminant stomach lysozymes that digest symbiotic bacteria
+      supporting_text: &#34;highly reminiscent of the situation in ruminants, where the lysozymes have been recruited for the digestion of symbiotic bacteria in the stomach&#34;
+- id: file:DROME/LysB/LysB-deep-research-falcon.md
+  title: &#39;Deep research summary for LysB from Falcon AI&#39;
+  findings:
+    - statement: Deletion of gut lysozymes (LysB-PD) reduces ex vivo muramidase activity
+      supporting_text: &#34;engineered deletion (LysB-PD) removing LysC and four gut-expressed lysozyme genes (including LysB) reduced ex vivo lysozyme activity (peptidoglycan digestion)&#34;
+    - statement: Lysozyme loss increases stochasticity of gut microbiota composition
+      supporting_text: &#34;loss of lysozymes (LysB-PD deletion removing LysB, LysD, LysE, LysP, LysC) increased stochasticity and altered community structure&#34;
+    - statement: Total bacterial load is not significantly affected by lysozyme loss
+      supporting_text: &#34;total bacterial load changes were not significant, indicating lysozymes contribute primarily to composition control rather than bulk bacterial burden&#34;
+    - statement: Lysozymes contribute to microbiota community structure regulation
+      supporting_text: &#34;lysozymes, while secondary to AMPs in effect size, are necessary to stabilize gut community structure&#34;
+    - statement: Gut lysozymes are induced by microbiota colonization (not systemic infection)
+      supporting_text: &#34;gut colonization by microbiota induces gut lysozyme expression, aligning them with epithelial homeostasis rather than systemic acute-phase effectors&#34;
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Maps Antimicrobial keyword (KW-0081) to GO:0031640 (killing of cells of another organism)
+    - statement: Maps Antimicrobial keyword to GO:0042742 (defense response to bacterium)
+    - statement: Maps Hydrolase keyword to GO:0016787 and children
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+
+core_functions:
+  - description: &gt;
+      LysB is a c-type lysozyme (GH22 family) that hydrolyzes beta-1,4 glycosidic
+      bonds between N-acetylmuramic acid and N-acetylglucosamine in bacterial
+      peptidoglycan. It is expressed in the midgut where it functions in digestion
+      of bacteria from food and regulation of gut microbiota composition.
+    molecular_function:
+      id: GO:0003796
+      label: lysozyme activity
+    directly_involved_in:
+      - id: GO:0007586
+        label: digestion
+    locations:
+      - id: GO:0005615
+        label: extracellular space
+    anatomical_locations:
+      - id: UBERON:0001045
+        label: midgut
+    supported_by:
+      - reference_id: PMID:8159165
+        supporting_text: &#34;four closely related genes, LysB, C, D and E, are all strongly expressed in the midgut of larvae and adults&#34;
+      - reference_id: UniProt:Q08694
+        supporting_text: &#34;May have a function in the digestion of bacteria in the food&#34;
+
+proposed_new_terms:
+  - proposed_name: digestion of microorganism
+    proposed_definition: &gt;
+      The process of breaking down microorganisms (bacteria, fungi, etc.) as food or
+      for nutrient acquisition, typically through enzymatic degradation in the
+      digestive tract. This process is distinct from immune-mediated killing of
+      microorganisms.
+    justification: &gt;
+      There is currently no GO term specifically for the enzymatic digestion
+      of bacteria/microorganisms as food or for microbiota regulation. This
+      would be distinct from immune-mediated killing. Terms like &#34;digestion&#34;
+      are broad, and &#34;defense response to bacterium&#34; implies immune function.
+      A term capturing the digestive/symbiotic processing of bacteria would
+      better annotate genes like LysB.
+    proposed_parent:
+      id: GO:0007586
+      label: digestion
+
+suggested_questions:
+  - question: What is the relative contribution of individual lysozyme genes (LysB, LysC, LysD, LysE) to gut function?
+  - question: Does LysB have any role in host defense in specific contexts (e.g., gut epithelial immunity)?
+  - question: What is the substrate specificity of LysB - is it more effective against certain bacterial species?
+
+suggested_experiments:
+  - description: Single-gene CRISPR knockout of LysB to distinguish its function from other gut lysozymes
+    hypothesis: LysB knockout alone will have measurable effects on gut microbiota composition
+  - description: Direct enzymatic assays with purified LysB protein against different bacterial peptidoglycans
+    hypothesis: LysB will show muramidase activity with potential substrate preferences
+  - description: Comparison of LysB activity at acidic gut pH vs neutral pH
+    hypothesis: LysB may have optimal activity at gut pH consistent with its digestive role
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

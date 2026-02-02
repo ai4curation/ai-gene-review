@@ -1,0 +1,2867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D7r1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>D7r1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9UB30" target="_blank" class="term-link">
+                        Q9UB30
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Anopheles gambiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "D7r1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9UB30" data-a="DESCRIPTION: D7r1 is a short-form salivary protein from female ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>D7r1 is a short-form salivary protein from female Anopheles gambiae mosquitoes that facilitates blood feeding by binding and sequestering host biogenic amines (serotonin and histamine). It functions as a &#34;kratagonist&#34; - capturing host signaling molecules with high affinity to prevent their vasoconstrictive and inflammatory effects. The protein is secreted into saliva during blood feeding and increases clotting time in the host. D7r1 belongs to the PBP/GOBP (Pheromone/Odorant-Binding Protein) structural family but has evolved a distinct function unrelated to olfaction.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035821" target="_blank" class="term-link">
+                                    GO:0035821
+                                </a>
+                            </span>
+                            <span class="term-label">modulation of process of another organism</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UB30" data-a="GO:0035821" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation accurately describes D7r1&#39;s function. The protein modulates host hemostatic and inflammatory responses during blood feeding by sequestering serotonin and histamine. This is a correct BP annotation for the cross-species effect.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> D7r1 clearly modulates processes in the vertebrate host. Per UniProt, it &#34;Modulates blood feeding of female mosquitoes on vertebrate species by binding and sequestering different mediators involved in the host response&#34; [UniProt Q9UB30]. The GO:0035821 definition &#34;A process in which an organism effects a change in a biological process in another organism&#34; accurately captures this function. The annotation was inferred via GO_REF:0000108 from the toxin activity annotation, but the logic is sound - kratagonistic binding of host mediators does modulate host processes. Deep research confirms D7 proteins &#34;function as kratagonists - high-affinity scavengers of host small-molecule inflammatory and hemostatic mediators&#34; [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q9UB30
+                                    
+                                </span>
+                                
+                                <div class="support-text">Modulates blood feeding of female mosquitoes on vertebrate species by binding and sequestering different mediators involved in the host response</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/D7r1/D7r1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">D7 proteins are among the most abundant mosquito salivary proteins and function as kratagonists</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005549" target="_blank" class="term-link">
+                                    GO:0005549
+                                </a>
+                            </span>
+                            <span class="term-label">odorant binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UB30" data-a="GO:0005549" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on structural family membership (PBP/GOBP family via InterPro IPR006170) but does not reflect the actual function of D7r1. The protein binds biogenic amines (serotonin, histamine), not odorants, and has no role in olfaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> D7r1 belongs to the PBP/GOBP structural family (InterPro IPR006170), which led to this IEA annotation. However, the D7 proteins have evolutionarily repurposed this fold for binding biogenic amines in saliva, not odorants in antennae. D7r1 is expressed exclusively in female salivary glands [PMID:9990055, PMID:11841502], not olfactory tissues. The actual molecular function is serotonin binding (GO:0051378) and histamine binding (GO:0051381). This is a clear case where structural homology does not predict function. The GO:0005549 definition &#34;Binding to an odorant, any substance capable of stimulating the sense of smell&#34; does not apply - serotonin and histamine are not odorants. Deep research confirms &#34;short-form D7s (including D7r1) predominantly bind biogenic amines (serotonin/5-HT, histamine, epinephrine/norepinephrine)&#34; [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051378" target="_blank" class="term-link">
+                                    serotonin binding
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051381" target="_blank" class="term-link">
+                                    histamine binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q9UB30
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds serotonin and histamine</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q9UB30
+                                    
+                                </span>
+                                
+                                <div class="support-text">Female salivary gland</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UB30" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation correctly reflects the subcellular localization of D7r1 as a secreted salivary protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> D7r1 is a secreted protein with a signal peptide (residues 1-21) [UniProt Q9UB30]. It is released into the extracellular space (saliva) during blood feeding. The UniProt entry confirms &#34;SUBCELLULAR LOCATION: Secreted&#34; [UniProt Q9UB30]. This is an appropriate CC annotation. Deep research confirms &#34;D7r1 is produced in adult female salivary glands and secreted in saliva at the skin interface during probing/feeding&#34; [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q9UB30
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090729" target="_blank" class="term-link">
+                                    GO:0090729
+                                </a>
+                            </span>
+                            <span class="term-label">toxin activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UB30" data-a="GO:0090729" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is an OVER-ANNOTATION. D7r1 does not meet the GO definition of toxin activity, which requires &#34;initiating pathogenesis (leading to an abnormal, generally detrimental state)&#34;. D7r1 transiently modulates host physiology without causing disease or tissue damage.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The GO:0090729 definition states: &#34;Interacting selectively with one or more biological molecules in another (target) organism, initiating pathogenesis (leading to an abnormal, generally detrimental state) in the target organism.&#34; D7r1 does NOT meet this definition because: (1) It does not initiate pathogenesis - it facilitates feeding, not disease; (2) It does not cause tissue damage - it transiently sequesters host mediators; (3) The effect is reversible and temporary; (4) The host returns to normal state after feeding. The UniProt keywords &#34;Blood coagulation cascade inhibiting toxin&#34; and &#34;Hemostasis impairing toxin&#34; that led to this IEA annotation via GO_REF:0000043 are technically inaccurate - anti-hemostatic activity is not equivalent to toxin activity. The kratagonist mechanism (sequestering signaling molecules) is fundamentally different from true toxins that cause pathological damage. Better annotations would be serotonin binding (GO:0051378) and histamine binding (GO:0051381) for MF, and negative regulation of hemostasis (GO:1900047) for BP. Deep research explicitly describes the mechanism as kratagonism not toxicity [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q9UB30
+                                    
+                                </span>
+                                
+                                <div class="support-text">Modulates blood feeding of female mosquitoes on vertebrate species by binding and sequestering different mediators involved in the host response</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051378" target="_blank" class="term-link">
+                                    GO:0051378
+                                </a>
+                            </span>
+                            <span class="term-label">serotonin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16301315
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Function and evolution of a mosquito salivary protein family
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UB30" data-a="GO:0051378" data-r="PMID:16301315" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> D7r1 binds serotonin with high affinity as demonstrated by direct binding assays. This is a core molecular function that should be annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt confirms &#34;Binds serotonin and histamine (PubMed:16301315)&#34; [UniProt Q9UB30]. The protein has specific binding sites for serotonin (residues 28, 56, 115, 132, 135). This is the actual molecular function that enables kratagonism - sequestering host serotonin to prevent vasoconstriction. GO:0051378 definition &#34;Binding to serotonin (5-hydroxytryptamine), a monoamine neurotransmitter&#34; accurately describes this function. Deep research confirms D7 short forms &#34;bind serotonin, histamine, and catecholamines with high affinity&#34; [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q9UB30
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds serotonin and histamine</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link">
+                                        PMID:16301315
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051381" target="_blank" class="term-link">
+                                    GO:0051381
+                                </a>
+                            </span>
+                            <span class="term-label">histamine binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16301315
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Function and evolution of a mosquito salivary protein family
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UB30" data-a="GO:0051381" data-r="PMID:16301315" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> D7r1 binds histamine with high affinity as demonstrated by direct binding assays. This is a core molecular function that should be annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt confirms &#34;Binds serotonin and histamine (PubMed:16301315)&#34; [UniProt Q9UB30]. The protein has specific binding sites for histamine (residues 115, 132, 135). This is the actual molecular function that enables sequestration of host histamine to prevent inflammation and vasodilation. GO:0051381 definition &#34;Binding to histamine, a physiologically active amine&#34; accurately describes this function. Deep research confirms short-form D7s bind &#34;biogenic amines (serotonin/5-HT, histamine, epinephrine/norepinephrine)&#34; [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q9UB30
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds serotonin and histamine</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link">
+                                        PMID:16301315
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900047" target="_blank" class="term-link">
+                                    GO:1900047
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of hemostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16301315
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Function and evolution of a mosquito salivary protein family
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UB30" data-a="GO:1900047" data-r="PMID:16301315" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> D7r1 increases blood clotting time in the host, which represents negative regulation of hemostasis. This is a core biological process annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt states &#34;Increases blood clotting time (PubMed:16301315)&#34; [UniProt Q9UB30]. By sequestering serotonin (which promotes platelet aggregation) and histamine, D7r1 negatively regulates the host hemostatic response. GO:1900047 definition &#34;Any process that stops, prevents or reduces the frequency, rate or extent of hemostasis&#34; accurately captures this function. This is a more accurate BP annotation than inferring from &#34;toxin activity&#34;. Deep research confirms biogenic amine scavenging &#34;counteracts platelet aggregation, vasoconstriction, and nociception during feeding&#34; [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q9UB30
+                                    
+                                </span>
+                                
+                                <div class="support-text">Increases blood clotting time</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>D7r1 functions as a kratagonist by binding and sequestering host biogenic amines (serotonin and histamine) during blood feeding, thereby preventing vasoconstriction, platelet aggregation, and inflammation at the feeding site.</h3>
+                <span class="vote-buttons" data-g="Q9UB30" data-a="FUNCTION: D7r1 functions as a kratagonist by binding and seq..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051378" target="_blank" class="term-link">
+                            serotonin binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900047" target="_blank" class="term-link">
+                                negative regulation of hemostasis
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035821" target="_blank" class="term-link">
+                                modulation of process of another organism
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q9UB30
+                            
+                        </span>
+                        
+                        <div class="finding-text">Modulates blood feeding of female mosquitoes on vertebrate species by binding and sequestering different mediators involved in the host response</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link">
+                                PMID:16301315
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>D7r1 also binds histamine to prevent host inflammatory and vasodilatory responses during blood feeding.</h3>
+                <span class="vote-buttons" data-g="Q9UB30" data-a="FUNCTION: D7r1 also binds histamine to prevent host inflamma..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051381" target="_blank" class="term-link">
+                            histamine binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900047" target="_blank" class="term-link">
+                                negative regulation of hemostasis
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035821" target="_blank" class="term-link">
+                                modulation of process of another organism
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q9UB30
+                            
+                        </span>
+                        
+                        <div class="finding-text">Binds serotonin and histamine</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link">
+                            PMID:16301315
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Function and evolution of a mosquito salivary protein family</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D7 short proteins bind serotonin, histamine and norepinephrine with high affinity</div>
+                        
+                        <div class="finding-text">"four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scavenging host amines antagonizes vasoconstriction and platelet aggregation</div>
+                        
+                        <div class="finding-text">"Scavenging of host amines would antagonize their vasoconstrictor, platelet-aggregating, and pain-inducing properties"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9990055" target="_blank" class="term-link">
+                            PMID:9990055
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Trapping cDNAs encoding secreted proteins from the salivary glands of the malaria vector Anopheles gambiae</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D7-related genes were identified in A. gambiae salivary glands</div>
+                        
+                        <div class="finding-text">"Fragments showing a high degree of similarity to D7 and apyrase, two salivary gland-specific genes previously found in Aedes aegypti, were identified"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11841502" target="_blank" class="term-link">
+                            PMID:11841502
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A cluster of four D7-related genes is expressed in the salivary glands of the African malaria vector Anopheles gambiae</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D7r genes are expressed in adult female salivary glands</div>
+                        
+                        <div class="finding-text">"Four genes expressed in the Anopheles gambiae adult female salivary glands and similar in sequence to the Aedes aegypti D7 gene were identified"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D7r proteins are secreted into host during blood feeding</div>
+                        
+                        <div class="finding-text">"The deduced proteins contain secretory signals and they are probably injected by the mosquito into the host with the saliva during blood feeding"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:Q9UB30
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for D7R1_ANOGA</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D7r1 modulates blood feeding by binding host mediators</div>
+                        
+                        <div class="finding-text">"Modulates blood feeding of female mosquitoes on vertebrate species by binding and sequestering different mediators involved in the host response"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Binds serotonin and histamine</div>
+                        
+                        <div class="finding-text">"Binds serotonin and histamine"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Increases blood clotting time</div>
+                        
+                        <div class="finding-text">"Increases blood clotting time"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Expressed in female salivary gland</div>
+                        
+                        <div class="finding-text">"Female salivary gland"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Protein is secreted</div>
+                        
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Secreted"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ANOGA/D7r1/D7r1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research review of D7r1 function and evolution</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D7 proteins function as kratagonists that scavenge host signaling molecules</div>
+                        
+                        <div class="finding-text">"D7 proteins are among the most abundant mosquito salivary proteins and function as kratagonists - high-affinity scavengers of host small-molecule inflammatory and hemostatic mediators"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Short-form D7s bind biogenic amines</div>
+                        
+                        <div class="finding-text">"Short-form D7s (including D7r1) predominantly bind biogenic amines (serotonin/5-HT, histamine, epinephrine/norepinephrine)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D7r1 is secreted in saliva during feeding</div>
+                        
+                        <div class="finding-text">"D7r1 is produced in adult female salivary glands and secreted in saliva at the skin interface during probing/feeding"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the binding affinity (Kd) of D7r1 for serotonin vs histamine, and does it show preference for one over the other?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Calvo E, Ribeiro JM</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9UB30" data-a="Q: What is the binding affinity (Kd) of D7r1 for sero..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there functional differences between D7r1 and other short-form D7 proteins (D7r2-5) in terms of ligand binding specificity?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Calvo E, Mans BJ</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9UB30" data-a="Q: Are there functional differences between D7r1 and ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate D7r1 knockout A. gambiae using CRISPR and measure blood meal size, feeding time, and feeding success rate compared to wild-type controls</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: D7r1 knockout mosquitoes will have reduced blood feeding efficiency due to host hemostatic responses</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Gene knockout and feeding assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9UB30" data-a="EXPERIMENT: Generate D7r1 knockout A. gambiae using CRISPR and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform competitive binding assays and structural analysis (crystallography or cryo-EM) with D7r1 bound to serotonin, histamine, or both to determine binding site organization</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: D7r1 binding to serotonin and histamine occurs at overlapping but distinct binding sites</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Structural biology and binding assays</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9UB30" data-a="EXPERIMENT: Perform competitive binding assays and structural ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(D7r1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9UB30" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-30T08:06:00.187489'<br />
+end_time: '2026-01-30T08:12:59.544081'<br />
+duration_seconds: 419.36<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ANOGA<br />
+  gene_id: D7r1<br />
+  gene_symbol: D7r1<br />
+  uniprot_accession: Q9UB30<br />
+  protein_description: 'RecName: Full=Short form salivary protein D7R1 {ECO:0000305};<br />
+    AltName: Full=D7-related 1 protein {ECO:0000312|EMBL:CAB39727.1}; Flags: Precursor;'<br />
+  gene_info: Name=D7r1 {ECO:0000303|PubMed:9990055};<br />
+  organism_full: Anopheles gambiae (African malaria mosquito).<br />
+  protein_family: Belongs to the PBP/GOBP family. .<br />
+  protein_domains: PBP/GOBP. (IPR006170); PBP_GOBP_sf. (IPR036728); PBP_GOBP (PF01395)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 21</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9UB30</li>
+<li><strong>Protein Description:</strong> RecName: Full=Short form salivary protein D7R1 {ECO:0000305}; AltName: Full=D7-related 1 protein {ECO:0000312|EMBL:CAB39727.1}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=D7r1 {ECO:0000303|PubMed:9990055};</li>
+<li><strong>Organism (full):</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Protein Family:</strong> Belongs to the PBP/GOBP family. .</li>
+<li><strong>Key Domains:</strong> PBP/GOBP. (IPR006170); PBP_GOBP_sf. (IPR036728); PBP_GOBP (PF01395)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "D7r1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'D7r1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>D7r1</strong> (gene ID: D7r1, UniProt: Q9UB30) in ANOGA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9UB30</li>
+<li><strong>Protein Description:</strong> RecName: Full=Short form salivary protein D7R1 {ECO:0000305}; AltName: Full=D7-related 1 protein {ECO:0000312|EMBL:CAB39727.1}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=D7r1 {ECO:0000303|PubMed:9990055};</li>
+<li><strong>Organism (full):</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Protein Family:</strong> Belongs to the PBP/GOBP family. .</li>
+<li><strong>Key Domains:</strong> PBP/GOBP. (IPR006170); PBP_GOBP_sf. (IPR036728); PBP_GOBP (PF01395)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "D7r1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'D7r1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>D7r1</strong> (gene ID: D7r1, UniProt: Q9UB30) in ANOGA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan status update<br />
+- Verified identity and organism; gathered core mechanistic/structural literature for Anopheles gambiae D7 short forms including D7r1; assembled domain/family and localization evidence; compiled applications and limitations. A compact evidence table is embedded for reference.</p>
+<p>Gene/protein verification and identity<br />
+The target is D7r1, a short-form salivary D7 protein from Anopheles gambiae (African malaria mosquito). D7r1 belongs to a cluster of D7-related genes (D7r1–D7r4) that are strongly and specifically expressed in adult female salivary glands; the proteins possess N‑terminal signal peptides indicating secretion into saliva during blood feeding (Arcà et al., 2002). This family is a divergent branch of the insect odorant-binding protein superfamily (PBP/GOBP-like), and occurs as single-domain “short” forms (≈15–20 kDa) and two-domain “long” forms (≈31–35 kDa) (Calvo et al., 2006; Arcà et al., 2017). These features align with UniProt Q9UB30 (D7r1) annotations and organismal context. (arca2002aclusterof pages 1-2, calvo2006functionandevolution pages 1-1, arca2017anophelinesalivaryprotein pages 7-9)</p>
+<p>Key concepts and definitions with current understanding<br />
+- D7 family and kratagonism: D7 proteins are among the most abundant mosquito salivary proteins and function as kratagonists—high-affinity scavengers of host small-molecule inflammatory and hemostatic mediators deposited at the bite site—reducing vasoconstriction, platelet aggregation, edema, pain/itch, and inflammation to facilitate hematophagy (Calvo et al., 2006; Alvarenga et al., 2010). (calvo2006functionandevolution pages 5-6, alvarenga2010thefunctionand pages 1-2)<br />
+- Short vs long D7 division of labor: In Anopheles spp., short-form D7s (including D7r1) predominantly bind biogenic amines (serotonin/5‑HT, histamine, epinephrine/norepinephrine), whereas long-form D7s bind lipid mediators (cysteinyl leukotrienes; some bind thromboxane A2 analogs) via their N‑terminal domain; the biogenic-amine binding role present in the C‑terminal domain of some Aedes long forms appears to be assumed by Anopheles short forms (Calvo et al., 2006; Alvarenga et al., 2010; Jablonka et al., 2019). (calvo2006functionandevolution pages 1-1, alvarenga2010thefunctionand pages 1-2, jablonka2019functionalandstructural pages 1-2)<br />
+- Structural basis (representative short-form): The crystal structure of An. gambiae D7r4 revealed a modified OBP-like fold (eight α‑helices, three disulfide bonds) and a binding pocket adapted to amine ligands, establishing the structural class for Anopheles D7 short forms (Mans et al., 2007). While D7r1’s crystal structure is not yet reported in these sources, D7r1 shares family-defining features and salivary localization (Arcà et al., 2002; Mans et al., 2007). (mans2007thecrystalstructure pages 1-1, arca2002aclusterof pages 1-2)</p>
+<p>Primary molecular function, ligands, and mechanisms<br />
+- Ligand specificity (short-form D7s): Recombinant An. gambiae short D7 proteins, including paralogues closely related to D7r1, bind serotonin, histamine, and catecholamines with high affinity, antagonizing smooth muscle responses elicited by these mediators (Calvo et al., 2006; Mans et al., 2007). This biogenic-amine scavenging counteracts platelet aggregation, vasoconstriction, and nociception during feeding (Calvo et al., 2006). (calvo2006functionandevolution pages 5-6, mans2007thecrystalstructure pages 1-1)<br />
+- Distinct activities associated with D7r1 homologs (hamadarin-like): Beyond amine binding, a D7r1 homolog termed hamadarin has anticoagulant/antikinin activity via interference with the plasma contact system, reducing bradykinin release and prolonging activated partial thromboplastin time (APTT), indicating that some D7r1-like proteins both sequester amines and attenuate contact pathway activation (Calvo et al., 2006; Alvarenga et al., 2010). (calvo2006functionandevolution pages 5-6, alvarenga2010thefunctionand pages 1-2)<br />
+- Long-form D7 reference (for family context): Anopheles stephensi D7L1 binds cysteinyl leukotrienes and the thromboxane A2 analog U‑46619, inhibits platelet aggregation and vasoconstriction, and shows the eicosanoid-binding pocket in the N‑terminal domain; this underscores the family’s partitioned small-molecule scavenging across paralog classes (Alvarenga et al., 2010). Although long-form data are not specific to D7r1, they frame complementary salivary mechanisms. (alvarenga2010thefunctionand pages 1-2)</p>
+<p>Cellular/organismal localization and dynamics<br />
+- Localization: D7r1 is produced in adult female salivary glands and secreted in saliva at the skin interface during probing/feeding, consistent with signal peptides and robust salivary-gland expression of D7r1–r4 (Arcà et al., 2002). (arca2002aclusterof pages 1-2)<br />
+- Abundance and secretion: Mosquito salivary glands contain ~1–3 µg total protein, and D7 proteins are a substantial proportion of the salivary proteome; feeding discharges a large fraction of stored saliva. Family-level estimates suggest D7s may comprise 5–20% of salivary protein, sufficient to achieve functional concentrations at the bite site (Calvo et al., 2006). (calvo2006functionandevolution pages 5-6)</p>
+<p>Pathways and processes impacted<br />
+- Hemostasis and neuroimmune signaling at the bite site: By scavenging serotonin, histamine, and catecholamines, D7r1-like short forms inhibit platelet activation and vasoconstriction and dampen neurogenic inflammation; in some paralogues, interactions with the plasma contact system further reduce bradykinin generation and intrinsic pathway activation (Calvo et al., 2006; Mans et al., 2007; Alvarenga et al., 2010). (calvo2006functionandevolution pages 5-6, mans2007thecrystalstructure pages 1-1, alvarenga2010thefunctionand pages 1-2)</p>
+<p>Recent developments and latest research<br />
+The foundational mechanistic and structural insights for Anopheles D7 short forms come from Arcà et al. (2002), Calvo et al. (2006), Mans et al. (2007), and Alvarenga et al. (2010). More recent structural/functional evolution analyses reinforce domain/ligand assignments across D7 families (Jablonka et al., 2019) and modern biophysical/physiological assays on D7 long forms (Aedes) demonstrate nanoscale affinities and in vivo roles, providing methodological and conceptual updates applicable to Anopheles D7 short-form study design (Martin‑Martin et al., 2021). Direct 2023–2024 Anopheles D7r1-specific primary updates were not captured in the available evidence set used for this report and should be sought to refine paralogue-specific KDs and in vivo roles. (jablonka2019functionalandstructural pages 1-2, martin‐martin2021biochemicalcharacterizationof pages 1-2)</p>
+<p>Current applications and real-world implementations<br />
+- Exposure biomarkers and vector surveillance: D7 proteins are immunogenic and repeatedly highlighted as candidate antigens for serological estimation of human exposure to mosquito bites; anopheline sialome catalogues provide candidate lists, including D7r family members (Arcà et al., 2017). Field-facing assays typically use recombinant D7 antigens to measure anti-saliva IgG as proxies for bite exposure. (arca2017anophelinesalivaryprotein pages 7-9)<br />
+- Salivary pharmacology as translational scaffolds: Long-form D7s with defined leukotriene/TXA2 binding have been used as tools to dissect host hemostasis; while not D7r1-specific, these studies illustrate the therapeutic potential of D7-like kratagonists (Alvarenga et al., 2010). (alvarenga2010thefunctionand pages 1-2)</p>
+<p>Expert opinions and authoritative analyses<br />
+- Evolutionary and functional overview: The BMC Genomics analysis across 16 Anopheles genomes provides an authoritative framework on D7 gene family composition, evolution, expression bias to female salivary glands, and functional specialization, explicitly placing D7r1 among highly expressed short forms (Arcà et al., 2017). (arca2017anophelinesalivaryprotein pages 7-9)<br />
+- Mechanistic concept consolidation: JBC and PLoS Biology investigations by Andersen, Ribeiro, and colleagues established the D7 kratagonist model and the structural basis for ligand binding in both short and long forms (Calvo et al., 2006; Mans et al., 2007; Alvarenga et al., 2010). (calvo2006functionandevolution pages 5-6, mans2007thecrystalstructure pages 1-1, alvarenga2010thefunctionand pages 1-2)</p>
+<p>Relevant statistics and quantitative data<br />
+- D7 protein abundance: Salivary glands hold ~1–3 µg total protein; D7 proteins constitute a large fraction (estimated 5–20%) of the salivary proteome; approximately half of gland content may be discharged during feeding, implying physiologically relevant local concentrations (Calvo et al., 2006). (calvo2006functionandevolution pages 5-6)<br />
+- Binding and functional potency: While paralogue-specific KDs for An. gambiae D7r1 are not provided in the cited set, short-form D7s show high-affinity binding to serotonin/histamine/catecholamines with robust antagonism in smooth muscle assays; long-form references show nanomolar binding to U‑46619 and CysLTs and potent inhibition of platelet aggregation and vasoconstriction (Calvo et al., 2006; Alvarenga et al., 2010; Martin‑Martin et al., 2021). (calvo2006functionandevolution pages 5-6, alvarenga2010thefunctionand pages 1-2, martin‐martin2021biochemicalcharacterizationof pages 1-2)</p>
+<p>Embedded reference summary<br />
+| Aspect | Evidence-based details | Key quantitative data | Primary sources (short citation + URL) |<br />
+|---|---|---:|---|<br />
+| Identity / verification | Short-form salivary D7 protein (gene D7r1) from Anopheles gambiae; sequence encodes signal peptide and secreted ~16–17 kDa protein; matches cluster of D7r1–r4 genes in An. gambiae SGs. (verification in salivary-gland transcriptome) | Protein size ≈16.2–16.9 kDa (deduced); gene cluster location ~3R; D7 proteins constitute a major fraction (5–20%) of salivary protein mass in mosquitoes. | Arcà et al., 2002 — Insect Mol Biol. https://doi.org/10.1046/j.0962-1075.2001.00309.x (arca2002aclusterof pages 1-2) |<br />
+| Family &amp; domains | Member of the odorant-binding protein / PBP/GOBP-like superfamily (D7 family); exists as short (single-domain) and long (two-domain) forms; D7r1 is a short-form D7. | Short-form D7s ≈15–20 kDa; long-form D7s ≈31–35 kDa. | Calvo et al., 2006 — J Biol Chem. https://doi.org/10.1074/jbc.m510359200 (calvo2006functionandevolution pages 5-6, calvo2006functionandevolution pages 1-1); Arcà et al., 2017 — BMC Genomics. https://doi.org/10.1186/s12864-017-3579-8 (arca2017anophelinesalivaryprotein pages 7-9) |<br />
+| Expression &amp; localization | Specifically and abundantly expressed in adult female salivary glands and secreted into saliva during blood feeding (signal peptide present); injected into host skin during probing. | Salivary glands contain ~1–3 µg total protein per gland pair and D7 proteins represent a substantial fraction of that saliva pool. | Arcà et al., 2002 — Insect Mol Biol. https://doi.org/10.1046/j.0962-1075.2001.00309.x (arca2002aclusterof pages 1-2); Mans et al., 2007 — J Biol Chem. https://doi.org/10.1074/jbc.m706410200 (mans2007thecrystalstructure pages 1-1) |<br />
+| Structure (D7 short-form representative) | High-resolution crystal structure solved for An. gambiae D7r4 (short-form) showing modified OBP-like fold (eight α-helices, three disulfides) and an internal ligand-binding pocket adapted for biogenic amines. | PDB coordinate deposits reported (ligand complexes available; representative PDB IDs reported in the structural study). | Mans et al., 2007 — J Biol Chem. https://doi.org/10.1074/jbc.m706410200 (mans2007thecrystalstructure pages 1-1) |<br />
+| Ligand specificity &amp; binding function (short vs long) | Short-form D7s (Anopheles D7r proteins) bind biogenic amines (serotonin/5-HT, histamine, norepinephrine/epinephrine); long-form D7s bind eicosanoids (cysteinyl leukotrienes) and, in some species, thromboxane A2 analogs. Roles partitioned between single- and two-domain proteins. | Family-level KDs reported for long-form D7s / analogs in related studies (example: AeD7L2 KD to U-46619 ≈69 nM — long-form, Aedes); specific KDs for each An. gambiae short paralogue vary by study and paralogue. | Calvo et al., 2006 — J Biol Chem. https://doi.org/10.1074/jbc.m510359200 (calvo2006functionandevolution pages 5-6); Alvarenga et al., 2010 — PLoS Biol. https://doi.org/10.1371/journal.pbio.1000547 (alvarenga2010thefunctionand pages 1-2); Martin-Martin et al., 2021 (Ae example) https://doi.org/10.1111/febs.15524 (martin‐martin2021biochemicalcharacterizationof pages 1-2) |<br />
+| Mechanism in hematophagy | D7 proteins act as 'kratagonists'—scavenging host small-molecule mediators (amines, leukotrienes, TXA2) at the bite site to blunt vasoconstriction, platelet aggregation, pain/itch and inflammation, thereby facilitating blood feeding. | Functional assays (smooth-muscle, platelet aggregation) show reversal/inhibition at physiologically relevant concentrations given saliva protein quantities. | Calvo et al., 2006 — J Biol Chem. https://doi.org/10.1074/jbc.m510359200 (calvo2006functionandevolution pages 5-6); Alvarenga et al., 2010 — PLoS Biol. https://doi.org/10.1371/journal.pbio.1000547 (alvarenga2010thefunctionand pages 1-2) |<br />
+| Distinct activities of D7r1 (hamadarin-like) | D7r1 homologs (hamadarin in related species) have been reported to possess anticoagulant/antikinin activities (interference with plasma contact system, reduced bradykinin release, effects on APTT) in addition to amine binding in some paralogues. | Activity described qualitatively in bioassays (APTT prolongation; contact-system inhibition); quantitative enzyme kinetics for D7r1-specific anticoagulant activity are not provided in these sources. | Calvo et al., 2006 — J Biol Chem. https://doi.org/10.1074/jbc.m510359200 (calvo2006functionandevolution pages 5-6); Alvarenga et al., 2010 — PLoS Biol. https://doi.org/10.1371/journal.pbio.1000547 (alvarenga2010thefunctionand pages 1-2) |<br />
+| Post-blood-meal dynamics | These sources document abundant expression and secretion into saliva during feeding; explicit quantitative post-blood-meal depletion kinetics for D7r1 in An. gambiae are not reported in the cited set. | Not quantified in the provided evidence set (reports note secretion/discharge during feeding but lack time-course KD/abundance after feeding). | Arcà et al., 2002 — Insect Mol Biol. https://doi.org/10.1046/j.0962-1075.2001.00309.x (arca2002aclusterof pages 1-2); Calvo et al., 2006 — J Biol Chem. https://doi.org/10.1074/jbc.m510359200 (calvo2006functionandevolution pages 5-6) |<br />
+| Links to insecticide resistance expression signatures | No direct evidence for D7r1-specific association with insecticide resistance is presented in this limited evidence set; broader transcriptome studies outside these cited items have reported D7 family expression changes with resistance in some contexts (not shown here). | Not demonstrated in these sources. | Arcà et al., 2017 — BMC Genomics (overview of sialome evolution) https://doi.org/10.1186/s12864-017-3579-8 (arca2017anophelinesalivaryprotein pages 7-9) |<br />
+| Biomarker applications (anti-D7 IgG) | D7 family proteins are immunogenic and have been proposed as serological markers of human exposure to mosquito bites and as candidate antigens for exposure surveillance; the anopheline sialome catalogue highlights candidate exposure markers. | Serological studies (outside this narrow source-set) report robust anti-D7 IgG responses correlated with exposure intensity; quantitative serology metrics not given in these cited items. | Arcà et al., 2017 — BMC Genomics (sialome catalogue and marker proposal) https://doi.org/10.1186/s12864-017-3579-8 (arca2017anophelinesalivaryprotein pages 7-9) |<br />
+| Recent advances (2023–2024) relevant to D7/Anopheles | The selected evidence set summarizes mechanistic and structural foundations (2002–2010 and family reviews); explicit 2023–2024 Anopheles-specific primary advances are not present among these particular citations—consult recent reviews and 2023–2024 experimental papers for newest KD/omics data. | Not present in this evidence subset; newer quantitative affinity, in vivo knockout, proteomics and seroepidemiology studies exist in broader literature. | Jablonka et al., 2019 — Sci Rep. https://doi.org/10.1038/s41598-019-41848-0 (jablonka2019functionalandstructural pages 1-2); Martin-Martin et al., 2021 — FEBS J. https://doi.org/10.1111/febs.15524 (martin‐martin2021biochemicalcharacterizationof pages 1-2) |<br />
+| Limitations / unknowns specific to D7r1 | No high-resolution crystal structure reported for D7r1 itself (structure available for paralogue D7r4 only); paralogue-specific KDs and in vivo functional dissection for D7r1 remain incompletely quantified in these sources; post-translational modifications and precise in-host concentration at bite microenvironment are not fully defined. | Gaps: paralogue-specific KD values for D7r1, D7r1 crystal coordinates absent in these citations, time-course saliva abundance after feeding not quantified here. | Mans et al., 2007 — J Biol Chem. https://doi.org/10.1074/jbc.m706410200 (mans2007thecrystalstructure pages 1-1); Arcà et al., 2002 — Insect Mol Biol. https://doi.org/10.1046/j.0962-1075.2001.00309.x (arca2002aclusterof pages 1-2) |</p>
+<p><em>Table: Compact, evidence-linked table summarizing identity, family, expression, structure, ligand function, biological role, translational potential, and key knowledge gaps for Anopheles gambiae D7r1 (UniProt Q9UB30) using the cited sources; useful as a reference map tying mechanistic claims to primary literature.</em></p>
+<p>Ambiguity check and precautions<br />
+- Gene symbol ambiguity: “D7r1” is a mosquito salivary gene symbol and can conflict with unrelated symbols in other species. All evidence cited here is specific to Anopheles gambiae salivary D7 short forms or clearly framed as cross-species D7 family context. If literature corresponding to a different organism/gene symbol is encountered, it should not be conflated with Anopheles D7r1. (arca2002aclusterof pages 1-2, arca2017anophelinesalivaryprotein pages 7-9)</p>
+<p>Limitations and open questions specific to D7r1<br />
+- Structural gap: No crystal structure for D7r1 itself was identified in the evidence set; structural inferences are drawn from D7r4 (An. gambiae) and family homology. (mans2007thecrystalstructure pages 1-1)<br />
+- Quantitative ligand specificity: Paralogue-specific KDs and detailed ligand ranking for D7r1 remain to be extracted from dedicated biochemical studies; the cited work demonstrates high-affinity amine binding for short-form D7s broadly, and anticoagulant/contact-system interference for D7r1-like homologs. (calvo2006functionandevolution pages 5-6)<br />
+- Post-blood-meal kinetics and in situ concentrations: Detailed depletion/replenishment time courses for D7r1 were not available in the retrieved sources; family-level estimates indicate functionally adequate doses at the bite site. (calvo2006functionandevolution pages 5-6)</p>
+<p>Cited sources with URLs and publication dates<br />
+- Arcà B. et al. A cluster of four D7‑related genes… Insect Mol Biol. 2002 Feb. https://doi.org/10.1046/j.0962-1075.2001.00309.x (arca2002aclusterof pages 1-2)<br />
+- Calvo E. et al. Function and evolution of a mosquito salivary protein family. J Biol Chem. 2006 Jan;281(4):1935–1942. https://doi.org/10.1074/jbc.m510359200 (calvo2006functionandevolution pages 5-6, calvo2006functionandevolution pages 1-1)<br />
+- Mans BJ. et al. The crystal structure of D7r4… J Biol Chem. 2007 Dec;282(50):36626–36633. https://doi.org/10.1074/jbc.m706410200 (mans2007thecrystalstructure pages 1-1)<br />
+- Alvarenga PH. et al. The function and three-dimensional structure of a TXA2/CysLT-binding protein… PLoS Biol. 2010 Nov;8(11):e1000547. https://doi.org/10.1371/journal.pbio.1000547 (alvarenga2010thefunctionand pages 1-2)<br />
+- Arcà B. et al. Anopheline salivary protein genes and gene families… BMC Genomics. 2017 Feb;18: Article 51. https://doi.org/10.1186/s12864-017-3579-8 (arca2017anophelinesalivaryprotein pages 7-9)<br />
+- Jablonka W. et al. Functional and structural similarities of D7 proteins… Sci Rep. 2019 Mar;9: Article 4037. https://doi.org/10.1038/s41598-019-41848-0 (jablonka2019functionalandstructural pages 1-2)<br />
+- Martin‑Martin I. et al. Biochemical characterization of AeD7L2… FEBS J. 2021 Sep;288(6):2014–2029. https://doi.org/10.1111/febs.15524 (family/long-form reference) (martin‐martin2021biochemicalcharacterizationof pages 1-2)</p>
+<p>Conclusion<br />
+Collectively, Anopheles gambiae D7r1 is a secreted, short-form D7 salivary protein within the PBP/GOBP-like superfamily that primarily functions as a kratagonist of host biogenic amines at the bite site; homologous data indicate additional anticoagulant/antikinin effects via contact pathway interference for D7r1-like proteins. These actions facilitate blood feeding by counteracting hemostasis and inflammation. D7 proteins are abundant in female salivary glands and are immunogenic, supporting their use as exposure biomarkers. Further paralogue-specific structural and quantitative binding studies—especially recent 2023–2024 data—would refine ligand specificity, binding constants, and in vivo role attribution for D7r1. (arca2002aclusterof pages 1-2, calvo2006functionandevolution pages 1-1, mans2007thecrystalstructure pages 1-1, alvarenga2010thefunctionand pages 1-2, calvo2006functionandevolution pages 5-6, arca2017anophelinesalivaryprotein pages 7-9, jablonka2019functionalandstructural pages 1-2, martin‐martin2021biochemicalcharacterizationof pages 1-2)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(arca2002aclusterof pages 1-2): B. Arcà, F. Lombardo, A. Lanfrancotti, L. Spanos, M. Veneri, C. Louis, and M. Coluzzi. A cluster of four d7‐related genes is expressed in the salivary glands of the african malaria vector anopheles gambiae. Insect Molecular Biology, Feb 2002. URL: https://doi.org/10.1046/j.0962-1075.2001.00309.x, doi:10.1046/j.0962-1075.2001.00309.x. This article has 64 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(calvo2006functionandevolution pages 1-1): Eric Calvo, Ben J. Mans, John F. Andersen, and José M.C. Ribeiro. Function and evolution of a mosquito salivary protein family*. Journal of Biological Chemistry, 281:1935-1942, Jan 2006. URL: https://doi.org/10.1074/jbc.m510359200, doi:10.1074/jbc.m510359200. This article has 292 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arca2017anophelinesalivaryprotein pages 7-9): Bruno Arcà, Fabrizio Lombardo, Claudio J. Struchiner, and José M. C. Ribeiro. Anopheline salivary protein genes and gene families: an evolutionary overview after the whole genome sequence of sixteen anopheles species. BMC Genomics, Feb 2017. URL: https://doi.org/10.1186/s12864-017-3579-8, doi:10.1186/s12864-017-3579-8. This article has 86 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(calvo2006functionandevolution pages 5-6): Eric Calvo, Ben J. Mans, John F. Andersen, and José M.C. Ribeiro. Function and evolution of a mosquito salivary protein family*. Journal of Biological Chemistry, 281:1935-1942, Jan 2006. URL: https://doi.org/10.1074/jbc.m510359200, doi:10.1074/jbc.m510359200. This article has 292 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(alvarenga2010thefunctionand pages 1-2): Patricia H. Alvarenga, Ivo M. B. Francischetti, Eric Calvo, Anderson Sá-Nunes, José M. C. Ribeiro, and John F. Andersen. The function and three-dimensional structure of a thromboxane a2/cysteinyl leukotriene-binding protein from the saliva of a mosquito vector of the malaria parasite. PLoS Biology, 8:e1000547, Nov 2010. URL: https://doi.org/10.1371/journal.pbio.1000547, doi:10.1371/journal.pbio.1000547. This article has 72 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jablonka2019functionalandstructural pages 1-2): Willy Jablonka, Il Hwan Kim, Patricia H. Alvarenga, Jesus G. Valenzuela, Jose´ M. C. Ribeiro, and John F. Andersen. Functional and structural similarities of d7 proteins in the independently-evolved salivary secretions of sand flies and mosquitoes. Scientific Reports, Mar 2019. URL: https://doi.org/10.1038/s41598-019-41848-0, doi:10.1038/s41598-019-41848-0. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mans2007thecrystalstructure pages 1-1): Ben J. Mans, Eric Calvo, José M.C. Ribeiro, and John F. Andersen. The crystal structure of d7r4, a salivary biogenic amine-binding protein from the malaria mosquito anopheles gambiae*. Journal of Biological Chemistry, 282:36626-36633, Dec 2007. URL: https://doi.org/10.1074/jbc.m706410200, doi:10.1074/jbc.m706410200. This article has 94 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martin‐martin2021biochemicalcharacterizationof pages 1-2): Ines Martin‐Martin, Olivia Kern, Steven Brooks, Leticia Barion Smith, Paola Carolina Valenzuela‐Leon, Brian Bonilla, Hans Ackerman, and Eric Calvo. Biochemical characterization of aed7l2 and its physiological relevance in blood feeding in the dengue mosquito vector, <i>aedes aegypti</i>. The FEBS Journal, 288:2014-2029, Sep 2021. URL: https://doi.org/10.1111/febs.15524, doi:10.1111/febs.15524. This article has 23 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>alvarenga2010thefunctionand pages 1-2</li>
+<li>arca2002aclusterof pages 1-2</li>
+<li>calvo2006functionandevolution pages 5-6</li>
+<li>arca2017anophelinesalivaryprotein pages 7-9</li>
+<li>mans2007thecrystalstructure pages 1-1</li>
+<li>jablonka2019functionalandstructural pages 1-2</li>
+<li>calvo2006functionandevolution pages 1-1</li>
+<li>https://doi.org/10.1046/j.0962-1075.2001.00309.x</li>
+<li>https://doi.org/10.1074/jbc.m510359200</li>
+<li>https://doi.org/10.1186/s12864-017-3579-8</li>
+<li>https://doi.org/10.1074/jbc.m706410200</li>
+<li>https://doi.org/10.1371/journal.pbio.1000547</li>
+<li>https://doi.org/10.1111/febs.15524</li>
+<li>https://doi.org/10.1038/s41598-019-41848-0</li>
+<li>https://doi.org/10.1046/j.0962-1075.2001.00309.x,</li>
+<li>https://doi.org/10.1074/jbc.m510359200,</li>
+<li>https://doi.org/10.1186/s12864-017-3579-8,</li>
+<li>https://doi.org/10.1371/journal.pbio.1000547,</li>
+<li>https://doi.org/10.1038/s41598-019-41848-0,</li>
+<li>https://doi.org/10.1074/jbc.m706410200,</li>
+<li>https://doi.org/10.1111/febs.15524,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(D7r1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9UB30" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="d7r1-review-notes-anopheles-gambiae">D7r1 Review Notes - Anopheles gambiae</h1>
+<h2 id="gene-overview">Gene Overview</h2>
+<p>D7r1 (D7-related 1) is a short-form salivary protein from <em>Anopheles gambiae</em> (African malaria mosquito). It belongs to the PBP/GOBP (Pheromone/Odorant-Binding Protein) family.</p>
+<h2 id="key-literature-findings">Key Literature Findings</h2>
+<h3 id="core-function">Core Function</h3>
+<p>D7r1 "modulates blood feeding of female mosquitoes on vertebrate species by binding and sequestering different mediators involved in the host response" [PMID:16301315, UniProt].</p>
+<p>Specifically:<br />
+- Binds <strong>serotonin</strong> and <strong>histamine</strong> with high affinity <a href="https://pubmed.ncbi.nlm.nih.gov/16301315">PMID:16301315</a><br />
+- Increases blood clotting time <a href="https://pubmed.ncbi.nlm.nih.gov/16301315">PMID:16301315</a><br />
+- Acts as a "kratagonist" - sequesters host signaling molecules rather than blocking receptors</p>
+<h3 id="mechanism-kratagonism">Mechanism - Kratagonism</h3>
+<p>D7 proteins show a unique type of agonist inhibition called "kratagonism" - they bind biogenic amines (serotonin, histamine, norepinephrine, epinephrine) with high affinity, effectively sequestering them and preventing their action on host tissues.</p>
+<p>From <a href="https://pubmed.ncbi.nlm.nih.gov/17928288">PMID:17928288</a> (D7r4 crystal structure):</p>
+<blockquote>
+<p>"The D7r proteins bind the biogenic amines serotonin, norepinephrine, and histamine with high affinity"<br />
+"The D7 fold consists of an arrangement of eight alpha-helices stabilized by three disulfide bonds"</p>
+</blockquote>
+<h3 id="tissue-expression">Tissue Expression</h3>
+<ul>
+<li>Female salivary gland only [PMID:9990055, PMID:11841502]</li>
+<li>Not detected in male tissues</li>
+<li>Not detected in embryo, larval, or pupal stages</li>
+</ul>
+<h3 id="stoichiometry">Stoichiometry</h3>
+<p>D7 proteins bind ligands in a 1:1 stoichiometric ratio, which explains why they are among the most abundant components of mosquito salivary glands - they need to be at equimolar concentrations with host mediators (1-10 μM for histamine/serotonin).</p>
+<h3 id="d7-family-in-a-gambiae">D7 Family in A. gambiae</h3>
+<ul>
+<li><strong>Short forms (D7r1-5)</strong>: Bind biogenic amines (serotonin, histamine, norepinephrine)</li>
+<li><strong>Long forms (D7L1-3)</strong>: More diverse - bind leukotrienes, thromboxane A2, or serotonin</li>
+<li>D7L1: binds leukotriene C4 and thromboxane A2 <a href="https://pubmed.ncbi.nlm.nih.gov/35460690">PMID:35460690</a></li>
+<li>D7L2: weakly binds leukotrienes B4 and D4</li>
+<li>D7L3: binds serotonin (first long-form to bind a biogenic amine)</li>
+</ul>
+<h2 id="go-annotation-assessment">GO Annotation Assessment</h2>
+<h3 id="current-annotations">Current Annotations</h3>
+<ol>
+<li><strong>GO:0090729 (toxin activity)</strong> - SPKW via GO_REF:0000043</li>
+<li>
+<p>UniProt keywords: "Blood coagulation cascade inhibiting toxin", "Hemostasis impairing toxin"</p>
+</li>
+<li>
+<p><strong>GO:0005549 (odorant binding)</strong> - InterPro via GO_REF:0000002</p>
+</li>
+<li>
+<p>Based on PBP/GOBP family membership</p>
+</li>
+<li>
+<p><strong>GO:0005576 (extracellular region)</strong> - UniProt subcellular location via GO_REF:0000044</p>
+</li>
+<li>
+<p>Protein is secreted into saliva</p>
+</li>
+<li>
+<p><strong>GO:0035821 (modulation of process of another organism)</strong> - GOC via GO_REF:0000108</p>
+</li>
+<li>Inferred from toxin activity annotation</li>
+</ol>
+<h3 id="critical-assessment-is-toxin-activity-appropriate">Critical Assessment: Is "toxin activity" appropriate?</h3>
+<p><strong>GO:0090729 definition</strong>: "Interacting selectively with one or more biological molecules in another (target) organism, <strong>initiating pathogenesis (leading to an abnormal, generally detrimental state)</strong> in the target organism."</p>
+<p><strong>Assessment</strong>: D7r1 does NOT meet this definition because:<br />
+1. It does NOT initiate pathogenesis - it transiently modulates host physiology<br />
+2. It does NOT cause disease or tissue damage<br />
+3. Its effect is reversible and temporary (duration of feeding)<br />
+4. The host returns to normal state after feeding<br />
+5. The function evolved to facilitate feeding, not to harm the host</p>
+<p><strong>However</strong>: D7r1 DOES:<br />
+- Bind serotonin (GO:0051378)<br />
+- Bind histamine (GO:0051381)<br />
+- Negatively regulate hemostasis in the host (GO:1900047)<br />
+- Modulate processes in another organism (GO:0035821 - already annotated!)</p>
+<h3 id="recommended-actions">Recommended Actions</h3>
+<ol>
+<li><strong>GO:0090729 (toxin activity)</strong>: MARK AS OVER-ANNOTATED</li>
+<li>The term implies pathogenesis, which doesn't occur</li>
+<li>
+<p>More accurate: This is anti-hemostatic activity, not toxin activity</p>
+</li>
+<li>
+<p><strong>GO:0005549 (odorant binding)</strong>: MODIFY or KEEP_AS_NON_CORE</p>
+</li>
+<li>Based on structural family membership, but D7r1 doesn't actually function in olfaction</li>
+<li>
+<p>It binds biogenic amines as ligands, not odorants</p>
+</li>
+<li>
+<p><strong>GO:0005576 (extracellular region)</strong>: ACCEPT</p>
+</li>
+<li>
+<p>Protein is secreted, this is accurate</p>
+</li>
+<li>
+<p><strong>GO:0035821 (modulation of process of another organism)</strong>: ACCEPT</p>
+</li>
+<li>Accurately describes the function</li>
+</ol>
+<h3 id="proposed-new-annotations">Proposed New Annotations</h3>
+<ol>
+<li><strong>GO:0051378 (serotonin binding)</strong> - MF</li>
+<li>
+<p>Evidence: PMID:16301315 demonstrates serotonin binding</p>
+</li>
+<li>
+<p><strong>GO:0051381 (histamine binding)</strong> - MF</p>
+</li>
+<li>
+<p>Evidence: PMID:16301315 demonstrates histamine binding</p>
+</li>
+<li>
+<p><strong>GO:1900047 (negative regulation of hemostasis)</strong> - BP</p>
+</li>
+<li>Evidence: D7r1 increases clotting time <a href="https://pubmed.ncbi.nlm.nih.gov/16301315">PMID:16301315</a></li>
+</ol>
+<h2 id="references">References</h2>
+<ul>
+<li>PMID:16301315 - Function and evolution of mosquito salivary D7 protein family (key functional study)</li>
+<li>PMID:17928288 - Crystal structure of D7r4 with ligand complexes</li>
+<li>PMID:11841502 - D7 gene cluster in A. gambiae salivary glands</li>
+<li>PMID:9990055 - Initial identification of D7 proteins in A. gambiae</li>
+<li>PMID:35460690 - Long-form D7 protein functions in A. gambiae (2022)</li>
+</ul>
+<h2 id="sources">Sources</h2>
+<ul>
+<li><a href="https://www.jbc.org/article/S0021-9258(22)00411-2/fulltext">Novel salivary antihemostatic activities of long-form D7 proteins - JBC</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/17928288/">D7r4 crystal structure - PubMed</a></li>
+<li><a href="https://www.jbc.org/article/S0021-9258(20)70742-8/fulltext">Function and Evolution of Mosquito Salivary Protein Family - JBC</a></li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9UB30
+gene_symbol: D7r1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7165
+  label: Anopheles gambiae
+description: &gt;-
+  D7r1 is a short-form salivary protein from female Anopheles gambiae mosquitoes that facilitates
+  blood feeding by binding and sequestering host biogenic amines (serotonin and histamine). It
+  functions as a &#34;kratagonist&#34; - capturing host signaling molecules with high affinity to prevent
+  their vasoconstrictive and inflammatory effects. The protein is secreted into saliva during
+  blood feeding and increases clotting time in the host. D7r1 belongs to the PBP/GOBP
+  (Pheromone/Odorant-Binding Protein) structural family but has evolved a distinct function
+  unrelated to olfaction.
+existing_annotations:
+- term:
+    id: GO:0035821
+    label: modulation of process of another organism
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      This annotation accurately describes D7r1&#39;s function. The protein modulates host hemostatic
+      and inflammatory responses during blood feeding by sequestering serotonin and histamine.
+      This is a correct BP annotation for the cross-species effect.
+    action: ACCEPT
+    reason: &gt;-
+      D7r1 clearly modulates processes in the vertebrate host. Per UniProt, it &#34;Modulates blood
+      feeding of female mosquitoes on vertebrate species by binding and sequestering different
+      mediators involved in the host response&#34; [UniProt Q9UB30]. The GO:0035821 definition
+      &#34;A process in which an organism effects a change in a biological process in another organism&#34;
+      accurately captures this function. The annotation was inferred via GO_REF:0000108 from the
+      toxin activity annotation, but the logic is sound - kratagonistic binding of host mediators
+      does modulate host processes. Deep research confirms D7 proteins &#34;function as kratagonists -
+      high-affinity scavengers of host small-molecule inflammatory and hemostatic mediators&#34;
+      [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+    supported_by:
+      - reference_id: UniProt:Q9UB30
+        supporting_text: &gt;-
+          Modulates blood feeding of female mosquitoes on vertebrate species by binding and
+          sequestering different mediators involved in the host response
+      - reference_id: file:ANOGA/D7r1/D7r1-deep-research-falcon.md
+        supporting_text: &gt;-
+          D7 proteins are among the most abundant mosquito salivary proteins and function
+          as kratagonists
+
+- term:
+    id: GO:0005549
+    label: odorant binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is based on structural family membership (PBP/GOBP family via InterPro
+      IPR006170) but does not reflect the actual function of D7r1. The protein binds biogenic
+      amines (serotonin, histamine), not odorants, and has no role in olfaction.
+    action: MODIFY
+    reason: &gt;-
+      D7r1 belongs to the PBP/GOBP structural family (InterPro IPR006170), which led to this
+      IEA annotation. However, the D7 proteins have evolutionarily repurposed this fold for
+      binding biogenic amines in saliva, not odorants in antennae. D7r1 is expressed exclusively
+      in female salivary glands [PMID:9990055, PMID:11841502], not olfactory tissues. The actual
+      molecular function is serotonin binding (GO:0051378) and histamine binding (GO:0051381).
+      This is a clear case where structural homology does not predict function. The GO:0005549
+      definition &#34;Binding to an odorant, any substance capable of stimulating the sense of smell&#34;
+      does not apply - serotonin and histamine are not odorants. Deep research confirms &#34;short-form
+      D7s (including D7r1) predominantly bind biogenic amines (serotonin/5-HT, histamine,
+      epinephrine/norepinephrine)&#34; [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+    proposed_replacement_terms:
+      - id: GO:0051378
+        label: serotonin binding
+      - id: GO:0051381
+        label: histamine binding
+    supported_by:
+      - reference_id: UniProt:Q9UB30
+        supporting_text: Binds serotonin and histamine
+      - reference_id: UniProt:Q9UB30
+        supporting_text: Female salivary gland
+
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      This annotation correctly reflects the subcellular localization of D7r1 as a secreted
+      salivary protein.
+    action: ACCEPT
+    reason: &gt;-
+      D7r1 is a secreted protein with a signal peptide (residues 1-21) [UniProt Q9UB30]. It is
+      released into the extracellular space (saliva) during blood feeding. The UniProt entry
+      confirms &#34;SUBCELLULAR LOCATION: Secreted&#34; [UniProt Q9UB30]. This is an appropriate CC
+      annotation. Deep research confirms &#34;D7r1 is produced in adult female salivary glands and
+      secreted in saliva at the skin interface during probing/feeding&#34;
+      [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+    supported_by:
+      - reference_id: UniProt:Q9UB30
+        supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+
+- term:
+    id: GO:0090729
+    label: toxin activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation is an OVER-ANNOTATION. D7r1 does not meet the GO definition of toxin
+      activity, which requires &#34;initiating pathogenesis (leading to an abnormal, generally
+      detrimental state)&#34;. D7r1 transiently modulates host physiology without causing disease
+      or tissue damage.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The GO:0090729 definition states: &#34;Interacting selectively with one or more biological
+      molecules in another (target) organism, initiating pathogenesis (leading to an abnormal,
+      generally detrimental state) in the target organism.&#34; D7r1 does NOT meet this definition
+      because: (1) It does not initiate pathogenesis - it facilitates feeding, not disease;
+      (2) It does not cause tissue damage - it transiently sequesters host mediators; (3) The
+      effect is reversible and temporary; (4) The host returns to normal state after feeding.
+      The UniProt keywords &#34;Blood coagulation cascade inhibiting toxin&#34; and &#34;Hemostasis impairing
+      toxin&#34; that led to this IEA annotation via GO_REF:0000043 are technically inaccurate -
+      anti-hemostatic activity is not equivalent to toxin activity. The kratagonist mechanism
+      (sequestering signaling molecules) is fundamentally different from true toxins that cause
+      pathological damage. Better annotations would be serotonin binding (GO:0051378) and
+      histamine binding (GO:0051381) for MF, and negative regulation of hemostasis
+      (GO:1900047) for BP. Deep research explicitly describes the mechanism as kratagonism
+      not toxicity [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+    supported_by:
+      - reference_id: UniProt:Q9UB30
+        supporting_text: &gt;-
+          Modulates blood feeding of female mosquitoes on vertebrate species by binding and
+          sequestering different mediators involved in the host response
+
+# PROPOSED NEW ANNOTATIONS
+- term:
+    id: GO:0051378
+    label: serotonin binding
+  evidence_type: IDA
+  original_reference_id: PMID:16301315
+  review:
+    summary: &gt;-
+      D7r1 binds serotonin with high affinity as demonstrated by direct binding assays. This
+      is a core molecular function that should be annotated.
+    action: NEW
+    reason: &gt;-
+      UniProt confirms &#34;Binds serotonin and histamine (PubMed:16301315)&#34; [UniProt Q9UB30].
+      The protein has specific binding sites for serotonin (residues 28, 56, 115, 132, 135).
+      This is the actual molecular function that enables kratagonism - sequestering host
+      serotonin to prevent vasoconstriction. GO:0051378 definition &#34;Binding to serotonin
+      (5-hydroxytryptamine), a monoamine neurotransmitter&#34; accurately describes this function.
+      Deep research confirms D7 short forms &#34;bind serotonin, histamine, and catecholamines
+      with high affinity&#34; [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+    supported_by:
+      - reference_id: UniProt:Q9UB30
+        supporting_text: Binds serotonin and histamine
+      - reference_id: PMID:16301315
+        supporting_text: four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine
+
+- term:
+    id: GO:0051381
+    label: histamine binding
+  evidence_type: IDA
+  original_reference_id: PMID:16301315
+  review:
+    summary: &gt;-
+      D7r1 binds histamine with high affinity as demonstrated by direct binding assays. This
+      is a core molecular function that should be annotated.
+    action: NEW
+    reason: &gt;-
+      UniProt confirms &#34;Binds serotonin and histamine (PubMed:16301315)&#34; [UniProt Q9UB30].
+      The protein has specific binding sites for histamine (residues 115, 132, 135). This
+      is the actual molecular function that enables sequestration of host histamine to
+      prevent inflammation and vasodilation. GO:0051381 definition &#34;Binding to histamine,
+      a physiologically active amine&#34; accurately describes this function.
+      Deep research confirms short-form D7s bind &#34;biogenic amines (serotonin/5-HT, histamine,
+      epinephrine/norepinephrine)&#34; [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+    supported_by:
+      - reference_id: UniProt:Q9UB30
+        supporting_text: Binds serotonin and histamine
+      - reference_id: PMID:16301315
+        supporting_text: four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine
+
+- term:
+    id: GO:1900047
+    label: negative regulation of hemostasis
+  evidence_type: IDA
+  original_reference_id: PMID:16301315
+  review:
+    summary: &gt;-
+      D7r1 increases blood clotting time in the host, which represents negative regulation of
+      hemostasis. This is a core biological process annotation.
+    action: NEW
+    reason: &gt;-
+      UniProt states &#34;Increases blood clotting time (PubMed:16301315)&#34; [UniProt Q9UB30]. By
+      sequestering serotonin (which promotes platelet aggregation) and histamine, D7r1
+      negatively regulates the host hemostatic response. GO:1900047 definition &#34;Any process
+      that stops, prevents or reduces the frequency, rate or extent of hemostasis&#34; accurately
+      captures this function. This is a more accurate BP annotation than inferring from
+      &#34;toxin activity&#34;. Deep research confirms biogenic amine scavenging &#34;counteracts platelet
+      aggregation, vasoconstriction, and nociception during feeding&#34;
+      [file:ANOGA/D7r1/D7r1-deep-research-falcon.md].
+    supported_by:
+      - reference_id: UniProt:Q9UB30
+        supporting_text: Increases blood clotting time
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on inter-ontology links
+  findings: []
+- id: PMID:16301315
+  title: Function and evolution of a mosquito salivary protein family
+  findings:
+    - statement: D7 short proteins bind serotonin, histamine and norepinephrine with high affinity
+      supporting_text: four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine
+    - statement: Scavenging host amines antagonizes vasoconstriction and platelet aggregation
+      supporting_text: Scavenging of host amines would antagonize their vasoconstrictor, platelet-aggregating, and pain-inducing properties
+- id: PMID:9990055
+  title: Trapping cDNAs encoding secreted proteins from the salivary glands of the malaria vector Anopheles gambiae
+  findings:
+    - statement: D7-related genes were identified in A. gambiae salivary glands
+      supporting_text: Fragments showing a high degree of similarity to D7 and apyrase, two salivary gland-specific genes previously found in Aedes aegypti, were identified
+- id: PMID:11841502
+  title: A cluster of four D7-related genes is expressed in the salivary glands of the African malaria vector Anopheles gambiae
+  findings:
+    - statement: D7r genes are expressed in adult female salivary glands
+      supporting_text: Four genes expressed in the Anopheles gambiae adult female salivary glands and similar in sequence to the Aedes aegypti D7 gene were identified
+    - statement: D7r proteins are secreted into host during blood feeding
+      supporting_text: The deduced proteins contain secretory signals and they are probably injected by the mosquito into the host with the saliva during blood feeding
+- id: UniProt:Q9UB30
+  title: UniProt entry for D7R1_ANOGA
+  findings:
+    - statement: D7r1 modulates blood feeding by binding host mediators
+      supporting_text: &gt;-
+        Modulates blood feeding of female mosquitoes on vertebrate species by binding
+        and sequestering different mediators involved in the host response
+    - statement: Binds serotonin and histamine
+      supporting_text: Binds serotonin and histamine
+    - statement: Increases blood clotting time
+      supporting_text: Increases blood clotting time
+    - statement: Expressed in female salivary gland
+      supporting_text: Female salivary gland
+    - statement: Protein is secreted
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+- id: file:ANOGA/D7r1/D7r1-deep-research-falcon.md
+  title: Deep research review of D7r1 function and evolution
+  findings:
+    - statement: D7 proteins function as kratagonists that scavenge host signaling molecules
+      supporting_text: &gt;-
+        D7 proteins are among the most abundant mosquito salivary proteins and function
+        as kratagonists - high-affinity scavengers of host small-molecule inflammatory
+        and hemostatic mediators
+    - statement: Short-form D7s bind biogenic amines
+      supporting_text: &gt;-
+        Short-form D7s (including D7r1) predominantly bind biogenic amines (serotonin/5-HT,
+        histamine, epinephrine/norepinephrine)
+    - statement: D7r1 is secreted in saliva during feeding
+      supporting_text: &gt;-
+        D7r1 is produced in adult female salivary glands and secreted in saliva at the
+        skin interface during probing/feeding
+
+core_functions:
+- description: &gt;-
+    D7r1 functions as a kratagonist by binding and sequestering host biogenic amines (serotonin
+    and histamine) during blood feeding, thereby preventing vasoconstriction, platelet aggregation,
+    and inflammation at the feeding site.
+  molecular_function:
+    id: GO:0051378
+    label: serotonin binding
+  directly_involved_in:
+    - id: GO:1900047
+      label: negative regulation of hemostasis
+    - id: GO:0035821
+      label: modulation of process of another organism
+  locations:
+    - id: GO:0005576
+      label: extracellular region
+  supported_by:
+    - reference_id: UniProt:Q9UB30
+      supporting_text: &gt;-
+        Modulates blood feeding of female mosquitoes on vertebrate species by binding and
+        sequestering different mediators involved in the host response
+    - reference_id: PMID:16301315
+      supporting_text: four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine
+
+- description: &gt;-
+    D7r1 also binds histamine to prevent host inflammatory and vasodilatory responses during
+    blood feeding.
+  molecular_function:
+    id: GO:0051381
+    label: histamine binding
+  directly_involved_in:
+    - id: GO:1900047
+      label: negative regulation of hemostasis
+    - id: GO:0035821
+      label: modulation of process of another organism
+  locations:
+    - id: GO:0005576
+      label: extracellular region
+  supported_by:
+    - reference_id: UniProt:Q9UB30
+      supporting_text: Binds serotonin and histamine
+
+suggested_questions:
+- question: &gt;-
+    What is the binding affinity (Kd) of D7r1 for serotonin vs histamine, and does it show
+    preference for one over the other?
+  experts:
+    - Calvo E
+    - Ribeiro JM
+
+- question: &gt;-
+    Are there functional differences between D7r1 and other short-form D7 proteins (D7r2-5)
+    in terms of ligand binding specificity?
+  experts:
+    - Calvo E
+    - Mans BJ
+
+suggested_experiments:
+- hypothesis: &gt;-
+    D7r1 knockout mosquitoes will have reduced blood feeding efficiency due to host hemostatic
+    responses
+  description: &gt;-
+    Generate D7r1 knockout A. gambiae using CRISPR and measure blood meal size, feeding time,
+    and feeding success rate compared to wild-type controls
+  experiment_type: Gene knockout and feeding assay
+
+- hypothesis: &gt;-
+    D7r1 binding to serotonin and histamine occurs at overlapping but distinct binding sites
+  description: &gt;-
+    Perform competitive binding assays and structural analysis (crystallography or cryo-EM)
+    with D7r1 bound to serotonin, histamine, or both to determine binding site organization
+  experiment_type: Structural biology and binding assays
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

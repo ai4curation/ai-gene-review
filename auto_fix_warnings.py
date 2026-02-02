@@ -4,7 +4,6 @@ Automatically fix substring warnings from validation report
 """
 
 import re
-import sys
 
 def process_validation_report(report_path):
     """Process validation report and generate fix commands"""

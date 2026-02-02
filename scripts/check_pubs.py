@@ -3,7 +3,6 @@
 Check publication files for potential HTML scraping issues by comparing abstract to full text.
 """
 
-import os
 import re
 from pathlib import Path
 
@@ -187,7 +186,7 @@ def main():
                 for pmid, issue in other:
                     f.write(f"| {pmid} | {issue} |\n")
     
-    print(f"\nDetailed results written to PROBLEM_PMIDS_DETAILED.md")
+    print("\nDetailed results written to PROBLEM_PMIDS_DETAILED.md")
 
 if __name__ == "__main__":
     main()

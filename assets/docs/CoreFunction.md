@@ -34,3 +34,6 @@ URI: [gene_review:CoreFunction](https://w3id.org/ai4curation/gene_review/CoreFun
      * Range: [Term](Term.md)
  * [➞in_complex](coreFunction__in_complex.md)  <sub>0..1</sub>
      * Range: [Term](Term.md)
+ * [CoreFunction➞description](CoreFunction_description.md)  <sub>0..1</sub>
+     * Description: Description of the entity
+     * Range: [String](types/String.md)

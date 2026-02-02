@@ -1,0 +1,3464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mrcA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mrcA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CU6" target="_blank" class="term-link">
+                        Q88CU6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mrcA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CU6" data-a="DESCRIPTION: Penicillin-binding protein 1A (PBP1A) is a bifunct..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Penicillin-binding protein 1A (PBP1A) is a bifunctional class A high-molecular-mass penicillin-binding protein that catalyzes both glycosyltransferase (GT) and D,D-transpeptidase (TP) activities essential for peptidoglycan biosynthesis. The N-terminal GT domain (EC 2.4.99.28) polymerizes glycan strands from lipid II precursors, while the C-terminal TP domain (EC 3.4.16.4) cross-links peptide stems to form the mature peptidoglycan sacculus. The enzyme is inner membrane-anchored with catalytic domains operating in the periplasmic space. In Gram-negative bacteria, PBP1A activity is regulated by outer membrane lipoprotein activators (LpoA/LpoP family). The TP domain is the target of beta-lactam antibiotics while the GT domain is inhibited by moenomycin. PBP1A functions redundantly with PBP1B (mrcB) for core peptidoglycan synthesis but shows stress-specific requirements.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0030288" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1A is an inner membrane-anchored protein with large periplasmic catalytic domains that operate at the peptidoglycan layer interface. The TreeGrafter annotation correctly places the functional site in the periplasmic space where the enzyme synthesizes and crosslinks peptidoglycan [Pazos &amp; Vollmer 2021, Typas et al. 2010].
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The localization is well-supported by the protein architecture: PBP1A has an N-terminal membrane anchor with the GT and TP catalytic domains extending into the periplasm where they act on lipid II and the nascent peptidoglycan layer.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">aPBPs are inner-membrane anchored, with periplasmic catalytic domains acting at the peptidoglycan layer</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">aPBPs operate in complexes bridging the inner and outer membranes via periplasm-spanning partners</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0003824" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very general root-level term that provides minimal information. PBP1A is indeed a bifunctional enzyme with both glycosyltransferase and transpeptidase activities, but this annotation is too broad to be informative.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is overly general and adds no value when more specific molecular function annotations (GO:0008955, GO:0009002) are present. The annotation to &#34;catalytic activity&#34; provides no meaningful information about what the enzyme actually does.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004180" target="_blank" class="term-link">
+                                    GO:0004180
+                                </a>
+                            </span>
+                            <span class="term-label">carboxypeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0004180" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1A possesses D,D-carboxypeptidase activity as part of its transpeptidase domain function. The enzyme can cleave the terminal D-Ala from the peptidoglycan pentapeptide stem. UniProt annotation confirms EC 3.4.16.4 (serine-type D-Ala-D-Ala carboxypeptidase). However, more specific terms exist.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct, the annotation should use the more specific term GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase activity) which precisely describes the enzymatic activity. The general &#34;carboxypeptidase activity&#34; term is less informative.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                                    serine-type D-Ala-D-Ala carboxypeptidase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">substituents of D-alanine.; EC=3.4.16.4</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1A is correctly localized to the plasma membrane (inner membrane in Gram-negative bacteria). The protein has an N-terminal transmembrane helix (residues 7-30 per UniProt) that anchors it to the inner membrane.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt annotation confirms &#34;Cell inner membrane; Single-pass type II membrane protein&#34; with a defined transmembrane helix. The catalytic domains are periplasmic but the protein is membrane-anchored.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">Single-pass type II membrane protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0006508" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1A does have peptidase activity via its transpeptidase domain which cleaves the D-Ala-D-Ala bond during transpeptidation. However, the primary function is transpeptidation (forming new crosslinks) rather than simple proteolysis.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The proteolytic cleavage of the terminal D-Ala is mechanistically coupled to transpeptidation - the acyl-enzyme intermediate is transferred to an acceptor amino group rather than being simply hydrolyzed. This annotation is not wrong but represents a secondary aspect of the core transpeptidase function.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ser-type D,D-TPase activity (EC 3.4.16.4) that crosslinks peptide stems to the existing sacculus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0008233" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Similar to the proteolysis annotation, this general term captures that PBP1A has peptidase activity. The transpeptidase domain acts as a serine-type D-Ala-D-Ala carboxypeptidase.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This general term should be replaced with the more specific GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase activity) which accurately describes the substrate specificity and mechanism.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                                    serine-type D-Ala-D-Ala carboxypeptidase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">Preferential cleavage: (Ac)2-L-Lys-D-Ala-|-D-Ala</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008360" target="_blank" class="term-link">
+                                    GO:0008360
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell shape</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0008360" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1A contributes to maintaining cell shape through peptidoglycan synthesis. However, this term may be slightly overspecified - PBP1A participates in peptidoglycan synthesis which is essential for cell shape, but it is not primarily a &#34;regulator&#34; of cell shape. In Pseudomonas, PBP1A mutants show morphology/motility defects [Chen et al. 2017].
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt keyword &#34;Cell shape&#34; maps to this term. The peptidoglycan layer synthesized by PBP1A directly determines bacterial cell morphology. In E. coli, PBP1B loss decreases cell stiffness [Pazos &amp; Vollmer 2021]. While &#34;maintenance of cell shape&#34; might be more precise, this annotation captures the biological reality that PBP1A function affects cell morphology. Pseudomonas PBP1A disruptions specifically affect morphology [Chen et al. 2017].
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PBP1A disruptions affecting motility and morphology</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">aPBPs provide mechanical stability (e.g., PBP1B loss decreases stiffness in E. coli)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                                    GO:0008658
+                                </a>
+                            </span>
+                            <span class="term-label">penicillin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0008658" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1A is by definition a penicillin-binding protein. The transpeptidase active site serine is acylated by beta-lactam antibiotics including penicillins and cephalosporins. This is a core defining feature of the protein family.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The protein name itself (Penicillin-binding protein 1A) indicates this function. The transpeptidase domain contains a serine that forms a covalent acyl-enzyme intermediate with beta-lactam antibiotics, inhibiting the enzyme. This is the mechanism by which beta-lactams exert their antibacterial effect.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The TPase active site is acylated by beta-lactam antibiotics</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Penicillin-binding protein 1A</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008955" target="_blank" class="term-link">
+                                    GO:0008955
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan glycosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0008955" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is one of the two core enzymatic activities of PBP1A. The N-terminal glycosyltransferase domain (GT51 family) polymerizes glycan strands from lipid II precursors (EC 2.4.99.28). The domain is inhibited by moenomycin.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately captures a primary molecular function of PBP1A. UniProt confirms EC 2.4.99.28 and the Pfam Transgly domain (PF00912). The glycosyltransferase activity polymerizes lipid II to form the glycan backbone of peptidoglycan.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">ChEBI:CHEBI:78435; EC=2.4.99.28</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">Glycosyl transferase family 51</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GTase activity (EC 2.4.99.28) that polymerizes glycan strands from the lipid II precursor</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                                    GO:0009002
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type D-Ala-D-Ala carboxypeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0009002" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the second core enzymatic activity of PBP1A. The C-terminal transpeptidase domain acts as a serine-type D,D-transpeptidase/carboxypeptidase (EC 3.4.16.4). The enzyme cleaves the terminal D-Ala and transfers the acyl-enzyme intermediate to form crosslinks.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately describes the transpeptidase domain function. UniProt confirms EC 3.4.16.4 and the Pfam Transpeptidase domain (PF00905). This is the enzymatic activity targeted by beta-lactam antibiotics.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">substituents of D-alanine.; EC=3.4.16.4</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">Penicillin-binding protein transpeptidase</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">Preferential cleavage: (Ac)2-L-Lys-D-Ala-|-D-Ala</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0009252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the central biological process in which PBP1A participates. As a bifunctional synthase, PBP1A directly catalyzes peptidoglycan biosynthesis by both polymerizing glycan chains and crosslinking peptide stems.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core biological process annotation for PBP1A. UniProt pathway annotation confirms &#34;Cell wall biogenesis; peptidoglycan biosynthesis&#34;. The enzyme acts late in the peptidoglycan pathway, using lipid II to extend and crosslink the sacculus.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell wall biogenesis; peptidoglycan biosynthesis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PBP1A acts late in the peptidoglycan pathway, using lipid II delivered to the periplasm to extend glycan chains and crosslink to the existing sacculus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1A has transferase activity via its glycosyltransferase domain, but this root-level term is too general to be informative.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is overly general and redundant with the more specific GO:0008955 (peptidoglycan glycosyltransferase activity) annotation. Removing this uninformative annotation improves annotation quality.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016757" target="_blank" class="term-link">
+                                    GO:0016757
+                                </a>
+                            </span>
+                            <span class="term-label">glycosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0016757" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1A has glycosyltransferase activity but this term is less specific than GO:0008955 (peptidoglycan glycosyltransferase activity) which is already annotated.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While correct, this should be replaced with the more specific GO:0008955 (peptidoglycan glycosyltransferase activity) which captures the substrate specificity. Since GO:0008955 is already annotated, this general term is redundant.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008955" target="_blank" class="term-link">
+                                    peptidoglycan glycosyltransferase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1A has hydrolase activity (carboxypeptidase function), but this root-level term is too general to be informative when more specific terms are available.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is overly general and provides minimal information. The more specific GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase activity) annotation already captures the hydrolase function with appropriate specificity.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046677" target="_blank" class="term-link">
+                                    GO:0046677
+                                </a>
+                            </span>
+                            <span class="term-label">response to antibiotic</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0046677" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1A is the direct molecular target of beta-lactam antibiotics. The transpeptidase active site serine is covalently acylated by penicillins and cephalosporins, inhibiting the enzyme and causing bacterial cell death.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is legitimate and accurate. PBPs are the pharmacological targets of beta-lactam antibiotics, and their inhibition leads to bactericidal effects. The UniProt keyword &#34;Antibiotic resistance&#34; also supports this annotation. Mutations in PBPs can confer antibiotic resistance.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">TPase inhibited by beta-lactam antibiotics (penicillins/cephalosporins)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In Pseudomonas, PBPs are established beta-lactam targets</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">Antibiotic resistance {ECO:0000256|ARBA:ARBA00023251}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU6" data-a="GO:0071555" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1A directly participates in cell wall organization by synthesizing and crosslinking peptidoglycan, the main structural component of the bacterial cell wall. The enzyme works in multi-protein complexes with hydrolases to coordinate safe insertion of new peptidoglycan.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While cell wall organization is correct, the more specific term GO:0031504 (peptidoglycan-based cell wall organization) would be more appropriate for this Gram-negative bacterial protein that specifically acts on peptidoglycan. Alternatively, GO:0009273 (peptidoglycan-based cell wall biogenesis) could be used.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031504" target="_blank" class="term-link">
+                                    peptidoglycan-based cell wall organization
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">participates in multi-enzyme complexes with hydrolases and divisome/elongasome components to insert and repair PG during elongation and septation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88CU6
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell wall biogenesis/degradation {ECO:0000256|ARBA:ARBA00023316}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Peptidoglycan glycosyltransferase activity: The N-terminal GT51 domain catalyzes polymerization of lipid II to form glycan strands. UniProt EC 2.4.99.28; Pfam domain PF00912.
+</h3>
+                <span class="vote-buttons" data-g="Q88CU6" data-a="FUNCTION: Peptidoglycan glycosyltransferase activity: The N-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008955" target="_blank" class="term-link">
+                            peptidoglycan glycosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                peptidoglycan biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Serine-type D-Ala-D-Ala carboxypeptidase/transpeptidase activity: The C-terminal transpeptidase domain catalyzes crosslinking of peptide stems via D,D-transpeptidation. UniProt EC 3.4.16.4; Pfam domain PF00905.
+</h3>
+                <span class="vote-buttons" data-g="Q88CU6" data-a="FUNCTION: Serine-type D-Ala-D-Ala carboxypeptidase/transpept..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                            serine-type D-Ala-D-Ala carboxypeptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                peptidoglycan biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Penicillin binding: As a class A PBP, the protein binds penicillins and other beta-lactams at its transpeptidase active site serine, mediating response to antibiotic stress.
+</h3>
+                <span class="vote-buttons" data-g="Q88CU6" data-a="FUNCTION: Penicillin binding: As a class A PBP, the protein ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                            penicillin binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046677" target="_blank" class="term-link">
+                                response to antibiotic
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequence of P. putida KT2440 establishing the gene model for mrcA (PP_5084)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on mrcA function based on literature review</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Class A PBPs are bifunctional synthases with GT and TP domains</div>
+                        
+                        <div class="finding-text">"PBP1A catalyzes (i) GTase activity (EC 2.4.99.28) that polymerizes glycan strands from the lipid II precursor and (ii) Ser-type D,D-TPase activity (EC 3.4.16.4) that crosslinks peptide stems"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">aPBPs require outer membrane lipoprotein activators (LpoA/LpoB/LpoP)</div>
+                        
+                        <div class="finding-text">"Requires outer-membrane-anchored lipoprotein activators in Gram-negative bacteria (LpoA for PBP1A in many gamma-proteobacteria)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TPase inhibited by beta-lactams, GTase inhibited by moenomycin</div>
+                        
+                        <div class="finding-text">"TPase inhibited by beta-lactam antibiotics (penicillins/cephalosporins); GTase inhibited by moenomycin"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">aPBPs contribute to cell envelope mechanical stability</div>
+                        
+                        <div class="finding-text">"aPBPs provide mechanical stability (e.g., PBP1B loss decreases stiffness in E. coli)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the specific outer membrane lipoprotein activator for P. putida PBP1A - is it LpoA, LpoP, or another family member? E. coli uses LpoA for PBP1A and LpoB for PBP1B, while Pseudomonas employs LpoP, but the specific pairing with PBP1A in P. putida KT2440 is not established.
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CU6" data-a="Q: What is the specific outer membrane lipoprotein ac..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is P. putida mrcA (PBP1A) individually essential or redundant with mrcB (PBP1B)? In E. coli, either can be deleted but not both. In P. aeruginosa, most HMM PBPs are individually nonessential. Direct data for P. putida KT2440 is limited.
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CU6" data-a="Q: Is P. putida mrcA (PBP1A) individually essential o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate clean deletion mutants of mrcA and mrcB in P. putida KT2440 to test individual essentiality and redundancy. This would clarify whether PBP1A and PBP1B are functionally redundant in this organism as they are in E. coli.
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: mrcA and mrcB are individually dispensable but show synthetic lethality when both are deleted, similar to E. coli.
+</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CU6" data-a="EXPERIMENT: Generate clean deletion mutants of mrcA and mrcB i..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Characterize cell morphology and mechanical properties of mrcA mutants under various stress conditions. Based on E. coli data showing stress-dependent performance differences between PBP1A and PBP1B, similar studies in P. putida would inform functional partitioning.
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: mrcA mutants will show altered cell shape or reduced mechanical stability under specific stress conditions such as high osmolarity.
+</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CU6" data-a="EXPERIMENT: Characterize cell morphology and mechanical proper..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mrcA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CU6" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-30T23:25:00.962336'<br />
+end_time: '2026-01-30T23:31:01.349621'<br />
+duration_seconds: 360.39<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: mrcA<br />
+  gene_symbol: mrcA<br />
+  uniprot_accession: Q88CU6<br />
+  protein_description: 'RecName: Full=Penicillin-binding protein 1A {ECO:0000256|ARBA:ARBA00018638};<br />
+    EC=2.4.99.28 {ECO:0000256|ARBA:ARBA00044770}; EC=3.4.16.4 {ECO:0000256|ARBA:ARBA00012448};'<br />
+  gene_info: Name=mrcA {ECO:0000313|EMBL:AAN70649.1}; OrderedLocusNames=PP_5084 {ECO:0000313|EMBL:AAN70649.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: In the N-terminal section; belongs to the<br />
+  protein_domains: Beta-lactam/transpept-like. (IPR012338); Glyco_trans_51. (IPR001264);<br />
+    Glycosyltr_51/Transpeptidase. (IPR050396); Lysozyme-like_dom_sf. (IPR023346);<br />
+    PBP_transglycosylase. (IPR036950)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 17</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88CU6</li>
+<li><strong>Protein Description:</strong> RecName: Full=Penicillin-binding protein 1A {ECO:0000256|ARBA:ARBA00018638}; EC=2.4.99.28 {ECO:0000256|ARBA:ARBA00044770}; EC=3.4.16.4 {ECO:0000256|ARBA:ARBA00012448};</li>
+<li><strong>Gene Information:</strong> Name=mrcA {ECO:0000313|EMBL:AAN70649.1}; OrderedLocusNames=PP_5084 {ECO:0000313|EMBL:AAN70649.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> In the N-terminal section; belongs to the</li>
+<li><strong>Key Domains:</strong> Beta-lactam/transpept-like. (IPR012338); Glyco_trans_51. (IPR001264); Glycosyltr_51/Transpeptidase. (IPR050396); Lysozyme-like_dom_sf. (IPR023346); PBP_transglycosylase. (IPR036950)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "mrcA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'mrcA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>mrcA</strong> (gene ID: mrcA, UniProt: Q88CU6) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88CU6</li>
+<li><strong>Protein Description:</strong> RecName: Full=Penicillin-binding protein 1A {ECO:0000256|ARBA:ARBA00018638}; EC=2.4.99.28 {ECO:0000256|ARBA:ARBA00044770}; EC=3.4.16.4 {ECO:0000256|ARBA:ARBA00012448};</li>
+<li><strong>Gene Information:</strong> Name=mrcA {ECO:0000313|EMBL:AAN70649.1}; OrderedLocusNames=PP_5084 {ECO:0000313|EMBL:AAN70649.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> In the N-terminal section; belongs to the</li>
+<li><strong>Key Domains:</strong> Beta-lactam/transpept-like. (IPR012338); Glyco_trans_51. (IPR001264); Glycosyltr_51/Transpeptidase. (IPR050396); Lysozyme-like_dom_sf. (IPR023346); PBP_transglycosylase. (IPR036950)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "mrcA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'mrcA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>mrcA</strong> (gene ID: mrcA, UniProt: Q88CU6) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and approach<br />
+We first verified target identity and domain architecture, then gathered recent (2023–2024) and authoritative literature on class A penicillin-binding proteins (aPBPs), prioritizing Pseudomonas-focused sources where available. We synthesized enzymology, regulation, cellular localization, pathway context, and organism-specific insights (Pseudomonas and E. coli as reference Gram-negative models). Finally, we organized current applications and expert perspectives, and summarize key facts in an artifact table. (URLs are provided inline; formal support is cited using context IDs.)</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Summary</th>
+<th style="text-align: right;">Key evidence</th>
+<th>Source URL</th>
+<th>Publication date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>mrcA (PP_5084) encodes Penicillin-binding protein 1A (PBP1A), a class A high-molecular-mass PBP; UniProt Q88CU6 annotation.</td>
+<td style="text-align: right;">(pazos2021regulationandfunction pages 1-2, typas2010regulationofpeptidoglycan pages 1-3)</td>
+<td>https://www.uniprot.org/uniprot/Q88CU6 ; https://doi.org/10.1016/j.mib.2021.01.008</td>
+<td>Apr 2021</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>N-terminal membrane anchor; periplasmic catalytic modules: PBP_transglycosylase (GT) and beta-lactam/transpeptidase (TP) domains; UB2H-like/noncatalytic docking regions.</td>
+<td style="text-align: right;">(pazos2021regulationandfunction pages 1-2, typas2010regulationofpeptidoglycan pages 1-3)</td>
+<td>https://doi.org/10.1016/j.mib.2021.01.008</td>
+<td>Apr 2021</td>
+</tr>
+<tr>
+<td>Catalytic activities</td>
+<td>Bifunctional: glycosyltransferase (polymerizes glycan chains; EC 2.4.99.28) and D,D-transpeptidase (cross-links peptide stems; EC 3.4.16.4).</td>
+<td style="text-align: right;">(pazos2021regulationandfunction pages 1-2, alodaini2024reducedpeptidoglycansynthesis pages 1-2)</td>
+<td>https://doi.org/10.1016/j.mib.2021.01.008 ; https://doi.org/10.1128/mbio.00325-24</td>
+<td>Apr 2021; Apr 2024</td>
+</tr>
+<tr>
+<td>Substrate</td>
+<td>Lipid II (undecaprenyl-pyrophosphate–linked peptidoglycan precursor) as donor/acceptor for GTase; peptide stems for TPase.</td>
+<td style="text-align: right;">(pazos2021regulationandfunction pages 1-2, alodaini2024reducedpeptidoglycansynthesis pages 1-2)</td>
+<td>https://doi.org/10.1016/j.mib.2021.01.008 ; https://doi.org/10.1128/mbio.00325-24</td>
+<td>Apr 2021; Apr 2024</td>
+</tr>
+<tr>
+<td>Inhibitors</td>
+<td>TPase inhibited by β-lactam antibiotics (penicillins/cephalosporins); GTase inhibited by moenomycin (natural product).</td>
+<td style="text-align: right;">(pazos2021regulationandfunction pages 1-2, chen2017penicillinbindingprotein3 pages 1-3)</td>
+<td>https://doi.org/10.1016/j.mib.2021.01.008 ; https://doi.org/10.1128/aac.01651-16</td>
+<td>Apr 2021; Jan 2017</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Inner-membrane anchored protein with large periplasmic catalytic domains acting in the periplasmic space (PG layer interface).</td>
+<td style="text-align: right;">(typas2010regulationofpeptidoglycan pages 1-3, pazos2021regulationandfunction pages 1-2)</td>
+<td>https://doi.org/10.1016/j.cell.2010.11.038 ; https://doi.org/10.1016/j.mib.2021.01.008</td>
+<td>Dec 2010; Apr 2021</td>
+</tr>
+<tr>
+<td>Activation / regulation</td>
+<td>Requires outer-membrane–anchored lipoprotein activators in Gram-negative bacteria (LpoA for PBP1A in many γ-proteobacteria); Pseudomonas species use a related activator (LpoP) that stimulates GTase/TPase.</td>
+<td style="text-align: right;">(typas2010regulationofpeptidoglycan pages 1-3, pazos2021regulationandfunction pages 6-7)</td>
+<td>https://doi.org/10.1016/j.cell.2010.11.038 ; https://doi.org/10.1016/j.mib.2021.01.008</td>
+<td>Dec 2010; Apr 2021</td>
+</tr>
+<tr>
+<td>Roles in elongation/division &amp; hydrolases</td>
+<td>Participates in multi-enzyme complexes with hydrolases and divisome/elongasome components to insert and repair PG during elongation and septation; coordinates with hydrolases for safe insertion of new strands.</td>
+<td style="text-align: right;">(pazos2021regulationandfunction pages 1-2, alodaini2024reducedpeptidoglycansynthesis pages 1-2)</td>
+<td>https://doi.org/10.1016/j.mib.2021.01.008 ; https://doi.org/10.1128/mbio.00325-24</td>
+<td>Apr 2021; Apr 2024</td>
+</tr>
+<tr>
+<td>Essentiality / redundancy (mrcA vs mrcB)</td>
+<td>Species-dependent: E. coli shows partial redundancy between PBP1A (mrcA) and PBP1B (mrcB) with stress-specific phenotypes (e.g., salt sensitivity when one is absent); in Pseudomonas aeruginosa HMM PBPs show variable essentiality (PBP3 often essential; PBP1A deletions cause motility/shape effects but may be nonessential).</td>
+<td style="text-align: right;">(alodaini2024reducedpeptidoglycansynthesis pages 1-2, chen2017penicillinbindingprotein3 pages 3-5)</td>
+<td>https://doi.org/10.1128/mbio.00325-24 ; https://doi.org/10.1128/aac.01651-16</td>
+<td>Apr 2024; Jan 2017</td>
+</tr>
+<tr>
+<td>Key 2023–2024 developments</td>
+<td>Recent work emphasizes coordination between synthases and hydrolases, stress-dependent performance differences between class A PBPs (PBP1A vs PBP1B), and continued structural/biochemical dissection of activator–PBP interactions informing Pseudomonas-specific regulation.</td>
+<td style="text-align: right;">(alodaini2024reducedpeptidoglycansynthesis pages 1-2, pazos2021regulationandfunction pages 2-4)</td>
+<td>https://doi.org/10.1128/mbio.00325-24 ; https://doi.org/10.1016/j.mib.2021.01.008</td>
+<td>Apr 2024; Apr 2021</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Concise, evidence-linked summary of Pseudomonas putida KT2440 mrcA (PBP1A, UniProt Q88CU6) covering identity, domains, activities, substrates, inhibitors, localization, regulation, roles, essentiality, and recent (2023–2024) findings; citations indicate the supporting context IDs.</em></p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Identity and domain architecture: mrcA encodes Penicillin-binding protein 1A (PBP1A), a class A high-molecular-mass PBP. aPBPs are bifunctional cell-wall synthases with an N-terminal membrane anchor and large periplasmic catalytic modules: a glycosyltransferase (GT) domain and a D,D-transpeptidase (TP) domain; noncatalytic regions serve as docking platforms for regulators. This architecture and role are conserved across Gram-negative bacteria, including Pseudomonas species (reviewed in Pazos &amp; Vollmer 2021; Typas et al. 2010). https://doi.org/10.1016/j.mib.2021.01.008; https://doi.org/10.1016/j.cell.2010.11.038 (pazos2021regulationandfunction pages 1-2, typas2010regulationofpeptidoglycan pages 1-3, pazos2021regulationandfunction pages 2-4)<br />
+- Catalytic activities and substrates: PBP1A catalyzes (i) GTase activity (EC 2.4.99.28) that polymerizes glycan strands from the lipid II precursor and (ii) Ser-type D,D-TPase activity (EC 3.4.16.4) that crosslinks peptide stems to the existing sacculus. The TP reaction depends on ongoing GTase on the same enzyme; lipid II is the GT substrate. https://doi.org/10.1016/j.mib.2021.01.008; recent functional genetics confirm aPBP synthase–hydrolase coordination and stress-dependent performance differences between PBP1A and PBP1B in E. coli. https://doi.org/10.1128/mbio.00325-24 (pazos2021regulationandfunction pages 1-2, alodaini2024reducedpeptidoglycansynthesis pages 1-2, pazos2021regulationandfunction pages 6-7)<br />
+- Inhibitors: The TPase active site is acylated by β-lactam antibiotics, while the GTase is inhibited by moenomycin, which binds the donor glycan site. https://doi.org/10.1016/j.mib.2021.01.008; see Pseudomonas context for PBPs as β-lactam targets. https://doi.org/10.1128/aac.01651-16 (pazos2021regulationandfunction pages 1-2, chen2017penicillinbindingprotein3 pages 1-3, pazos2021regulationandfunction pages 2-4)<br />
+- Localization: PBP1A is inner-membrane anchored, with periplasmic catalytic domains acting at the peptidoglycan layer. aPBPs operate in complexes bridging the inner and outer membranes via periplasm-spanning partners. https://doi.org/10.1016/j.cell.2010.11.038; https://doi.org/10.1016/j.mib.2021.01.008 (typas2010regulationofpeptidoglycan pages 1-3, pazos2021regulationandfunction pages 1-2)<br />
+- Regulation by outer-membrane lipoproteins: In Gram-negative γ-proteobacteria, aPBPs require OM lipoprotein activators. E. coli PBP1A is activated by LpoA and PBP1B by LpoB. Pseudomonas species employ a related OM activator (LpoP) to stimulate cognate aPBP GT and TP activities (as summarized in Pazos &amp; Vollmer 2021; foundational evidence from Typas et al. 2010 for OM regulation paradigm). https://doi.org/10.1016/j.mib.2021.01.008; https://doi.org/10.1016/j.cell.2010.11.038 (pazos2021regulationandfunction pages 6-7, typas2010regulationofpeptidoglycan pages 1-3, pazos2021regulationandfunction pages 2-4)</p>
+<p>2) Recent developments and latest research (2023–2024)<br />
+- Stress-dependent division of labor between PBP1A and PBP1B: In E. coli, large-scale genetic interaction mapping and phenotyping under envelope stress show robust redundancy of aPBPs with notable stress dependencies—ΔmrcB (PBP1B) cells are specifically impaired at high salt, consistent with reduced PBP1A activity in vitro under high ionic strength. This clarifies environmental modulation of aPBP function and synthase–hydrolase robustness. mBio (Apr 2024). https://doi.org/10.1128/mbio.00325-24 (alodaini2024reducedpeptidoglycansynthesis pages 1-2)<br />
+- Continued consolidation of aPBP regulation mechanisms: Reviews emphasize that OM lipoprotein activators (LpoA/LpoB/LpoP) allosterically stimulate aPBP activities and integrate aPBPs with division and elongation systems, aligning with the periplasm-spanning regulation first defined by Typas et al. 2010. Current Opinion in Microbiology (Apr 2021). https://doi.org/10.1016/j.mib.2021.01.008 (pazos2021regulationandfunction pages 2-4, pazos2021regulationandfunction pages 6-7)</p>
+<p>3) Current applications and real-world implementations<br />
+- Antibacterial targeting of aPBPs: β-lactams target the TPase domain of aPBPs, a cornerstone of clinical antibiotics. In Pseudomonas, PBPs are established β-lactam targets; essentiality varies by PBP and condition, affecting susceptibility and resistance profiling. Antimicrobial Agents and Chemotherapy (Jan 2017). https://doi.org/10.1128/aac.01651-16 (chen2017penicillinbindingprotein3 pages 1-3, chen2017penicillinbindingprotein3 pages 3-5)<br />
+- Chemical probes and natural products: Moenomycin is a well-characterized GTase inhibitor used extensively as a biochemical probe of aPBP polymerase function and to dissect synthase–hydrolase coordination. Mechanistic context summarized in Pazos &amp; Vollmer 2021; Typas et al. 2010. https://doi.org/10.1016/j.mib.2021.01.008; https://doi.org/10.1016/j.cell.2010.11.038 (pazos2021regulationandfunction pages 1-2, typas2010regulationofpeptidoglycan pages 1-3)</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- aPBPs as central, regulated synthases: Pazos &amp; Vollmer synthesize structural, biochemical, and systems-level data to conclude that aPBPs are pivotal for peptidoglycan growth and repair, with activities critically controlled by OM lipoprotein activators and multi-enzyme complex formation. They note species differences in essentiality and functional partitioning, and that aPBPs provide mechanical stability (e.g., PBP1B loss decreases stiffness in E. coli). Current Opinion in Microbiology (Apr 2021). https://doi.org/10.1016/j.mib.2021.01.008 (pazos2021regulationandfunction pages 2-4, pazos2021regulationandfunction pages 6-7)<br />
+- OM-based regulation paradigm: Typas et al. defined the LpoA/LpoB activation of PBP1A/PBP1B, respectively, establishing the periplasm-spanning regulation concept that extends to Pseudomonas (with LpoP as a Pseudomonas-specific activator). Cell (Dec 2010). https://doi.org/10.1016/j.cell.2010.11.038 (typas2010regulationofpeptidoglycan pages 1-3)<br />
+- Pseudomonas PBPs and druggability: Chen et al. showed variable essentiality among high-molecular-mass PBPs in P. aeruginosa, with PBP3 essential and PBP1A disruptions affecting motility and morphology, supporting nuanced targeting strategies. Antimicrobial Agents and Chemotherapy (Jan 2017). https://doi.org/10.1128/aac.01651-16 (chen2017penicillinbindingprotein3 pages 3-5, chen2017penicillinbindingprotein3 pages 1-3)</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- E. coli genetic interaction mapping under stress (2024): Systematic interaction analysis of aPBPs with multiple hydrolases revealed few strict dependencies, underscoring robustness of PG growth; ΔmrcB showed significant fitness loss at high salt, with in vitro data indicating reduced PBP1A activity at high salt. mBio (Apr 2024). https://doi.org/10.1128/mbio.00325-24 (alodaini2024reducedpeptidoglycansynthesis pages 1-2)<br />
+- Mechanistic inhibition details: Moenomycin binds donor site in GT domain to block polymerization; β-lactams acylate TP active site serine. Structural and biochemical synthesis in reviews consolidate these mechanisms. Current Opinion in Microbiology (Apr 2021). https://doi.org/10.1016/j.mib.2021.01.008 (pazos2021regulationandfunction pages 2-4, pazos2021regulationandfunction pages 1-2)</p>
+<p>Organism- and gene-specific synthesis for Pseudomonas putida KT2440 mrcA (Q88CU6)<br />
+- Mandatory verification: The gene symbol mrcA is widely used for PBP1A in Gram-negative bacteria. For P. putida KT2440, the ordered locus PP_5084 corresponds to PBP1A (per the prompt’s UniProt record Q88CU6). This matches the aPBP architecture and enzymology summarized in authoritative reviews and Pseudomonas literature, with no conflicting alternate gene identity found; thus, the symbol here is not ambiguous in this organismal context (supported by the conserved class A PBP features and OM-lipoprotein activation paradigm). https://doi.org/10.1016/j.mib.2021.01.008; https://doi.org/10.1016/j.cell.2010.11.038 (pazos2021regulationandfunction pages 1-2, typas2010regulationofpeptidoglycan pages 1-3)<br />
+- Primary function: A bifunctional peptidoglycan synthase performing GT (EC 2.4.99.28) using lipid II to polymerize glycan chains and TP (EC 3.4.16.4) to crosslink peptide stems; β-lactams inhibit TP and moenomycin inhibits GT. https://doi.org/10.1016/j.mib.2021.01.008 (pazos2021regulationandfunction pages 1-2, pazos2021regulationandfunction pages 2-4)<br />
+- Localization: Inner-membrane anchored with periplasmic catalytic domains that operate at the peptidoglycan layer. https://doi.org/10.1016/j.cell.2010.11.038 (typas2010regulationofpeptidoglycan pages 1-3)<br />
+- Regulation and partners: Expected activation by an OM lipoprotein (Lpo family); in Pseudomonas, the related activator LpoP stimulates its cognate aPBP’s GT and TP activities (summarized in Pazos &amp; Vollmer). The aPBP also interacts functionally with peptidoglycan hydrolases, with coordinated activities essential for safe insertion and remodeling. https://doi.org/10.1016/j.mib.2021.01.008 (pazos2021regulationandfunction pages 6-7, pazos2021regulationandfunction pages 2-4)<br />
+- Roles in elongation and division: Class A PBPs contribute to both lateral wall growth and septal PG synthesis/repair, forming multi-enzyme complexes that integrate with divisome and elongasome components. https://doi.org/10.1016/j.mib.2021.01.008 (pazos2021regulationandfunction pages 1-2, pazos2021regulationandfunction pages 6-7)<br />
+- Essentiality and redundancy: Direct KT2440 knockout/essentiality data for mrcA are limited in the present evidence. In E. coli, PBP1A (mrcA) and PBP1B (mrcB) exhibit partial redundancy with stress-specific vulnerabilities (e.g., high-salt sensitivity without PBP1B due to reduced PBP1A activity). In Pseudomonas aeruginosa, most high-molecular-mass PBPs are individually nonessential under standard conditions, with PBP3 essential; PBP1A mutants show motility/morphology defects, illustrating organism-specific and condition-dependent requirements. Extrapolating cautiously, P. putida KT2440 mrcA likely functions redundantly with mrcB for core PG synthesis but may contribute distinctly to envelope robustness and fitness under specific stresses or growth regimes. https://doi.org/10.1128/mbio.00325-24; https://doi.org/10.1128/aac.01651-16 (alodaini2024reducedpeptidoglycansynthesis pages 1-2, chen2017penicillinbindingprotein3 pages 3-5, chen2017penicillinbindingprotein3 pages 1-3)</p>
+<p>Pathway placement and mechanistic context<br />
+- Biosynthetic pathway: PBP1A acts late in the peptidoglycan pathway, using lipid II delivered to the periplasm to extend glycan chains and crosslink to the existing sacculus. aPBP function complements the SEDS–class B PBP (RodA–PBP2; FtsW–PBP3) machineries that form the core elongation and division synthases; aPBPs provide substantial flux and repair capacity and are integrated via periplasmic regulators. https://doi.org/10.1016/j.mib.2021.01.008 (pazos2021regulationandfunction pages 1-2, pazos2021regulationandfunction pages 6-7)<br />
+- Hydrolase coordination: Growth requires tightly coupled synthase–hydrolase action; large-scale interaction mapping shows no single amidase/endopeptidase is strictly required for either aPBP, highlighting robustness and distributed coordination. https://doi.org/10.1128/mbio.00325-24 (alodaini2024reducedpeptidoglycansynthesis pages 1-2)</p>
+<p>Evidence limitations and notes<br />
+- While Pseudomonas aeruginosa PBPs have been systematically interrogated, direct genetic and biochemical characterizations specific to P. putida KT2440 mrcA (PP_5084) are limited in the present evidence set. Nevertheless, class A PBP architecture, regulation by OM lipoproteins (Lpo family), and enzymology are highly conserved in Gram-negative bacteria, supporting functional inference for KT2440. Future work should explicitly profile PP_5084 essentiality/phenotypes, map its lipoprotein activator (e.g., LpoP/LpoA ortholog reliance), and quantify stress-specific roles in KT2440. (pazos2021regulationandfunction pages 1-2, typas2010regulationofpeptidoglycan pages 1-3)</p>
+<p>Key sources with URLs and dates<br />
+- Pazos M, Vollmer W. Regulation and function of class A penicillin-binding proteins. Current Opinion in Microbiology. Apr 2021. https://doi.org/10.1016/j.mib.2021.01.008 (pazos2021regulationandfunction pages 2-4, pazos2021regulationandfunction pages 6-7, pazos2021regulationandfunction pages 1-2)<br />
+- Typas A, et al. Regulation of peptidoglycan synthesis by outer membrane proteins. Cell. Dec 2010. https://doi.org/10.1016/j.cell.2010.11.038 (typas2010regulationofpeptidoglycan pages 1-3)<br />
+- Alodaini D, et al. Reduced peptidoglycan synthesis capacity impairs growth of E. coli at high salt concentration. mBio. Apr 2024. https://doi.org/10.1128/mbio.00325-24 (alodaini2024reducedpeptidoglycansynthesis pages 1-2)<br />
+- Chen W, Zhang Y-M, Davies C. Penicillin-Binding Protein 3 Is Essential for Growth of Pseudomonas aeruginosa. Antimicrobial Agents and Chemotherapy. Jan 2017. https://doi.org/10.1128/aac.01651-16 (chen2017penicillinbindingprotein3 pages 3-5, chen2017penicillinbindingprotein3 pages 1-3)</p>
+<p>Conclusion<br />
+The Pseudomonas putida KT2440 mrcA gene product is a canonical class A PBP (PBP1A), a bifunctional peptidoglycan synthase that polymerizes lipid II-derived glycans and crosslinks peptide stems in the periplasm. Its TP activity is inhibited by β-lactams and its GT activity by moenomycin. aPBP activity and pathway integration are regulated by outer-membrane lipoprotein activators (Lpo family; Pseudomonas employs a related activator), and the enzyme functions within multi-protein complexes that coordinate with hydrolases during elongation and division. Recent work (2024) refines understanding of aPBP functional redundancy and environmental sensitivity, reinforcing the central yet regulated role of aPBPs in maintaining envelope integrity and antibiotic susceptibility in Gram-negative bacteria. (pazos2021regulationandfunction pages 1-2, typas2010regulationofpeptidoglycan pages 1-3, alodaini2024reducedpeptidoglycansynthesis pages 1-2, chen2017penicillinbindingprotein3 pages 3-5)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(pazos2021regulationandfunction pages 1-2): Manuel Pazos and Waldemar Vollmer. Regulation and function of class a penicillin-binding proteins. Current Opinion in Microbiology, 60:80-87, Apr 2021. URL: https://doi.org/10.1016/j.mib.2021.01.008, doi:10.1016/j.mib.2021.01.008. This article has 61 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(typas2010regulationofpeptidoglycan pages 1-3): Athanasios Typas, Manuel Banzhaf, Bart van den Berg van Saparoea, Jolanda Verheul, Jacob Biboy, Robert J. Nichols, Matylda Zietek, Katrin Beilharz, Kai Kannenberg, Moritz von Rechenberg, Eefjan Breukink, Tanneke den Blaauwen, Carol A. Gross, and Waldemar Vollmer. Regulation of peptidoglycan synthesis by outer membrane proteins. Cell, 143:1097-1109, Dec 2010. URL: https://doi.org/10.1016/j.cell.2010.11.038, doi:10.1016/j.cell.2010.11.038. This article has 460 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(alodaini2024reducedpeptidoglycansynthesis pages 1-2): Dema Alodaini, Victor Hernandez-Rocamora, Gabriela Boelter, Xuyu Ma, Micheal B. Alao, Hannah M. Doherty, Jack A. Bryant, Patrick Moynihan, Danesh Moradigaravand, Monika Glinkowska, Waldemar Vollmer, and Manuel Banzhaf. Reduced peptidoglycan synthesis capacity impairs growth of <i>e. coli</i> at high salt concentration. mBio, Apr 2024. URL: https://doi.org/10.1128/mbio.00325-24, doi:10.1128/mbio.00325-24. This article has 8 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2017penicillinbindingprotein3 pages 1-3): Wei Chen, Yong-Mei Zhang, and Christopher Davies. Penicillin-binding protein 3 is essential for growth of pseudomonas aeruginosa. Antimicrobial Agents and Chemotherapy, Jan 2017. URL: https://doi.org/10.1128/aac.01651-16, doi:10.1128/aac.01651-16. This article has 91 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pazos2021regulationandfunction pages 6-7): Manuel Pazos and Waldemar Vollmer. Regulation and function of class a penicillin-binding proteins. Current Opinion in Microbiology, 60:80-87, Apr 2021. URL: https://doi.org/10.1016/j.mib.2021.01.008, doi:10.1016/j.mib.2021.01.008. This article has 61 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2017penicillinbindingprotein3 pages 3-5): Wei Chen, Yong-Mei Zhang, and Christopher Davies. Penicillin-binding protein 3 is essential for growth of pseudomonas aeruginosa. Antimicrobial Agents and Chemotherapy, Jan 2017. URL: https://doi.org/10.1128/aac.01651-16, doi:10.1128/aac.01651-16. This article has 91 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pazos2021regulationandfunction pages 2-4): Manuel Pazos and Waldemar Vollmer. Regulation and function of class a penicillin-binding proteins. Current Opinion in Microbiology, 60:80-87, Apr 2021. URL: https://doi.org/10.1016/j.mib.2021.01.008, doi:10.1016/j.mib.2021.01.008. This article has 61 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>alodaini2024reducedpeptidoglycansynthesis pages 1-2</li>
+<li>typas2010regulationofpeptidoglycan pages 1-3</li>
+<li>pazos2021regulationandfunction pages 1-2</li>
+<li>pazos2021regulationandfunction pages 6-7</li>
+<li>pazos2021regulationandfunction pages 2-4</li>
+<li>https://www.uniprot.org/uniprot/Q88CU6</li>
+<li>https://doi.org/10.1016/j.mib.2021.01.008</li>
+<li>https://doi.org/10.1128/mbio.00325-24</li>
+<li>https://doi.org/10.1128/aac.01651-16</li>
+<li>https://doi.org/10.1016/j.cell.2010.11.038</li>
+<li>https://doi.org/10.1016/j.mib.2021.01.008;</li>
+<li>https://doi.org/10.1016/j.cell.2010.11.038;</li>
+<li>https://doi.org/10.1128/mbio.00325-24;</li>
+<li>https://doi.org/10.1016/j.mib.2021.01.008,</li>
+<li>https://doi.org/10.1016/j.cell.2010.11.038,</li>
+<li>https://doi.org/10.1128/mbio.00325-24,</li>
+<li>https://doi.org/10.1128/aac.01651-16,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CU6
+gene_symbol: mrcA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;
+  Penicillin-binding protein 1A (PBP1A) is a bifunctional class A high-molecular-mass
+  penicillin-binding protein that catalyzes both glycosyltransferase (GT) and
+  D,D-transpeptidase (TP) activities essential for peptidoglycan biosynthesis. The
+  N-terminal GT domain (EC 2.4.99.28) polymerizes glycan strands from lipid II precursors,
+  while the C-terminal TP domain (EC 3.4.16.4) cross-links peptide stems to form the
+  mature peptidoglycan sacculus. The enzyme is inner membrane-anchored with catalytic
+  domains operating in the periplasmic space. In Gram-negative bacteria, PBP1A activity
+  is regulated by outer membrane lipoprotein activators (LpoA/LpoP family). The TP
+  domain is the target of beta-lactam antibiotics while the GT domain is inhibited by
+  moenomycin. PBP1A functions redundantly with PBP1B (mrcB) for core peptidoglycan
+  synthesis but shows stress-specific requirements.
+existing_annotations:
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;
+      PBP1A is an inner membrane-anchored protein with large periplasmic catalytic
+      domains that operate at the peptidoglycan layer interface. The TreeGrafter
+      annotation correctly places the functional site in the periplasmic space where
+      the enzyme synthesizes and crosslinks peptidoglycan [Pazos &amp; Vollmer 2021,
+      Typas et al. 2010].
+    action: ACCEPT
+    reason: &gt;
+      The localization is well-supported by the protein architecture: PBP1A has an
+      N-terminal membrane anchor with the GT and TP catalytic domains extending into
+      the periplasm where they act on lipid II and the nascent peptidoglycan layer.
+    supported_by:
+      - reference_id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+        supporting_text: &#34;aPBPs are inner-membrane anchored, with periplasmic catalytic domains acting at the peptidoglycan layer&#34;
+      - reference_id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+        supporting_text: &#34;aPBPs operate in complexes bridging the inner and outer membranes via periplasm-spanning partners&#34;
+
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This is a very general root-level term that provides minimal information. PBP1A
+      is indeed a bifunctional enzyme with both glycosyltransferase and transpeptidase
+      activities, but this annotation is too broad to be informative.
+    action: REMOVE
+    reason: &gt;
+      This term is overly general and adds no value when more specific molecular
+      function annotations (GO:0008955, GO:0009002) are present. The annotation to
+      &#34;catalytic activity&#34; provides no meaningful information about what the enzyme
+      actually does.
+
+- term:
+    id: GO:0004180
+    label: carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      PBP1A possesses D,D-carboxypeptidase activity as part of its transpeptidase
+      domain function. The enzyme can cleave the terminal D-Ala from the peptidoglycan
+      pentapeptide stem. UniProt annotation confirms EC 3.4.16.4 (serine-type D-Ala-D-Ala
+      carboxypeptidase). However, more specific terms exist.
+    action: MODIFY
+    reason: &gt;
+      While technically correct, the annotation should use the more specific term
+      GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase activity) which precisely
+      describes the enzymatic activity. The general &#34;carboxypeptidase activity&#34; term
+      is less informative.
+    proposed_replacement_terms:
+      - id: GO:0009002
+        label: serine-type D-Ala-D-Ala carboxypeptidase activity
+    supported_by:
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;substituents of D-alanine.; EC=3.4.16.4&#34;
+
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;
+      PBP1A is correctly localized to the plasma membrane (inner membrane in
+      Gram-negative bacteria). The protein has an N-terminal transmembrane helix
+      (residues 7-30 per UniProt) that anchors it to the inner membrane.
+    action: ACCEPT
+    reason: &gt;
+      UniProt annotation confirms &#34;Cell inner membrane; Single-pass type II membrane
+      protein&#34; with a defined transmembrane helix. The catalytic domains are
+      periplasmic but the protein is membrane-anchored.
+    supported_by:
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;SUBCELLULAR LOCATION: Cell inner membrane&#34;
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;Single-pass type II membrane protein&#34;
+
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      PBP1A does have peptidase activity via its transpeptidase domain which cleaves
+      the D-Ala-D-Ala bond during transpeptidation. However, the primary function is
+      transpeptidation (forming new crosslinks) rather than simple proteolysis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The proteolytic cleavage of the terminal D-Ala is mechanistically coupled to
+      transpeptidation - the acyl-enzyme intermediate is transferred to an acceptor
+      amino group rather than being simply hydrolyzed. This annotation is not wrong
+      but represents a secondary aspect of the core transpeptidase function.
+    supported_by:
+      - reference_id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+        supporting_text: &#34;Ser-type D,D-TPase activity (EC 3.4.16.4) that crosslinks peptide stems to the existing sacculus&#34;
+
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      Similar to the proteolysis annotation, this general term captures that PBP1A
+      has peptidase activity. The transpeptidase domain acts as a serine-type
+      D-Ala-D-Ala carboxypeptidase.
+    action: MODIFY
+    reason: &gt;
+      This general term should be replaced with the more specific GO:0009002
+      (serine-type D-Ala-D-Ala carboxypeptidase activity) which accurately describes
+      the substrate specificity and mechanism.
+    proposed_replacement_terms:
+      - id: GO:0009002
+        label: serine-type D-Ala-D-Ala carboxypeptidase activity
+    supported_by:
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;Preferential cleavage: (Ac)2-L-Lys-D-Ala-|-D-Ala&#34;
+
+- term:
+    id: GO:0008360
+    label: regulation of cell shape
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      PBP1A contributes to maintaining cell shape through peptidoglycan synthesis.
+      However, this term may be slightly overspecified - PBP1A participates in
+      peptidoglycan synthesis which is essential for cell shape, but it is not
+      primarily a &#34;regulator&#34; of cell shape. In Pseudomonas, PBP1A mutants show
+      morphology/motility defects [Chen et al. 2017].
+    action: ACCEPT
+    reason: &gt;
+      The UniProt keyword &#34;Cell shape&#34; maps to this term. The peptidoglycan layer
+      synthesized by PBP1A directly determines bacterial cell morphology. In E. coli,
+      PBP1B loss decreases cell stiffness [Pazos &amp; Vollmer 2021]. While &#34;maintenance
+      of cell shape&#34; might be more precise, this annotation captures the biological
+      reality that PBP1A function affects cell morphology. Pseudomonas PBP1A
+      disruptions specifically affect morphology [Chen et al. 2017].
+    supported_by:
+      - reference_id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+        supporting_text: &#34;PBP1A disruptions affecting motility and morphology&#34;
+      - reference_id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+        supporting_text: &#34;aPBPs provide mechanical stability (e.g., PBP1B loss decreases stiffness in E. coli)&#34;
+
+- term:
+    id: GO:0008658
+    label: penicillin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      PBP1A is by definition a penicillin-binding protein. The transpeptidase active
+      site serine is acylated by beta-lactam antibiotics including penicillins and
+      cephalosporins. This is a core defining feature of the protein family.
+    action: ACCEPT
+    reason: &gt;
+      The protein name itself (Penicillin-binding protein 1A) indicates this function.
+      The transpeptidase domain contains a serine that forms a covalent acyl-enzyme
+      intermediate with beta-lactam antibiotics, inhibiting the enzyme. This is the
+      mechanism by which beta-lactams exert their antibacterial effect.
+    supported_by:
+      - reference_id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+        supporting_text: &#34;The TPase active site is acylated by beta-lactam antibiotics&#34;
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;RecName: Full=Penicillin-binding protein 1A&#34;
+
+- term:
+    id: GO:0008955
+    label: peptidoglycan glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This is one of the two core enzymatic activities of PBP1A. The N-terminal
+      glycosyltransferase domain (GT51 family) polymerizes glycan strands from lipid II
+      precursors (EC 2.4.99.28). The domain is inhibited by moenomycin.
+    action: ACCEPT
+    reason: &gt;
+      This annotation accurately captures a primary molecular function of PBP1A.
+      UniProt confirms EC 2.4.99.28 and the Pfam Transgly domain (PF00912). The
+      glycosyltransferase activity polymerizes lipid II to form the glycan backbone
+      of peptidoglycan.
+    supported_by:
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;ChEBI:CHEBI:78435; EC=2.4.99.28&#34;
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;Glycosyl transferase family 51&#34;
+      - reference_id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+        supporting_text: &#34;GTase activity (EC 2.4.99.28) that polymerizes glycan strands from the lipid II precursor&#34;
+
+- term:
+    id: GO:0009002
+    label: serine-type D-Ala-D-Ala carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: &gt;
+      This is the second core enzymatic activity of PBP1A. The C-terminal
+      transpeptidase domain acts as a serine-type D,D-transpeptidase/carboxypeptidase
+      (EC 3.4.16.4). The enzyme cleaves the terminal D-Ala and transfers the
+      acyl-enzyme intermediate to form crosslinks.
+    action: ACCEPT
+    reason: &gt;
+      This annotation accurately describes the transpeptidase domain function.
+      UniProt confirms EC 3.4.16.4 and the Pfam Transpeptidase domain (PF00905).
+      This is the enzymatic activity targeted by beta-lactam antibiotics.
+    supported_by:
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;substituents of D-alanine.; EC=3.4.16.4&#34;
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;Penicillin-binding protein transpeptidase&#34;
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;Preferential cleavage: (Ac)2-L-Lys-D-Ala-|-D-Ala&#34;
+
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This is the central biological process in which PBP1A participates. As a
+      bifunctional synthase, PBP1A directly catalyzes peptidoglycan biosynthesis by
+      both polymerizing glycan chains and crosslinking peptide stems.
+    action: ACCEPT
+    reason: &gt;
+      This is the core biological process annotation for PBP1A. UniProt pathway
+      annotation confirms &#34;Cell wall biogenesis; peptidoglycan biosynthesis&#34;. The
+      enzyme acts late in the peptidoglycan pathway, using lipid II to extend and
+      crosslink the sacculus.
+    supported_by:
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;Cell wall biogenesis; peptidoglycan biosynthesis&#34;
+      - reference_id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+        supporting_text: &#34;PBP1A acts late in the peptidoglycan pathway, using lipid II delivered to the periplasm to extend glycan chains and crosslink to the existing sacculus&#34;
+
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      PBP1A has transferase activity via its glycosyltransferase domain, but this
+      root-level term is too general to be informative.
+    action: REMOVE
+    reason: &gt;
+      This term is overly general and redundant with the more specific GO:0008955
+      (peptidoglycan glycosyltransferase activity) annotation. Removing this
+      uninformative annotation improves annotation quality.
+
+- term:
+    id: GO:0016757
+    label: glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      PBP1A has glycosyltransferase activity but this term is less specific than
+      GO:0008955 (peptidoglycan glycosyltransferase activity) which is already
+      annotated.
+    action: MODIFY
+    reason: &gt;
+      While correct, this should be replaced with the more specific GO:0008955
+      (peptidoglycan glycosyltransferase activity) which captures the substrate
+      specificity. Since GO:0008955 is already annotated, this general term is
+      redundant.
+    proposed_replacement_terms:
+      - id: GO:0008955
+        label: peptidoglycan glycosyltransferase activity
+
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      PBP1A has hydrolase activity (carboxypeptidase function), but this root-level
+      term is too general to be informative when more specific terms are available.
+    action: REMOVE
+    reason: &gt;
+      This term is overly general and provides minimal information. The more
+      specific GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase activity)
+      annotation already captures the hydrolase function with appropriate specificity.
+
+- term:
+    id: GO:0046677
+    label: response to antibiotic
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      PBP1A is the direct molecular target of beta-lactam antibiotics. The
+      transpeptidase active site serine is covalently acylated by penicillins and
+      cephalosporins, inhibiting the enzyme and causing bacterial cell death.
+    action: ACCEPT
+    reason: &gt;
+      This annotation is legitimate and accurate. PBPs are the pharmacological
+      targets of beta-lactam antibiotics, and their inhibition leads to
+      bactericidal effects. The UniProt keyword &#34;Antibiotic resistance&#34; also
+      supports this annotation. Mutations in PBPs can confer antibiotic resistance.
+    supported_by:
+      - reference_id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+        supporting_text: &#34;TPase inhibited by beta-lactam antibiotics (penicillins/cephalosporins)&#34;
+      - reference_id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+        supporting_text: &#34;In Pseudomonas, PBPs are established beta-lactam targets&#34;
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;Antibiotic resistance {ECO:0000256|ARBA:ARBA00023251}&#34;
+
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      PBP1A directly participates in cell wall organization by synthesizing and
+      crosslinking peptidoglycan, the main structural component of the bacterial
+      cell wall. The enzyme works in multi-protein complexes with hydrolases to
+      coordinate safe insertion of new peptidoglycan.
+    action: MODIFY
+    reason: &gt;
+      While cell wall organization is correct, the more specific term GO:0031504
+      (peptidoglycan-based cell wall organization) would be more appropriate for
+      this Gram-negative bacterial protein that specifically acts on peptidoglycan.
+      Alternatively, GO:0009273 (peptidoglycan-based cell wall biogenesis) could
+      be used.
+    proposed_replacement_terms:
+      - id: GO:0031504
+        label: peptidoglycan-based cell wall organization
+    supported_by:
+      - reference_id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+        supporting_text: &#34;participates in multi-enzyme complexes with hydrolases and divisome/elongasome components to insert and repair PG during elongation and septation&#34;
+      - reference_id: UniProt:Q88CU6
+        supporting_text: &#34;Cell wall biogenesis/degradation {ECO:0000256|ARBA:ARBA00023316}&#34;
+
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically
+    versatile Pseudomonas putida KT2440
+  full_text_unavailable: true
+  findings:
+    - statement: Genome sequence of P. putida KT2440 establishing the gene model for mrcA (PP_5084)
+      full_text_unavailable: true
+- id: file:PSEPK/mrcA/mrcA-deep-research-falcon.md
+  title: Deep research on mrcA function based on literature review
+  findings:
+    - statement: Class A PBPs are bifunctional synthases with GT and TP domains
+      supporting_text: &#34;PBP1A catalyzes (i) GTase activity (EC 2.4.99.28) that polymerizes glycan strands from the lipid II precursor and (ii) Ser-type D,D-TPase activity (EC 3.4.16.4) that crosslinks peptide stems&#34;
+    - statement: aPBPs require outer membrane lipoprotein activators (LpoA/LpoB/LpoP)
+      supporting_text: &#34;Requires outer-membrane-anchored lipoprotein activators in Gram-negative bacteria (LpoA for PBP1A in many gamma-proteobacteria)&#34;
+    - statement: TPase inhibited by beta-lactams, GTase inhibited by moenomycin
+      supporting_text: &#34;TPase inhibited by beta-lactam antibiotics (penicillins/cephalosporins); GTase inhibited by moenomycin&#34;
+    - statement: aPBPs contribute to cell envelope mechanical stability
+      supporting_text: &#34;aPBPs provide mechanical stability (e.g., PBP1B loss decreases stiffness in E. coli)&#34;
+
+core_functions:
+  - description: &gt;
+      Peptidoglycan glycosyltransferase activity: The N-terminal GT51 domain catalyzes
+      polymerization of lipid II to form glycan strands. UniProt EC 2.4.99.28; Pfam domain PF00912.
+    molecular_function:
+      id: GO:0008955
+      label: peptidoglycan glycosyltransferase activity
+    directly_involved_in:
+      - id: GO:0009252
+        label: peptidoglycan biosynthetic process
+    locations:
+      - id: GO:0030288
+        label: outer membrane-bounded periplasmic space
+  - description: &gt;
+      Serine-type D-Ala-D-Ala carboxypeptidase/transpeptidase activity: The C-terminal
+      transpeptidase domain catalyzes crosslinking of peptide stems via D,D-transpeptidation.
+      UniProt EC 3.4.16.4; Pfam domain PF00905.
+    molecular_function:
+      id: GO:0009002
+      label: serine-type D-Ala-D-Ala carboxypeptidase activity
+    directly_involved_in:
+      - id: GO:0009252
+        label: peptidoglycan biosynthetic process
+    locations:
+      - id: GO:0030288
+        label: outer membrane-bounded periplasmic space
+  - description: &gt;
+      Penicillin binding: As a class A PBP, the protein binds penicillins and other
+      beta-lactams at its transpeptidase active site serine, mediating response to
+      antibiotic stress.
+    molecular_function:
+      id: GO:0008658
+      label: penicillin binding
+    directly_involved_in:
+      - id: GO:0046677
+        label: response to antibiotic
+    locations:
+      - id: GO:0030288
+        label: outer membrane-bounded periplasmic space
+
+suggested_questions:
+  - question: &gt;
+      What is the specific outer membrane lipoprotein activator for P. putida
+      PBP1A - is it LpoA, LpoP, or another family member? E. coli uses LpoA for
+      PBP1A and LpoB for PBP1B, while Pseudomonas employs LpoP, but the specific
+      pairing with PBP1A in P. putida KT2440 is not established.
+  - question: &gt;
+      Is P. putida mrcA (PBP1A) individually essential or redundant with mrcB (PBP1B)?
+      In E. coli, either can be deleted but not both. In P. aeruginosa, most HMM
+      PBPs are individually nonessential. Direct data for P. putida KT2440 is limited.
+
+suggested_experiments:
+  - description: &gt;
+      Generate clean deletion mutants of mrcA and mrcB in P. putida KT2440 to
+      test individual essentiality and redundancy. This would clarify whether
+      PBP1A and PBP1B are functionally redundant in this organism as they are in E. coli.
+    hypothesis: &gt;
+      mrcA and mrcB are individually dispensable but show synthetic lethality when
+      both are deleted, similar to E. coli.
+  - description: &gt;
+      Characterize cell morphology and mechanical properties of mrcA mutants
+      under various stress conditions. Based on E. coli data showing stress-dependent
+      performance differences between PBP1A and PBP1B, similar studies in P. putida
+      would inform functional partitioning.
+    hypothesis: &gt;
+      mrcA mutants will show altered cell shape or reduced mechanical stability
+      under specific stress conditions such as high osmolarity.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

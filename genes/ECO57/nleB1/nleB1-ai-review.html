@@ -1,0 +1,3342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nleB1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nleB1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8XBX8" target="_blank" class="term-link">
+                        Q8XBX8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Escherichia coli O157:H7</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nleB1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8XBX8" data-a="DESCRIPTION: NleB1 (Non-LEE-encoded type III effector B1) is a ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NleB1 (Non-LEE-encoded type III effector B1) is a protein-arginine N-acetylglucosaminyltransferase that is secreted by the type III secretion system (T3SS) into host cells during EHEC infection. The enzyme catalyzes the transfer of N-acetylglucosamine (GlcNAc) from UDP-GlcNAc to the guanidino nitrogen of arginine residues on host target proteins, primarily death domain-containing proteins such as FADD (Arg117), TRADD (Arg235), and RIPK1 (Arg603). This unusual post-translational modification disrupts homotypic and heterotypic death domain interactions required for death receptor signaling complex assembly, thereby inhibiting TNF/TRAIL/Fas-mediated apoptosis, necroptosis, and NF-kappaB activation. NleB1 also glycosylates GAPDH at Arg197/Arg200, preventing GAPDH-TRAF2 interaction. The enzyme requires Mn2+ as a cofactor and contains a GT-A fold with a characteristic DXD motif and HEN catalytic triad. NleB1 undergoes auto-GlcNAcylation which is required for activity toward death domain-containing substrates. Importantly, NleB1 is a signaling modulator/effector that manipulates host cell processes rather than a classical toxin that directly kills cells (nleB1-deep-research-falcon.md).</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NleB1 is secreted via the type III secretion system into the extracellular milieu and then translocated directly into host cells. The annotation reflects that the protein leaves the bacterial cytoplasm and enters the extracellular space transiently before entering host cells (PMID:30619781, PMID:28522607).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct as NleB1 is a T3SS effector that is secreted from the bacterium. UniProt confirms the subcellular location as &#34;Secreted&#34; with subsequent translocation to &#34;Host cytoplasm&#34; via T3SS. The IEA annotation based on UniProt subcellular location vocabulary mapping is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                        PMID:30619781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The enteropathogenic and enterohemorrhagic Escherichia coli NleB proteins as well as the Salmonella enterica SseK proteins are type III secretion system effectors that function as glycosyltransferase enzymes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NleB1 is a glycosyltransferase that transfers GlcNAc from UDP-GlcNAc to arginine residues on protein substrates. This broad transferase activity annotation is correct but less specific than GO:0106362 (protein-arginine N-acetylglucosaminyltransferase activity) which is also annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a correct parent term annotation. While more specific annotations exist (GO:0016757, GO:0106362), having parent terms from IEA mappings is acceptable and does not conflict with more specific annotations. The UniProt record explicitly lists EC=2.4.1.- confirming transferase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                        PMID:30619781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The kinetic parameters of NleB1 (150 nM at 30°C) were calculated as follows: Vmax: 2,975.3 ± 125 RLU/min/μg protein; Km: 379 ± 43 μM; Kcat (s-1): 50, Kcat/Km (s-1, M-1): 130,703.4</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016757" target="_blank" class="term-link">
+                                    GO:0016757
+                                </a>
+                            </span>
+                            <span class="term-label">glycosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0016757" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NleB1 catalyzes the transfer of N-acetylglucosamine (GlcNAc) from UDP-GlcNAc to arginine residues on host proteins. Multiple publications confirm glycosyltransferase activity (PMID:28522607, PMID:30619781). The protein belongs to the glycosyltransferase NleB family and has a GT-A fold.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is experimentally validated. PMID:28522607 states &#34;NleB is a glycosyltransferase that modifies host proteins with N-acetyl-d-glucosamine&#34;. PMID:30619781 further characterizes the kinetic parameters. This is an appropriate intermediate-level MF annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link">
+                                        PMID:28522607
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NleB is a glycosyltransferase that modifies host proteins with N-acetyl-d-glucosamine to inhibit antibacterial and inflammatory host responses</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                        PMID:30619781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The NleB1/NleB2 (enteropathogenic and enterohemorrhagic E. coli; EPEC and EHEC) and SseK1/SseK2/SseK3 (Salmonella enterica) T3SS effectors are glycosyltransferases that modify protein substrates on arginine residues</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030430" target="_blank" class="term-link">
+                                    GO:0030430
+                                </a>
+                            </span>
+                            <span class="term-label">host cell cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0030430" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NleB1 is translocated into host cells via the T3SS where it functions in the host cell cytoplasm to modify death domain-containing proteins. This localization is essential for its function in disrupting host signaling pathways.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct localization annotation. The deep research report confirms &#34;NleB1 is secreted by the T3SS into host cells, where it acts in the host cytosol to modify death-domain proteins.&#34; UniProt also lists &#34;Host cytoplasm&#34; as the subcellular location with evidence by similarity to related effectors.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link">
+                                        PMID:28522607
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Many Gram-negative bacterial pathogens use a syringe-like apparatus called a type III secretion system to inject virulence factors into host cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NleB1 requires manganese (Mn2+) as a cofactor for its glycosyltransferase activity. The DXD motif (residues 221-223) coordinates the metal ion. Mutation of the DXD motif to AAA abolishes activity (PMID:30619781).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation supported by experimental evidence. While GO:0030145 (manganese ion binding) is more specific and also annotated with IDA evidence, this broader term is acceptable as an IEA annotation. The DXD motif essential for Mn2+ coordination is confirmed in the UniProt feature table.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                        PMID:30619781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">an inactive form of NleB1 (NleB1-AAA) in which the aspartic acid residues required for Mn2+ stabilization were mutated to alanines</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090729" target="_blank" class="term-link">
+                                    GO:0090729
+                                </a>
+                            </span>
+                            <span class="term-label">toxin activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0090729" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from the UniProt keyword &#34;Toxin&#34; (KW-0800) mapping to GO. However, the GO definition of toxin activity requires &#34;Interacting selectively with one or more biological molecules in another (target) organism, initiating pathogenesis (leading to an abnormal, generally detrimental state).&#34; While NleB1 is a virulence factor, it is fundamentally different from classical toxins. NleB1 is a signaling modulator that manipulates host cell processes by enzymatically modifying host proteins - it does NOT directly kill or damage cells like true toxins (e.g., Shiga toxin which inhibits protein synthesis, hemolysin which lyses cells by pore formation). NleB1 actually INHIBITS cell death (apoptosis, necroptosis) rather than causing it (nleB1-deep-research-falcon.md).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a clear case of SPKW over-annotation. The UniProt keyword &#34;Toxin&#34; is applied broadly to bacterial virulence factors, but the GO term &#34;toxin activity&#34; has a specific definition that does not fit NleB1. Key distinctions: 1) True toxins (Shiga toxin, diphtheria toxin, hemolysins) directly damage/kill cells 2) NleB1 is a T3SS effector that MODULATES host signaling without direct cytotoxicity 3) NleB1 actually SUPPRESSES host cell death pathways (apoptosis, necroptosis) 4) The mechanism is enzymatic modification of host proteins to subvert signaling,
+   not direct cellular damage
+5) PMID:30619781 explicitly notes that inhibitors of NleB1 &#34;were not significantly
+   toxic to mammalian cells&#34; and did not cause &#34;significant macrophage death&#34;
+The appropriate GO terms for NleB1&#39;s function are process terms like GO:0052041 (symbiont-mediated suppression of host programmed cell death), GO:0085034 (symbiont-mediated suppression of host NF-kappaB cascade), and GO:0140403 (effector-mediated suppression of host innate immune response).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link">
+                                        PMID:28522607
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NleB is a glycosyltransferase that modifies host proteins with N-acetyl-d-glucosamine to inhibit antibacterial and inflammatory host responses</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                        PMID:30619781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also failed to observe significant macrophage death in our studies</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106362" target="_blank" class="term-link">
+                                    GO:0106362
+                                </a>
+                            </span>
+                            <span class="term-label">protein-arginine N-acetylglucosaminyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0106362" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most precise molecular function annotation for NleB1. The enzyme specifically catalyzes the transfer of GlcNAc to the guanidino nitrogen of arginine residues on protein substrates. This activity is directly demonstrated in PMID:28522607 and PMID:30619781.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and appropriate annotation. This GO term precisely describes NleB1&#39;s enzymatic activity. UniProt lists this exact term with IDA evidence from PMID:28522607 and PMID:30619781. The IEA annotation from InterPro is consistent with experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link">
+                                        PMID:28522607
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">EHEC NleB1 glycosylated two GAPDH arginine residues, Arg197 and Arg200</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                        PMID:30619781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This modification is unusual because it occurs on the guanidinium groups of arginines, which are poor nucleophiles</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27018634" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27018634
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative Mass Spectrometry Identifies Novel Host Binding...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0005515" data-r="PMID:27018634" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:27018634 identified ensconsin (MAP7) as a binding partner for NleB1 using quantitative mass spectrometry. The study confirmed that NleB1 interacted with ensconsin in a region corresponding to its microtubule binding domain. However, &#34;protein binding&#34; is an uninformative annotation per GO curation guidelines.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the interaction with ensconsin/MAP7 is experimentally validated, the GO term &#34;protein binding&#34; (GO:0005515) is considered too vague to be informative. Per GO curation guidelines, more specific binding terms should be used. The interaction with MAP7 led to disruption of intracellular trafficking (see GO:0052038 annotation). A more informative annotation would describe the functional consequence or use a specific binding term if available.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140418" target="_blank" class="term-link">
+                                    effector-mediated perturbation of host process by symbiont
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27018634" target="_blank" class="term-link">
+                                        PMID:27018634
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we confirmed that NleB1 and EspL interacted with ensconsin in a region that corresponded to its microtubule binding domain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030145" target="_blank" class="term-link">
+                                    GO:0030145
+                                </a>
+                            </span>
+                            <span class="term-label">manganese ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30619781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High-Throughput Screening for Bacterial Glycosyltransferase ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0030145" data-r="PMID:30619781" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NleB1 requires Mn2+ as a cofactor for its glycosyltransferase activity. The DXD motif (residues 221-223) is essential for Mn2+ coordination. PMID:30619781 demonstrated that mutation of the DXD motif to AAA (NleB1-AAA) abolished enzymatic activity, confirming the requirement for metal coordination.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a well-supported annotation with direct experimental evidence. The kinetic assays in PMID:30619781 used 25 mM MnCl2 and showed that the DXD-&gt;AAA mutant lacked activity. UniProt features annotate residues 223, 320, and 322 as Mn2+ binding sites.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                        PMID:30619781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">UDP-Glo luminescence assays were performed in 96 well-microplates, containing 250 nM NleB1 in 125 mM Tris pH 7.4, 25 mM MnCl2, 2.5 mM DTT, and 100 μM UDP-GlcNAc</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                        PMID:30619781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">an inactive form of NleB1 (NleB1-AAA) in which the aspartic acid residues required for Mn2+ stabilization were mutated to alanines</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106362" target="_blank" class="term-link">
+                                    GO:0106362
+                                </a>
+                            </span>
+                            <span class="term-label">protein-arginine N-acetylglucosaminyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28522607
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NleB/SseK effectors from Citrobacter rodentium, Escherichia ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0106362" data-r="PMID:28522607" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:28522607 directly demonstrated that EHEC NleB1 glycosylates host proteins GAPDH (at Arg197 and Arg200) and FADD on arginine residues using in vitro glycosylation assays and mass spectrometry.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the primary experimental evidence for NleB1&#39;s enzymatic activity. The study used in vitro assays and cell culture experiments to demonstrate arginine-specific N-acetylglucosaminyltransferase activity. The specific modification sites were identified by mass spectrometry.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link">
+                                        PMID:28522607
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also found that EHEC NleB1 glycosylated two GAPDH arginine residues, Arg197 and Arg200, and that these two residues were essential for GAPDH-mediated activation of TNF receptor-associated factor 2 ubiquitination</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link">
+                                        PMID:28522607
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">C. rodentium NleB, EHEC NleB1, EPEC NleB1, and SseK2 glycosylated the FADD (Fas-associated death domain protein)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106362" target="_blank" class="term-link">
+                                    GO:0106362
+                                </a>
+                            </span>
+                            <span class="term-label">protein-arginine N-acetylglucosaminyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30619781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High-Throughput Screening for Bacterial Glycosyltransferase ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0106362" data-r="PMID:30619781" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:30619781 characterized the kinetic parameters of NleB1&#39;s glycosyltransferase activity (Km = 379 uM for UDP-GlcNAc, kcat = 50 s-1) and developed high-throughput screening assays to identify inhibitors. The study used purified recombinant NleB1 and demonstrated activity against GAPDH and TRADD substrates.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This provides additional IDA evidence for the same molecular function. The study provides quantitative kinetic characterization of the enzyme. Having multiple IDA annotations from different publications strengthens the evidence base.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                        PMID:30619781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The kinetic parameters of NleB1 (150 nM at 30°C) were calculated as follows: Vmax: 2,975.3 ± 125 RLU/min/μg protein; Km: 379 ± 43 μM; Kcat (s-1): 50, Kcat/Km (s-1, M-1): 130,703.4</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052038" target="_blank" class="term-link">
+                                    GO:0052038
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated perturbation of host intracellular transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27018634" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27018634
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative Mass Spectrometry Identifies Novel Host Binding...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0052038" data-r="PMID:27018634" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:27018634 demonstrated that NleB1 and EspL interact with ensconsin (MAP7), an essential cofactor of kinesin-1 required for intracellular trafficking. The study showed that intracellular trafficking was severely disrupted during wild-type EPEC infections but not during infections with ΔnleB1 or ΔespL mutants.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a well-supported annotation with genetic evidence (IMP). The phenotype was observed in wild-type but not mutant infections, providing direct evidence that NleB1 contributes to perturbation of host intracellular transport through its interaction with the microtubule-associated protein ensconsin.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27018634" target="_blank" class="term-link">
+                                        PMID:27018634
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ensconsin is an essential cofactor of kinesin-1 that is required for intracellular trafficking, and we demonstrated that intracellular trafficking was severely disrupted during wild type EPEC infections but not during infections with ΔnleB1 or ΔespL mutants</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0085034" target="_blank" class="term-link">
+                                    GO:0085034
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated suppression of host NF-kappaB cascade</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28522607
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NleB/SseK effectors from Citrobacter rodentium, Escherichia ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0085034" data-r="PMID:28522607" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NleB1 blocks TNF-mediated NF-kappaB pathway activation by glycosylating death domain proteins FADD, TRADD, and RIPK1, preventing their assembly into signaling complexes. This is a core function of NleB1. PMID:28522607 directly demonstrated that EHEC NleB1 blocked TNF-mediated NF-kappaB pathway activation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is strongly supported by the literature and represents a core biological function of NleB1. The mechanism (arginine glycosylation of death domain proteins preventing signaling complex assembly) is well characterized.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link">
+                                        PMID:28522607
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SseK1, SseK3, EHEC NleB1, EPEC NleB1, and Crodentium NleB blocked TNF-mediated NF-κB pathway activation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                        PMID:30619781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This modification is biologically important because the glycosylation of arginines on protein substrates disrupts the normal functioning of the innate immune system</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033668" target="_blank" class="term-link">
+                                    GO:0033668
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated suppression of host apoptosis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28522607
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NleB/SseK effectors from Citrobacter rodentium, Escherichia ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8XBX8" data-a="GO:0033668" data-r="PMID:28522607" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NleB1 inhibits host apoptosis by glycosylating death domain proteins (FADD, TRADD, RIPK1) which prevents death receptor signaling complex assembly. This blocks TNF/TRAIL/Fas-mediated apoptotic signaling pathways (nleB1-deep-research-falcon.md).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a well-documented function of NleB1. The enzyme specifically targets death domain-containing proteins that are essential for death receptor-mediated apoptosis. By glycosylating these proteins, NleB1 prevents their interaction and blocks apoptotic signaling.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link">
+                                        PMID:28522607
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NleB is a glycosyltransferase that modifies host proteins with N-acetyl-d-glucosamine to inhibit antibacterial and inflammatory host responses</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                        PMID:30619781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Several death domain-containing proteins have been described as substrates of some of the NleB/SseK orthologs, including the Fas-associated protein with death domain (FADD), tumor necrosis factor receptor type 1-associated DEATH domain protein (TRADD), and the receptor-interacting serine/threonine-protein kinase 1 (RIPK1)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Directly demonstrated by in vitro assays showing glycosylation of GAPDH (Arg197, Arg200), FADD, and TRADD (Arg235). Kinetic parameters characterized (Km=379 uM, kcat=50 s-1). Requires Mn2+ cofactor coordinated by DXD motif.</h3>
+                <span class="vote-buttons" data-g="Q8XBX8" data-a="FUNCTION: Directly demonstrated by in vitro assays showing g..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106362" target="_blank" class="term-link">
+                            protein-arginine N-acetylglucosaminyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0085034" target="_blank" class="term-link">
+                                symbiont-mediated suppression of host NF-kappaB cascade
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033668" target="_blank" class="term-link">
+                                symbiont-mediated suppression of host apoptosis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030430" target="_blank" class="term-link">
+                                host cell cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link">
+                                PMID:28522607
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">EHEC NleB1 glycosylated two GAPDH arginine residues, Arg197 and Arg200</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                                PMID:30619781
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The kinetic parameters of NleB1 (150 nM at 30°C) were calculated as follows: Vmax: 2,975.3 ± 125 RLU/min/μg protein; Km: 379 ± 43 μM; Kcat (s-1): 50, Kcat/Km (s-1, M-1): 130,703.4</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NleB1 matches InterPro domain IPR057545 (SseK_NleB) which maps to protein-arginine N-acetylglucosaminyltransferase activity</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt keyword &#34;Toxin&#34; maps to GO:0090729, but this is an over-annotation for T3SS effectors</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt keyword &#34;Glycosyltransferase&#34; appropriately maps to GO:0016757</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt keyword &#34;Transferase&#34; appropriately maps to GO:0016740</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt keyword &#34;Metal-binding&#34; appropriately maps to GO:0046872</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt subcellular location &#34;Secreted&#34; maps to GO:0005576 (extracellular region)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt subcellular location &#34;Host cytoplasm&#34; maps to GO:0030430 (host cell cytoplasm)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27018634" target="_blank" class="term-link">
+                            PMID:27018634
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative Mass Spectrometry Identifies Novel Host Binding Partners for Pathogenic Escherichia coli Type III Secretion System Effectors</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified ensconsin/MAP7 as a binding partner for NleB1 using quantitative mass spectrometry</div>
+                        
+                        <div class="finding-text">"we confirmed that NleB1 and EspL interacted with ensconsin in a region that corresponded to its microtubule binding domain"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Wild-type EPEC infection disrupts intracellular trafficking; ΔnleB1 mutants do not</div>
+                        
+                        <div class="finding-text">"Ensconsin is an essential cofactor of kinesin-1 that is required for intracellular trafficking, and we demonstrated that intracellular trafficking was severely disrupted during wild type EPEC infections but not during infections with ΔnleB1 or ΔespL mutants"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28522607" target="_blank" class="term-link">
+                            PMID:28522607
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">NleB/SseK effectors from Citrobacter rodentium, Escherichia coli, and Salmonella enterica display distinct differences in host substrate specificity</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EHEC NleB1 blocks TNF-mediated NF-kappaB pathway activation</div>
+                        
+                        <div class="finding-text">"SseK1, SseK3, EHEC NleB1, EPEC NleB1, and Crodentium NleB blocked TNF-mediated NF-κB pathway activation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EHEC NleB1 glycosylates host GAPDH at Arg197 and Arg200</div>
+                        
+                        <div class="finding-text">"EHEC NleB1 glycosylated two GAPDH arginine residues, Arg197 and Arg200"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EHEC NleB1 glycosylates FADD death domain protein</div>
+                        
+                        <div class="finding-text">"C. rodentium NleB, EHEC NleB1, EPEC NleB1, and SseK2 glycosylated the FADD (Fas-associated death domain protein)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Glycosylation of GAPDH prevents GAPDH-TRAF2 interaction and inhibits NF-kappaB signaling</div>
+                        
+                        <div class="finding-text">"these two residues were essential for GAPDH-mediated activation of TNF receptor-associated factor 2 ubiquitination"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30619781" target="_blank" class="term-link">
+                            PMID:30619781
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">High-Throughput Screening for Bacterial Glycosyltransferase Inhibitors</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Characterized kinetic parameters of NleB1 (Km = 379 uM, kcat = 50 s-1)</div>
+                        
+                        <div class="finding-text">"The kinetic parameters of NleB1 (150 nM at 30°C) were calculated as follows: Vmax: 2,975.3 ± 125 RLU/min/μg protein; Km: 379 ± 43 μM; Kcat (s-1): 50, Kcat/Km (s-1, M-1): 130,703.4"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DXD motif essential for Mn2+ coordination and catalytic activity</div>
+                        
+                        <div class="finding-text">"an inactive form of NleB1 (NleB1-AAA) in which the aspartic acid residues required for Mn2+ stabilization were mutated to alanines"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NleB1 glycosylates TRADD at R235</div>
+                        
+                        <div class="finding-text">"NleB1 glycosylates human TRADD on R235, thereby blocking death domain interactions and disrupting tumor necrosis factor signaling"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Inhibitors were not toxic to mammalian cells and did not cause macrophage death</div>
+                        
+                        <div class="finding-text">"We also failed to observe significant macrophage death in our studies"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should UniProt keyword &#34;Toxin&#34; be applied to T3SS effectors that modulate host signaling without direct cytotoxic activity? The current mapping leads to inappropriate GO annotations.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8XBX8" data-a="Q: Should UniProt keyword &#34;Toxin&#34; be applied to T3SS ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relative importance of different NleB1 substrates (FADD, TRADD, RIPK1, GAPDH) for virulence during natural infection?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8XBX8" data-a="Q: What is the relative importance of different NleB1..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Comparative analysis of NleB1 activity on different death domain proteins to establish substrate hierarchy and physiological relevance during infection.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FADD may be the primary physiological target based on structural and kinetic data</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8XBX8" data-a="EXPERIMENT: Comparative analysis of NleB1 activity on differen..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structural characterization of NleB1-substrate complexes to understand substrate recognition and guide inhibitor development.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Substrate recognition involves specific interactions with death domain fold</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8XBX8" data-a="EXPERIMENT: Structural characterization of NleB1-substrate com..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nleB1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8XBX8" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-31T14:04:00.210520'<br />
+end_time: '2026-01-31T14:12:00.625182'<br />
+duration_seconds: 480.41<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ECO57<br />
+  gene_id: nleB1<br />
+  gene_symbol: nleB1<br />
+  uniprot_accession: Q8XBX8<br />
+  protein_description: 'RecName: Full=Protein-arginine N-acetylglucosaminyltransferase<br />
+    NleB1 {ECO:0000305}; Short=Arginine GlcNAcyltransferase NleB1 {ECO:0000305}; EC=2.4.1.-<br />
+    {ECO:0000269|PubMed:30619781}; AltName: Full=Non-LEE-encoded type III effector<br />
+    B1 {ECO:0000303|PubMed:30619781};'<br />
+  gene_info: Name=nleB1 {ECO:0000303|PubMed:30619781}; OrderedLocusNames=ECs3857 {ECO:0000312|EMBL:BAB37280.1};<br />
+  organism_full: Escherichia coli O157:H7.<br />
+  protein_family: Belongs to the glycosyltransferase NleB family.<br />
+  protein_domains: SseK_NleB. (IPR057545); SseK_NleB (PF24688)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 17</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q8XBX8</li>
+<li><strong>Protein Description:</strong> RecName: Full=Protein-arginine N-acetylglucosaminyltransferase NleB1 {ECO:0000305}; Short=Arginine GlcNAcyltransferase NleB1 {ECO:0000305}; EC=2.4.1.- {ECO:0000269|PubMed:30619781}; AltName: Full=Non-LEE-encoded type III effector B1 {ECO:0000303|PubMed:30619781};</li>
+<li><strong>Gene Information:</strong> Name=nleB1 {ECO:0000303|PubMed:30619781}; OrderedLocusNames=ECs3857 {ECO:0000312|EMBL:BAB37280.1};</li>
+<li><strong>Organism (full):</strong> Escherichia coli O157:H7.</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyltransferase NleB family.</li>
+<li><strong>Key Domains:</strong> SseK_NleB. (IPR057545); SseK_NleB (PF24688)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "nleB1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Escherichia coli O157:H7.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'nleB1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>nleB1</strong> (gene ID: nleB1, UniProt: Q8XBX8) in ECO57.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q8XBX8</li>
+<li><strong>Protein Description:</strong> RecName: Full=Protein-arginine N-acetylglucosaminyltransferase NleB1 {ECO:0000305}; Short=Arginine GlcNAcyltransferase NleB1 {ECO:0000305}; EC=2.4.1.- {ECO:0000269|PubMed:30619781}; AltName: Full=Non-LEE-encoded type III effector B1 {ECO:0000303|PubMed:30619781};</li>
+<li><strong>Gene Information:</strong> Name=nleB1 {ECO:0000303|PubMed:30619781}; OrderedLocusNames=ECs3857 {ECO:0000312|EMBL:BAB37280.1};</li>
+<li><strong>Organism (full):</strong> Escherichia coli O157:H7.</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyltransferase NleB family.</li>
+<li><strong>Key Domains:</strong> SseK_NleB. (IPR057545); SseK_NleB (PF24688)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "nleB1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Escherichia coli O157:H7.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'nleB1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>nleB1</strong> (gene ID: nleB1, UniProt: Q8XBX8) in ECO57.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- Identity verification: The query targets Escherichia coli O157:H7 NleB1 (UniProt Q8XBX8), a non-LEE-encoded type III secretion (T3SS) effector belonging to the NleB/SseK family of arginine glycosyltransferases. Multiple structural and functional studies establish NleB1 as an arginine N-acetylglucosaminyltransferase that modifies host death-domain proteins to disrupt immune signaling (GT-A-like fold with family-defining SseK_NleB domain) (giogha2021nleb2fromenteropathogenic pages 2-4, park2018structuralbasisfor pages 1-2). The organism (E. coli A/E pathogens) and family/domain assignment are consistent across primary literature (ding2019structuralandfunctional pages 1-3, park2018structuralbasisfor pages 1-2, giogha2021nleb2fromenteropathogenic pages 2-4).</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Summary</th>
+<th style="text-align: right;">Key details (residues, motifs, donors, mechanism)</th>
+<th>References</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity verification</td>
+<td>NleB1 is an NleB-family type III-secreted glycosyltransferase from Escherichia coli O157:H7 (UniProt Q8XBX8).</td>
+<td style="text-align: right;">Member of NleB/SseK family (SseK_NleB domain); non-LEE-encoded T3SS effector.</td>
+<td>(giogha2021nleb2fromenteropathogenic pages 2-4, park2018structuralbasisfor pages 1-2, giogha2021nleb2fromenteropathogenic pages 26-27)</td>
+</tr>
+<tr>
+<td>Enzymatic reaction &amp; mechanism</td>
+<td>Catalyses transfer of a sugar to arginine side chains (Arg-GlcNAc in vivo for NleB1) using nucleotide-sugar donors.</td>
+<td style="text-align: right;">Donor: UDP-GlcNAc (primary for NleB1); linkage: Arg–GlcNAc. Structural/ mechanistic notes: GT‑A–like fold with HLH/lid elements; active-site features reported include a HEN motif and requirement for a DXD region / critical Glu (e.g., Glu253); structural studies report both retaining (front-face SNi-like) and inverting mechanisms in different analyses. Mn2+ observed in crystal complexes.</td>
+<td>(park2018structuralbasisfor pages 1-2, ding2019structuralandfunctional pages 1-3, giogha2021nleb2fromenteropathogenic pages 2-4)</td>
+</tr>
+<tr>
+<td>Substrate specificity &amp; preferences</td>
+<td>Preferentially modifies death-domain (DD) proteins and a limited set of other host proteins; substrate scope can vary across paralogues.</td>
+<td style="text-align: right;">Reported modified residues: TRADD Arg235 (reported target), FADD Arg117 (preferred), RIPK1 Arg603 (validated), GAPDH Arg197/Arg200 (reported). Paralogues (NleB2, SseKs) show altered donor preference or narrower substrate selectivity.</td>
+<td>(ding2019structuralandfunctional pages 1-3, giogha2021nleb2fromenteropathogenic pages 11-13, araujogarrido2020typeiiisecretion pages 12-13)</td>
+</tr>
+<tr>
+<td>Auto-GlcNAcylation</td>
+<td>NleB-family enzymes can self-modify and auto-modification promotes enzymatic activity during infection.</td>
+<td style="text-align: right;">Auto-GlcNAc/hexose on internal Arg residues; loss of auto-modification reduces activity toward host DD substrates.</td>
+<td>(pan2020bacteriacatalyzedarginineglycosylation pages 1-2, giogha2021nleb2fromenteropathogenic pages 11-13, giogha2021nleb2fromenteropathogenic pages 13-14)</td>
+</tr>
+<tr>
+<td>Localization / delivery</td>
+<td>Delivered into host-cell cytosol by the bacterial type III secretion system (T3SS) where it encounters DD-containing proteins.</td>
+<td style="text-align: right;">Non-LEE-encoded T3SS effector translocated into host; acts in host cytosol at death-receptor signalling complexes.</td>
+<td>(park2018structuralbasisfor pages 1-2, giogha2021nleb2fromenteropathogenic pages 2-4, ding2019structuralandfunctional pages 1-3)</td>
+</tr>
+<tr>
+<td>Pathway context &amp; outcomes</td>
+<td>Directly antagonizes death-receptor signalling and NF-κB–linked inflammatory responses, thereby inhibiting apoptosis and necroptosis in infected cells.</td>
+<td style="text-align: right;">Targets interrupt TNFR/FAS/TRAIL DD interactions, block caspase‑8 cleavage and NF‑κB activation, and thereby promote bacterial survival/colonization.</td>
+<td>(ding2019structuralandfunctional pages 1-3, giogha2021nleb2fromenteropathogenic pages 11-13, araujogarrido2020typeiiisecretion pages 12-13)</td>
+</tr>
+<tr>
+<td>Quantitative / experimental highlights</td>
+<td>Site-specific and stable Arg-GlcNAc modifications detected by MS; structural complexes solved; in vivo virulence relevance demonstrated in animal models.</td>
+<td style="text-align: right;">Example residue: RIPK1 Arg603 mapped by MS; Arg‑GlcNAc modification is chemically stable (resistant to host glycosidases); crystal complexes include UDP and Mn2+; catalytic DXD mutants abolish activity; NleB activity promotes colonization in mouse models.</td>
+<td>(giogha2021nleb2fromenteropathogenic pages 11-13, ding2019structuralandfunctional pages 1-3, giogha2021nleb2fromenteropathogenic pages 4-6)</td>
+</tr>
+<tr>
+<td>Applications / inhibitors</td>
+<td>Anti-virulence rationale: inhibit NleB1/SseK arginine glycosyltransferase activity to restore host signalling; HTS and small-molecule leads reported.</td>
+<td style="text-align: right;">High-throughput screening identified inhibitory compounds (example HTS hits reported) and follow-up small-molecule inhibitors (proof-of-concept compounds) that block Arg‑GlcNAcylation in cells; potential for anti-virulence therapeutics.</td>
+<td>(giogha2021nleb2fromenteropathogenic pages 27-28, giogha2021nleb2fromenteropathogenic pages 4-6)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Concise, evidence-linked summary of NleB1 (E. coli O157:H7, UniProt Q8XBX8): identity, enzymatic chemistry, substrates/residues, localization, pathway effects, experimental highlights, and inhibitor efforts, with source citations for each item.</em></p>
+<p>Comprehensive research report<br />
+1) Key concepts and definitions<br />
+- Protein and family: NleB1 is a type III–translocated effector glycosyltransferase from E. coli O157:H7 that installs a sugar on arginine side chains of host proteins. It is the prototypic member of the NleB/SseK family, which share a GT-A–like catalytic domain plus auxiliary helix–loop–helix (HLH) and “lid” elements implicated in substrate recognition and active-site gating (park2018structuralbasisfor pages 1-2, giogha2021nleb2fromenteropathogenic pages 2-4).<br />
+- Enzymatic activity: NleB1 uses UDP-N-acetylglucosamine (UDP-GlcNAc) to transfer a single GlcNAc to the guanidinium of specific arginines in target proteins, forming a chemically stable Arg–GlcNAc linkage that is not removed by host glycosidases (detected by MS and specific anti-Arg-GlcNAc reagents) (giogha2021nleb2fromenteropathogenic pages 2-4, giogha2021nleb2fromenteropathogenic pages 11-13). This activity blocks death-domain (DD) protein–protein interactions central to TNFR/FAS/TRAIL signaling and NF-κB activation (ding2019structuralandfunctional pages 1-3, park2018structuralbasisfor pages 1-2).<br />
+- Mechanistic motifs and metal dependence: NleB/SseK enzymes possess a DXD-like metal-binding region and a conserved HEN (His-Glu-Asn) motif important for catalysis; structures show Mn2+ (or other divalent cations) coordinating UDP-GlcNAc in the active site (park2018structuralbasisfor pages 1-2, ding2019structuralandfunctional pages 1-3). Structural analyses of NleB/SseK enzymes support a retaining transfer via a front-face SNi-like pathway, though inverting features have been proposed for certain complexes, indicating mechanistic nuances across family members and contexts (park2018structuralbasisfor pages 1-2, ding2019structuralandfunctional pages 1-3).<br />
+- Substrate class and specificity: Preferred substrates are host death-domain adaptor proteins including TRADD, FADD, and RIPK1; additional substrates such as GAPDH have been identified in some studies. The family members differ in substrate breadth and donor preference (e.g., NleB2 can prefer UDP-glucose), but NleB1 predominantly installs Arg–GlcNAc during infection (giogha2021nleb2fromenteropathogenic pages 2-4, giogha2021nleb2fromenteropathogenic pages 4-6, park2018structuralbasisfor pages 1-2).</p>
+<p>2) Recent developments and latest research (prioritizing 2023–2024 sources when available)<br />
+- Death-pathway inhibition context: Contemporary reviews and syntheses emphasize NleB-family effectors as archetypal T3SS post-translational modifiers that suppress extrinsic apoptosis and necroptosis by Arg glycosylation of DD proteins, integrating death-receptor and NF-κB axes within modern frameworks of pathogen manipulation of regulated cell death; these updates build directly on earlier mechanistic studies cited below (araujogarrido2020typeiiisecretion pages 12-13). While these 2023–2024 treatments integrate NleB into broader PTM landscapes, the most precise biochemical/structural evidence remains anchored in prior primary work (2018–2021) summarized here.<br />
+- Donor specificity fine-tuning: Work comparing NleB1 and NleB2 shows that a single position near the catalytic machinery influences donor preference and substrate breadth; in particular, NleB1 Gly255 versus NleB2 Ser252 modulates UDP-GlcNAc vs UDP-glucose usage without abolishing signaling inhibition, refining our understanding of specificity determinants relevant to inhibitor design (giogha2021nleb2fromenteropathogenic pages 11-13, giogha2021nleb2fromenteropathogenic pages 2-4). <br />
+- Auto-modification: Family-wide auto-Arg-GlcNAcylation/hexosylation on internal arginines enhances effector activity toward host targets; disrupting auto-modification sites attenuates activity during infection, reinforcing auto-PTM as a regulatory layer (pan2020bacteriacatalyzedarginineglycosylation pages 1-2, giogha2021nleb2fromenteropathogenic pages 13-14, giogha2021nleb2fromenteropathogenic pages 11-13).</p>
+<p>3) Current applications and real-world implementations<br />
+- Anti-virulence inhibitor discovery: High-throughput screening has yielded small molecules (e.g., 100066N, 102644N) that inhibit NleB1/SseK glycosyltransferase activity, block cellular Arg-GlcNAcylation of DD substrates, and reduce intracellular survival of Salmonella in macrophage-like cells without significant host toxicity—supporting anti-virulence strategies that disarm effectors rather than inhibit bacterial growth (Frontiers 2018; DOI: https://doi.org/10.3389/fcimb.2018.00435) (giogha2021nleb2fromenteropathogenic pages 4-6). Repurposing of the small molecule YM155 (sepantronium bromide) also inhibits NleB/SseK Arg glycosyltransferase activity in cells with limited bacterial growth effects, further validating the target class (Pathogens 2021; DOI: https://doi.org/10.3390/pathogens10020253) (zhu2021ym155inhibitsnleb pages 2-6).<br />
+- Target selection rationale: Structural data (GT-A fold, HEN motif, Mn2+ dependence) and defined peptide/protein binding modes provide actionable pharmacophore hypotheses for competitive or allosteric inhibition at the donor, acceptor, or protein–protein interaction interface (park2018structuralbasisfor pages 1-2, ding2019structuralandfunctional pages 1-3).</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Structural consensus: Independent structural programs show SseK/NleB enzymes share a GT-A-like catalytic domain with HLH and lid substructures, with a conserved HEN motif contributing to catalysis and virulence. These studies emphasize retaining-like front-face chemistry for Arg glycosylation—an unusual modification given the poor nucleophilicity of the arginine guanidinium—highlighting unique transition-state features exploitable for selective inhibitor design (Nature Communications 2018; DOI: https://doi.org/10.1038/s41467-018-06680-6) (park2018structuralbasisfor pages 1-2).<br />
+- Functional paradigm: Comprehensive mechanistic work establishes that NleB1 Arg-GlcNAcylation of DD proteins disrupts assembly of death-inducing and pro-inflammatory complexes, dampening NF-κB activation and extrinsic apoptosis/necroptosis. In vivo studies in A/E pathogen models support virulence contributions, situating NleB as a validated anti-virulence target (Molecular Cell 2019; DOI: https://doi.org/10.1016/j.molcel.2019.03.028) (ding2019structuralandfunctional pages 1-3).<br />
+- Specificity determinants and breadth: Comparative analyses describe NleB1 as broader in substrate scope than some Salmonella SseKs; discrete residues (e.g., Tyr/Gly positions near the active site) tune kinetics and substrate range, linking enzyme parameters to pathogen fitness—a principle consistent with precision anti-virulence targeting (park2018structuralbasisfor pages 1-2, giogha2021nleb2fromenteropathogenic pages 27-28).</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Residue-level substrate mapping: RIPK1 Arg603 is a validated NleB target residue; FADD Arg117 and TRADD Arg235 are commonly reported sites across the family literature (mass spectrometry and site-directed validation) (giogha2021nleb2fromenteropathogenic pages 11-13, ding2019structuralandfunctional pages 1-3). <br />
+- Chemical stability: Arg–GlcNAc on DD proteins is exceptionally stable in host cells—resistant to physiologic temperatures, glycosidases, and routine degradation—underscoring durable pathway blockade (ding2019structuralandfunctional pages 1-3).<br />
+- Donor pools and preference: In E. coli, measured UDP-sugar pools are compatible with NleB1 using UDP-GlcNAc; NleB2 shows competitive use of UDP-glucose, with site swaps (NleB1 G255S; NleB2 S252G) reversing donor preference while retaining functional pathway inhibition (giogha2021nleb2fromenteropathogenic pages 11-13, giogha2021nleb2fromenteropathogenic pages 4-6).<br />
+- Structural biochemistry: Crystal complexes identify divalent metal coordination and positioning of UDP and acceptor arginine within the active site; mutating DXD/HEN or the critical Glu (e.g., Glu253) disrupts catalysis and virulence phenotypes (park2018structuralbasisfor pages 1-2, ding2019structuralandfunctional pages 1-3).<br />
+- In vivo relevance: Loss of NleB-family glycosyltransferase activity compromises colonization/virulence in A/E infection models; pathway-level readouts include blocked caspase-8 cleavage and reduced NF-κB signaling when NleB is active, and converse phenotypes when inactivated (ding2019structuralandfunctional pages 1-3, giogha2021nleb2fromenteropathogenic pages 11-13).</p>
+<p>Detailed function, substrates, localization, and pathways<br />
+- Reaction catalyzed: Transfer of GlcNAc from UDP-GlcNAc onto a specific arginine of target proteins (Arg–N-GlcNAc) in a GT-A-like active site. NleB1 is predominantly Arg-GlcNAcyltransferase in infection contexts; donor flexibility can be engineered but does not abrogate signaling inhibition (giogha2021nleb2fromenteropathogenic pages 2-4, giogha2021nleb2fromenteropathogenic pages 11-13, park2018structuralbasisfor pages 1-2).<br />
+- Substrate specificity: Core death-domain substrates include TRADD (Arg235), FADD (Arg117; often preferentially modified at physiological levels), and RIPK1 (Arg603), disrupting death receptor adaptor assembly. Additional reported substrates include GAPDH (Arg197/Arg200) in certain experimental systems (ding2019structuralandfunctional pages 1-3, giogha2021nleb2fromenteropathogenic pages 11-13, park2018structuralbasisfor pages 1-2).<br />
+- Structural motifs/domains: GT-A fold with DXD-like metal-coordination and a conserved HEN motif in the catalytic pocket; HLH and lid domains shape substrate engagement and access. Mn2+ coordination is observed in complexes (park2018structuralbasisfor pages 1-2, ding2019structuralandfunctional pages 1-3).<br />
+- Localization and delivery: NleB1 is secreted by the T3SS into the host cytosol, localizing functionally to death-receptor signaling hubs where it modifies DD proteins to block complex formation (giogha2021nleb2fromenteropathogenic pages 2-4, park2018structuralbasisfor pages 1-2, ding2019structuralandfunctional pages 1-3).<br />
+- Pathway integration: Arg-GlcNAcylation disables TNFR/FAS/TRAIL adaptor interactions, inhibiting extrinsic apoptosis and necroptosis and dampening NF-κB responses. The Arg–GlcNAc PTM is not reversed by host hydrolases, leading to sustained inhibition during infection (ding2019structuralandfunctional pages 1-3, park2018structuralbasisfor pages 1-2, giogha2021nleb2fromenteropathogenic pages 11-13).</p>
+<p>Applications and translational outlook<br />
+- Target validation: Genetic and biochemical data validate NleB1’s enzymatic activity as essential for suppression of host death/inflammatory signaling and for virulence in A/E models, supporting druggability (ding2019structuralandfunctional pages 1-3).<br />
+- Inhibitor classes and exemplars: HTS-derived chemotypes (e.g., 100066N, 102644N) and the repurposed compound YM155 inhibit NleB/SseK activity in cells with minimal toxicity and without affecting human OGT, supporting selectivity and an anti-virulence profile (Frontiers 2018; https://doi.org/10.3389/fcimb.2018.00435; Pathogens 2021; https://doi.org/10.3390/pathogens10020253) (giogha2021nleb2fromenteropathogenic pages 4-6, zhu2021ym155inhibitsnleb pages 2-6).<br />
+- Opportunities: Structural insights into donor binding, HEN/DXD residues, and acceptor positioning, together with defined peptide-recognition features, provide templates for structure-guided inhibitor design and biochemical screening cascades (park2018structuralbasisfor pages 1-2, ding2019structuralandfunctional pages 1-3).</p>
+<p>Limitations and evidence scope<br />
+- While 2023–2024 reviews contextualize NleB-family roles within current frameworks of regulated cell death and PTM-based host manipulation, the most precise mechanistic/structural and residue-level data derive from 2018–2021 primary studies. Where recent sources were unavailable within the retrieved evidence, conclusions are anchored to these definitive works (park2018structuralbasisfor pages 1-2, ding2019structuralandfunctional pages 1-3, giogha2021nleb2fromenteropathogenic pages 2-4, giogha2021nleb2fromenteropathogenic pages 11-13, giogha2021nleb2fromenteropathogenic pages 4-6, zhu2021ym155inhibitsnleb pages 2-6).</p>
+<p>References (URLs and dates)<br />
+- Park JB et al., Structural basis for arginine glycosylation of host substrates by bacterial effector proteins. Nature Communications. 2018-10-18. URL: https://doi.org/10.1038/s41467-018-06680-6 (park2018structuralbasisfor pages 1-2).<br />
+- Ding J et al., Structural and Functional Insights into Host Death Domains Inactivation by the Bacterial Arginine GlcNAcyltransferase Effector. Molecular Cell. 2019-06-06. URL: https://doi.org/10.1016/j.molcel.2019.03.028 (ding2019structuralandfunctional pages 1-3).<br />
+- Pan X, Luo J, Li S., Bacteria-Catalyzed Arginine Glycosylation in Pathogens and Host. Frontiers in Cellular and Infection Microbiology. 2020-04-29. URL: https://doi.org/10.3389/fcimb.2020.00185 (pan2020bacteriacatalyzedarginineglycosylation pages 1-2).<br />
+- Giogha C et al., NleB2 from enteropathogenic Escherichia coli is a novel arginine-glucose transferase effector. PLOS Pathogens. 2021-06-03. URL: https://doi.org/10.1371/journal.ppat.1009658 (giogha2021nleb2fromenteropathogenic pages 2-4, giogha2021nleb2fromenteropathogenic pages 11-13, giogha2021nleb2fromenteropathogenic pages 4-6, giogha2021nleb2fromenteropathogenic pages 27-28).<br />
+- El Qaidi S et al., High-Throughput Screening for Bacterial Glycosyltransferase Inhibitors. Frontiers in Cellular and Infection Microbiology. 2018-12-14. URL: https://doi.org/10.3389/fcimb.2018.00435 (giogha2021nleb2fromenteropathogenic pages 4-6).<br />
+- Zhu C et al., YM155 Inhibits NleB and SseK Arginine Glycosyltransferase Activity. Pathogens. 2021-02-10. URL: https://doi.org/10.3390/pathogens10020253 (zhu2021ym155inhibitsnleb pages 2-6).<br />
+- Araujo-Garrido JL et al., Type III Secretion Effectors with Arginine N-Glycosyltransferase Activity. Microorganisms. 2020-03-06. URL: https://doi.org/10.3390/microorganisms8030357 (araujogarrido2020typeiiisecretion pages 12-13).</p>
+<p>Citations in text correspond to the context IDs in parentheses.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(giogha2021nleb2fromenteropathogenic pages 2-4): Cristina Giogha, Nichollas E. Scott, Tania Wong Fok Lung, Georgina L. Pollock, Marina Harper, Ethan D. Goddard-Borger, Jaclyn S. Pearson, and Elizabeth L. Hartland. Nleb2 from enteropathogenic escherichia coli is a novel arginine-glucose transferase effector. PLOS Pathogens, 17:e1009658, Jun 2021. URL: https://doi.org/10.1371/journal.ppat.1009658, doi:10.1371/journal.ppat.1009658. This article has 19 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(park2018structuralbasisfor pages 1-2): Jun Bae Park, Young Hun Kim, Youngki Yoo, Juyeon Kim, Sung-Hoon Jun, Jin Won Cho, Samir El Qaidi, Samuel Walpole, Serena Monaco, Ana A. García-García, Miaomiao Wu, Michael P. Hays, Ramon Hurtado-Guerrero, Jesus Angulo, Philip R. Hardwidge, Jeon-Soo Shin, and Hyun-Soo Cho. Structural basis for arginine glycosylation of host substrates by bacterial effector proteins. Nature Communications, Oct 2018. URL: https://doi.org/10.1038/s41467-018-06680-6, doi:10.1038/s41467-018-06680-6. This article has 74 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ding2019structuralandfunctional pages 1-3): Jingjin Ding, Xing Pan, Lijie Du, Qing Yao, Juan Xue, Hongwei Yao, Da-Cheng Wang, Shan Li, and Feng Shao. Structural and functional insights into host death domains inactivation by the bacterial arginine glcnacyltransferase effector. Molecular cell, 74 5:922-935.e6, Jun 2019. URL: https://doi.org/10.1016/j.molcel.2019.03.028, doi:10.1016/j.molcel.2019.03.028. This article has 59 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(giogha2021nleb2fromenteropathogenic pages 26-27): Cristina Giogha, Nichollas E. Scott, Tania Wong Fok Lung, Georgina L. Pollock, Marina Harper, Ethan D. Goddard-Borger, Jaclyn S. Pearson, and Elizabeth L. Hartland. Nleb2 from enteropathogenic escherichia coli is a novel arginine-glucose transferase effector. PLOS Pathogens, 17:e1009658, Jun 2021. URL: https://doi.org/10.1371/journal.ppat.1009658, doi:10.1371/journal.ppat.1009658. This article has 19 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(giogha2021nleb2fromenteropathogenic pages 11-13): Cristina Giogha, Nichollas E. Scott, Tania Wong Fok Lung, Georgina L. Pollock, Marina Harper, Ethan D. Goddard-Borger, Jaclyn S. Pearson, and Elizabeth L. Hartland. Nleb2 from enteropathogenic escherichia coli is a novel arginine-glucose transferase effector. PLOS Pathogens, 17:e1009658, Jun 2021. URL: https://doi.org/10.1371/journal.ppat.1009658, doi:10.1371/journal.ppat.1009658. This article has 19 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(araujogarrido2020typeiiisecretion pages 12-13): Juan Luis Araujo-Garrido, Joaquín Bernal-Bayard, and Francisco Ramos-Morales. Type iii secretion effectors with arginine n-glycosyltransferase activity. Microorganisms, 8:357, Mar 2020. URL: https://doi.org/10.3390/microorganisms8030357, doi:10.3390/microorganisms8030357. This article has 26 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(pan2020bacteriacatalyzedarginineglycosylation pages 1-2): Xing Pan, Jie Luo, and Shan Li. Bacteria-catalyzed arginine glycosylation in pathogens and host. Frontiers in Cellular and Infection Microbiology, Apr 2020. URL: https://doi.org/10.3389/fcimb.2020.00185, doi:10.3389/fcimb.2020.00185. This article has 30 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(giogha2021nleb2fromenteropathogenic pages 13-14): Cristina Giogha, Nichollas E. Scott, Tania Wong Fok Lung, Georgina L. Pollock, Marina Harper, Ethan D. Goddard-Borger, Jaclyn S. Pearson, and Elizabeth L. Hartland. Nleb2 from enteropathogenic escherichia coli is a novel arginine-glucose transferase effector. PLOS Pathogens, 17:e1009658, Jun 2021. URL: https://doi.org/10.1371/journal.ppat.1009658, doi:10.1371/journal.ppat.1009658. This article has 19 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(giogha2021nleb2fromenteropathogenic pages 4-6): Cristina Giogha, Nichollas E. Scott, Tania Wong Fok Lung, Georgina L. Pollock, Marina Harper, Ethan D. Goddard-Borger, Jaclyn S. Pearson, and Elizabeth L. Hartland. Nleb2 from enteropathogenic escherichia coli is a novel arginine-glucose transferase effector. PLOS Pathogens, 17:e1009658, Jun 2021. URL: https://doi.org/10.1371/journal.ppat.1009658, doi:10.1371/journal.ppat.1009658. This article has 19 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(giogha2021nleb2fromenteropathogenic pages 27-28): Cristina Giogha, Nichollas E. Scott, Tania Wong Fok Lung, Georgina L. Pollock, Marina Harper, Ethan D. Goddard-Borger, Jaclyn S. Pearson, and Elizabeth L. Hartland. Nleb2 from enteropathogenic escherichia coli is a novel arginine-glucose transferase effector. PLOS Pathogens, 17:e1009658, Jun 2021. URL: https://doi.org/10.1371/journal.ppat.1009658, doi:10.1371/journal.ppat.1009658. This article has 19 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhu2021ym155inhibitsnleb pages 2-6): C Zhu, S El Qaidi, P McDonald, A Roy, and PR Hardwidge. Ym155 inhibits nleb and ssek arginine glycosyltransferase activity. pathogens 2021, 10, 253. Unknown journal, 2021.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>araujogarrido2020typeiiisecretion pages 12-13</li>
+<li>park2018structuralbasisfor pages 1-2</li>
+<li>ding2019structuralandfunctional pages 1-3</li>
+<li>pan2020bacteriacatalyzedarginineglycosylation pages 1-2</li>
+<li>https://doi.org/10.3389/fcimb.2018.00435</li>
+<li>https://doi.org/10.3390/pathogens10020253</li>
+<li>https://doi.org/10.1038/s41467-018-06680-6</li>
+<li>https://doi.org/10.1016/j.molcel.2019.03.028</li>
+<li>https://doi.org/10.3389/fcimb.2018.00435;</li>
+<li>https://doi.org/10.3389/fcimb.2020.00185</li>
+<li>https://doi.org/10.1371/journal.ppat.1009658</li>
+<li>https://doi.org/10.3390/microorganisms8030357</li>
+<li>https://doi.org/10.1371/journal.ppat.1009658,</li>
+<li>https://doi.org/10.1038/s41467-018-06680-6,</li>
+<li>https://doi.org/10.1016/j.molcel.2019.03.028,</li>
+<li>https://doi.org/10.3390/microorganisms8030357,</li>
+<li>https://doi.org/10.3389/fcimb.2020.00185,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8XBX8
+gene_symbol: nleB1
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:83334
+  label: Escherichia coli O157:H7
+description: &gt;-
+  NleB1 (Non-LEE-encoded type III effector B1) is a protein-arginine N-acetylglucosaminyltransferase
+  that is secreted by the type III secretion system (T3SS) into host cells during EHEC infection.
+  The enzyme catalyzes the transfer of N-acetylglucosamine (GlcNAc) from UDP-GlcNAc to the guanidino
+  nitrogen of arginine residues on host target proteins, primarily death domain-containing proteins
+  such as FADD (Arg117), TRADD (Arg235), and RIPK1 (Arg603). This unusual post-translational modification
+  disrupts homotypic and heterotypic death domain interactions required for death receptor signaling
+  complex assembly, thereby inhibiting TNF/TRAIL/Fas-mediated apoptosis, necroptosis, and NF-kappaB
+  activation. NleB1 also glycosylates GAPDH at Arg197/Arg200, preventing GAPDH-TRAF2 interaction.
+  The enzyme requires Mn2+ as a cofactor and contains a GT-A fold with a characteristic DXD motif
+  and HEN catalytic triad. NleB1 undergoes auto-GlcNAcylation which is required for activity toward
+  death domain-containing substrates. Importantly, NleB1 is a signaling modulator/effector that
+  manipulates host cell processes rather than a classical toxin that directly kills cells
+  (nleB1-deep-research-falcon.md).
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      NleB1 is secreted via the type III secretion system into the extracellular milieu
+      and then translocated directly into host cells. The annotation reflects that the
+      protein leaves the bacterial cytoplasm and enters the extracellular space
+      transiently before entering host cells (PMID:30619781, PMID:28522607).
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is correct as NleB1 is a T3SS effector that is secreted from the
+      bacterium. UniProt confirms the subcellular location as &#34;Secreted&#34; with subsequent
+      translocation to &#34;Host cytoplasm&#34; via T3SS. The IEA annotation based on UniProt
+      subcellular location vocabulary mapping is appropriate.
+    supported_by:
+      - reference_id: PMID:30619781
+        supporting_text: &#34;The enteropathogenic and enterohemorrhagic Escherichia coli NleB proteins as well as the Salmonella enterica SseK proteins are type III secretion system effectors that function as glycosyltransferase enzymes&#34;
+
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      NleB1 is a glycosyltransferase that transfers GlcNAc from UDP-GlcNAc to arginine
+      residues on protein substrates. This broad transferase activity annotation is
+      correct but less specific than GO:0106362 (protein-arginine N-acetylglucosaminyltransferase
+      activity) which is also annotated.
+    action: ACCEPT
+    reason: &gt;-
+      This is a correct parent term annotation. While more specific annotations exist
+      (GO:0016757, GO:0106362), having parent terms from IEA mappings is acceptable
+      and does not conflict with more specific annotations. The UniProt record explicitly
+      lists EC=2.4.1.- confirming transferase activity.
+    supported_by:
+      - reference_id: PMID:30619781
+        supporting_text: &#34;The kinetic parameters of NleB1 (150 nM at 30°C) were calculated as follows: Vmax: 2,975.3 ± 125 RLU/min/μg protein; Km: 379 ± 43 μM; Kcat (s-1): 50, Kcat/Km (s-1, M-1): 130,703.4&#34;
+
+- term:
+    id: GO:0016757
+    label: glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      NleB1 catalyzes the transfer of N-acetylglucosamine (GlcNAc) from UDP-GlcNAc to
+      arginine residues on host proteins. Multiple publications confirm glycosyltransferase
+      activity (PMID:28522607, PMID:30619781). The protein belongs to the glycosyltransferase
+      NleB family and has a GT-A fold.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is experimentally validated. PMID:28522607 states &#34;NleB is a
+      glycosyltransferase that modifies host proteins with N-acetyl-d-glucosamine&#34;.
+      PMID:30619781 further characterizes the kinetic parameters. This is an appropriate
+      intermediate-level MF annotation.
+    supported_by:
+      - reference_id: PMID:28522607
+        supporting_text: &#34;NleB is a glycosyltransferase that modifies host proteins with N-acetyl-d-glucosamine to inhibit antibacterial and inflammatory host responses&#34;
+      - reference_id: PMID:30619781
+        supporting_text: &#34;The NleB1/NleB2 (enteropathogenic and enterohemorrhagic E. coli; EPEC and EHEC) and SseK1/SseK2/SseK3 (Salmonella enterica) T3SS effectors are glycosyltransferases that modify protein substrates on arginine residues&#34;
+
+- term:
+    id: GO:0030430
+    label: host cell cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      NleB1 is translocated into host cells via the T3SS where it functions in the
+      host cell cytoplasm to modify death domain-containing proteins. This localization
+      is essential for its function in disrupting host signaling pathways.
+    action: ACCEPT
+    reason: &gt;-
+      Correct localization annotation. The deep research report confirms &#34;NleB1 is
+      secreted by the T3SS into host cells, where it acts in the host cytosol to modify
+      death-domain proteins.&#34; UniProt also lists &#34;Host cytoplasm&#34; as the subcellular
+      location with evidence by similarity to related effectors.
+    supported_by:
+      - reference_id: PMID:28522607
+        supporting_text: &#34;Many Gram-negative bacterial pathogens use a syringe-like apparatus called a type III secretion system to inject virulence factors into host cells&#34;
+
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      NleB1 requires manganese (Mn2+) as a cofactor for its glycosyltransferase activity.
+      The DXD motif (residues 221-223) coordinates the metal ion. Mutation of the DXD
+      motif to AAA abolishes activity (PMID:30619781).
+    action: ACCEPT
+    reason: &gt;-
+      Correct annotation supported by experimental evidence. While GO:0030145 (manganese
+      ion binding) is more specific and also annotated with IDA evidence, this broader
+      term is acceptable as an IEA annotation. The DXD motif essential for Mn2+ coordination
+      is confirmed in the UniProt feature table.
+    supported_by:
+      - reference_id: PMID:30619781
+        supporting_text: &#34;an inactive form of NleB1 (NleB1-AAA) in which the aspartic acid residues required for Mn2+ stabilization were mutated to alanines&#34;
+
+- term:
+    id: GO:0090729
+    label: toxin activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation derives from the UniProt keyword &#34;Toxin&#34; (KW-0800) mapping to GO.
+      However, the GO definition of toxin activity requires &#34;Interacting selectively with
+      one or more biological molecules in another (target) organism, initiating pathogenesis
+      (leading to an abnormal, generally detrimental state).&#34; While NleB1 is a virulence
+      factor, it is fundamentally different from classical toxins. NleB1 is a signaling
+      modulator that manipulates host cell processes by enzymatically modifying host
+      proteins - it does NOT directly kill or damage cells like true toxins (e.g., Shiga
+      toxin which inhibits protein synthesis, hemolysin which lyses cells by pore formation).
+      NleB1 actually INHIBITS cell death (apoptosis, necroptosis) rather than causing it
+      (nleB1-deep-research-falcon.md).
+    action: REMOVE
+    reason: &gt;-
+      This is a clear case of SPKW over-annotation. The UniProt keyword &#34;Toxin&#34; is
+      applied broadly to bacterial virulence factors, but the GO term &#34;toxin activity&#34;
+      has a specific definition that does not fit NleB1. Key distinctions:
+      1) True toxins (Shiga toxin, diphtheria toxin, hemolysins) directly damage/kill cells
+      2) NleB1 is a T3SS effector that MODULATES host signaling without direct cytotoxicity
+      3) NleB1 actually SUPPRESSES host cell death pathways (apoptosis, necroptosis)
+      4) The mechanism is enzymatic modification of host proteins to subvert signaling,
+         not direct cellular damage
+      5) PMID:30619781 explicitly notes that inhibitors of NleB1 &#34;were not significantly
+         toxic to mammalian cells&#34; and did not cause &#34;significant macrophage death&#34;
+      The appropriate GO terms for NleB1&#39;s function are process terms like
+      GO:0052041 (symbiont-mediated suppression of host programmed cell death),
+      GO:0085034 (symbiont-mediated suppression of host NF-kappaB cascade), and
+      GO:0140403 (effector-mediated suppression of host innate immune response).
+    supported_by:
+      - reference_id: PMID:28522607
+        supporting_text: &#34;NleB is a glycosyltransferase that modifies host proteins with N-acetyl-d-glucosamine to inhibit antibacterial and inflammatory host responses&#34;
+      - reference_id: PMID:30619781
+        supporting_text: &#34;We also failed to observe significant macrophage death in our studies&#34;
+
+- term:
+    id: GO:0106362
+    label: protein-arginine N-acetylglucosaminyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This is the most precise molecular function annotation for NleB1. The enzyme
+      specifically catalyzes the transfer of GlcNAc to the guanidino nitrogen of
+      arginine residues on protein substrates. This activity is directly demonstrated
+      in PMID:28522607 and PMID:30619781.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and appropriate annotation. This GO term precisely describes NleB1&#39;s
+      enzymatic activity. UniProt lists this exact term with IDA evidence from
+      PMID:28522607 and PMID:30619781. The IEA annotation from InterPro is consistent
+      with experimental evidence.
+    supported_by:
+      - reference_id: PMID:28522607
+        supporting_text: &#34;EHEC NleB1 glycosylated two GAPDH arginine residues, Arg197 and Arg200&#34;
+      - reference_id: PMID:30619781
+        supporting_text: &#34;This modification is unusual because it occurs on the guanidinium groups of arginines, which are poor nucleophiles&#34;
+
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27018634
+  review:
+    summary: &gt;-
+      PMID:27018634 identified ensconsin (MAP7) as a binding partner for NleB1 using
+      quantitative mass spectrometry. The study confirmed that NleB1 interacted with
+      ensconsin in a region corresponding to its microtubule binding domain.
+      However, &#34;protein binding&#34; is an uninformative annotation per GO curation guidelines.
+    action: MODIFY
+    reason: &gt;-
+      While the interaction with ensconsin/MAP7 is experimentally validated, the GO term
+      &#34;protein binding&#34; (GO:0005515) is considered too vague to be informative. Per GO
+      curation guidelines, more specific binding terms should be used. The interaction
+      with MAP7 led to disruption of intracellular trafficking (see GO:0052038 annotation).
+      A more informative annotation would describe the functional consequence or use a
+      specific binding term if available.
+    proposed_replacement_terms:
+      - id: GO:0140418
+        label: effector-mediated perturbation of host process by symbiont
+    additional_reference_ids:
+      - PMID:27018634
+    supported_by:
+      - reference_id: PMID:27018634
+        supporting_text: &#34;we confirmed that NleB1 and EspL interacted with ensconsin in a region that corresponded to its microtubule binding domain&#34;
+
+- term:
+    id: GO:0030145
+    label: manganese ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:30619781
+  review:
+    summary: &gt;-
+      NleB1 requires Mn2+ as a cofactor for its glycosyltransferase activity. The DXD
+      motif (residues 221-223) is essential for Mn2+ coordination. PMID:30619781
+      demonstrated that mutation of the DXD motif to AAA (NleB1-AAA) abolished enzymatic
+      activity, confirming the requirement for metal coordination.
+    action: ACCEPT
+    reason: &gt;-
+      This is a well-supported annotation with direct experimental evidence. The kinetic
+      assays in PMID:30619781 used 25 mM MnCl2 and showed that the DXD-&gt;AAA mutant
+      lacked activity. UniProt features annotate residues 223, 320, and 322 as Mn2+
+      binding sites.
+    supported_by:
+      - reference_id: PMID:30619781
+        supporting_text: &#34;UDP-Glo luminescence assays were performed in 96 well-microplates, containing 250 nM NleB1 in 125 mM Tris pH 7.4, 25 mM MnCl2, 2.5 mM DTT, and 100 μM UDP-GlcNAc&#34;
+      - reference_id: PMID:30619781
+        supporting_text: &#34;an inactive form of NleB1 (NleB1-AAA) in which the aspartic acid residues required for Mn2+ stabilization were mutated to alanines&#34;
+
+- term:
+    id: GO:0106362
+    label: protein-arginine N-acetylglucosaminyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:28522607
+  review:
+    summary: &gt;-
+      PMID:28522607 directly demonstrated that EHEC NleB1 glycosylates host proteins
+      GAPDH (at Arg197 and Arg200) and FADD on arginine residues using in vitro
+      glycosylation assays and mass spectrometry.
+    action: ACCEPT
+    reason: &gt;-
+      This is the primary experimental evidence for NleB1&#39;s enzymatic activity.
+      The study used in vitro assays and cell culture experiments to demonstrate
+      arginine-specific N-acetylglucosaminyltransferase activity. The specific
+      modification sites were identified by mass spectrometry.
+    supported_by:
+      - reference_id: PMID:28522607
+        supporting_text: &#34;We also found that EHEC NleB1 glycosylated two GAPDH arginine residues, Arg197 and Arg200, and that these two residues were essential for GAPDH-mediated activation of TNF receptor-associated factor 2 ubiquitination&#34;
+      - reference_id: PMID:28522607
+        supporting_text: &#34;C. rodentium NleB, EHEC NleB1, EPEC NleB1, and SseK2 glycosylated the FADD (Fas-associated death domain protein)&#34;
+
+- term:
+    id: GO:0106362
+    label: protein-arginine N-acetylglucosaminyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:30619781
+  review:
+    summary: &gt;-
+      PMID:30619781 characterized the kinetic parameters of NleB1&#39;s glycosyltransferase
+      activity (Km = 379 uM for UDP-GlcNAc, kcat = 50 s-1) and developed high-throughput
+      screening assays to identify inhibitors. The study used purified recombinant NleB1
+      and demonstrated activity against GAPDH and TRADD substrates.
+    action: ACCEPT
+    reason: &gt;-
+      This provides additional IDA evidence for the same molecular function. The study
+      provides quantitative kinetic characterization of the enzyme. Having multiple
+      IDA annotations from different publications strengthens the evidence base.
+    supported_by:
+      - reference_id: PMID:30619781
+        supporting_text: &#34;The kinetic parameters of NleB1 (150 nM at 30°C) were calculated as follows: Vmax: 2,975.3 ± 125 RLU/min/μg protein; Km: 379 ± 43 μM; Kcat (s-1): 50, Kcat/Km (s-1, M-1): 130,703.4&#34;
+
+- term:
+    id: GO:0052038
+    label: symbiont-mediated perturbation of host intracellular transport
+  evidence_type: IMP
+  original_reference_id: PMID:27018634
+  review:
+    summary: &gt;-
+      PMID:27018634 demonstrated that NleB1 and EspL interact with ensconsin (MAP7),
+      an essential cofactor of kinesin-1 required for intracellular trafficking.
+      The study showed that intracellular trafficking was severely disrupted during
+      wild-type EPEC infections but not during infections with ΔnleB1 or ΔespL mutants.
+    action: ACCEPT
+    reason: &gt;-
+      This is a well-supported annotation with genetic evidence (IMP). The phenotype
+      was observed in wild-type but not mutant infections, providing direct evidence
+      that NleB1 contributes to perturbation of host intracellular transport through
+      its interaction with the microtubule-associated protein ensconsin.
+    supported_by:
+      - reference_id: PMID:27018634
+        supporting_text: &#34;Ensconsin is an essential cofactor of kinesin-1 that is required for intracellular trafficking, and we demonstrated that intracellular trafficking was severely disrupted during wild type EPEC infections but not during infections with ΔnleB1 or ΔespL mutants&#34;
+
+# Additional annotations that should be considered based on well-documented functions
+- term:
+    id: GO:0085034
+    label: symbiont-mediated suppression of host NF-kappaB cascade
+  evidence_type: IDA
+  original_reference_id: PMID:28522607
+  review:
+    summary: &gt;-
+      NleB1 blocks TNF-mediated NF-kappaB pathway activation by glycosylating death
+      domain proteins FADD, TRADD, and RIPK1, preventing their assembly into signaling
+      complexes. This is a core function of NleB1. PMID:28522607 directly demonstrated
+      that EHEC NleB1 blocked TNF-mediated NF-kappaB pathway activation.
+    action: NEW
+    reason: &gt;-
+      This annotation is strongly supported by the literature and represents a core
+      biological function of NleB1. The mechanism (arginine glycosylation of death
+      domain proteins preventing signaling complex assembly) is well characterized.
+    supported_by:
+      - reference_id: PMID:28522607
+        supporting_text: &#34;SseK1, SseK3, EHEC NleB1, EPEC NleB1, and Crodentium NleB blocked TNF-mediated NF-κB pathway activation&#34;
+      - reference_id: PMID:30619781
+        supporting_text: &#34;This modification is biologically important because the glycosylation of arginines on protein substrates disrupts the normal functioning of the innate immune system&#34;
+
+- term:
+    id: GO:0033668
+    label: symbiont-mediated suppression of host apoptosis
+  evidence_type: IDA
+  original_reference_id: PMID:28522607
+  review:
+    summary: &gt;-
+      NleB1 inhibits host apoptosis by glycosylating death domain proteins (FADD, TRADD,
+      RIPK1) which prevents death receptor signaling complex assembly. This blocks
+      TNF/TRAIL/Fas-mediated apoptotic signaling pathways (nleB1-deep-research-falcon.md).
+    action: NEW
+    reason: &gt;-
+      This is a well-documented function of NleB1. The enzyme specifically targets
+      death domain-containing proteins that are essential for death receptor-mediated
+      apoptosis. By glycosylating these proteins, NleB1 prevents their interaction
+      and blocks apoptotic signaling.
+    supported_by:
+      - reference_id: PMID:28522607
+        supporting_text: &#34;NleB is a glycosyltransferase that modifies host proteins with N-acetyl-d-glucosamine to inhibit antibacterial and inflammatory host responses&#34;
+      - reference_id: PMID:30619781
+        supporting_text: &#34;Several death domain-containing proteins have been described as substrates of some of the NleB/SseK orthologs, including the Fas-associated protein with death domain (FADD), tumor necrosis factor receptor type 1-associated DEATH domain protein (TRADD), and the receptor-interacting serine/threonine-protein kinase 1 (RIPK1)&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: NleB1 matches InterPro domain IPR057545 (SseK_NleB) which maps to protein-arginine N-acetylglucosaminyltransferase activity
+
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: UniProt keyword &#34;Toxin&#34; maps to GO:0090729, but this is an over-annotation for T3SS effectors
+    - statement: UniProt keyword &#34;Glycosyltransferase&#34; appropriately maps to GO:0016757
+    - statement: UniProt keyword &#34;Transferase&#34; appropriately maps to GO:0016740
+    - statement: UniProt keyword &#34;Metal-binding&#34; appropriately maps to GO:0046872
+
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings:
+    - statement: UniProt subcellular location &#34;Secreted&#34; maps to GO:0005576 (extracellular region)
+    - statement: UniProt subcellular location &#34;Host cytoplasm&#34; maps to GO:0030430 (host cell cytoplasm)
+
+- id: PMID:27018634
+  title: Quantitative Mass Spectrometry Identifies Novel Host Binding Partners for Pathogenic Escherichia coli Type III Secretion System Effectors
+  findings:
+    - statement: Identified ensconsin/MAP7 as a binding partner for NleB1 using quantitative mass spectrometry
+      supporting_text: &#34;we confirmed that NleB1 and EspL interacted with ensconsin in a region that corresponded to its microtubule binding domain&#34;
+    - statement: Wild-type EPEC infection disrupts intracellular trafficking; ΔnleB1 mutants do not
+      supporting_text: &#34;Ensconsin is an essential cofactor of kinesin-1 that is required for intracellular trafficking, and we demonstrated that intracellular trafficking was severely disrupted during wild type EPEC infections but not during infections with ΔnleB1 or ΔespL mutants&#34;
+
+- id: PMID:28522607
+  title: NleB/SseK effectors from Citrobacter rodentium, Escherichia coli, and Salmonella enterica display distinct differences in host substrate specificity
+  findings:
+    - statement: EHEC NleB1 blocks TNF-mediated NF-kappaB pathway activation
+      supporting_text: &#34;SseK1, SseK3, EHEC NleB1, EPEC NleB1, and Crodentium NleB blocked TNF-mediated NF-κB pathway activation&#34;
+    - statement: EHEC NleB1 glycosylates host GAPDH at Arg197 and Arg200
+      supporting_text: &#34;EHEC NleB1 glycosylated two GAPDH arginine residues, Arg197 and Arg200&#34;
+    - statement: EHEC NleB1 glycosylates FADD death domain protein
+      supporting_text: &#34;C. rodentium NleB, EHEC NleB1, EPEC NleB1, and SseK2 glycosylated the FADD (Fas-associated death domain protein)&#34;
+    - statement: Glycosylation of GAPDH prevents GAPDH-TRAF2 interaction and inhibits NF-kappaB signaling
+      supporting_text: &#34;these two residues were essential for GAPDH-mediated activation of TNF receptor-associated factor 2 ubiquitination&#34;
+
+- id: PMID:30619781
+  title: High-Throughput Screening for Bacterial Glycosyltransferase Inhibitors
+  findings:
+    - statement: Characterized kinetic parameters of NleB1 (Km = 379 uM, kcat = 50 s-1)
+      supporting_text: &#34;The kinetic parameters of NleB1 (150 nM at 30°C) were calculated as follows: Vmax: 2,975.3 ± 125 RLU/min/μg protein; Km: 379 ± 43 μM; Kcat (s-1): 50, Kcat/Km (s-1, M-1): 130,703.4&#34;
+    - statement: DXD motif essential for Mn2+ coordination and catalytic activity
+      supporting_text: &#34;an inactive form of NleB1 (NleB1-AAA) in which the aspartic acid residues required for Mn2+ stabilization were mutated to alanines&#34;
+    - statement: NleB1 glycosylates TRADD at R235
+      supporting_text: &#34;NleB1 glycosylates human TRADD on R235, thereby blocking death domain interactions and disrupting tumor necrosis factor signaling&#34;
+    - statement: Inhibitors were not toxic to mammalian cells and did not cause macrophage death
+      supporting_text: &#34;We also failed to observe significant macrophage death in our studies&#34;
+
+core_functions:
+  - description: &gt;-
+      Directly demonstrated by in vitro assays showing glycosylation of GAPDH (Arg197, Arg200),
+      FADD, and TRADD (Arg235). Kinetic parameters characterized (Km=379 uM, kcat=50 s-1).
+      Requires Mn2+ cofactor coordinated by DXD motif.
+    molecular_function:
+      id: GO:0106362
+      label: protein-arginine N-acetylglucosaminyltransferase activity
+    directly_involved_in:
+      - id: GO:0085034
+        label: symbiont-mediated suppression of host NF-kappaB cascade
+      - id: GO:0033668
+        label: symbiont-mediated suppression of host apoptosis
+    locations:
+      - id: GO:0030430
+        label: host cell cytoplasm
+    supported_by:
+      - reference_id: PMID:28522607
+        supporting_text: &#34;EHEC NleB1 glycosylated two GAPDH arginine residues, Arg197 and Arg200&#34;
+      - reference_id: PMID:30619781
+        supporting_text: &#34;The kinetic parameters of NleB1 (150 nM at 30°C) were calculated as follows: Vmax: 2,975.3 ± 125 RLU/min/μg protein; Km: 379 ± 43 μM; Kcat (s-1): 50, Kcat/Km (s-1, M-1): 130,703.4&#34;
+
+suggested_questions:
+  - question: &gt;-
+      Should UniProt keyword &#34;Toxin&#34; be applied to T3SS effectors that modulate host signaling
+      without direct cytotoxic activity? The current mapping leads to inappropriate GO annotations.
+  - question: &gt;-
+      What is the relative importance of different NleB1 substrates (FADD, TRADD, RIPK1, GAPDH)
+      for virulence during natural infection?
+
+suggested_experiments:
+  - description: &gt;-
+      Comparative analysis of NleB1 activity on different death domain proteins to establish
+      substrate hierarchy and physiological relevance during infection.
+    hypothesis: FADD may be the primary physiological target based on structural and kinetic data
+  - description: &gt;-
+      Structural characterization of NleB1-substrate complexes to understand substrate recognition
+      and guide inhibitor development.
+    hypothesis: Substrate recognition involves specific interactions with death domain fold
+
+proposed_new_terms: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

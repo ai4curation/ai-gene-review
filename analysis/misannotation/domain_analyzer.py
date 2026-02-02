@@ -11,7 +11,7 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 import requests
 import yaml
@@ -316,7 +316,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     analyzer.generate_report(analyses, args.output)
 
-    print(f"\nDomain analysis complete!")
+    print("\nDomain analysis complete!")
     print(f"Report saved to: {args.output}")
     print(f"Consistent genes: {len([a for a in analyses if a.domain_go_consistency])}")
     print(f"Inconsistent genes: {len([a for a in analyses if not a.domain_go_consistency])}")

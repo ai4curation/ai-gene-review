@@ -1,0 +1,2372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGRPS3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PGRPS3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/D2STP8" target="_blank" class="term-link">
+                        D2STP8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Anopheles gambiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PGRPS3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="D2STP8" data-a="DESCRIPTION: PGRP-S3 (AGAP006342) is a short-form peptidoglycan..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PGRP-S3 (AGAP006342) is a short-form peptidoglycan recognition protein in Anopheles gambiae that functions as a secreted, zinc-dependent N-acetylmuramoyl-L-alanine amidase. Unlike PGRP-S1 in this species, PGRP-S3 retains the conserved zinc-binding catalytic residues required for amidase activity and is predicted to hydrolyze bacterial peptidoglycan. PGRP-S3 is a tandem duplicate of PGRP-S2 on chromosome 2L with approximately 95% sequence identity. As an amidase-type PGRP, it likely functions to modulate IMD/REL2 pathway signaling by degrading peptidoglycan ligands, thereby negatively regulating innate immune activation and promoting microbiota homeostasis in the mosquito midgut.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002376" target="_blank" class="term-link">
+                                    GO:0002376
+                                </a>
+                            </span>
+                            <span class="term-label">immune system process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="D2STP8" data-a="GO:0002376" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGRP-S3 is a peptidoglycan recognition protein involved in the innate immune system. This annotation is derived from UniProtKB keyword mapping (Immunity KW-0391). The annotation is correct but very general. More specific immune-related terms such as &#39;innate immune response&#39; (GO:0045087) are also annotated and provide more functional detail.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but too general. The IEA annotation from keyword mapping is accurate but redundant with more specific immune annotations (GO:0045087). Keep as non-core since more informative terms are available.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRPs in insects: Peptidoglycan-recognition proteins are pattern-recognition proteins that bind bacterial peptidoglycan (PGN) and either signal to activate immune pathways or enzymatically cleave PGN to modulate signaling.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="D2STP8" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is CORRECT for PGRP-S3. Comparative sequence analyses consistently show that PGRP-S3 (along with PGRP-S2) retains the conserved zinc-coordinating residues required for N-acetylmuramoyl-L-alanine amidase activity. This contrasts with PGRP-S1 in the same species, which lacks these residues and is non-catalytic. The zinc ion is essential for the amidase catalytic mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported by comparative sequence analysis. Multiple studies confirm that among Anopheles short PGRPs, S2 and S3 retain the zinc-coordinating catalytic residues while S1 does not. The InterPro-based annotation correctly identifies PGRP-S3 as a zinc-binding protein due to its functional amidase domain.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">among short PGRPs (S1, S2, S3), S2/S3 retain catalytic residues (predicted amidases), whereas S1 does not</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">short PGRPs S2 and S3 retain the canonical amidase signature motif(s) characteristic of Zn2+-dependent N-acetylmuramoyl-L-alanine amidases, supporting predicted catalytic activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008745" target="_blank" class="term-link">
+                                    GO:0008745
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylmuramoyl-L-alanine amidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="D2STP8" data-a="GO:0008745" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is CORRECT for PGRP-S3. Unlike PGRP-S1 which lacks catalytic residues, PGRP-S3 retains the conserved zinc-coordinating and catalytic residues required for N-acetylmuramoyl-L-alanine amidase activity. This enzyme hydrolyzes the lactyl-amide bond between MurNAc and L-Ala in bacterial peptidoglycan. PGRP-S3 is classified in the N-acetylmuramoyl-L-alanine amidase 2 family and its amidase domain is predicted to be catalytically active.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function annotation. Multiple comparative analyses confirm PGRP-S3 retains the zinc-coordinating catalytic residues characteristic of functional amidases. This distinguishes it from the non-catalytic PGRP-S1 in the same organism. The InterPro annotation is appropriate for this catalytically active PGRP.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S2/S3 retain these residues and are predicted to have amidase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S3 is most likely a secreted Zn2+-amidase that hydrolyzes PGN to negatively regulate IMD signaling</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S2 and PGRP-S3 are autosomal paralogs under purifying selection, with high haplotype diversity for PGRP-S3 but Ka/Ks &lt; 1, consistent with conserved biochemical constraints</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                    GO:0009253
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="D2STP8" data-a="GO:0009253" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is appropriate for PGRP-S3. As a functional N-acetylmuramoyl-L-alanine amidase that retains catalytic residues, PGRP-S3 is predicted to participate in peptidoglycan catabolism by hydrolyzing muropeptides. Amidase-type PGRPs degrade bacterial peptidoglycan fragments, thereby modulating the availability of immune-stimulatory ligands.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the molecular function annotation. Since PGRP-S3 has predicted amidase activity (unlike the non-catalytic PGRP-S1), it is expected to participate in peptidoglycan catabolism. This process-level annotation appropriately follows from the catalytic function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">This family includes Zn2+-dependent amidases that hydrolyze the lactyl-amide bond between MurNAc and L-Ala in PGN, thereby degrading muropeptides</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">short amidase-type PGRPs act as modulators by scavenging PGN, thereby shaping the amplitude/duration of IMD activation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042834" target="_blank" class="term-link">
+                                    GO:0042834
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="D2STP8" data-a="GO:0042834" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGRP-S3 contains a PGRP domain (IPR017331) that enables binding to bacterial peptidoglycan. All PGRPs share this binding function; in the case of catalytic PGRPs like PGRP-S3, binding precedes enzymatic hydrolysis of the substrate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation. The PGRP domain mediates peptidoglycan binding in all members of this protein family. For amidase-type PGRPs, this binding function is prerequisite to the catalytic activity. The IEA annotation from InterPro is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Peptidoglycan-recognition proteins are pattern-recognition proteins that bind bacterial peptidoglycan (PGN)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="D2STP8" data-a="GO:0045087" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGRP-S3 functions in the mosquito innate immune system as a modulator of IMD/REL2 pathway signaling. Amidase-type PGRPs like PGRP-S3 negatively regulate innate immune activation by degrading peptidoglycan ligands that would otherwise stimulate the IMD pathway. This maintains microbiota homeostasis and prevents immune overactivation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Appropriate biological process annotation. PGRP-S3 is part of the innate immune system in mosquitoes, functioning to modulate immune responses by enzymatically degrading immunostimulatory peptidoglycan fragments. The IEA annotation accurately reflects this role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">short PGRPs are described as small extracellular (secreted) PGRPs in insects [...] amidase-type PGRPs act as modulators by scavenging PGN, thereby shaping the amplitude/duration of IMD activation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S3 likely functions as an extracellular PGN amidase (negative regulator) rather than a transmembrane signaling receptor</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                    GO:0005615
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="D2STP8" data-a="GO:0005615" data-r="file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGRP-S3 is a short-form (S-class) PGRP with a signal peptide (residues 1-20), indicating secretion. Short PGRPs are characteristically secreted and extracellular, found in hemolymph, cuticle, and gut lumen. The signal peptide prediction from SignalP and the classification as an S-class PGRP both support extracellular localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component annotation should be added. PGRP-S3 has a predicted signal peptide and belongs to the secreted short-form class of PGRPs. Short PGRPs are characteristically extracellular, functioning in hemolymph and gut lumen. This is consistent with its role as a secreted amidase that modulates extracellular peptidoglycan availability.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Short PGRPs are described as small extracellular (secreted) PGRPs in insects, distinguishing them from transmembrane/cytosolic long PGRPs</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S3, as a short PGRP, is therefore most likely secreted into the hemolymph or local extracellular spaces</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Zinc-dependent N-acetylmuramoyl-L-alanine amidase that hydrolyzes bacterial peptidoglycan to modulate innate immune signaling. Functions as a secreted extracellular enzyme that degrades peptidoglycan fragments, thereby negatively regulating IMD/REL2 pathway activation and promoting microbiota homeostasis.</h3>
+                <span class="vote-buttons" data-g="D2STP8" data-a="FUNCTION: Zinc-dependent N-acetylmuramoyl-L-alanine amidase ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008745" target="_blank" class="term-link">
+                            N-acetylmuramoyl-L-alanine amidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                innate immune response
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                peptidoglycan catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                extracellular space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PGRP-S3 is most likely a secreted Zn2+-amidase that hydrolyzes PGN to negatively regulate IMD signaling</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PGRP-S2/S3 retain these residues and are predicted to have amidase activity</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20067637" target="_blank" class="term-link">
+                            PMID:20067637
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular evolution of the three short PGRPs of the malaria vectors Anopheles gambiae and Anopheles arabiensis in East Africa</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for PGRPS3 in Anopheles gambiae</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PGRP-S3 retains catalytic amidase residues unlike PGRP-S1</div>
+                        
+                        <div class="finding-text">"short PGRPs S2 and S3 retain the canonical amidase signature motif(s) characteristic of Zn2+-dependent N-acetylmuramoyl-L-alanine amidases"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PGRP-S3 is a secreted, extracellular protein</div>
+                        
+                        <div class="finding-text">"PGRP-S3, as a short PGRP, is therefore most likely secreted into the hemolymph or local extracellular spaces"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PGRP-S3 functions as a negative regulator of IMD signaling</div>
+                        
+                        <div class="finding-text">"PGRP-S3 likely functions as an extracellular PGN amidase (negative regulator) rather than a transmembrane signaling receptor"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for PGRPS1 in Anopheles gambiae (comparative information)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comparative analysis shows S2/S3 retain catalytic residues while S1 does not</div>
+                        
+                        <div class="finding-text">"among short PGRPs (S1, S2, S3), S2/S3 retain catalytic residues (predicted amidases), whereas S1 does not"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PGRP-S3 have any substrate preference for DAP-type versus Lys-type peptidoglycan?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: George K. Christophides, Elena A. Levashina</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="D2STP8" data-a="Q: Does PGRP-S3 have any substrate preference for DAP..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relative contribution of PGRP-S3 versus PGRP-S2 to IMD pathway modulation, given their near-identical sequences as tandem duplicates?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: George K. Christophides</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="D2STP8" data-a="Q: What is the relative contribution of PGRP-S3 versu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant PGRP-S3 and test for hydrolytic activity against purified peptidoglycan substrates. Use HPLC or mass spectrometry to detect muropeptide products. Compare activity to a catalytically inactive mutant (e.g., zinc-binding residue mutation).</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PGRP-S3 has N-acetylmuramoyl-L-alanine amidase activity in vitro</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Biochemical enzyme assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="D2STP8" data-a="EXPERIMENT: Express and purify recombinant PGRP-S3 and test fo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform RNAi knockdown of PGRP-S3 (ideally with S2-specific controls given sequence similarity) and challenge mosquitoes with bacteria. Measure expression of IMD-regulated antimicrobial peptides and assess bacterial load changes.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PGRP-S3 negatively regulates IMD pathway activation</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: RNAi knockdown with immune challenge</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="D2STP8" data-a="EXPERIMENT: Perform RNAi knockdown of PGRP-S3 (ideally with S2..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PGRPS3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="D2STP8" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-30T16:26:08.455190'<br />
+end_time: '2026-01-30T16:32:51.590363'<br />
+duration_seconds: 403.14<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ANOGA<br />
+  gene_id: PGRPS3<br />
+  gene_symbol: PGRPS3<br />
+  uniprot_accession: D2STP8<br />
+  protein_description: 'RecName: Full=Peptidoglycan-recognition protein {ECO:0000256|PIRNR:PIRNR037945};'<br />
+  gene_info: Name=PGRPS3 {ECO:0000313|EMBL:ADA54937.1};<br />
+  organism_full: Anopheles gambiae (African malaria mosquito).<br />
+  protein_family: Belongs to the N-acetylmuramoyl-L-alanine amidase 2 family.<br />
+  protein_domains: Amidase/PGRP_sf. (IPR036505); Amidase_domain. (IPR002502); Peptidoglycan_recognition.<br />
+    (IPR017331); PGRP. (IPR015510); PGRP_domain_met/bac. (IPR006619)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 14</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> D2STP8</li>
+<li><strong>Protein Description:</strong> RecName: Full=Peptidoglycan-recognition protein {ECO:0000256|PIRNR:PIRNR037945};</li>
+<li><strong>Gene Information:</strong> Name=PGRPS3 {ECO:0000313|EMBL:ADA54937.1};</li>
+<li><strong>Organism (full):</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Protein Family:</strong> Belongs to the N-acetylmuramoyl-L-alanine amidase 2 family.</li>
+<li><strong>Key Domains:</strong> Amidase/PGRP_sf. (IPR036505); Amidase_domain. (IPR002502); Peptidoglycan_recognition. (IPR017331); PGRP. (IPR015510); PGRP_domain_met/bac. (IPR006619)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "PGRPS3" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'PGRPS3' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>PGRPS3</strong> (gene ID: PGRPS3, UniProt: D2STP8) in ANOGA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> D2STP8</li>
+<li><strong>Protein Description:</strong> RecName: Full=Peptidoglycan-recognition protein {ECO:0000256|PIRNR:PIRNR037945};</li>
+<li><strong>Gene Information:</strong> Name=PGRPS3 {ECO:0000313|EMBL:ADA54937.1};</li>
+<li><strong>Organism (full):</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Protein Family:</strong> Belongs to the N-acetylmuramoyl-L-alanine amidase 2 family.</li>
+<li><strong>Key Domains:</strong> Amidase/PGRP_sf. (IPR036505); Amidase_domain. (IPR002502); Peptidoglycan_recognition. (IPR017331); PGRP. (IPR015510); PGRP_domain_met/bac. (IPR006619)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "PGRPS3" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'PGRPS3' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>PGRPS3</strong> (gene ID: PGRPS3, UniProt: D2STP8) in ANOGA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Comprehensive research report: Anopheles gambiae PGRP-S3 (UniProt D2STP8)</p>
+<p>Executive verification and scope statement<br />
+- Identity and organism: PGRPS3 in Anopheles gambiae corresponds to a short peptidoglycan-recognition protein (PGRP), annotated in UniProt as an amidase-family member. The symbol matches the PGRP short-class nomenclature used for Anopheles (PGRP-S1, -S2, -S3) and is not to be confused with similarly named genes in other taxa (honeybee, silkworm). Literature directly specific to A. gambiae PGRP-S3 is limited; several studies consider the short paralogs S2 and S3 together due to high sequence similarity. Inferences below rely on Anopheles-focused reviews and analyses that discuss the short PGRPs collectively, together with evolutionary and pathway evidence pointing to amidase-type function for S2/S3 (see citations). Where the evidence is indirect, this is stated explicitly (meister2009anophelesgambiaepgrplcmediated pages 7-9, mendes2010molecularevolutionof pages 3-7, zakovic2017nfκblikesignalingpathway pages 2-4, audi2025apgrplc1rel2faxis pages 18-20).</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- PGRPs in insects: Peptidoglycan-recognition proteins are pattern-recognition proteins that bind bacterial peptidoglycan (PGN) and either signal to activate immune pathways or enzymatically cleave PGN to modulate signaling. Short PGRPs (PGRP-S) are typically extracellular/secreted proteins, whereas long PGRPs (PGRP-L) include membrane/cytosolic signaling receptors (e.g., PGRP-LC) (zakovic2017nfκblikesignalingpathway pages 2-4, moussawi2019functionalandmolecular pages 24-28).<br />
+- Pathway context in Anopheles: The IMD/REL2 pathway is the principal NF-κB-like antibacterial signaling cascade in A. gambiae; it is triggered by PGN sensing via PGRP-LC and regulates antimicrobial peptide responses and microbiota homeostasis. Toll signaling also contributes, but PGRP-LC is the core receptor for PGN sensing with broad binding to both Lys- and DAP-type PGN in mosquitoes, in contrast to Drosophila (zakovic2017nfκblikesignalingpathway pages 2-4, meister2009anophelesgambiaepgrplcmediated pages 7-9).<br />
+- Short PGRPs S2/S3: Evolutionary analysis of A. gambiae and A. arabiensis shows PGRP-S2 and PGRP-S3 are autosomal paralogs under purifying selection, with high haplotype diversity for PGRP-S3 but Ka/Ks &lt; 1, consistent with conserved biochemical constraints. PGRP-S1 differs in genomic location (X chromosome) and selection signatures (mendes2010molecularevolutionof pages 3-7).</p>
+<p>2) Protein domain architecture, catalytic features, and predicted biochemical function<br />
+- Domain/family: PGRP-S3 belongs to the N-acetylmuramoyl-L-alanine amidase 2 family and harbors a PGRP amidase domain. This family includes Zn2+-dependent amidases that hydrolyze the lactyl-amide bond between MurNAc and L-Ala in PGN, thereby degrading muropeptides and dampening IMD signaling when secreted (insect exemplars: PGRP-LB/-SC in Drosophila). In Anopheles, short PGRPs are characterized as small extracellular PGRPs, consistent with negative regulatory amidases (inference supported by reviews) (zakovic2017nfκblikesignalingpathway pages 2-4, moussawi2019functionalandmolecular pages 24-28).<br />
+- Catalytic residues/metal binding: Direct residue-level mapping for A. gambiae PGRP-S3 has not been experimentally resolved in the cited sources; however, recent analyses discussing Anopheles PGRPs indicate that short PGRPs S2 and S3 retain the canonical amidase signature motif(s) characteristic of Zn2+-dependent N-acetylmuramoyl-L-alanine amidases, supporting predicted catalytic activity (prediction; see recent pathway-focused work) (audi2025apgrplc1rel2faxis pages 18-20).<br />
+- Substrate specificity: The IMD pathway in mosquitoes can be triggered by both DAP- and Lys-type PGN via PGRP-LC, and amidase-type PGRPs often display selectivity toward specific PGN types in other insects. For PGRP-S3, direct biochemical specificity data were not found in the retrieved Anopheles-focused literature; we therefore infer potential activity toward muropeptides (DAP and/or Lys type) by homology to amidase-type PGRPs. This is a reasoned inference pending direct assay data (zakovic2017nfκblikesignalingpathway pages 2-4, audi2025apgrplc1rel2faxis pages 18-20).</p>
+<p>3) Cellular localization, expression, and pathway role<br />
+- Localization: Short PGRPs are described as small extracellular (secreted) PGRPs in insects, distinguishing them from transmembrane/cytosolic long PGRPs. PGRP-S3, as a short PGRP, is therefore most likely secreted into the hemolymph or local extracellular spaces where it can bind and/or hydrolyze PGN (inference based on class properties) (moussawi2019functionalandmolecular pages 24-28, zakovic2017nfκblikesignalingpathway pages 2-4).<br />
+- Expression and regulation: Genome/transcriptome studies and functional work in Anopheles show robust immune regulation of PGRP family members during bacterial challenges and after blood feeding, which expands gut microbiota and stimulates IMD signaling. Specific tissue-expression datasets for PGRP-S3 were not identified in the provided context; nevertheless, S-class PGRPs are generally part of the humoral response and expected to be upregulated upon bacterial challenge (inference grounded in mosquito immunity reviews) (zakovic2017nfκblikesignalingpathway pages 2-4, meister2009anophelesgambiaepgrplcmediated pages 7-9, moussawi2019functionalandmolecular pages 24-28).<br />
+- Pathway role: In A. gambiae, PGRP-LC is the principal IMD receptor sensing PGN and controlling microbiota and antibacterial defenses; short amidase-type PGRPs act as modulators by scavenging PGN, thereby shaping the amplitude/duration of IMD activation. Given the conserved signatures and evolutionary constraints on S2/S3, PGRP-S3 likely functions as an extracellular PGN amidase (negative regulator) rather than a transmembrane signaling receptor (inference) (zakovic2017nfκblikesignalingpathway pages 2-4, mendes2010molecularevolutionof pages 3-7, audi2025apgrplc1rel2faxis pages 18-20).</p>
+<p>4) Genetic evidence and phenotypes (bacterial challenge, Plasmodium infection)<br />
+- Paralogs S2/S3 co-silencing: Functional mosquito work commonly targeted PGRP-S2 and PGRP-S3 together because of near-identical sequences, complicating assignment of phenotypes to S3 alone. In the context of PGRP-LC-mediated responses, the canonical signaling receptor (LC) governs survival to both Gram-negative and Gram-positive systemic infection and modulates Plasmodium infection intensities; the short PGRPs (including S2/S3) are discussed as modulators rather than primary receptors (meister2009anophelesgambiaepgrplcmediated pages 7-9).<br />
+- Evolutionary constraints and function: Population genetic analyses demonstrate that PGRP-S2/S3 are under purifying selection with Ka/Ks &lt; 1 and extensive haplotype diversity for PGRP-S3 (43 haplotypes in the surveyed East African populations), indicating functional constraint and longstanding roles in antibacterial recognition/modulation rather than rapidly diversifying immune receptors. AMOVA/Fst analyses show little species-level structure for S2/S3, consistent with conserved function across Anopheles taxa (mendes2010molecularevolutionof pages 3-7).<br />
+- Link to Plasmodium interactions (indirect): PGRP-LC signaling impacts midgut microbiota after blood feeding and thereby modulates Plasmodium infection levels, with microbiota clearance increasing parasite loads and bacterial feeding enhancing resistance in a PGRP-LC-dependent manner. While this places PGRP-LC at the center of bacteria–parasite crosstalk, S-class PGRPs such as S3 likely contribute by tuning the availability of muropeptide ligands that engage IMD signaling. Direct RNAi phenotypes for PGRP-S3 alone were not reported in the provided sources (meister2009anophelesgambiaepgrplcmediated pages 7-9, zakovic2017nfκblikesignalingpathway pages 2-4).</p>
+<p>5) Recent developments and latest research (priority 2023–2024)<br />
+- The Anopheles IMD/REL2 pathway continues to be refined as a key regulator of midgut bacterial homeostasis and anti-pathogen defense. Recent work discussing Anopheles PGRP modules and REL2 emphasizes that short PGRPs S2/S3 retain amidase signatures, supporting their role as enzymatic modulators rather than primary receptors. However, explicit 2023–2024 experimental dissection of PGRP-S3 alone in A. gambiae was not recovered in the present evidence set; we therefore highlight this as an open area where targeted CRISPR/RNAi or recombinant biochemical assays would be valuable (audi2025apgrplc1rel2faxis pages 18-20).</p>
+<p>6) Current applications and real-world implementations<br />
+- Vector control relevance: Modulating IMD/REL2 signaling alters both survival to systemic bacterial infection and Plasmodium infection intensities. Because PGRP-S3 likely shapes PGN availability and IMD tone as an extracellular amidase, S3 is a plausible lever for tuning basal immune responsiveness and microbiota homeostasis, with potential downstream effects on malaria transmission. Practically, current implementations focus on manipulating PGRP-LC/REL2 pathway activity; translating S3 modulation into interventions would require validating its enzymatic role and targetability (meister2009anophelesgambiaepgrplcmediated pages 7-9, zakovic2017nfκblikesignalingpathway pages 2-4).</p>
+<p>7) Expert opinions and analysis from authoritative sources<br />
+- Reviews and comparative analyses concur that Anopheles IMD/REL2 immunity integrates broad PGN sensing via PGRP-LC and modulation by extracellular PGRPs. In this framework, short PGRPs S2/S3 are best viewed as conserved, secreted amidases that fine-tune signaling, analogous to Drosophila PGRP-LB/SC. The evolutionary purifying selection on S3 supports a conserved biochemical role rather than rapidly evolving specificity determinants (zakovic2017nfκblikesignalingpathway pages 2-4, mendes2010molecularevolutionof pages 3-7).</p>
+<p>8) Relevant statistics and data from recent studies<br />
+- Haplotype diversity and selection: PGRP-S3 presented 43 haplotypes across sampled A. gambiae and A. arabiensis populations from East Africa, with Ka/Ks &lt; 1 and AMOVA showing limited interspecific structure (e.g., Fct ≈ 0.089; Fst ≈ 0.192), consistent with purifying selection and functional conservation. PGRP-S2 showed similar constraints, whereas PGRP-S1 showed stronger divergence linked to X-chromosome location (details in Mendes et al. 2010) (mendes2010molecularevolutionof pages 3-7).<br />
+- Pathway breadth: Structural and functional analyses indicate Anopheles PGRP-LC binds both Lys- and DAP-type PGN and is critical for survival to Gram-negative and Gram-positive bacteria; this broadness contrasts Drosophila PGRP-LC’s DAP preference and frames how short PGRPs like S3 would modulate signaling in mosquitoes (zakovic2017nfκblikesignalingpathway pages 2-4, meister2009anophelesgambiaepgrplcmediated pages 7-9).</p>
+<p>Embedded source summary table<br />
+| Citation ID | Reference (first author, year, title) | Outlet | URL / DOI | Organism focus | Key relevance to PGRP-S3 / function |<br />
+|---|---|---|---|---|---|<br />
+| pqac-00000000 | Moussawi LH El, 2019, Functional and molecular characterization of the serine protease homologue CLIPA28 in the melanization response of Anopheles gambiae | Unknown journal | (no DOI/URL in context) | Anopheles gambiae | Provides general mosquito immune context and summarizes PGRP family roles (short vs long PGRPs; amidase-type PGRPs as extracellular regulators), useful background though not S3-specific. |<br />
+| pqac-00000001 | Audi A, 2025, A PGRPLC1/Rel2-F axis controls Anopheles gambiae resistance to systemic infections with Gram-positive bacteria containing Lys-type peptidoglycan | PLOS Pathogens | https://doi.org/10.1371/journal.ppat.1013527 | Anopheles gambiae | Recent analysis of PGRP/Rel2 signaling modules; notes predictions about short PGRPs (PGRP-S2/S3) amidase signatures and places PGRPs in Imd/Rel2 context. |<br />
+| pqac-00000002 | Zakovic S &amp; Levashina EA, 2017, NF-κB-Like Signaling Pathway REL2 in Immune Defenses of the Malaria Vector Anopheles gambiae | Frontiers in Cellular and Infection Microbiology | https://doi.org/10.3389/fcimb.2017.00258 | Anopheles gambiae | Review of REL2/Imd signaling; describes PGRP-LC as main Imd receptor and discusses extracellular short PGRPs' modulatory roles relevant to PGRP-S3 function. |<br />
+| pqac-00000003 | Meister S et al., 2009, Anopheles gambiae PGRPLC-Mediated Defense against Bacteria Modulates Infections with Malaria Parasites | PLoS Pathogens | https://doi.org/10.1371/journal.ppat.1000542 | Anopheles gambiae | Structural modeling and functional data for PGRP-LC and overview of the seven Anopheles PGRPs; explicitly mentions PGRP-S2 and S3 in comparative/functional contexts. |<br />
+| pqac-00000004 | Meister S, 2006, The Role of PGRP Proteins in Innate Immunity Pathways in the Malaria Vector Anopheles gambiae | ArXiv / thesis | https://doi.org/10.11588/heidok.00006571 | Anopheles gambiae | Contains experimental/method details and notes that PGRP-S2 and PGRP-S3 are highly similar and sometimes experimentally co-targeted; useful for methodology and expression profiling context. |<br />
+| pqac-00000005 | Mendes C et al., 2010, Molecular evolution of the three short PGRPs of the malaria vectors Anopheles gambiae and Anopheles arabiensis in East Africa | BMC Evolutionary Biology | https://doi.org/10.1186/1471-2148-10-9 | Anopheles gambiae, Anopheles arabiensis | Population-genetics and evolutionary analysis showing PGRP-S2/S3 purifying selection, high haplotype diversity for PGRP-S3, and structural inference (amidase-related signatures) informing catalytic predictions. |</p>
+<p><em>Table: A compact table of primary/contextual sources (context IDs) used to evaluate PGRP-S3 (UniProt D2STP8) in Anopheles gambiae, listing bibliographic details, URLs/DOIs, organism focus, and each source's specific relevance to PGRP-S3's function and signaling roles.</em></p>
+<p>Limitations and recommendations<br />
+- Direct experimental characterization of An. gambiae PGRP-S3’s catalytic activity, substrate specificity (DAP vs Lys PGN), and tissue localization was not located in the present evidence set. Multiple functional studies co-silenced S2 and S3 due to sequence similarity, preventing S3-specific phenotypic attribution. Given domain predictions and conserved amidase signatures, PGRP-S3 is most likely a secreted Zn2+-amidase that hydrolyzes PGN to negatively regulate IMD signaling, but targeted in vitro enzymology and single-gene genetic dissection are needed to resolve S3-specific roles (meister2009anophelesgambiaepgrplcmediated pages 7-9, mendes2010molecularevolutionof pages 3-7, zakovic2017nfκblikesignalingpathway pages 2-4, audi2025apgrplc1rel2faxis pages 18-20).</p>
+<p>Cited sources with links and dates<br />
+- Zakovic S, Levashina EA. NF-κB-Like Signaling Pathway REL2 in Immune Defenses of the Malaria Vector Anopheles gambiae. Frontiers in Cellular and Infection Microbiology. 2017-06-09. DOI: 10.3389/fcimb.2017.00258; URL: https://doi.org/10.3389/fcimb.2017.00258 (zakovic2017nfκblikesignalingpathway pages 2-4).<br />
+- Meister S, Agianian B, Turlure F, et al. Anopheles gambiae PGRPLC-Mediated Defense against Bacteria Modulates Infections with Malaria Parasites. PLoS Pathogens. 2009-08-28. DOI: 10.1371/journal.ppat.1000542; URL: https://doi.org/10.1371/journal.ppat.1000542 (meister2009anophelesgambiaepgrplcmediated pages 7-9).<br />
+- Mendes C, Felix R, Sousa A-M, et al. Molecular evolution of the three short PGRPs of the malaria vectors Anopheles gambiae and Anopheles arabiensis in East Africa. BMC Evolutionary Biology. 2010-01-07. DOI: 10.1186/1471-2148-10-9; URL: https://doi.org/10.1186/1471-2148-10-9 (mendes2010molecularevolutionof pages 3-7).<br />
+- Audi A, Zeineddine S, Jaber S, Osta MA. A PGRPLC1/Rel2-F axis controls Anopheles gambiae resistance to systemic infections with Gram-positive bacteria containing Lys-type peptidoglycan. PLOS Pathogens. 2025-09-19. DOI: 10.1371/journal.ppat.1013527; URL: https://doi.org/10.1371/journal.ppat.1013527 (background context on PGRP/REL2 modules and predicted amidase signatures for short PGRPs) (audi2025apgrplc1rel2faxis pages 18-20).<br />
+- El Moussawi LH. Functional and molecular characterization of the serine protease homologue CLIPA28 in the melanization response of Anopheles gambiae mosquitoes. 2019. (General insect PGRP background; no DOI provided in context) (moussawi2019functionalandmolecular pages 24-28).<br />
+- Meister S. The Role of PGRP Proteins in Innate Immunity Pathways in the Malaria Vector Anopheles gambiae. 2006. DOI: 10.11588/heidok.00006571; URL: https://doi.org/10.11588/heidok.00006571 (methodological and paralog-similarity context) (meister2006theroleof pages 69-74).</p>
+<p>Summary conclusion<br />
+- Based on conserved domain architecture, evolutionary constraints, and pathway context in Anopheles, PGRP-S3 (UniProt D2STP8) is best annotated as a secreted, Zn2+-dependent PGN amidase that modulates IMD/REL2 signaling by degrading muropeptide ligands. Although S3-specific phenotypes remain insufficiently isolated from S2 in published functional studies, the combined genetic, evolutionary, and pathway evidence supports a role for PGRP-S3 in extracellular immune modulation that indirectly influences antibacterial defense and malaria parasite interactions via effects on microbiota-driven IMD signaling (mendes2010molecularevolutionof pages 3-7, zakovic2017nfκblikesignalingpathway pages 2-4, meister2009anophelesgambiaepgrplcmediated pages 7-9, audi2025apgrplc1rel2faxis pages 18-20, moussawi2019functionalandmolecular pages 24-28, meister2006theroleof pages 69-74).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(meister2009anophelesgambiaepgrplcmediated pages 7-9): Stephan Meister, Bogos Agianian, Fanny Turlure, Angela Relógio, Isabelle Morlais, Fotis C. Kafatos, and George K. Christophides. Anopheles gambiae pgrplc-mediated defense against bacteria modulates infections with malaria parasites. PLoS Pathogens, 5:e1000542, Aug 2009. URL: https://doi.org/10.1371/journal.ppat.1000542, doi:10.1371/journal.ppat.1000542. This article has 290 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mendes2010molecularevolutionof pages 3-7): Cristina Mendes, Rute Felix, Ana-Margarida Sousa, Joana Lamego, Derek Charlwood, Virgílio E do Rosário, João Pinto, and Henrique Silveira. Molecular evolution of the three short pgrps of the malaria vectors anopheles gambiae and anopheles arabiensis in east africa. BMC Evolutionary Biology, 10:9-9, Jan 2010. URL: https://doi.org/10.1186/1471-2148-10-9, doi:10.1186/1471-2148-10-9. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zakovic2017nfκblikesignalingpathway pages 2-4): Suzana Zakovic and Elena A. Levashina. Nf-κb-like signaling pathway rel2 in immune defenses of the malaria vector anopheles gambiae. Frontiers in Cellular and Infection Microbiology, Jun 2017. URL: https://doi.org/10.3389/fcimb.2017.00258, doi:10.3389/fcimb.2017.00258. This article has 36 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(audi2025apgrplc1rel2faxis pages 18-20): Amani Audi, Suheir Zeineddine, Sana Jaber, and Mike A. Osta. A pgrplc1/rel2-f axis controls anopheles gambiae resistance to systemic infections with gram-positive bacteria containing lys-type peptidoglycan. PLOS Pathogens, 21:e1013527, Sep 2025. URL: https://doi.org/10.1371/journal.ppat.1013527, doi:10.1371/journal.ppat.1013527. This article has 0 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moussawi2019functionalandmolecular pages 24-28): LH El Moussawi. Functional and molecular characterization of the serine protease homologue clipa28 in the melanization response of anopheles gambiae mosquitoes. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(meister2006theroleof pages 69-74): Stephan Meister. The role of pgrp proteins in innate immunity pathways in the malaria vector anopheles gambiae. ArXiv, Jan 2006. URL: https://doi.org/10.11588/heidok.00006571, doi:10.11588/heidok.00006571. This article has 4 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>mendes2010molecularevolutionof pages 3-7</li>
+<li>meister2009anophelesgambiaepgrplcmediated pages 7-9</li>
+<li>moussawi2019functionalandmolecular pages 24-28</li>
+<li>meister2006theroleof pages 69-74</li>
+<li>https://doi.org/10.1371/journal.ppat.1013527</li>
+<li>https://doi.org/10.3389/fcimb.2017.00258</li>
+<li>https://doi.org/10.1371/journal.ppat.1000542</li>
+<li>https://doi.org/10.11588/heidok.00006571</li>
+<li>https://doi.org/10.1186/1471-2148-10-9</li>
+<li>https://doi.org/10.1371/journal.ppat.1000542,</li>
+<li>https://doi.org/10.1186/1471-2148-10-9,</li>
+<li>https://doi.org/10.3389/fcimb.2017.00258,</li>
+<li>https://doi.org/10.1371/journal.ppat.1013527,</li>
+<li>https://doi.org/10.11588/heidok.00006571,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: D2STP8
+gene_symbol: PGRPS3
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7165
+  label: Anopheles gambiae
+description: &gt;-
+  PGRP-S3 (AGAP006342) is a short-form peptidoglycan recognition protein in Anopheles gambiae
+  that functions as a secreted, zinc-dependent N-acetylmuramoyl-L-alanine amidase. Unlike PGRP-S1
+  in this species, PGRP-S3 retains the conserved zinc-binding catalytic residues required for
+  amidase activity and is predicted to hydrolyze bacterial peptidoglycan. PGRP-S3 is a tandem
+  duplicate of PGRP-S2 on chromosome 2L with approximately 95% sequence identity. As an amidase-type
+  PGRP, it likely functions to modulate IMD/REL2 pathway signaling by degrading peptidoglycan
+  ligands, thereby negatively regulating innate immune activation and promoting microbiota
+  homeostasis in the mosquito midgut.
+existing_annotations:
+- term:
+    id: GO:0002376
+    label: immune system process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      PGRP-S3 is a peptidoglycan recognition protein involved in the innate immune system.
+      This annotation is derived from UniProtKB keyword mapping (Immunity KW-0391). The
+      annotation is correct but very general. More specific immune-related terms such as
+      &#39;innate immune response&#39; (GO:0045087) are also annotated and provide more functional
+      detail.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but too general. The IEA annotation from keyword mapping is accurate but
+      redundant with more specific immune annotations (GO:0045087). Keep as non-core since
+      more informative terms are available.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;PGRPs in insects: Peptidoglycan-recognition proteins are pattern-recognition proteins that bind bacterial peptidoglycan (PGN) and either signal to activate immune pathways or enzymatically cleave PGN to modulate signaling.&#34;
+
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is CORRECT for PGRP-S3. Comparative sequence analyses consistently show
+      that PGRP-S3 (along with PGRP-S2) retains the conserved zinc-coordinating residues
+      required for N-acetylmuramoyl-L-alanine amidase activity. This contrasts with PGRP-S1
+      in the same species, which lacks these residues and is non-catalytic. The zinc ion
+      is essential for the amidase catalytic mechanism.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported by comparative sequence analysis. Multiple studies confirm that among
+      Anopheles short PGRPs, S2 and S3 retain the zinc-coordinating catalytic residues while
+      S1 does not. The InterPro-based annotation correctly identifies PGRP-S3 as a zinc-binding
+      protein due to its functional amidase domain.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;among short PGRPs (S1, S2, S3), S2/S3 retain catalytic residues (predicted amidases), whereas S1 does not&#34;
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;short PGRPs S2 and S3 retain the canonical amidase signature motif(s) characteristic of Zn2+-dependent N-acetylmuramoyl-L-alanine amidases, supporting predicted catalytic activity&#34;
+
+- term:
+    id: GO:0008745
+    label: N-acetylmuramoyl-L-alanine amidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is CORRECT for PGRP-S3. Unlike PGRP-S1 which lacks catalytic residues,
+      PGRP-S3 retains the conserved zinc-coordinating and catalytic residues required for
+      N-acetylmuramoyl-L-alanine amidase activity. This enzyme hydrolyzes the lactyl-amide
+      bond between MurNAc and L-Ala in bacterial peptidoglycan. PGRP-S3 is classified in
+      the N-acetylmuramoyl-L-alanine amidase 2 family and its amidase domain is predicted
+      to be catalytically active.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function annotation. Multiple comparative analyses confirm PGRP-S3 retains
+      the zinc-coordinating catalytic residues characteristic of functional amidases. This
+      distinguishes it from the non-catalytic PGRP-S1 in the same organism. The InterPro
+      annotation is appropriate for this catalytically active PGRP.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S2/S3 retain these residues and are predicted to have amidase activity&#34;
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S3 is most likely a secreted Zn2+-amidase that hydrolyzes PGN to negatively regulate IMD signaling&#34;
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S2 and PGRP-S3 are autosomal paralogs under purifying selection, with high haplotype diversity for PGRP-S3 but Ka/Ks &lt; 1, consistent with conserved biochemical constraints&#34;
+
+- term:
+    id: GO:0009253
+    label: peptidoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is appropriate for PGRP-S3. As a functional N-acetylmuramoyl-L-alanine
+      amidase that retains catalytic residues, PGRP-S3 is predicted to participate in
+      peptidoglycan catabolism by hydrolyzing muropeptides. Amidase-type PGRPs degrade
+      bacterial peptidoglycan fragments, thereby modulating the availability of immune-stimulatory
+      ligands.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the molecular function annotation. Since PGRP-S3 has predicted amidase
+      activity (unlike the non-catalytic PGRP-S1), it is expected to participate in peptidoglycan
+      catabolism. This process-level annotation appropriately follows from the catalytic
+      function.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;This family includes Zn2+-dependent amidases that hydrolyze the lactyl-amide bond between MurNAc and L-Ala in PGN, thereby degrading muropeptides&#34;
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;short amidase-type PGRPs act as modulators by scavenging PGN, thereby shaping the amplitude/duration of IMD activation&#34;
+
+- term:
+    id: GO:0042834
+    label: peptidoglycan binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      PGRP-S3 contains a PGRP domain (IPR017331) that enables binding to bacterial peptidoglycan.
+      All PGRPs share this binding function; in the case of catalytic PGRPs like PGRP-S3,
+      binding precedes enzymatic hydrolysis of the substrate.
+    action: ACCEPT
+    reason: &gt;-
+      Correct annotation. The PGRP domain mediates peptidoglycan binding in all members of
+      this protein family. For amidase-type PGRPs, this binding function is prerequisite
+      to the catalytic activity. The IEA annotation from InterPro is appropriate.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;Peptidoglycan-recognition proteins are pattern-recognition proteins that bind bacterial peptidoglycan (PGN)&#34;
+
+- term:
+    id: GO:0045087
+    label: innate immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      PGRP-S3 functions in the mosquito innate immune system as a modulator of IMD/REL2
+      pathway signaling. Amidase-type PGRPs like PGRP-S3 negatively regulate innate immune
+      activation by degrading peptidoglycan ligands that would otherwise stimulate the
+      IMD pathway. This maintains microbiota homeostasis and prevents immune overactivation.
+    action: ACCEPT
+    reason: &gt;-
+      Appropriate biological process annotation. PGRP-S3 is part of the innate immune system
+      in mosquitoes, functioning to modulate immune responses by enzymatically degrading
+      immunostimulatory peptidoglycan fragments. The IEA annotation accurately reflects
+      this role.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;short PGRPs are described as small extracellular (secreted) PGRPs in insects [...] amidase-type PGRPs act as modulators by scavenging PGN, thereby shaping the amplitude/duration of IMD activation&#34;
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S3 likely functions as an extracellular PGN amidase (negative regulator) rather than a transmembrane signaling receptor&#34;
+
+- term:
+    id: GO:0005615
+    label: extracellular space
+  evidence_type: ISS
+  original_reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+  review:
+    summary: &gt;-
+      PGRP-S3 is a short-form (S-class) PGRP with a signal peptide (residues 1-20), indicating
+      secretion. Short PGRPs are characteristically secreted and extracellular, found in
+      hemolymph, cuticle, and gut lumen. The signal peptide prediction from SignalP and
+      the classification as an S-class PGRP both support extracellular localization.
+    action: NEW
+    reason: &gt;-
+      This cellular component annotation should be added. PGRP-S3 has a predicted signal
+      peptide and belongs to the secreted short-form class of PGRPs. Short PGRPs are
+      characteristically extracellular, functioning in hemolymph and gut lumen. This is
+      consistent with its role as a secreted amidase that modulates extracellular
+      peptidoglycan availability.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;Short PGRPs are described as small extracellular (secreted) PGRPs in insects, distinguishing them from transmembrane/cytosolic long PGRPs&#34;
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S3, as a short PGRP, is therefore most likely secreted into the hemolymph or local extracellular spaces&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:20067637
+  title: Molecular evolution of the three short PGRPs of the malaria vectors Anopheles gambiae and Anopheles arabiensis in East Africa
+  findings: []
+- id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+  title: Deep research summary for PGRPS3 in Anopheles gambiae
+  findings:
+    - statement: PGRP-S3 retains catalytic amidase residues unlike PGRP-S1
+      supporting_text: &#34;short PGRPs S2 and S3 retain the canonical amidase signature motif(s) characteristic of Zn2+-dependent N-acetylmuramoyl-L-alanine amidases&#34;
+    - statement: PGRP-S3 is a secreted, extracellular protein
+      supporting_text: &#34;PGRP-S3, as a short PGRP, is therefore most likely secreted into the hemolymph or local extracellular spaces&#34;
+    - statement: PGRP-S3 functions as a negative regulator of IMD signaling
+      supporting_text: &#34;PGRP-S3 likely functions as an extracellular PGN amidase (negative regulator) rather than a transmembrane signaling receptor&#34;
+- id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+  title: Deep research summary for PGRPS1 in Anopheles gambiae (comparative information)
+  findings:
+    - statement: Comparative analysis shows S2/S3 retain catalytic residues while S1 does not
+      supporting_text: &#34;among short PGRPs (S1, S2, S3), S2/S3 retain catalytic residues (predicted amidases), whereas S1 does not&#34;
+
+core_functions:
+  - description: &gt;-
+      Zinc-dependent N-acetylmuramoyl-L-alanine amidase that hydrolyzes bacterial peptidoglycan
+      to modulate innate immune signaling. Functions as a secreted extracellular enzyme that
+      degrades peptidoglycan fragments, thereby negatively regulating IMD/REL2 pathway
+      activation and promoting microbiota homeostasis.
+    molecular_function:
+      id: GO:0008745
+      label: N-acetylmuramoyl-L-alanine amidase activity
+    directly_involved_in:
+      - id: GO:0045087
+        label: innate immune response
+      - id: GO:0009253
+        label: peptidoglycan catabolic process
+    locations:
+      - id: GO:0005615
+        label: extracellular space
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS3/PGRPS3-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S3 is most likely a secreted Zn2+-amidase that hydrolyzes PGN to negatively regulate IMD signaling&#34;
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S2/S3 retain these residues and are predicted to have amidase activity&#34;
+
+suggested_questions:
+  - question: &gt;-
+      Does PGRP-S3 have any substrate preference for DAP-type versus Lys-type peptidoglycan?
+    experts:
+      - George K. Christophides
+      - Elena A. Levashina
+  - question: &gt;-
+      What is the relative contribution of PGRP-S3 versus PGRP-S2 to IMD pathway modulation,
+      given their near-identical sequences as tandem duplicates?
+    experts:
+      - George K. Christophides
+
+suggested_experiments:
+  - hypothesis: PGRP-S3 has N-acetylmuramoyl-L-alanine amidase activity in vitro
+    description: &gt;-
+      Express and purify recombinant PGRP-S3 and test for hydrolytic activity against
+      purified peptidoglycan substrates. Use HPLC or mass spectrometry to detect
+      muropeptide products. Compare activity to a catalytically inactive mutant
+      (e.g., zinc-binding residue mutation).
+    experiment_type: Biochemical enzyme assay
+  - hypothesis: PGRP-S3 negatively regulates IMD pathway activation
+    description: &gt;-
+      Perform RNAi knockdown of PGRP-S3 (ideally with S2-specific controls given
+      sequence similarity) and challenge mosquitoes with bacteria. Measure expression
+      of IMD-regulated antimicrobial peptides and assess bacterial load changes.
+    experiment_type: RNAi knockdown with immune challenge
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

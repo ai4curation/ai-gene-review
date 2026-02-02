@@ -224,7 +224,7 @@ def main():
         print(f"Warning: Using raw rule file (labels may be missing): {rule_file}")
     else:
         print(f"Error: Rule file not found in {rule_dir}", file=sys.stderr)
-        print(f"Run 'just arba-sync' or 'just unirule-sync' first to fetch rules", file=sys.stderr)
+        print("Run 'just arba-sync' or 'just unirule-sync' first to fetch rules", file=sys.stderr)
         return 1
 
     # Load rule JSON

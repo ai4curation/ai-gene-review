@@ -32,4 +32,4 @@ for species, gene, uniprot_id in genes_to_update:
         lines = goa_data.strip().split('\n')
         print(f"  ✓ Updated {gene}-goa.tsv with {len(lines)-1} annotations")
     else:
-        print(f"  ✗ Failed to fetch GOA data")
+        print("  ✗ Failed to fetch GOA data")

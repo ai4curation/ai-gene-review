@@ -3,7 +3,6 @@
 Help manually check publication files by extracting key information.
 """
 
-import os
 import re
 from pathlib import Path
 

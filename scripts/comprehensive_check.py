@@ -3,8 +3,6 @@
 Comprehensive check of publication files for HTML scraping issues.
 """
 
-import os
-import re
 from pathlib import Path
 
 def check_known_problematic_content(content):
@@ -107,7 +105,7 @@ def main():
                     f.write(f"- {pmid}\n")
                 f.write("\n")
     
-    print(f"\nResults written to PROBLEM_PMIDS.md")
+    print("\nResults written to PROBLEM_PMIDS.md")
 
 if __name__ == "__main__":
     main()

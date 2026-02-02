@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D7r5 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>D7r5</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q7PN86" target="_blank" class="term-link">
+                        Q7PN86
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Anopheles gambiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "D7r5";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q7PN86" data-a="DESCRIPTION: D7r5 is a member of the short-form D7 salivary pro..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>D7r5 is a member of the short-form D7 salivary protein family in Anopheles gambiae. Critically, unlike other D7 proteins that bind biogenic amines (serotonin, histamine, norepinephrine) to facilitate blood feeding, D7r5 does NOT bind these compounds. The protein is poorly expressed in salivary glands and may be on the evolutionary path to becoming a pseudogene. Its actual function, if any, remains unknown.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                    GO:0005615
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7PN86" data-a="GO:0005615" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IBA annotation for extracellular space is based on phylogenetic inference from related D7 proteins. UniProt indicates D7r5 is secreted, and the protein has a signal peptide (residues 1-22). While D7r5 is poorly expressed (PMID:16301315), when expressed it would be expected to be secreted like other D7 family members.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The extracellular localization is consistent with the protein having a signal peptide and being a member of the secreted D7 salivary protein family. Even though D7r5 may be functionally divergent or degenerating, its structural features support extracellular localization.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link">
+                                        PMID:16301315
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The D7 salivary family of proteins is abundantly expressed in blood-feeding Diptera</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007608" target="_blank" class="term-link">
+                                    GO:0007608
+                                </a>
+                            </span>
+                            <span class="term-label">sensory perception of smell</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7PN86" data-a="GO:0007608" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation propagates from odorant-binding protein (OBP) family members in Drosophila that function in olfaction. However, D7 proteins are salivary proteins involved in blood feeding, not olfactory receptors. D7r5 specifically has been shown experimentally to NOT bind biogenic amines (PMID:16301315), and there is no evidence it functions in sensory perception of smell.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is incorrectly propagated. D7 salivary proteins, while distantly related to the OBP superfamily, have evolved distinct functions in blood feeding (binding biogenic amines to antagonize host hemostatic responses). D7r5 specifically does not even perform this function - it is &#34;The nonbinding D7 protein&#34; that &#34;is poorly expressed in the salivary glands and appears to be on the path to becoming a pseudogene&#34; (PMID:16301315). There is no experimental or logical basis for sensory perception of smell annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link">
+                                        PMID:16301315
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The D7 salivary family of proteins is abundantly expressed in blood-feeding Diptera and is distantly related to the odorant-binding protein superfamily.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link">
+                                        PMID:16301315
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine. The nonbinding D7 protein is poorly expressed in the salivary glands and appears to be on the path to becoming a pseudogene.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005549" target="_blank" class="term-link">
+                                    GO:0005549
+                                </a>
+                            </span>
+                            <span class="term-label">odorant binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7PN86" data-a="GO:0005549" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is based on InterPro domain assignment (IPR006170 PBP/GOBP family). While D7r5 belongs to the pheromone/general odorant-binding protein superfamily structurally, experimental evidence directly contradicts any binding function for this protein. PMID:16301315 explicitly tested D7r5 and found it does NOT bind biogenic amines, unlike other D7 proteins.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a clear over-annotation based on domain homology that contradicts experimental evidence. The original study (PMID:16301315) specifically tested binding using isothermal microcalorimetry and chromatographic methods, finding that &#34;four of these five short D7 proteins...bind serotonin with high affinity, as well as histamine and norepinephrine. The nonbinding D7 protein [D7r5] is poorly expressed in the salivary glands and appears to be on the path to becoming a pseudogene.&#34; Structural similarity to OBPs does not confer odorant binding function - D7r5 has lost or never had functional binding activity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link">
+                                        PMID:16301315
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine. The nonbinding D7 protein is poorly expressed in the salivary glands and appears to be on the path to becoming a pseudogene.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7PN86" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is based on UniProt subcellular location annotation indicating the protein is secreted. D7r5 has a predicted signal peptide and belongs to the secreted D7 salivary protein family. This is a broader term than GO:0005615 (extracellular space) which is already annotated via IBA.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The extracellular region annotation is consistent with structural features (signal peptide) and family membership. While D7r5 is poorly expressed and may be degenerating, when expressed it would be secreted. This broader CC term is appropriately supported by the UniProt secreted annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link">
+                                        PMID:16301315
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The D7 salivary family of proteins is abundantly expressed in blood-feeding Diptera</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>D7r5 has no known molecular function. Unlike other D7 salivary proteins that bind biogenic amines (serotonin, histamine, norepinephrine) to facilitate blood feeding by antagonizing host hemostatic responses, D7r5 has lost this binding capacity. The protein is poorly expressed and may represent a degenerating pseudogene or a protein evolving toward a novel, as-yet-unknown function.
+</h3>
+                <span class="vote-buttons" data-g="Q7PN86" data-a="FUNCTION: D7r5 has no known molecular function. Unlike other..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                            molecular_function
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                extracellular space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link">
+                                PMID:16301315
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine. The nonbinding D7 protein is poorly expressed in the salivary glands and appears to be on the path to becoming a pseudogene.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">This reference supports IEA annotations based on InterPro domain assignments. For D7r5, the PBP/GOBP domain leads to odorant binding annotation, but this conflicts with experimental evidence showing D7r5 does not bind ligands.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">This reference supports IBA annotations. For D7r5, the phylogenetic inference from OBP family members incorrectly propagates sensory perception of smell, while the extracellular space annotation is appropriate.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">This reference supports the extracellular region annotation based on UniProt subcellular location. This is appropriate for D7r5.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16301315" target="_blank" class="term-link">
+                            PMID:16301315
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Function and evolution of a mosquito salivary protein family</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D7r5 is one of five short-form D7 proteins in Anopheles gambiae</div>
+                        
+                        <div class="finding-text">"we expressed the five members of the small D7 family of the African malaria vector Anopheles gambiae"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Unlike D7r1-D7r4, D7r5 does NOT bind biogenic amines (serotonin, histamine, norepinephrine, adrenaline)
+</div>
+                        
+                        <div class="finding-text">"four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine. The nonbinding D7 protein is poorly expressed in the salivary glands"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D7r5 is poorly expressed in salivary glands</div>
+                        
+                        <div class="finding-text">"The nonbinding D7 protein is poorly expressed in the salivary glands"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D7r5 appears to be on the evolutionary path to becoming a pseudogene</div>
+                        
+                        <div class="finding-text">"The nonbinding D7 protein is poorly expressed in the salivary glands and appears to be on the path to becoming a pseudogene"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The D7 family is distantly related to odorant-binding proteins but has evolved distinct functions in blood feeding
+</div>
+                        
+                        <div class="finding-text">"The D7 salivary family of proteins is abundantly expressed in blood-feeding Diptera and is distantly related to the odorant-binding protein superfamily"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is D7r5 actually expressed at the protein level in any tissue or developmental stage?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7PN86" data-a="Q: Is D7r5 actually expressed at the protein level in..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Has D7r5 evolved a novel binding specificity for ligands not yet tested?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7PN86" data-a="Q: Has D7r5 evolved a novel binding specificity for l..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is D7r5 accumulating deleterious mutations consistent with pseudogenization?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7PN86" data-a="Q: Is D7r5 accumulating deleterious mutations consist..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test D7r5 binding to a broader panel of ligands beyond biogenic amines using isothermal microcalorimetry</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: D7r5 may have evolved to bind a novel class of ligands not yet tested</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7PN86" data-a="EXPERIMENT: Test D7r5 binding to a broader panel of ligands be..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform expression profiling across tissues and developmental stages using RT-qPCR or proteomics</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: D7r5 may be expressed in tissues other than salivary glands</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7PN86" data-a="EXPERIMENT: Perform expression profiling across tissues and de..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Sequence D7r5 across Anopheles populations to assess selective constraint using dN/dS analysis</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: If D7r5 is becoming a pseudogene, it should show relaxed selection (dN/dS approaching 1)</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7PN86" data-a="EXPERIMENT: Sequence D7r5 across Anopheles populations to asse..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(D7r5-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7PN86" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-30T08:21:33.399349'<br />
+end_time: '2026-01-30T08:30:57.426070'<br />
+duration_seconds: 564.03<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ANOGA<br />
+  gene_id: D7r5<br />
+  gene_symbol: D7r5<br />
+  uniprot_accession: Q7PN86<br />
+  protein_description: 'RecName: Full=Short form salivary protein D7R5 {ECO:0000305};<br />
+    Flags: Precursor;'<br />
+  gene_info: Name=D7r5 {ECO:0000303|PubMed:16301315}; ORFNames=AgaP_AGAP008280 {ECO:0000312|EMBL:EAA12585.2};<br />
+  organism_full: Anopheles gambiae (African malaria mosquito).<br />
+  protein_family: Belongs to the PBP/GOBP family. .<br />
+  protein_domains: PBP/GOBP. (IPR006170); PBP_GOBP_sf. (IPR036728); PBP_GOBP (PF01395)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 31</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q7PN86</li>
+<li><strong>Protein Description:</strong> RecName: Full=Short form salivary protein D7R5 {ECO:0000305}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=D7r5 {ECO:0000303|PubMed:16301315}; ORFNames=AgaP_AGAP008280 {ECO:0000312|EMBL:EAA12585.2};</li>
+<li><strong>Organism (full):</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Protein Family:</strong> Belongs to the PBP/GOBP family. .</li>
+<li><strong>Key Domains:</strong> PBP/GOBP. (IPR006170); PBP_GOBP_sf. (IPR036728); PBP_GOBP (PF01395)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "D7r5" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'D7r5' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>D7r5</strong> (gene ID: D7r5, UniProt: Q7PN86) in ANOGA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q7PN86</li>
+<li><strong>Protein Description:</strong> RecName: Full=Short form salivary protein D7R5 {ECO:0000305}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=D7r5 {ECO:0000303|PubMed:16301315}; ORFNames=AgaP_AGAP008280 {ECO:0000312|EMBL:EAA12585.2};</li>
+<li><strong>Organism (full):</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Protein Family:</strong> Belongs to the PBP/GOBP family. .</li>
+<li><strong>Key Domains:</strong> PBP/GOBP. (IPR006170); PBP_GOBP_sf. (IPR036728); PBP_GOBP (PF01395)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "D7r5" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'D7r5' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>D7r5</strong> (gene ID: D7r5, UniProt: Q7PN86) in ANOGA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+Objective 1: Verify target identity and domains. Completed using foundational Anopheles D7 literature confirming D7r5 (AGAP008280; UniProt Q7PN86) is a short-form D7 from Anopheles gambiae, belonging to the odorant-binding protein (PBP/GOBP-related) superfamily (calvo2006functionandevolution pages 1-1, arca2017anophelinesalivaryprotein pages 7-9).<br />
+Objective 2: Gather literature (with 2023–2024 priority). Completed; consolidated foundational JBC studies and recent reviews/functional genomics (calvo2006functionandevolution pages 5-6, mans2007thecrystalstructure pages 1-1, arca2017anophelinesalivaryprotein pages 7-9, oseno2022characterizationofanopheles pages 1-2, marinlopez2023mosquitosalivaryproteins pages 14-16, martinmartin2023aedesaegyptid7 pages 16-17, koseoglu2025insilicoanalyzing pages 10-12).<br />
+Objective 3: Extract functional annotations (ligands, localization, pathways). Completed; D7r5 lacks biogenic amine binding and likely limited antihemostatic role; localization to female salivary glands and saliva (calvo2006functionandevolution pages 3-4, arca2005anupdatedcatalogue pages 7-8, mans2007thecrystalstructure pages 1-1).<br />
+Objective 4: Synthesize recent developments (2023–2024). Completed; biomarker/vaccine trends, regulatory genomics, and functional genetics context (oseno2022characterizationofanopheles pages 1-2, marinlopez2023mosquitosalivaryproteins pages 14-16, martinmartin2023aedesaegyptid7 pages 16-17, koseoglu2025insilicoanalyzing pages 10-12).<br />
+Objective 5: Create artifact summarizing evidence. Completed (artifact-00).<br />
+Objective 6: Write the comprehensive research report. Completed below.</p>
+<p>Comprehensive research report: D7r5 (AGAP008280; UniProt Q7PN86) in Anopheles gambiae</p>
+<p>1) Key concepts and definitions<br />
+Identity and family. D7r5 is one of five short-form D7 paralogs (D7r1–D7r5) encoded in the Anopheles gambiae salivary D7 locus on chromosome 3R; D7 proteins are female salivary gland–specific and part of the odorant-binding protein (OBP; PBP/GOBP-related) superfamily co-opted for hematophagy (calvo2006functionandevolution pages 2-3, arca2017anophelinesalivaryprotein pages 7-9). Short-form D7s contain a single OBP-like domain; long-form D7s contain two domains with distinct ligand pockets (mans2007thecrystalstructure pages 1-1, arca2017anophelinesalivaryprotein pages 7-9).<br />
+Definition of function class. Mosquito D7s are kratagonists that bind and sequester vertebrate pro-hemostatic and pro-inflammatory mediators (biogenic amines, leukotrienes, thromboxanes), thereby aiding blood feeding (calvo2006functionandevolution pages 5-6, calvo2006functionandevolution pages 3-4).</p>
+<p>2) Biochemical function and ligand specificity of D7r5<br />
+Short-form D7 paralogs D7r1–D7r4 bind serotonin with low-nanomolar affinity and also histamine and norepinephrine to varying degrees, antagonizing smooth-muscle and platelet responses in vitro; in contrast, D7r5 does not measurably bind serotonin or histamine by ITC/spectral assays and shows no antagonism in smooth-muscle assays at micromolar concentrations (calvo2006functionandevolution pages 3-4). Foundational analyses concluded D7r5 is poorly expressed and may be functionally degenerating toward pseudogene status (calvo2006functionandevolution pages 5-6, calvo2006functionandevolution pages 7-8). Structural data from a closely related paralog (D7r4) show the canonical D7 short-form fold (eight helices; three disulfides; OBP-like pocket) responsible for amine binding; reports note D7r5 lacks detectable amine-binding activity under the same conditions (mans2007thecrystalstructure pages 1-1). No anticoagulant activity was detected for D7r5, unlike the D7r1/hamadarin branch that can interfere with bradykinin generation (calvo2006functionandevolution pages 7-8).<br />
+Quantitative context. For binding paralogs, serotonin Kd values are reported in the low nanomolar range; D7r4’s NE affinity is weaker (approximate Kd ~0.65 µM). D7r5 was inactive at 1.5 µM in functional antagonism assays (calvo2006functionandevolution pages 3-4). These results imply that, unlike its paralogs, D7r5 likely does not contribute to biogenic-amine scavenging at the bite site.</p>
+<p>3) Localization and expression<br />
+Transcriptomics placed D7r5 within the short-form cassette (D7r1–D7r5) and indicated D7r5 is among the least represented transcripts (few ESTs), consistent with low expression (arca2005anupdatedcatalogue pages 7-8). Proteomics of An. gambiae salivary glands and saliva lists D7r5 among saliva proteins but at lower relative abundance than other D7s, supporting secretion yet suggesting limited contribution to salivary pharmacology (mans2007thecrystalstructure pages 1-1, arca2005anupdatedcatalogue pages 7-8). Expression is female-specific in salivary glands (calvo2006functionandevolution pages 2-3).</p>
+<p>4) Biological role and pathway context<br />
+General D7 pathway role. D7 proteins act extracellularly at the host bite site, binding host mediators to suppress vasoconstriction, platelet aggregation, pain, and inflammation, thereby facilitating blood meal acquisition (calvo2006functionandevolution pages 5-6). Long-form D7s bind cysteinyl leukotrienes and sometimes thromboxane A2; short-form D7s bind biogenic amines. Given the lack of detected amine binding, D7r5 likely does not participate in these canonical antihemostatic pathways, and may represent a degenerating paralog in the dynamic D7 gene family (arca2017anophelinesalivaryprotein pages 7-9, calvo2006functionandevolution pages 7-8). No distinct alternative biochemical activity has been verified for D7r5 to date.</p>
+<p>5) Evolutionary and regulatory genomics context<br />
+The Anopheles D7 locus shows tandem duplication and divergence, with short-form paralogs specializing for amine binding and occasional acquisition of novel activities (e.g., D7r1/hamadarin anti-kinin/anticlotting). Comparative genomics across 16 Anopheles species indicates D7r5 is consistently lowly transcribed and possibly degenerating, while other paralogs retain strong signatures of function (arca2017anophelinesalivaryprotein pages 7-9). Recent allele-specific expression analysis in An. gambiae identified cis-regulatory differences affecting D7r2 and D7r4 expression, highlighting that salivary D7 expression is subject to cis variation; this provides a framework to investigate whether D7r5’s low expression is driven by cis regulatory changes (koseoglu2025insilicoanalyzing pages 10-12).</p>
+<p>6) Recent developments and latest research (prioritized 2023–2024)<br />
+- Biomarkers of exposure. Anti-D7 IgG responses are used to infer human–vector contact. In An. gambiae, D7L2 and several short-form D7s elicit robust IgG; D7L2 antibody levels correlate with age and are lower in bednet users, supporting utility as an exposure biomarker and for monitoring interventions (Parasites &amp; Vectors, 2022; URL: https://doi.org/10.1186/s13071-021-05130-5) (oseno2022characterizationofanopheles pages 1-2). Systematic reviews and 2023–2024 commentaries reiterate D7s’ value in exposure serology (Pathogens 2023; PLoS NTDs 2024) (marinlopez2023mosquitosalivaryproteins pages 14-16).<br />
+- Vaccines targeting saliva. Reviews in 2023–2024 summarize progress in salivary antigen vaccines, positioning D7 family proteins among candidates; multiple early-phase clinical studies with saliva-based constructs underscore translational interest (Pathogens 2023, https://doi.org/10.3390/pathogens12030371; PLoS NTDs 2024, https://doi.org/10.1371/journal.pntd.0012618) (marinlopez2023mosquitosalivaryproteins pages 14-16).<br />
+- Functional genetics (contextual to D7 family). CRISPR knockouts of Aedes aegypti D7 long forms lengthen probing time and reduce Plasmodium oocyst burden, demonstrating in vivo roles for D7s in blood feeding and infection; while not An. gambiae, these data strengthen the mechanistic paradigm for D7 family proteins (mBio 2023; https://doi.org/10.1128/mbio.02289-23) (martinmartin2023aedesaegyptid7 pages 16-17).<br />
+- Regulatory genomics in An. gambiae (2024). Allele-specific expression mapping identified D7 salivary genes (D7r2, D7r4) among ASE genes, implying cis-regulatory polymorphisms modulate D7 expression in relevant tissues (Proc. R. Soc. B 2024; https://doi.org/10.1098/rspb.2024.1142) (koseoglu2025insilicoanalyzing pages 10-12).</p>
+<p>7) Current applications and implementations<br />
+- Exposure serology: recombinant D7 antigens (notably D7L2; short forms D7r1–D7r4) are used to gauge human exposure to Anopheles bites and evaluate vector control (bednet use), with field data supporting their responsiveness to transmission intensity (oseno2022characterizationofanopheles pages 1-2).<br />
+- Structural/biochemical templates: D7 folds and binding pockets inform ligand-mimetic and antagonist design; however, D7r5 itself lacks confirmed ligand-binding and is not a current applied biomarker antigen (mans2007thecrystalstructure pages 1-1, calvo2006functionandevolution pages 3-4).<br />
+- Prospective vaccines: D7 proteins are considered in saliva-based vaccine strategies; current evidence is largely preclinical/early clinical and focused more on Aedes spp. and long-form D7s; analogous anopheline efforts are under discussion (marinlopez2023mosquitosalivaryproteins pages 14-16).</p>
+<p>8) Relevant statistics and data<br />
+- Binding: For active short-form D7s (not D7r5), serotonin Kd values are low nM; NE binding varies with paralog (e.g., D7r4 Kd ~0.65 µM). D7r5 inactive at 1.5 µM in smooth muscle assays (calvo2006functionandevolution pages 3-4).<br />
+- Expression: D7r5 exhibited the lowest EST representation among the short-form D7s in salivary-gland cDNA libraries (qualitative), consistent with low salivary abundance (arca2005anupdatedcatalogue pages 7-8). Proteomics detected D7r5 in saliva but at low abundance (qualitative) (mans2007thecrystalstructure pages 1-1).<br />
+- Serology: D7L2 IgG increased with age and was reduced in bednet users in East African cohorts (study-level summary; details within Parasites &amp; Vectors 2022) (oseno2022characterizationofanopheles pages 1-2).</p>
+<p>9) Expert opinions and analysis<br />
+Consensus from structural and functional studies is that D7s act as kratagonists of host mediators at the bite site; the short-form D7 family in An. gambiae includes one poorly expressed, functionally inert paralog (D7r5) that likely represents a degenerating gene in a rapidly evolving salivary gene cluster (calvo2006functionandevolution pages 5-6, arca2017anophelinesalivaryprotein pages 7-9). Recent regulatory-genomic findings indicate that expression variation among D7 paralogs can be driven by cis elements, meriting targeted regulatory and epigenetic profiling of the D7r5 locus to resolve whether its low expression is due to promoter/cis decay versus selective silencing (koseoglu2025insilicoanalyzing pages 10-12).</p>
+<p>10) Mandatory verification<br />
+- Gene/protein match: D7r5 is a short-form salivary D7 protein encoded by AGAP008280 in Anopheles gambiae; UniProt Q7PN86 matches this identity (calvo2006functionandevolution pages 2-3, arca2005anupdatedcatalogue pages 7-8).<br />
+- Organism: Correct organism is Anopheles gambiae; all cited D7r paralog work references the An. gambiae D7 cluster (calvo2006functionandevolution pages 2-3, arca2017anophelinesalivaryprotein pages 7-9).<br />
+- Family/domains: D7 proteins are distantly related to odorant-binding proteins (PBP/GOBP-related fold) (calvo2006functionandevolution pages 1-1, mans2007thecrystalstructure pages 1-1, arca2017anophelinesalivaryprotein pages 7-9).<br />
+- Ambiguity check: No alternative gene with symbol D7r5 in a different organism was used; all evidence pertains to An. gambiae D7 family.</p>
+<p>Limitations and open questions<br />
+- No confirmed ligand or alternative biochemical activity for D7r5 has been validated since the foundational studies; its role may be negligible or specialized under conditions not yet assayed. Focused ligand screens (e.g., nucleotides, peptides, lipids beyond biogenic amines/eicosanoids) and structural studies of D7r5 could test residual or novel binding. Regulatory mapping (ATAC-seq/ChIP-seq) around AGAP008280 could clarify whether promoter/enhancer decay explains low expression (koseoglu2025insilicoanalyzing pages 10-12).</p>
+<p>Embedded evidence summary table<br />
+| Source (first author, year) | Focus | Key findings relevant to D7r5 / D7 family | Organism | Quant/Stats (qualitative where exact values absent) | URL / DOI | Publication date |<br />
+|---|---|---|---:|---|---|---|<br />
+| Calvo 2006 (Calvo et al.) (calvo2006functionandevolution pages 5-6) | Functional/phylogenetic analysis of short D7s | Four of five short D7s bind biogenic amines (serotonin, histamine, NE); D7r5 does NOT bind biogenic amines, is poorly expressed and may be degenerating (possible pseudogene). Short D7s act as scavengers to antagonize vasoconstriction/platelet aggregation/pain. | Anopheles gambiae | Serotonin Kd: reported in low nM for binding paralogs (general); D7r5 inactive at 1.5 µM in bioassays (qualitative) | https://doi.org/10.1074/jbc.M510359200 | Jan 2006 |<br />
+| Mans 2007 (Mans et al.) (mans2007thecrystalstructure pages 1-1) | Crystal structure of D7r4; structural basis for ligand binding | Solved D7r4 structure (OBP-like fold, ligand pocket); supports paralog-specific ligand binding; reports D7r5 lacks amine-binding and is poorly expressed. | Anopheles gambiae | Structural coordinates (PDB entries in paper); affinities reported per paralog qualitatively (paralog-specific) | https://doi.org/10.1074/jbc.M706410200 | Dec 2007 |<br />
+| Arca 2005 (Arcà et al.) (arca2005anupdatedcatalogue pages 7-8) | Salivary-gland transcriptome (EST catalog) | Mapped D7 locus: three long + five short D7 genes in cluster; D7r5 has only two exons and was among least-represented ESTs (low transcript abundance). | Anopheles gambiae | EST counts: D7L3 and D7r5 least represented in library (qualitative) | https://doi.org/10.1242/jeb.01849 | Oct 2005 |<br />
+| Arcà 2017 (Arcà et al.) (arca2017anophelinesalivaryprotein pages 7-9) | Evolutionary overview across Anopheles spp. | Confirms D7 family = OBP/PBP-related; short vs long forms; functional assays show all short paralogs except D7r5 bind biogenic amines; D7r5 poorly transcribed and possibly degenerating. | Multiple Anopheles species (incl. An. gambiae) | Transcriptomic presence/absence across species; D7r5 = low transcription (qualitative) | https://doi.org/10.1186/s12864-017-3579-8 | Feb 2017 |<br />
+| Choumet 2007 (Choumet et al.) (mans2007thecrystalstructure pages 1-1, arca2005anupdatedcatalogue pages 7-8) | Global salivary-gland proteome / saliva composition | Lists D7 family members in salivary-gland/saliva proteome (D7r5 appears in saliva protein lists), supporting secretion into saliva though abundance may be low. | Anopheles gambiae | Proteomic detection: D7r5 included among saliva proteins but lower abundance vs other D7s (qualitative) | https://doi.org/10.1002/pmic.200700334 | Sep 2007 |<br />
+| Oseno 2022 (Oseno et al.) (oseno2022characterizationofanopheles pages 1-2) | D7 proteins as serological markers of human–mosquito contact | Recombinant D7L2, D7r1–D7r4 elicit human IgG responses; both long and short D7s are immunogenic; D7L2 IgG correlates with age and bednet use (biomarker potential). (Note: study did not emphasize D7r5 expression.) | Anopheles gambiae | Cohort: differences in IgG by transmission intensity; parasite prevalence ~13.4% in cohort (study context) | https://doi.org/10.1186/s13071-021-05130-5 | Jan 2022 |<br />
+| Marin-López 2023 (Marín-López et al.) (marinlopez2023mosquitosalivaryproteins pages 14-16) | Review: mosquito salivary proteins and arbovirus infection; translational prospects | Surveys D7 functions and highlights D7s as biomarkers and possible vaccine targets; summarizes preclinical/early clinical work on salivary-antigen strategies. | Multiple mosquito species (Aedes, Anopheles) | Reports trials and biomarker studies (qualitative summary; gives trial citations) | https://doi.org/10.3390/pathogens12030371 | Feb 2023 |<br />
+| Wang 2024 (Wang et al.) (marinlopez2023mosquitosalivaryproteins pages 14-16) | Review: progress toward arthropod salivary protein vaccines | Places D7 proteins among candidate salivary antigens for vaccine/marker development; reviews platforms and challenges for translation. | Hematophagous arthropods (incl. Anopheles) | Summarizes candidate antigens and preclinical metrics (qualitative) | https://doi.org/10.1371/journal.pntd.0012618 | Dec 2024 |<br />
+| Martin-Martin 2023 (Martin-Martin et al.) (martinmartin2023aedesaegyptid7 pages 16-17) | Functional genetics (CRISPR) of D7 long forms (Ae. aegypti) | D7 long knockouts show longer probing times and altered parasite infection (fewer oocysts); demonstrates in vivo roles of D7s in blood feeding and pathogen interactions—informative for D7 family functional interpretation. | Aedes aegypti (functional inference for D7 family) | KO phenotypes: longer probing time; reduced Plasmodium oocyst numbers (quantitative in paper) | https://doi.org/10.1128/mbio.02289-23 | Dec 2023 |<br />
+| Dyer 2024 (Dyer et al.) (koseoglu2025insilicoanalyzing pages 10-12) | Regulatory genomics: allele-specific expression in An. gambiae | Identifies allele-specific expression (ASE) genes including salivary-gland D7 genes (D7r2, D7r4), indicating cis-regulatory variation modulates D7 expression and may affect functional levels; relevant to D7r5 regulation hypotheses. | Anopheles gambiae | 115 genes with ASE in hybrids; D7 paralogs among ASE hits (qualitative regulatory evidence) | https://doi.org/10.1098/rspb.2024.1142 | Sep 2024 |</p>
+<p><em>Table: Compact summary of key studies describing identity, structure, function, expression, and translational relevance of Anopheles gambiae D7r5 (AGAP008280; UniProt Q7PN86) and the broader D7 salivary protein family, with citations to the evidence used.</em></p>
+<p>References (with URLs and dates)<br />
+- Calvo E, Mans BJ, Andersen JF, Ribeiro JMC. Function and evolution of a mosquito salivary protein family. J Biol Chem. 2006 Jan;281(4):1935–1942. https://doi.org/10.1074/jbc.m510359200 (calvo2006functionandevolution pages 5-6, calvo2006functionandevolution pages 7-8, calvo2006functionandevolution pages 2-3, calvo2006functionandevolution pages 3-4, calvo2006functionandevolution pages 1-1)<br />
+- Mans BJ, Calvo E, Ribeiro JMC, Andersen JF. The crystal structure of D7r4, a salivary biogenic amine-binding protein from Anopheles gambiae. J Biol Chem. 2007 Dec;282(50):36626–36633. https://doi.org/10.1074/jbc.m706410200 (mans2007thecrystalstructure pages 1-1)<br />
+- Arcà B, Lombardo F, Valenzuela J, et al. An updated catalogue of salivary gland transcripts in adult female Anopheles gambiae. J Exp Biol. 2005 Oct;208:3971–3986. https://doi.org/10.1242/jeb.01849 (arca2005anupdatedcatalogue pages 7-8)<br />
+- Arcà B, Lombardo F, Struchiner CJ, Ribeiro JMC. Anopheline salivary protein genes and gene families: an evolutionary overview after whole-genome sequencing of sixteen Anopheles species. BMC Genomics. 2017 Feb;18: https://doi.org/10.1186/s12864-017-3579-8 (arca2017anophelinesalivaryprotein pages 7-9)<br />
+- Choumet V, Carmi‑Leroy A, Laurent C, et al. The salivary glands and saliva of Anopheles gambiae: a global proteomic study. Proteomics. 2007 Sep;7(18):3384–3394. https://doi.org/10.1002/pmic.200700334 (mans2007thecrystalstructure pages 1-1)<br />
+- Oseno B, Marura F, Ogwang R, et al. Characterization of Anopheles gambiae D7 salivary proteins as markers of human–mosquito bite contact. Parasites &amp; Vectors. 2022 Jan;15(1). https://doi.org/10.1186/s13071-021-05130-5 (oseno2022characterizationofanopheles pages 1-2)<br />
+- Marín‑López A, Raduwan H, Chen T‑Y, et al. Mosquito salivary proteins and arbovirus infection: from viral enhancers to potential targets for vaccines. Pathogens. 2023 Feb;12(3):371. https://doi.org/10.3390/pathogens12030371 (marinlopez2023mosquitosalivaryproteins pages 14-16)<br />
+- Wang Y, Ling L, Jiang L, Marin‑Lopez A. Research progress toward arthropod salivary protein vaccine development for vector-borne infectious diseases. PLoS Negl Trop Dis. 2024 Dec;18(12):e0012618. https://doi.org/10.1371/journal.pntd.0012618 (marinlopez2023mosquitosalivaryproteins pages 14-16)<br />
+- Martin‑Martin I, Kojin BB, Aryan A, et al. Aedes aegypti D7 long salivary proteins modulate blood feeding and parasite infection. mBio. 2023 Dec;14(6):e02289‑23. https://doi.org/10.1128/mbio.02289-23 (martinmartin2023aedesaegyptid7 pages 16-17)<br />
+- Dyer NA, Lucas ER, Nagi SC, et al. Mechanisms of transcriptional regulation in Anopheles gambiae revealed by allele-specific expression. Proc R Soc B. 2024 Sep;291(2031). https://doi.org/10.1098/rspb.2024.1142 (koseoglu2025insilicoanalyzing pages 10-12)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(calvo2006functionandevolution pages 1-1): Eric Calvo, Ben J. Mans, John F. Andersen, and José M.C. Ribeiro. Function and evolution of a mosquito salivary protein family*. Journal of Biological Chemistry, 281:1935-1942, Jan 2006. URL: https://doi.org/10.1074/jbc.m510359200, doi:10.1074/jbc.m510359200. This article has 292 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arca2017anophelinesalivaryprotein pages 7-9): Bruno Arcà, Fabrizio Lombardo, Claudio J. Struchiner, and José M. C. Ribeiro. Anopheline salivary protein genes and gene families: an evolutionary overview after the whole genome sequence of sixteen anopheles species. BMC Genomics, Feb 2017. URL: https://doi.org/10.1186/s12864-017-3579-8, doi:10.1186/s12864-017-3579-8. This article has 86 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(calvo2006functionandevolution pages 5-6): Eric Calvo, Ben J. Mans, John F. Andersen, and José M.C. Ribeiro. Function and evolution of a mosquito salivary protein family*. Journal of Biological Chemistry, 281:1935-1942, Jan 2006. URL: https://doi.org/10.1074/jbc.m510359200, doi:10.1074/jbc.m510359200. This article has 292 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mans2007thecrystalstructure pages 1-1): Ben J. Mans, Eric Calvo, José M.C. Ribeiro, and John F. Andersen. The crystal structure of d7r4, a salivary biogenic amine-binding protein from the malaria mosquito anopheles gambiae*. Journal of Biological Chemistry, 282:36626-36633, Dec 2007. URL: https://doi.org/10.1074/jbc.m706410200, doi:10.1074/jbc.m706410200. This article has 94 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(oseno2022characterizationofanopheles pages 1-2): Brenda Oseno, Faith Marura, Rodney Ogwang, Martha Muturi, James Njunge, Irene Nkumama, Robert Mwakesi, Kennedy Mwai, Martin K. Rono, Ramadhan Mwakubambanya, Faith Osier, and James Tuju. Characterization of anopheles gambiae d7 salivary proteins as markers of human–mosquito bite contact. Parasites &amp; Vectors, Jan 2022. URL: https://doi.org/10.1186/s13071-021-05130-5, doi:10.1186/s13071-021-05130-5. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(marinlopez2023mosquitosalivaryproteins pages 14-16): Alejandro Marín-López, Hamidah Raduwan, Tse-Yu Chen, Sergio Utrilla-Trigo, David P. Wolfhard, and Erol Fikrig. Mosquito salivary proteins and arbovirus infection: from viral enhancers to potential targets for vaccines. Pathogens, 12:371, Feb 2023. URL: https://doi.org/10.3390/pathogens12030371, doi:10.3390/pathogens12030371. This article has 25 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(martinmartin2023aedesaegyptid7 pages 16-17): Ines Martin-Martin, Bianca Burini Kojin, Azadeh Aryan, Adeline E. Williams, Alvaro Molina-Cruz, Paola Carolina Valenzuela-Leon, Gaurav Shrivastava, Karina Botello, Mahnaz Minai, Zach N. Adelman, and Eric Calvo. <i>aedes aegypti</i> d7 long salivary proteins modulate blood feeding and parasite infection. mBio, Dec 2023. URL: https://doi.org/10.1128/mbio.02289-23, doi:10.1128/mbio.02289-23. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(koseoglu2025insilicoanalyzing pages 10-12): A Köseoğlu, B Özgültekin, and Y Şeflekçi. In silico analyzing 37 kda salivary protein d7 and discovering vaccine candidate and diagnostic epitopes to develop a transmission-blocking multi-epitope vector …. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(calvo2006functionandevolution pages 3-4): Eric Calvo, Ben J. Mans, John F. Andersen, and José M.C. Ribeiro. Function and evolution of a mosquito salivary protein family*. Journal of Biological Chemistry, 281:1935-1942, Jan 2006. URL: https://doi.org/10.1074/jbc.m510359200, doi:10.1074/jbc.m510359200. This article has 292 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arca2005anupdatedcatalogue pages 7-8): B. Arcà, F. Lombardo, J. Valenzuela, I. Francischetti, Osvaldo Marinotti, M. Coluzzi, and J. Ribeiro. An updated catalogue of salivary gland transcripts in the adult female mosquito, anopheles gambiae. Journal of Experimental Biology, 208:3971-3986, Oct 2005. URL: https://doi.org/10.1242/jeb.01849, doi:10.1242/jeb.01849. This article has 220 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(calvo2006functionandevolution pages 2-3): Eric Calvo, Ben J. Mans, John F. Andersen, and José M.C. Ribeiro. Function and evolution of a mosquito salivary protein family*. Journal of Biological Chemistry, 281:1935-1942, Jan 2006. URL: https://doi.org/10.1074/jbc.m510359200, doi:10.1074/jbc.m510359200. This article has 292 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(calvo2006functionandevolution pages 7-8): Eric Calvo, Ben J. Mans, John F. Andersen, and José M.C. Ribeiro. Function and evolution of a mosquito salivary protein family*. Journal of Biological Chemistry, 281:1935-1942, Jan 2006. URL: https://doi.org/10.1074/jbc.m510359200, doi:10.1074/jbc.m510359200. This article has 292 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>calvo2006functionandevolution pages 3-4</li>
+<li>mans2007thecrystalstructure pages 1-1</li>
+<li>calvo2006functionandevolution pages 7-8</li>
+<li>arca2005anupdatedcatalogue pages 7-8</li>
+<li>calvo2006functionandevolution pages 2-3</li>
+<li>calvo2006functionandevolution pages 5-6</li>
+<li>arca2017anophelinesalivaryprotein pages 7-9</li>
+<li>koseoglu2025insilicoanalyzing pages 10-12</li>
+<li>oseno2022characterizationofanopheles pages 1-2</li>
+<li>marinlopez2023mosquitosalivaryproteins pages 14-16</li>
+<li>calvo2006functionandevolution pages 1-1</li>
+<li>https://doi.org/10.1186/s13071-021-05130-5</li>
+<li>https://doi.org/10.3390/pathogens12030371;</li>
+<li>https://doi.org/10.1371/journal.pntd.0012618</li>
+<li>https://doi.org/10.1128/mbio.02289-23</li>
+<li>https://doi.org/10.1098/rspb.2024.1142</li>
+<li>https://doi.org/10.1074/jbc.M510359200</li>
+<li>https://doi.org/10.1074/jbc.M706410200</li>
+<li>https://doi.org/10.1242/jeb.01849</li>
+<li>https://doi.org/10.1186/s12864-017-3579-8</li>
+<li>https://doi.org/10.1002/pmic.200700334</li>
+<li>https://doi.org/10.3390/pathogens12030371</li>
+<li>https://doi.org/10.1074/jbc.m510359200</li>
+<li>https://doi.org/10.1074/jbc.m706410200</li>
+<li>https://doi.org/10.1074/jbc.m510359200,</li>
+<li>https://doi.org/10.1186/s12864-017-3579-8,</li>
+<li>https://doi.org/10.1074/jbc.m706410200,</li>
+<li>https://doi.org/10.1186/s13071-021-05130-5,</li>
+<li>https://doi.org/10.3390/pathogens12030371,</li>
+<li>https://doi.org/10.1128/mbio.02289-23,</li>
+<li>https://doi.org/10.1242/jeb.01849,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q7PN86
+gene_symbol: D7r5
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:7165
+  label: Anopheles gambiae
+description: &gt;
+  D7r5 is a member of the short-form D7 salivary protein family in Anopheles gambiae.
+  Critically, unlike other D7 proteins that bind biogenic amines (serotonin, histamine,
+  norepinephrine) to facilitate blood feeding, D7r5 does NOT bind these compounds.
+  The protein is poorly expressed in salivary glands and may be on the evolutionary
+  path to becoming a pseudogene. Its actual function, if any, remains unknown.
+existing_annotations:
+- term:
+    id: GO:0005615
+    label: extracellular space
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      The IBA annotation for extracellular space is based on phylogenetic inference from
+      related D7 proteins. UniProt indicates D7r5 is secreted, and the protein has a
+      signal peptide (residues 1-22). While D7r5 is poorly expressed (PMID:16301315),
+      when expressed it would be expected to be secreted like other D7 family members.
+    action: ACCEPT
+    reason: &gt;
+      The extracellular localization is consistent with the protein having a signal
+      peptide and being a member of the secreted D7 salivary protein family. Even
+      though D7r5 may be functionally divergent or degenerating, its structural
+      features support extracellular localization.
+    supported_by:
+      - reference_id: PMID:16301315
+        supporting_text: &#34;The D7 salivary family of proteins is abundantly expressed in blood-feeding Diptera&#34;
+- term:
+    id: GO:0007608
+    label: sensory perception of smell
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      This IBA annotation propagates from odorant-binding protein (OBP) family members
+      in Drosophila that function in olfaction. However, D7 proteins are salivary
+      proteins involved in blood feeding, not olfactory receptors. D7r5 specifically
+      has been shown experimentally to NOT bind biogenic amines (PMID:16301315), and
+      there is no evidence it functions in sensory perception of smell.
+    action: REMOVE
+    reason: &gt;
+      This annotation is incorrectly propagated. D7 salivary proteins, while distantly
+      related to the OBP superfamily, have evolved distinct functions in blood feeding
+      (binding biogenic amines to antagonize host hemostatic responses). D7r5
+      specifically does not even perform this function - it is &#34;The nonbinding D7
+      protein&#34; that &#34;is poorly expressed in the salivary glands and appears to be on
+      the path to becoming a pseudogene&#34; (PMID:16301315). There is no experimental or
+      logical basis for sensory perception of smell annotation.
+    supported_by:
+      - reference_id: PMID:16301315
+        supporting_text: &#34;The D7 salivary family of proteins is abundantly expressed in blood-feeding Diptera and is distantly related to the odorant-binding protein superfamily.&#34;
+      - reference_id: PMID:16301315
+        supporting_text: &#34;four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine. The nonbinding D7 protein is poorly expressed in the salivary glands and appears to be on the path to becoming a pseudogene.&#34;
+- term:
+    id: GO:0005549
+    label: odorant binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;
+      This IEA annotation is based on InterPro domain assignment (IPR006170 PBP/GOBP
+      family). While D7r5 belongs to the pheromone/general odorant-binding protein
+      superfamily structurally, experimental evidence directly contradicts any binding
+      function for this protein. PMID:16301315 explicitly tested D7r5 and found it
+      does NOT bind biogenic amines, unlike other D7 proteins.
+    action: REMOVE
+    reason: &gt;
+      This is a clear over-annotation based on domain homology that contradicts
+      experimental evidence. The original study (PMID:16301315) specifically tested
+      binding using isothermal microcalorimetry and chromatographic methods, finding
+      that &#34;four of these five short D7 proteins...bind serotonin with high affinity,
+      as well as histamine and norepinephrine. The nonbinding D7 protein [D7r5] is
+      poorly expressed in the salivary glands and appears to be on the path to
+      becoming a pseudogene.&#34; Structural similarity to OBPs does not confer odorant
+      binding function - D7r5 has lost or never had functional binding activity.
+    supported_by:
+      - reference_id: PMID:16301315
+        supporting_text: &#34;four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine. The nonbinding D7 protein is poorly expressed in the salivary glands and appears to be on the path to becoming a pseudogene.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;
+      This IEA annotation is based on UniProt subcellular location annotation indicating
+      the protein is secreted. D7r5 has a predicted signal peptide and belongs to the
+      secreted D7 salivary protein family. This is a broader term than GO:0005615
+      (extracellular space) which is already annotated via IBA.
+    action: ACCEPT
+    reason: &gt;
+      The extracellular region annotation is consistent with structural features
+      (signal peptide) and family membership. While D7r5 is poorly expressed and may
+      be degenerating, when expressed it would be secreted. This broader CC term is
+      appropriately supported by the UniProt secreted annotation.
+    supported_by:
+      - reference_id: PMID:16301315
+        supporting_text: &#34;The D7 salivary family of proteins is abundantly expressed in blood-feeding Diptera&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: &gt;
+        This reference supports IEA annotations based on InterPro domain assignments.
+        For D7r5, the PBP/GOBP domain leads to odorant binding annotation, but this
+        conflicts with experimental evidence showing D7r5 does not bind ligands.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: &gt;
+        This reference supports IBA annotations. For D7r5, the phylogenetic inference
+        from OBP family members incorrectly propagates sensory perception of smell,
+        while the extracellular space annotation is appropriate.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+    - statement: &gt;
+        This reference supports the extracellular region annotation based on UniProt
+        subcellular location. This is appropriate for D7r5.
+- id: PMID:16301315
+  title: Function and evolution of a mosquito salivary protein family
+  findings:
+    - statement: D7r5 is one of five short-form D7 proteins in Anopheles gambiae
+      supporting_text: &#34;we expressed the five members of the small D7 family of the African malaria vector Anopheles gambiae&#34;
+    - statement: &gt;
+        Unlike D7r1-D7r4, D7r5 does NOT bind biogenic amines (serotonin, histamine,
+        norepinephrine, adrenaline)
+      supporting_text: &#34;four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine. The nonbinding D7 protein is poorly expressed in the salivary glands&#34;
+    - statement: D7r5 is poorly expressed in salivary glands
+      supporting_text: &#34;The nonbinding D7 protein is poorly expressed in the salivary glands&#34;
+    - statement: D7r5 appears to be on the evolutionary path to becoming a pseudogene
+      supporting_text: &#34;The nonbinding D7 protein is poorly expressed in the salivary glands and appears to be on the path to becoming a pseudogene&#34;
+    - statement: &gt;
+        The D7 family is distantly related to odorant-binding proteins but has evolved
+        distinct functions in blood feeding
+      supporting_text: &#34;The D7 salivary family of proteins is abundantly expressed in blood-feeding Diptera and is distantly related to the odorant-binding protein superfamily&#34;
+core_functions:
+  - description: &gt;
+      D7r5 has no known molecular function. Unlike other D7 salivary proteins that
+      bind biogenic amines (serotonin, histamine, norepinephrine) to facilitate blood
+      feeding by antagonizing host hemostatic responses, D7r5 has lost this binding
+      capacity. The protein is poorly expressed and may represent a degenerating
+      pseudogene or a protein evolving toward a novel, as-yet-unknown function.
+    molecular_function:
+      id: GO:0003674
+      label: molecular_function
+    supported_by:
+      - reference_id: PMID:16301315
+        supporting_text: &#34;four of these five short D7 proteins and the D7 long form bind serotonin with high affinity, as well as histamine and norepinephrine. The nonbinding D7 protein is poorly expressed in the salivary glands and appears to be on the path to becoming a pseudogene.&#34;
+    locations:
+      - id: GO:0005615
+        label: extracellular space
+suggested_questions:
+  - question: Is D7r5 actually expressed at the protein level in any tissue or developmental stage?
+  - question: Has D7r5 evolved a novel binding specificity for ligands not yet tested?
+  - question: Is D7r5 accumulating deleterious mutations consistent with pseudogenization?
+suggested_experiments:
+  - description: Test D7r5 binding to a broader panel of ligands beyond biogenic amines using isothermal microcalorimetry
+    hypothesis: D7r5 may have evolved to bind a novel class of ligands not yet tested
+  - description: Perform expression profiling across tissues and developmental stages using RT-qPCR or proteomics
+    hypothesis: D7r5 may be expressed in tissues other than salivary glands
+  - description: Sequence D7r5 across Anopheles populations to assess selective constraint using dN/dS analysis
+    hypothesis: If D7r5 is becoming a pseudogene, it should show relaxed selection (dN/dS approaching 1)
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

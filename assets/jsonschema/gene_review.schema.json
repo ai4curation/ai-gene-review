@@ -15,6 +15,42 @@
             "title": "ActionEnum",
             "type": "string"
         },
+        "AlternativeProduct": {
+            "additionalProperties": false,
+            "description": "An alternative splicing product (isoform) of the gene. Corresponds to UniProt isoform entries. Use this to document isoform-specific functions where different isoforms have distinct or even antagonistic biological activities. DEPRECATED: Use FunctionalIsoform instead for curated functional classes.",
+            "properties": {
+                "description": {
+                    "description": "Agent-populated description of the isoform's function. Document any isoform-specific functions, expression patterns, or biological activities that differ from other isoforms.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "UniProt isoform ID (e.g., Q07817-1, Q07817-2)",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Common name of the isoform (e.g., Bcl-xL, Bcl-xS)",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "sequence_note": {
+                    "description": "Brief note about sequence differences (e.g., \"lacks exon 2\", \"shorter C-terminus\")",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "AlternativeProduct",
+            "type": "object"
+        },
         "AnnotationExtension": {
             "additionalProperties": false,
             "description": "",
@@ -314,6 +350,13 @@
                         "null"
                     ]
                 },
+                "isoform": {
+                    "description": "UniProt isoform identifier (e.g., \"P19544-1\" for WT1 isoform 1). Only populated when the annotation is specific to a particular isoform rather than the canonical protein sequence. Note that just because an experiment used a particular isoform doesn't mean the annotation is isoform-specific - it may apply to all isoforms. Use this field only when there is clear evidence the annotation is isoform-specific.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "negated": {
                     "description": "Whether the term is negated",
                     "type": [
@@ -436,6 +479,107 @@
             "title": "Finding",
             "type": "object"
         },
+        "FunctionalIsoform": {
+            "additionalProperties": false,
+            "description": "A curated functional isoform class. Unlike AlternativeProduct (which maps 1:1 to UniProt isoforms), this captures FUNCTIONALLY RELEVANT distinctions that may: - Group multiple UniProt isoforms into a functional class (e.g., WT1 +KTS isoforms) - Represent cleavage products from polyproteins (e.g., POMC peptides) - Describe modification states or conformational variants Only create entries when there ARE functionally distinct forms worth documenting.",
+            "properties": {
+                "description": {
+                    "description": "Detailed description of this functional class. Document the specific functions, how they differ from other classes, tissue specificity, and any antagonistic relationships (e.g., \"OREXIGENIC - opposite to alpha-MSH\").",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Curator-defined identifier for this functional class. Use a descriptive format like GENE_CLASS (e.g., WT1_PLUS_KTS, POMC_ACTH, BCL2L1_XL).",
+                    "type": "string"
+                },
+                "isoform_specific_terms": {
+                    "description": "GO terms that are specific to this functional class. These are terms that should NOT be annotated to the gene as a whole, only to this specific form. Using Term objects enables linkml-term-validator checking.",
+                    "items": {
+                        "$ref": "#/$defs/Term"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "maps_to": {
+                    "description": "Mappings to underlying UniProt identifiers. Optional - some functional classes may not map cleanly to specific UniProt IDs.",
+                    "items": {
+                        "$ref": "#/$defs/FunctionalIsoformMapping"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "name": {
+                    "description": "Human-readable name for this functional class (e.g., \"+KTS isoforms\", \"ACTH/Corticotropin\", \"Bcl-xL\").",
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/$defs/FunctionalIsoformTypeEnum",
+                    "description": "Type of functional distinction (SPLICE_VARIANT, SPLICE_CLASS, CLEAVAGE_PRODUCT, MODIFICATION_STATE, CONFORMATIONAL_STATE)."
+                }
+            },
+            "required": [
+                "id",
+                "name",
+                "type",
+                "description"
+            ],
+            "title": "FunctionalIsoform",
+            "type": "object"
+        },
+        "FunctionalIsoformMapping": {
+            "additionalProperties": false,
+            "description": "A mapping from a functional isoform class to underlying UniProt identifiers. Allows grouping multiple UniProt isoforms or chains into a single functional class.",
+            "properties": {
+                "ids": {
+                    "description": "UniProt identifiers belonging to this functional class. For UNIPROT_ISOFORM: P19544-1, P19544-2, etc. For UNIPROT_CHAIN: PRO_0000024969, PRO_0000024970, etc.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "residues": {
+                    "description": "Residue range for cleavage products (e.g., \"138-176\" for ACTH). Only applicable for UNIPROT_CHAIN type.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "type": {
+                    "$ref": "#/$defs/FunctionalIsoformMappingTypeEnum",
+                    "description": "Type of identifier (UNIPROT_ISOFORM or UNIPROT_CHAIN)"
+                }
+            },
+            "required": [
+                "type",
+                "ids"
+            ],
+            "title": "FunctionalIsoformMapping",
+            "type": "object"
+        },
+        "FunctionalIsoformMappingTypeEnum": {
+            "description": "Type of identifier that a functional isoform maps to",
+            "enum": [
+                "UNIPROT_ISOFORM",
+                "UNIPROT_CHAIN"
+            ],
+            "title": "FunctionalIsoformMappingTypeEnum",
+            "type": "string"
+        },
+        "FunctionalIsoformTypeEnum": {
+            "description": "Type of functional isoform or product. Distinguishes between different mechanisms that produce functionally distinct forms of a gene product.",
+            "enum": [
+                "SPLICE_VARIANT",
+                "SPLICE_CLASS",
+                "CLEAVAGE_PRODUCT",
+                "MODIFICATION_STATE",
+                "CONFORMATIONAL_STATE"
+            ],
+            "title": "FunctionalIsoformTypeEnum",
+            "type": "string"
+        },
         "GOBiologicalProcessEnum": {
             "description": "A biological process term in the GO ontology",
             "title": "GOBiologicalProcessEnum",
@@ -506,6 +650,16 @@
                         "null"
                     ]
                 },
+                "alternative_products": {
+                    "description": "Alternative splicing products (isoforms) of the gene. Seeded from UniProt ALTERNATIVE PRODUCTS section. Only populated if there are multiple isoforms. Use this to document isoform-specific functions and biology. DEPRECATED: Use functional_isoforms instead for curated functional classes.",
+                    "items": {
+                        "$ref": "#/$defs/AlternativeProduct"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "core_functions": {
                     "items": {
                         "$ref": "#/$defs/CoreFunction"
@@ -525,6 +679,16 @@
                 "existing_annotations": {
                     "items": {
                         "$ref": "#/$defs/ExistingAnnotation"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "functional_isoforms": {
+                    "description": "Curated functional isoform classes for the gene. Unlike alternative_products (which is seeded from UniProt), this field is purely curator/agent-defined to capture FUNCTIONALLY RELEVANT distinctions. Examples: - Splice classes that group multiple UniProt isoforms (e.g., WT1 +KTS vs -KTS) - Cleavage products from polyproteins (e.g., POMC peptides) - Modification states with distinct functions Only populate when there ARE functionally distinct forms worth documenting.",
+                    "items": {
+                        "$ref": "#/$defs/FunctionalIsoform"
                     },
                     "type": [
                         "array",
@@ -1669,6 +1833,13 @@
                         "string",
                         "null"
                     ]
+                },
+                "supporting_text_fulltext": {
+                    "description": "Supporting text from the full-text PDF when the full text cannot be committed to the repository. This is an interim solution for cases where we have access to full text but cannot share it publicly. Unlike supporting_text, this field is not validated against cached publication text.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -1791,6 +1962,16 @@
                 "null"
             ]
         },
+        "alternative_products": {
+            "description": "Alternative splicing products (isoforms) of the gene. Seeded from UniProt ALTERNATIVE PRODUCTS section. Only populated if there are multiple isoforms. Use this to document isoform-specific functions and biology. DEPRECATED: Use functional_isoforms instead for curated functional classes.",
+            "items": {
+                "$ref": "#/$defs/AlternativeProduct"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
         "core_functions": {
             "items": {
                 "$ref": "#/$defs/CoreFunction"
@@ -1810,6 +1991,16 @@
         "existing_annotations": {
             "items": {
                 "$ref": "#/$defs/ExistingAnnotation"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "functional_isoforms": {
+            "description": "Curated functional isoform classes for the gene. Unlike alternative_products (which is seeded from UniProt), this field is purely curator/agent-defined to capture FUNCTIONALLY RELEVANT distinctions. Examples: - Splice classes that group multiple UniProt isoforms (e.g., WT1 +KTS vs -KTS) - Cleavage products from polyproteins (e.g., POMC peptides) - Modification states with distinct functions Only populate when there ARE functionally distinct forms worth documenting.",
+            "items": {
+                "$ref": "#/$defs/FunctionalIsoform"
             },
             "type": [
                 "array",

@@ -19,7 +19,6 @@ Usage:
 
 import asyncio
 import httpx
-from datetime import datetime
 from typing import Dict, List, Optional
 
 from nicegui import ui

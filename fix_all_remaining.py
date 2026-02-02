@@ -20,7 +20,7 @@ def extract_fixes_from_report(report_file):
                 continue
 
             file_path = row[0]
-            warning_type = row[2]
+            row[2]
             error_code = row[3]
             location = row[4]
             message = row[5]

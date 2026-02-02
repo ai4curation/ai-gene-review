@@ -3,7 +3,6 @@
 
 import yaml
 from pathlib import Path
-import sys
 
 
 def add_generic_support(core_function, gene_symbol, references):
@@ -52,7 +51,7 @@ def fix_file(yaml_path):
         data = yaml.safe_load(f)
     
     if 'core_functions' not in data:
-        print(f"  No core_functions found")
+        print("  No core_functions found")
         return False
     
     gene_symbol = data.get('gene_symbol', 'GENE')
@@ -63,14 +62,14 @@ def fix_file(yaml_path):
         if 'supported_by' not in core_func or not core_func['supported_by']:
             add_generic_support(core_func, gene_symbol, references)
             modified = True
-            print(f"  Added supported_by to core function")
+            print("  Added supported_by to core function")
     
     if modified:
         with open(yaml_path, 'w') as f:
             yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
-        print(f"  File updated")
+        print("  File updated")
     else:
-        print(f"  No changes needed")
+        print("  No changes needed")
     
     return modified
 

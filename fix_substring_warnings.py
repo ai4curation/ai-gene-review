@@ -4,8 +4,6 @@ Auto-fix substring warnings with high confidence matches (>=98%)
 """
 
 import re
-import sys
-from pathlib import Path
 
 def extract_fix_info(line):
     """Extract file, location, and suggested fix from TSV line"""
@@ -109,11 +107,10 @@ def main():
             # This is a simpler approach than parsing YAML
 
             # First, let's identify what we're looking for
-            location_parts = fix['location'].split('.')
+            fix['location'].split('.')
 
             # Create a pattern to find the supporting_text line
             # We'll look for "supporting_text:" followed by the text
-            old_pattern = r'(supporting_text:\s*)([^\n]+)'
 
             # Find all matches and try to identify the right one based on context
             import re
@@ -143,7 +140,7 @@ def main():
 
             # Count which occurrence we need
             # Parse the index from location
-            indices = re.findall(r'\[(\d+)\]', fix['location'])
+            re.findall(r'\[(\d+)\]', fix['location'])
 
             # Find all supporting_text in this section
             matches = list(re.finditer(support_pattern, section_text))

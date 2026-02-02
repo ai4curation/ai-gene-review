@@ -6,7 +6,6 @@ Adds supported_by reference to the first ACCEPT annotation in existing_annotatio
 
 import re
 from pathlib import Path
-import sys
 
 
 def find_deep_research_file(gene_dir: Path) -> str | None:
@@ -141,7 +140,6 @@ def main():
         if not species or not gene:
             continue
 
-        file_ref = f"file:{species}/{gene}/{deep_research_file}"
         content = yaml_path.read_text()
 
         # More precise check - look for file refs specifically in existing_annotations

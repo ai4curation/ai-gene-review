@@ -1,0 +1,2684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mdr - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mdr</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/H6TB12" target="_blank" class="term-link">
+                        H6TB12
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Starmerella bombicola</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mdr";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="H6TB12" data-a="DESCRIPTION: Mdr (SbSLMdr.1) is an MDR-subfamily ABC transporte..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Mdr (SbSLMdr.1) is an MDR-subfamily ABC transporter in the sophorolipid (SL) biosynthetic cluster that is largely responsible for SL export; transporter knockout reduces secretion to ~10% of wild type, indicating alternative routes but a major role for Mdr. The transportome analysis lists SbSLMdr.1 as a plasma membrane SL transporter. [PMID:34998388, PMID:23516968]</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="H6TB12" data-a="GO:0005743" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The literature describes SbSLMdr.1 as a sophorolipid exporter in the SL biosynthetic cluster, with no evidence for mitochondrial inner membrane localization. [PMID:34998388, PMID:23516968]
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SbSLMdr.1 is reported as the transporter responsible for sophorolipid export and transporter knockout reduces secretion to ~10% of wild type; this is inconsistent with a mitochondrial inner membrane annotation. [PMID:34998388, PMID:23516968]
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Previous research demonstrated that the SbSLMdr.1, present in the SL biosynthetic gene cluster, is indeed largely responsible for export of SLs [10].</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23516968" target="_blank" class="term-link">
+                                        PMID:23516968
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">knocking out the transporter gene yields mutants still ... able to secrete sophorolipids, though only at levels of 10% as compared with the ... wild type, suggesting alternative routes for secretion.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:STABO/mdr/mdr-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mdr/SbSLMdr.1 actively exports sophorolipids</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015421" target="_blank" class="term-link">
+                                    GO:0015421
+                                </a>
+                            </span>
+                            <span class="term-label">ABC-type oligopeptide transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="H6TB12" data-a="GO:0015421" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Evidence supports a sophorolipid transporter that is an MDR subfamily ABC transporter; there is no support for oligopeptide substrate specificity. [PMID:34998388, PMID:23964782]
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The transporter is described as an ABC MDR-family protein linked to sophorolipid export, not oligopeptide transport. [PMID:34998388, PMID:23964782]
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140359" target="_blank" class="term-link">
+                                    ABC-type transporter activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23964782" target="_blank" class="term-link">
+                                        PMID:23964782
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">including a predicted sophorolipid transporter.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:STABO/mdr/mdr-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">encodes an ATP-binding cassette (ABC) transporter of the MDR subfamily</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090374" target="_blank" class="term-link">
+                                    GO:0090374
+                                </a>
+                            </span>
+                            <span class="term-label">oligopeptide export from mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="H6TB12" data-a="GO:0090374" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Literature supports sophorolipid export by SbSLMdr.1 and provides no evidence for mitochondrial oligopeptide export. [PMID:34998388, PMID:23516968]
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The transporter is linked to sophorolipid export; the mitochondrial oligopeptide export process is unsupported. [PMID:34998388, PMID:23516968]
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Previous research demonstrated that the SbSLMdr.1, present in the SL biosynthetic gene cluster, is indeed largely responsible for export of SLs [10].</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23516968" target="_blank" class="term-link">
+                                        PMID:23516968
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">knocking out the transporter gene yields mutants still ... able to secrete sophorolipids, though only at levels of 10% as compared with the ... wild type, suggesting alternative routes for secretion.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:STABO/mdr/mdr-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mdr/SbSLMdr.1 actively exports sophorolipids</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="H6TB12" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SbSLMdr.1 is an ABC transporter and ABC full-size transporters carry nucleotide-binding domains, supporting nucleotide binding as a mechanistic property. [PMID:34998388]
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The evidence is consistent with ABC-family NBDs, but nucleotide binding is generic and best treated as non-core. [PMID:34998388]
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">2 Nucleotide Binding Domains (NBD)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="H6TB12" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As an ABC transporter with nucleotide-binding domains, SbSLMdr.1 is expected to bind ATP; no direct binding assay is cited. [PMID:34998388]
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is inferred from ABC-family NBDs and is less informative than the transporter activity itself. [PMID:34998388]
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">2 Nucleotide Binding Domains (NBD)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="H6TB12" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The transportome study lists SbSLMdr.1 with plasma membrane localization (predicted). [PMID:34998388]
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The transportome analysis provides explicit plasma membrane localization for SbSLMdr.1. [PMID:34998388]
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SbSLMdr.1129922123.A.1.201Plasma membraneH6TB12</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:STABO/mdr/mdr-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The SL exporter is a plasma membrane ABC transporter; plasma-membrane localization is predicted for SbSLMdr.1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="H6TB12" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General membrane localization is supported but redundant with plasma membrane. [PMID:34998388]
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The plasma membrane annotation is more specific; retain this as non-core. [PMID:34998388]
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SbSLMdr.1129922123.A.1.201Plasma membraneH6TB12</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="H6TB12" data-a="GO:0016887" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ABC transporters are primary active pumps that use ATP hydrolysis; SbSLMdr.1 is an MDR subfamily ABC transporter. [PMID:34998388]
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The mechanistic description of ABC pumps supports ATP hydrolysis for SbSLMdr.1. [PMID:34998388]
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">use the hydrolysis of ATP to drive active transport of the substrate against its gradient.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:STABO/mdr/mdr-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mechanism: Full-size MDR-subfamily ABC exporter, using ATP hydrolysis to drive sophorolipid efflux across the plasma membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="H6TB12" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SbSLMdr.1 is described as the transporter responsible for export of sophorolipids, and transporter knockout greatly reduces secretion. [PMID:34998388, PMID:23516968]
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct evidence for sophorolipid export supports transmembrane transport. [PMID:34998388, PMID:23516968]
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Previous research demonstrated that the SbSLMdr.1, present in the SL biosynthetic gene cluster, is indeed largely responsible for export of SLs [10].</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23516968" target="_blank" class="term-link">
+                                        PMID:23516968
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">knocking out the transporter gene yields mutants still ... able to secrete sophorolipids, though only at levels of 10% as compared with the ... wild type, suggesting alternative routes for secretion.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:STABO/mdr/mdr-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mdr/SbSLMdr.1 actively exports sophorolipids</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140359" target="_blank" class="term-link">
+                                    GO:0140359
+                                </a>
+                            </span>
+                            <span class="term-label">ABC-type transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="H6TB12" data-a="GO:0140359" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SbSLMdr.1 is described as an MDR subfamily ABC transporter in the S. bombicola transportome. [PMID:34998388]
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ABC-family classification for SbSLMdr.1 supports ABC-type transporter activity. [PMID:34998388]
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                        PMID:34998388
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:STABO/mdr/mdr-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">encodes an ATP-binding cassette (ABC) transporter of the MDR subfamily</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Executes ATP-dependent ABC-type transport to export sophorolipids from the cell, serving as the major exporter within the sophorolipid biosynthetic cluster.</h3>
+                <span class="vote-buttons" data-g="H6TB12" data-a="FUNCTION: Executes ATP-dependent ABC-type transport to expor..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140359" target="_blank" class="term-link">
+                            ABC-type transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                transmembrane transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                                PMID:34998388
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Previous research demonstrated that the SbSLMdr.1, present in the SL biosynthetic gene cluster, is indeed largely responsible for export of SLs [10].</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23516968" target="_blank" class="term-link">
+                                PMID:23516968
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">knocking out the transporter gene yields mutants still ... able to secrete sophorolipids, though only at levels of 10% as compared with the ... wild type, suggesting alternative routes for secretion.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:STABO/mdr/mdr-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Mdr/SbSLMdr.1 actively exports sophorolipids</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23516968" target="_blank" class="term-link">
+                            PMID:23516968
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The biosynthetic gene cluster for sophorolipids: a biotechnological interesting biosurfactant produced by Starmerella bombicola.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23964782" target="_blank" class="term-link">
+                            PMID:23964782
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">SILAC-based proteome analysis of Starmerella bombicola sophorolipid production.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34998388" target="_blank" class="term-link">
+                            PMID:34998388
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Exploring the transportome of the biosurfactant producing yeast Starmerella bombicola.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:STABO/mdr/mdr-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for mdr (falcon)</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mdr-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="H6TB12" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-30T20:07:56.894681'<br />
+end_time: '2026-01-30T20:13:37.313489'<br />
+duration_seconds: 340.42<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: STABO<br />
+  gene_id: mdr<br />
+  gene_symbol: mdr<br />
+  uniprot_accession: H6TB12<br />
+  protein_description: 'RecName: Full=Sophorolipid transporter {ECO:0000303|PubMed:23516968};<br />
+    EC=7.6.2.-;'<br />
+  gene_info: Name=mdr;<br />
+  organism_full: Starmerella bombicola (Yeast) (Candida bombicola).<br />
+  protein_family: Belongs to the ABC transporter superfamily. ABCB family.<br />
+  protein_domains: AAA+_ATPase. (IPR003593); ABC1_TM_dom. (IPR011527); ABC1_TM_sf.<br />
+    (IPR036640); ABC_transporter-like_ATP-bd. (IPR003439); ABC_transporter-like_CS.<br />
+    (IPR017871)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 11</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> H6TB12</li>
+<li><strong>Protein Description:</strong> RecName: Full=Sophorolipid transporter {ECO:0000303|PubMed:23516968}; EC=7.6.2.-;</li>
+<li><strong>Gene Information:</strong> Name=mdr;</li>
+<li><strong>Organism (full):</strong> Starmerella bombicola (Yeast) (Candida bombicola).</li>
+<li><strong>Protein Family:</strong> Belongs to the ABC transporter superfamily. ABCB family.</li>
+<li><strong>Key Domains:</strong> AAA+_ATPase. (IPR003593); ABC1_TM_dom. (IPR011527); ABC1_TM_sf. (IPR036640); ABC_transporter-like_ATP-bd. (IPR003439); ABC_transporter-like_CS. (IPR017871)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "mdr" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Starmerella bombicola (Yeast) (Candida bombicola).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'mdr' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>mdr</strong> (gene ID: mdr, UniProt: H6TB12) in STABO.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> H6TB12</li>
+<li><strong>Protein Description:</strong> RecName: Full=Sophorolipid transporter {ECO:0000303|PubMed:23516968}; EC=7.6.2.-;</li>
+<li><strong>Gene Information:</strong> Name=mdr;</li>
+<li><strong>Organism (full):</strong> Starmerella bombicola (Yeast) (Candida bombicola).</li>
+<li><strong>Protein Family:</strong> Belongs to the ABC transporter superfamily. ABCB family.</li>
+<li><strong>Key Domains:</strong> AAA+_ATPase. (IPR003593); ABC1_TM_dom. (IPR011527); ABC1_TM_sf. (IPR036640); ABC_transporter-like_ATP-bd. (IPR003439); ABC_transporter-like_CS. (IPR017871)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "mdr" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Starmerella bombicola (Yeast) (Candida bombicola).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'mdr' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>mdr</strong> (gene ID: mdr, UniProt: H6TB12) in STABO.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan overview<br />
+We verified the gene/protein identity (mdr; UniProt H6TB12) in Starmerella bombicola (Candida bombicola), gathered experimental and review evidence on sophorolipid export by ABC transporters in this organism, extracted key functional, localization, and pathway data, and synthesized applications, recent developments, and statistics. No conflicting gene symbol usage in other organisms was found in the cited sources, and the transporter is consistently referred to as an MDR-subfamily ABC exporter in S. bombicola (claus2022exploringthetransportome pages 5-7, jezierska2018yeastglycolipidbiosurfactants pages 4-6, claus2022exploringthetransportome pages 1-2).</p>
+<p>1) Key concepts and definitions<br />
+- Gene/protein identity and family. The mdr gene (also referred to as SbSLMdr.1 in Starmerella bombicola) encodes an ATP-binding cassette (ABC) transporter of the MDR subfamily that functions as the principal sophorolipid (SL) exporter. It is a full-size ABC exporter with two nucleotide-binding domains (NBDs) and transmembrane domains (TMDs) consistent with ATP-driven efflux (BMC Genomics, Jan 2022; https://doi.org/10.1186/s12864-021-08177-x) (claus2022exploringthetransportome pages 5-7, claus2022exploringthetransportome pages 1-2).<br />
+- Substrate and biochemical role. Mdr/SbSLMdr.1 actively exports sophorolipids—both acetylated and non-acetylated forms—from the cell to the extracellular milieu, enabling accumulation of high titers in culture (FEBS Letters, Apr 2018; https://doi.org/10.1002/1873-3468.12888) (jezierska2018yeastglycolipidbiosurfactants pages 4-6, jezierska2018yeastglycolipidbiosurfactants pages 3-4).<br />
+- Cellular localization. The SL exporter is a plasma membrane ABC transporter; plasma-membrane localization is predicted for SbSLMdr.1 based on ABC exporter topology and transportome annotations (claus2022exploringthetransportome pages 5-7, jezierska2018yeastglycolipidbiosurfactants pages 4-6).<br />
+- Pathway context. SL biosynthesis uses a fatty acid and two glucose units, with key enzymes including a cytochrome P450 fatty-acid hydroxylase (Cyp52m1), two glucosyltransferases (UgtA1, UgtB1), and an acetyltransferase (At). Genes for SL biosynthesis are clustered near a telomere, with the transporter located within the cluster; a lactone esterase (Sble) is positioned elsewhere and influences product form (FEBS Letters, 2018) (jezierska2018yeastglycolipidbiosurfactants pages 4-6, jezierska2018yeastglycolipidbiosurfactants pages 3-4). Transcriptomics shows SL biosynthetic and transporter genes are strongly induced in stationary phase and respond to C/N ratio (BMC Genomics, 2022) (claus2022exploringthetransportome pages 11-12, claus2022exploringthetransportome pages 2-5).</p>
+<p>2) Recent developments and latest research (emphasis 2022 and later)<br />
+- Transportome mapping and discovery of a second SL exporter. A genome-scale transporter inventory identified 254 transporters in S. bombicola, of which 18 are ABCs. Within this, the known SL transporter SbSLMdr.1 is highlighted, and an additional MDR-like transporter, SbSLMdr.2 (~59% identity to SbSLMdr.1, located outside the SL gene cluster), was discovered. Targeted gene deletions demonstrated that both contribute to SL export, with additive reductions in extracellular SLs in the double mutant, indicating partial redundancy (BMC Genomics, 2022; https://doi.org/10.1186/s12864-021-08177-x) (claus2022exploringthetransportome pages 9-11, claus2022exploringthetransportome pages 5-7, claus2022exploringthetransportome pages 1-2).<br />
+- Functional genomics and expression dynamics. RNA-seq across growth stages showed transporter genes, including SbSLMdr.1, are highly expressed during stationary phase when SLs are produced, situating the transporter within the physiological program of SL biosynthesis and secretion (BMC Genomics, 2022) (claus2022exploringthetransportome pages 2-5).<br />
+- Broader transporter functions with industrial potential. The same study identified ABC transporters mediating efflux of hydrophobic molecules such as medium-chain fatty alcohols (decanol, undecanol), underscoring the broader utility of S. bombicola transporters for exporting lipidic products in biotechnology (BMC Genomics, 2022) (claus2022exploringthetransportome pages 1-2, claus2022exploringthetransportome pages 11-12).</p>
+<p>3) Current applications and real-world implementations<br />
+- Industrial SL titers and the role of export. S. bombicola is an established industrial producer of sophorolipids, with reports of titers up to ~300 g/L. Efficient, active export via the Mdr ABC transporter is cited as a major reason for these high, commercially relevant titers. Process variables (e.g., citrate supplementation) and enzyme engineering (e.g., the lactone esterase Sble) can steer product profiles, while fatty-acid transport contributes to substrate uptake for SL biosynthesis (FEBS Letters, 2018; https://doi.org/10.1002/1873-3468.12888) (jezierska2018yeastglycolipidbiosurfactants pages 4-6, jezierska2018yeastglycolipidbiosurfactants pages 3-4).<br />
+- Transporter-informed strain engineering. The identification of a second SL exporter (SbSLMdr.2) and demonstration of transporter roles in hydrophobic product efflux suggest strategies for improving bioprocesses: transporter overexpression or engineering, tuning SL export to match biosynthetic capacity, and leveraging ABC transporters to secrete other lipidic products (BMC Genomics, 2022) (claus2022exploringthetransportome pages 9-11, claus2022exploringthetransportome pages 1-2).</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Reviews emphasize transporter centrality. Expert reviews on yeast glycolipid biosurfactants highlight that a specific plasma membrane ABC transporter (Mdr) is central to SL export and high titers, placing transporter biology at the core of S. bombicola’s industrial performance (FEBS Letters, 2018) (jezierska2018yeastglycolipidbiosurfactants pages 4-6, jezierska2018yeastglycolipidbiosurfactants pages 3-4).<br />
+- Regulatory and genomic context. The transporter’s location within a subtelomeric SL biosynthetic cluster and its coordinated induction during stationary phase suggest regulatory integration with carbon storage and stress physiology. This supports transporter-centric strategies for enhancing flux and secretion in production settings (BMC Genomics, 2022) (claus2022exploringthetransportome pages 11-12, claus2022exploringthetransportome pages 2-5, claus2022exploringthetransportome pages 1-2).</p>
+<p>5) Relevant statistics and experimental data<br />
+- Knockout phenotypes. Deletion of SbSLMdr.1 results in a pronounced reduction of SL production that “never reached more than 10% of wild-type,” directly implicating it as the major SL exporter in S. bombicola. Single ΔSbSLMdr.2 mutants also show reduced extracellular SLs; the ΔSbSLMdr.1 ΔSbSLMdr.2 double mutant exhibits the lowest levels, indicating partial redundancy (BMC Genomics, 2022) (claus2022exploringthetransportome pages 9-11).<br />
+- Expression dynamics. Transporters are, on average, expressed at higher levels than the genome-wide average during SL-producing stages, with SbSLMdr.1 among the most strongly upregulated in stationary phase (BMC Genomics, 2022) (claus2022exploringthetransportome pages 2-5).<br />
+- Industrial titers. Reported SL titers from S. bombicola reach ~300 g/L under optimized conditions, attributed in part to efficient transporter-mediated export (FEBS Letters, 2018) (jezierska2018yeastglycolipidbiosurfactants pages 4-6, jezierska2018yeastglycolipidbiosurfactants pages 3-4).</p>
+<p>Mechanistic and localization summary<br />
+- Mechanism: Full-size MDR-subfamily ABC exporter, using ATP hydrolysis to drive sophorolipid efflux across the plasma membrane (claus2022exploringthetransportome pages 5-7, jezierska2018yeastglycolipidbiosurfactants pages 4-6).<br />
+- Localization: Plasma membrane by functional assignment and predicted topology (claus2022exploringthetransportome pages 5-7, jezierska2018yeastglycolipidbiosurfactants pages 4-6).<br />
+- Substrate specificity: Sophorolipids (both acetylated and non-acetylated); broader ABC cohort in S. bombicola can efflux hydrophobic molecules, including medium-chain fatty alcohols (jezierska2018yeastglycolipidbiosurfactants pages 4-6, claus2022exploringthetransportome pages 1-2).</p>
+<p>Redundancy and additional transporters<br />
+- In addition to SbSLMdr.1, SbSLMdr.2 contributes to SL export; it lies outside the core SL gene cluster and shares ~59% identity with SbSLMdr.1. Double deletion exacerbates export defects relative to single deletions, demonstrating functional redundancy (BMC Genomics, 2022) (claus2022exploringthetransportome pages 9-11, claus2022exploringthetransportome pages 5-7).</p>
+<p>Pathway placement and regulation<br />
+- The transporter operates downstream of SL biosynthetic enzymes (Cyp52m1; UgtA1/UgtB1; At), exporting the final glycolipid products. Gene cluster proximity and stationary-phase induction tie its activity to carbon storage physiology and environmental cues such as C/N ratio (FEBS Letters, 2018; BMC Genomics, 2022) (jezierska2018yeastglycolipidbiosurfactants pages 4-6, claus2022exploringthetransportome pages 11-12, claus2022exploringthetransportome pages 2-5).</p>
+<p>Data table: evidence summary<br />
+| Gene / Protein (alias) | Organism | Family / Domains | Experimental evidence | Phenotype / Effect on SL export | Subcellular localization | Redundancy / Notes | Key source (year, DOI) |<br />
+|---|---|---:|---|---|---|---|---|<br />
+| SbSLMdr.1 (Mdr; UniProt H6TB12) | Starmerella bombicola (Candida bombicola) | ABC transporter, MDR subfamily (full-size exporter: 2 NBDs + TMDs) (claus2022exploringthetransportome pages 5-7, jezierska2018yeastglycolipidbiosurfactants pages 4-6) | Targeted deletion mutants; RNA-seq showing strong stationary-phase upregulation; localization predicted by topology (claus2022exploringthetransportome pages 1-2, claus2022exploringthetransportome pages 5-7) | Deletion of SbSLMdr.1 causes large reduction in extracellular sophorolipids (reported &lt;10% of WT in one study); implicated as central SL exporter (claus2022exploringthetransportome pages 9-11, claus2022exploringthetransportome pages 1-2) | Predicted plasma membrane (ABC exporter topology; NBD/TMD architecture) (claus2022exploringthetransportome pages 5-7, jezierska2018yeastglycolipidbiosurfactants pages 4-6) | Core SL-cluster transporter; partial functional redundancy indicated by presence of a second transporter (SbSLMdr.2) (claus2022exploringthetransportome pages 9-11) | Claus et al., 2022; https://doi.org/10.1186/s12864-021-08177-x (claus2022exploringthetransportome pages 9-11, claus2022exploringthetransportome pages 1-2) |<br />
+| SbSLMdr.2 (Mdr paralog) | Starmerella bombicola (Candida bombicola) | ABC transporter, MDR-like (full-size ABC exporter) (claus2022exploringthetransportome pages 9-11, claus2022exploringthetransportome pages 5-7) | Bioinformatic identification; targeted single and double knockouts with SbSLMdr.1 (claus2022exploringthetransportome pages 9-11) | Single knockout reduces extracellular SL levels; double knockout (ΔSbSLMdr.1 ΔSbSLMdr.2) yields an even greater reduction, indicating both contribute to export (claus2022exploringthetransportome pages 9-11) | Predicted plasma membrane (ABC topology) (claus2022exploringthetransportome pages 5-7) | Located outside the primary SL biosynthetic cluster; ~59% identity to SbSLMdr.1; contributes partially redundant export function (claus2022exploringthetransportome pages 9-11) | Claus et al., 2022; https://doi.org/10.1186/s12864-021-08177-x (claus2022exploringthetransportome pages 9-11) |</p>
+<p><em>Table: Concise evidence table summarizing key properties, experimental support, localization, redundancy, and primary sources for the Starmerella bombicola sophorolipid transporters SbSLMdr.1 and SbSLMdr.2; useful for quick reference when annotating UniProt H6TB12 or planning experiments.</em></p>
+<p>Verification of target identity and ambiguity check<br />
+- The gene symbol mdr, within the cited Starmerella (Candida) bombicola literature, matches an MDR-subfamily ABC transporter functioning as the sophorolipid exporter (SbSLMdr.1), with a paralog (SbSLMdr.2). Organism, function, and ABC-family/domain assignments are consistent across sources; no conflicting uses of “mdr” in other organisms were identified in the cited literature (claus2022exploringthetransportome pages 5-7, jezierska2018yeastglycolipidbiosurfactants pages 4-6, claus2022exploringthetransportome pages 1-2).</p>
+<p>Key sources with URLs and dates<br />
+- Claus S, Jezierska S, Elbourne LDH, Van Bogaert I. Exploring the transportome of the biosurfactant producing yeast Starmerella bombicola. BMC Genomics. Jan 2022. doi:10.1186/s12864-021-08177-x. URL: https://doi.org/10.1186/s12864-021-08177-x (claus2022exploringthetransportome pages 9-11, claus2022exploringthetransportome pages 11-12, claus2022exploringthetransportome pages 5-7, claus2022exploringthetransportome pages 2-5, claus2022exploringthetransportome pages 1-2).<br />
+- Jezierska S, Claus S, Van Bogaert IV. Yeast glycolipid biosurfactants. FEBS Letters. Apr 2018;592(8):1312–1329. doi:10.1002/1873-3468.12888. URL: https://doi.org/10.1002/1873-3468.12888 (jezierska2018yeastglycolipidbiosurfactants pages 4-6, jezierska2018yeastglycolipidbiosurfactants pages 3-4).</p>
+<p>Conclusions<br />
+- The mdr gene product in Starmerella bombicola is a plasma-membrane, MDR-subfamily ABC transporter that catalyzes ATP-dependent export of sophorolipids, essential for high extracellular titers. A paralog, SbSLMdr.2, provides partial redundancy. Integration with the SL biosynthetic cluster and stationary-phase induction situates mdr as a key node in SL production physiology and bioprocess performance. These findings provide concrete levers for strain and process engineering aimed at maximizing SL yields and tailoring product profiles (claus2022exploringthetransportome pages 9-11, claus2022exploringthetransportome pages 11-12, claus2022exploringthetransportome pages 5-7, jezierska2018yeastglycolipidbiosurfactants pages 4-6, claus2022exploringthetransportome pages 2-5, claus2022exploringthetransportome pages 1-2, jezierska2018yeastglycolipidbiosurfactants pages 3-4).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(claus2022exploringthetransportome pages 5-7): Silke Claus, Sylwia Jezierska, Liam D. H. Elbourne, and Inge Van Bogaert. Exploring the transportome of the biosurfactant producing yeast starmerella bombicola. BMC Genomics, Jan 2022. URL: https://doi.org/10.1186/s12864-021-08177-x, doi:10.1186/s12864-021-08177-x. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jezierska2018yeastglycolipidbiosurfactants pages 4-6): Sylwia Jezierska, Silke Claus, and I. V. Van Bogaert. Yeast glycolipid biosurfactants. FEBS Letters, 592:1312-1329, Apr 2018. URL: https://doi.org/10.1002/1873-3468.12888, doi:10.1002/1873-3468.12888. This article has 136 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(claus2022exploringthetransportome pages 1-2): Silke Claus, Sylwia Jezierska, Liam D. H. Elbourne, and Inge Van Bogaert. Exploring the transportome of the biosurfactant producing yeast starmerella bombicola. BMC Genomics, Jan 2022. URL: https://doi.org/10.1186/s12864-021-08177-x, doi:10.1186/s12864-021-08177-x. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jezierska2018yeastglycolipidbiosurfactants pages 3-4): Sylwia Jezierska, Silke Claus, and I. V. Van Bogaert. Yeast glycolipid biosurfactants. FEBS Letters, 592:1312-1329, Apr 2018. URL: https://doi.org/10.1002/1873-3468.12888, doi:10.1002/1873-3468.12888. This article has 136 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(claus2022exploringthetransportome pages 11-12): Silke Claus, Sylwia Jezierska, Liam D. H. Elbourne, and Inge Van Bogaert. Exploring the transportome of the biosurfactant producing yeast starmerella bombicola. BMC Genomics, Jan 2022. URL: https://doi.org/10.1186/s12864-021-08177-x, doi:10.1186/s12864-021-08177-x. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(claus2022exploringthetransportome pages 2-5): Silke Claus, Sylwia Jezierska, Liam D. H. Elbourne, and Inge Van Bogaert. Exploring the transportome of the biosurfactant producing yeast starmerella bombicola. BMC Genomics, Jan 2022. URL: https://doi.org/10.1186/s12864-021-08177-x, doi:10.1186/s12864-021-08177-x. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(claus2022exploringthetransportome pages 9-11): Silke Claus, Sylwia Jezierska, Liam D. H. Elbourne, and Inge Van Bogaert. Exploring the transportome of the biosurfactant producing yeast starmerella bombicola. BMC Genomics, Jan 2022. URL: https://doi.org/10.1186/s12864-021-08177-x, doi:10.1186/s12864-021-08177-x. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>claus2022exploringthetransportome pages 2-5</li>
+<li>claus2022exploringthetransportome pages 9-11</li>
+<li>claus2022exploringthetransportome pages 5-7</li>
+<li>jezierska2018yeastglycolipidbiosurfactants pages 4-6</li>
+<li>claus2022exploringthetransportome pages 1-2</li>
+<li>jezierska2018yeastglycolipidbiosurfactants pages 3-4</li>
+<li>claus2022exploringthetransportome pages 11-12</li>
+<li>https://doi.org/10.1186/s12864-021-08177-x</li>
+<li>https://doi.org/10.1002/1873-3468.12888</li>
+<li>https://doi.org/10.1186/s12864-021-08177-x,</li>
+<li>https://doi.org/10.1002/1873-3468.12888,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: H6TB12
+gene_symbol: mdr
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:75736
+  label: Starmerella bombicola
+description: &gt;-
+  Mdr (SbSLMdr.1) is an MDR-subfamily ABC transporter in the sophorolipid (SL) biosynthetic
+  cluster that is largely responsible for SL export; transporter knockout reduces secretion to
+  ~10% of wild type, indicating alternative routes but a major role for Mdr. The transportome
+  analysis lists SbSLMdr.1 as a plasma membrane SL transporter. [PMID:34998388, PMID:23516968]
+existing_annotations:
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      The literature describes SbSLMdr.1 as a sophorolipid exporter in the SL biosynthetic
+      cluster, with no evidence for mitochondrial inner membrane localization.
+      [PMID:34998388, PMID:23516968]
+    action: REMOVE
+    reason: &gt;-
+      SbSLMdr.1 is reported as the transporter responsible for sophorolipid export and transporter
+      knockout reduces secretion to ~10% of wild type; this is inconsistent with a mitochondrial
+      inner membrane annotation. [PMID:34998388, PMID:23516968]
+    supported_by:
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        Previous research demonstrated that the SbSLMdr.1, present in the SL biosynthetic gene cluster, is indeed largely responsible for export of SLs [10].
+    - reference_id: PMID:23516968
+      supporting_text: &gt;-
+        knocking out the transporter gene yields mutants still ... able to secrete sophorolipids, though only at levels of 10% as compared with the ... wild type, suggesting alternative routes for secretion.
+    - reference_id: file:STABO/mdr/mdr-deep-research-falcon.md
+      supporting_text: Mdr/SbSLMdr.1 actively exports sophorolipids
+- term:
+    id: GO:0015421
+    label: ABC-type oligopeptide transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      Evidence supports a sophorolipid transporter that is an MDR subfamily ABC transporter;
+      there is no support for oligopeptide substrate specificity. [PMID:34998388, PMID:23964782]
+    action: MODIFY
+    reason: &gt;-
+      The transporter is described as an ABC MDR-family protein linked to sophorolipid export,
+      not oligopeptide transport. [PMID:34998388, PMID:23964782]
+    proposed_replacement_terms:
+    - id: GO:0140359
+      label: ABC-type transporter activity
+    supported_by:
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does
+    - reference_id: PMID:23964782
+      supporting_text: &gt;-
+        including a predicted sophorolipid transporter.
+    - reference_id: file:STABO/mdr/mdr-deep-research-falcon.md
+      supporting_text: encodes an ATP-binding cassette (ABC) transporter of the MDR subfamily
+- term:
+    id: GO:0090374
+    label: oligopeptide export from mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      Literature supports sophorolipid export by SbSLMdr.1 and provides no evidence for
+      mitochondrial oligopeptide export. [PMID:34998388, PMID:23516968]
+    action: REMOVE
+    reason: &gt;-
+      The transporter is linked to sophorolipid export; the mitochondrial oligopeptide export
+      process is unsupported. [PMID:34998388, PMID:23516968]
+    supported_by:
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        Previous research demonstrated that the SbSLMdr.1, present in the SL biosynthetic gene cluster, is indeed largely responsible for export of SLs [10].
+    - reference_id: PMID:23516968
+      supporting_text: &gt;-
+        knocking out the transporter gene yields mutants still ... able to secrete sophorolipids, though only at levels of 10% as compared with the ... wild type, suggesting alternative routes for secretion.
+    - reference_id: file:STABO/mdr/mdr-deep-research-falcon.md
+      supporting_text: Mdr/SbSLMdr.1 actively exports sophorolipids
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SbSLMdr.1 is an ABC transporter and ABC full-size transporters carry nucleotide-binding
+      domains, supporting nucleotide binding as a mechanistic property. [PMID:34998388]
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The evidence is consistent with ABC-family NBDs, but nucleotide binding is generic and
+      best treated as non-core. [PMID:34998388]
+    supported_by:
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        2 Nucleotide Binding Domains (NBD)
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      As an ABC transporter with nucleotide-binding domains, SbSLMdr.1 is expected to bind ATP;
+      no direct binding assay is cited. [PMID:34998388]
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      ATP binding is inferred from ABC-family NBDs and is less informative than the transporter
+      activity itself. [PMID:34998388]
+    supported_by:
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        2 Nucleotide Binding Domains (NBD)
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      The transportome study lists SbSLMdr.1 with plasma membrane localization (predicted).
+      [PMID:34998388]
+    action: ACCEPT
+    reason: &gt;-
+      The transportome analysis provides explicit plasma membrane localization for SbSLMdr.1.
+      [PMID:34998388]
+    supported_by:
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        SbSLMdr.1129922123.A.1.201Plasma membraneH6TB12
+    - reference_id: file:STABO/mdr/mdr-deep-research-falcon.md
+      supporting_text: The SL exporter is a plasma membrane ABC transporter; plasma-membrane localization is predicted for SbSLMdr.1
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      General membrane localization is supported but redundant with plasma membrane.
+      [PMID:34998388]
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The plasma membrane annotation is more specific; retain this as non-core.
+      [PMID:34998388]
+    supported_by:
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        SbSLMdr.1129922123.A.1.201Plasma membraneH6TB12
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      ABC transporters are primary active pumps that use ATP hydrolysis; SbSLMdr.1 is an MDR
+      subfamily ABC transporter. [PMID:34998388]
+    action: ACCEPT
+    reason: &gt;-
+      The mechanistic description of ABC pumps supports ATP hydrolysis for SbSLMdr.1.
+      [PMID:34998388]
+    supported_by:
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        use the hydrolysis of ATP to drive active transport of the substrate against its gradient.
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does
+    - reference_id: file:STABO/mdr/mdr-deep-research-falcon.md
+      supporting_text: &gt;-
+        Mechanism: Full-size MDR-subfamily ABC exporter, using ATP hydrolysis to drive sophorolipid efflux across the plasma membrane
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      SbSLMdr.1 is described as the transporter responsible for export of sophorolipids, and
+      transporter knockout greatly reduces secretion. [PMID:34998388, PMID:23516968]
+    action: ACCEPT
+    reason: &gt;-
+      Direct evidence for sophorolipid export supports transmembrane transport.
+      [PMID:34998388, PMID:23516968]
+    supported_by:
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        Previous research demonstrated that the SbSLMdr.1, present in the SL biosynthetic gene cluster, is indeed largely responsible for export of SLs [10].
+    - reference_id: PMID:23516968
+      supporting_text: &gt;-
+        knocking out the transporter gene yields mutants still ... able to secrete sophorolipids, though only at levels of 10% as compared with the ... wild type, suggesting alternative routes for secretion.
+    - reference_id: file:STABO/mdr/mdr-deep-research-falcon.md
+      supporting_text: Mdr/SbSLMdr.1 actively exports sophorolipids
+- term:
+    id: GO:0140359
+    label: ABC-type transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      SbSLMdr.1 is described as an MDR subfamily ABC transporter in the S. bombicola transportome.
+      [PMID:34998388]
+    action: ACCEPT
+    reason: &gt;-
+      ABC-family classification for SbSLMdr.1 supports ABC-type transporter activity.
+      [PMID:34998388]
+    supported_by:
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does
+    - reference_id: PMID:34998388
+      supporting_text: &gt;-
+        Being a member of the MDR subfamily of ABC transporters, it shows high similarity to known multidrug pumps, yet it does
+    - reference_id: file:STABO/mdr/mdr-deep-research-falcon.md
+      supporting_text: encodes an ATP-binding cassette (ABC) transporter of the MDR subfamily
+core_functions:
+- description: &gt;-
+    Executes ATP-dependent ABC-type transport to export sophorolipids from the cell, serving as
+    the major exporter within the sophorolipid biosynthetic cluster.
+  molecular_function:
+    id: GO:0140359
+    label: ABC-type transporter activity
+  directly_involved_in:
+  - id: GO:0055085
+    label: transmembrane transport
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:34998388
+    supporting_text: &gt;-
+      Previous research demonstrated that the SbSLMdr.1, present in the SL biosynthetic gene cluster, is indeed largely responsible for export of SLs [10].
+  - reference_id: PMID:23516968
+    supporting_text: &gt;-
+      knocking out the transporter gene yields mutants still ... able to secrete sophorolipids, though only at levels of 10% as compared with the ... wild type, suggesting alternative routes for secretion.
+  - reference_id: file:STABO/mdr/mdr-deep-research-falcon.md
+    supporting_text: Mdr/SbSLMdr.1 actively exports sophorolipids
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:23516968
+  title: &gt;-
+    The biosynthetic gene cluster for sophorolipids: a biotechnological interesting
+    biosurfactant produced by Starmerella bombicola.
+  findings: []
+- id: PMID:23964782
+  title: SILAC-based proteome analysis of Starmerella bombicola sophorolipid production.
+  findings: []
+- id: PMID:34998388
+  title: Exploring the transportome of the biosurfactant producing yeast Starmerella
+    bombicola.
+  findings: []
+- id: file:STABO/mdr/mdr-deep-research-falcon.md
+  title: Deep research summary for mdr (falcon)
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 import csv
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 import yaml
@@ -612,7 +612,7 @@ class GOAValidator:
                 continue
 
             # Create new annotation entry (stub for review)
-            new_annotation = {
+            new_annotation: Dict[str, Any] = {
                 "term": {"id": go_id, "label": goa_ann.go_term},
                 "evidence_type": evidence,
                 "original_reference_id": reference,

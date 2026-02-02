@@ -11,14 +11,12 @@ Usage:
 """
 
 import argparse
-import sys
 from pathlib import Path
 from typing import Dict, List, Optional
 import yaml
 import openpyxl
 from dataclasses import dataclass
 import urllib.request
-import json
 
 
 @dataclass
@@ -125,7 +123,7 @@ class IModulonDBClient:
         ws = wb['4-iM table']
 
         # Read header
-        header = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+        [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
 
         imodulons = {}
         for row in ws.iter_rows(min_row=2, values_only=True):
@@ -219,7 +217,7 @@ class IModulonDBClient:
         excel_path = self.download_supplementary_data(organism)
 
         # 3. Parse iModulon table
-        print(f"📖 Parsing iModulon table...")
+        print("📖 Parsing iModulon table...")
         imodulons = self.parse_imodulon_table(excel_path)
 
         # Look for regulator matching gene symbol
@@ -239,10 +237,10 @@ class IModulonDBClient:
         # 4. Get gene weights
         imodulon_index = self.find_imodulon_index(excel_path, imodulon.name)
         if imodulon_index is None:
-            print(f"❌ Could not find iModulon index")
+            print("❌ Could not find iModulon index")
             return
 
-        print(f"📊 Extracting gene weights...")
+        print("📊 Extracting gene weights...")
         gene_weights = self.extract_gene_weights(excel_path, imodulon_index)
 
         # 5. Generate report
@@ -259,15 +257,15 @@ class IModulonDBClient:
         with open(report_file, 'w') as f:
             f.write(f"# {gene_symbol} iModulonDB Comparison\n\n")
 
-            f.write(f"## Dataset Information\n\n")
+            f.write("## Dataset Information\n\n")
             f.write(f"- **Organism**: {organism.taxon_label}\n")
             f.write(f"- **Dataset**: {organism.dataset}\n")
             f.write(f"- **Reference**: {organism.reference}\n")
             f.write(f"- **DOI**: {organism.doi}\n\n")
 
             f.write(f"## {imodulon.name} iModulon Statistics\n\n")
-            f.write(f"| Metric | Value |\n")
-            f.write(f"|--------|-------|\n")
+            f.write("| Metric | Value |\n")
+            f.write("|--------|-------|\n")
             f.write(f"| **iModulon Size** | {imodulon.imodulon_size} genes |\n")
             f.write(f"| **Known Regulon Size** | {imodulon.regulon_size} genes |\n")
             f.write(f"| **True Positives** | {imodulon.true_positives} |\n")
@@ -277,9 +275,9 @@ class IModulonDBClient:
             f.write(f"| **Category** | {imodulon.category} - {imodulon.subcategory} |\n")
             f.write(f"| **Function** | {imodulon.function} |\n\n")
 
-            f.write(f"## Top Genes in iModulon (weight > 0.05)\n\n")
-            f.write(f"| Rank | Locus Tag | Gene | Weight | Product |\n")
-            f.write(f"|------|-----------|------|--------|----------|\n")
+            f.write("## Top Genes in iModulon (weight > 0.05)\n\n")
+            f.write("| Rank | Locus Tag | Gene | Weight | Product |\n")
+            f.write("|------|-----------|------|--------|----------|\n")
 
             for i, gene in enumerate(genes[:20], 1):
                 gene_name = gene.gene_name if gene.gene_name else "---"
@@ -288,7 +286,7 @@ class IModulonDBClient:
 
             f.write(f"\n**Total genes with |weight| > 0.05**: {len(genes)}\n\n")
 
-            f.write(f"## Interpretation\n\n")
+            f.write("## Interpretation\n\n")
 
             consistency = "HIGH" if imodulon.recall >= 0.8 and imodulon.f1_score >= 0.5 else \
                          "MEDIUM" if imodulon.recall >= 0.6 and imodulon.f1_score >= 0.4 else "LOW"
@@ -296,11 +294,11 @@ class IModulonDBClient:
             f.write(f"**Consistency Level**: {consistency}\n\n")
 
             if imodulon.recall == 1.0:
-                f.write(f"✅ **Perfect Recall**: All known regulon members are captured in the iModulon.\n\n")
+                f.write("✅ **Perfect Recall**: All known regulon members are captured in the iModulon.\n\n")
 
             if imodulon.precision < 0.5:
-                f.write(f"⚠️ **Moderate Precision**: The iModulon contains additional genes beyond ")
-                f.write(f"the validated regulon, suggesting functional coupling or novel predictions.\n\n")
+                f.write("⚠️ **Moderate Precision**: The iModulon contains additional genes beyond ")
+                f.write("the validated regulon, suggesting functional coupling or novel predictions.\n\n")
 
         print(f"✅ Report generated: {report_file}")
 

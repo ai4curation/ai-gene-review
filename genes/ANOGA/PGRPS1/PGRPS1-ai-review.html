@@ -1,0 +1,2870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGRPS1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PGRPS1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q7QFK2" target="_blank" class="term-link">
+                        Q7QFK2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Anopheles gambiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PGRPS1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q7QFK2" data-a="DESCRIPTION: PGRP-S1 (AGAP000536) is a short-form peptidoglycan..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PGRP-S1 (AGAP000536) is a short-form peptidoglycan recognition protein in Anopheles gambiae that functions as a non-catalytic pattern recognition receptor for bacterial peptidoglycan. Unlike other short PGRPs in this species (PGRP-S2/S3), PGRP-S1 lacks the conserved zinc-binding catalytic residues required for N-acetylmuramoyl-L-alanine amidase activity and therefore does not hydrolyze peptidoglycan. Instead, it serves as the putative ortholog of Drosophila PGRP-SA, suggesting a role in activating Toll pathway-mediated innate immune responses to Gram-positive bacteria. It is a secreted, extracellular protein found in hemolymph.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                    GO:0005615
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0005615" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGRP-S1 is a short-form (S-class) peptidoglycan recognition protein, which are characteristically secreted and extracellular. The protein has a signal peptide (residues 1-26) predicted by SignalP, consistent with secretion. Short-form PGRPs in insects are generally found in hemolymph, cuticle, fat body, and gut epithelium.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with PGRP biology. Short-form PGRPs are secreted proteins that function in the extracellular space to detect bacterial peptidoglycan. The UniProt entry confirms a predicted signal peptide (residues 1-26), and the protein belongs to the secreted S-class of PGRPs. The IBA annotation from phylogenetic inference is well-supported.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Short-form PGRPs in insects are secreted/extracellular, present in hemolymph, cuticle, and fat body, and sometimes in gut epithelium/hemocytes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006955" target="_blank" class="term-link">
+                                    GO:0006955
+                                </a>
+                            </span>
+                            <span class="term-label">immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0006955" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGRP-S1 is clearly involved in immune response as it is a peptidoglycan recognition protein. However, this term is quite general. The more specific term &#39;innate immune response&#39; (GO:0045087) or &#39;defense response to Gram-positive bacterium&#39; (GO:0050830) would be more informative. Given that other more specific immune annotations exist, this can be kept as non-core.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct but redundant with more specific immune annotations. PGRP-S1 functions in innate immunity by detecting bacterial peptidoglycan and initiating immune signaling. The IBA annotation is phylogenetically supported.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S1 is [...] most consistent with a non-catalytic PGN recognition role analogous to Drosophila PGRP-SA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008745" target="_blank" class="term-link">
+                                    GO:0008745
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylmuramoyl-L-alanine amidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0008745" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT for PGRP-S1. Multiple comparative analyses demonstrate that PGRP-S1 lacks the conserved histidine and zinc-coordinating residues required for amidase catalytic activity. In contrast, PGRP-S2 and PGRP-S3 in A. gambiae retain these catalytic residues and are predicted to be functional amidases. PGRP-S1 functions as a non-catalytic pattern recognition receptor, not an enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is based on the presence of an amidase-like domain (Amidase_2/Pfam PF01510), but sequence analysis shows PGRP-S1 lacks the conserved catalytic residues. This represents an over-annotation based on domain presence without considering the loss of key functional residues. The protein is a non-catalytic receptor analogous to Drosophila PGRP-SA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S1 [...] lacks conserved Zn/catalytic residues (predicted non-amidase)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">among short PGRPs (S1, S2, S3), S2/S3 retain catalytic residues (predicted amidases), whereas S1 does not</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016019" target="_blank" class="term-link">
+                                    GO:0016019
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan immune receptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0016019" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the correct molecular function for PGRP-S1. As a non-catalytic PGRP that lacks amidase activity, PGRP-S1 functions primarily as a pattern recognition receptor for bacterial peptidoglycan. It is orthologous to Drosophila PGRP-SA, which activates the Toll pathway upon binding Lys-type peptidoglycan. The GO term definition explicitly notes that only PGRPs with receptor activity (not just binding) should be annotated to this term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function annotation. PGRP-S1 is a non-catalytic peptidoglycan recognition protein that functions as an immune receptor. The IBA annotation is well-supported by phylogenetic evidence and comparative sequence analysis showing it is the SA-like ortholog in Anopheles. The term correctly captures the signaling/receptor function rather than just binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S1 is best (though weakly) recognized as the putative ortholog of Drosophila PGRP-SA, a Toll-pathway-associated circulating receptor</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S1 is [...] most consistent with a non-catalytic PGN recognition role analogous to Drosophila PGRP-SA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                    GO:0050830
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-positive bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0050830" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is appropriate based on orthology to Drosophila PGRP-SA, which is specifically involved in defense against Gram-positive bacteria via the Toll pathway. In Drosophila, PGRP-SA recognizes Lys-type peptidoglycan (characteristic of Gram-positive bacteria) and activates Toll signaling. PGRP-S1&#39;s weak but best-hit orthology to PGRP-SA suggests similar specificity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported by phylogenetic inference. The IBA annotation derives from characterized orthologs in Drosophila where PGRP-SA specifically mediates defense against Gram-positive bacteria. While direct experimental evidence in Anopheles is lacking, the orthology relationship supports this annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">By orthology, it aligns weakly with Drosophila PGRP-SA, suggesting a role in presenting PGN to the Toll axis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Lys-type PGN via PGRP-SA/GNBP activates Toll in flies</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002376" target="_blank" class="term-link">
+                                    GO:0002376
+                                </a>
+                            </span>
+                            <span class="term-label">immune system process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0002376" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very general term derived from UniProtKB keyword mapping. PGRP-S1 is clearly involved in immune system processes as a pattern recognition receptor. However, more specific terms (innate immune response, defense response to Gram-positive bacterium) are already annotated and more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but too general. The IEA annotation from keyword mapping is accurate but redundant with more specific immune annotations. Keep as non-core since it provides no additional functional insight beyond the more specific terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRPs are pattern-recognition proteins that bind bacterial peptidoglycan (PGN)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is problematic for PGRP-S1. While the PGRP domain in general can coordinate zinc for amidase activity, PGRP-S1 specifically lacks the conserved zinc-coordinating residues. The annotation derives from the InterPro PGRP domain (IPR006619) which can encompass both catalytic and non-catalytic PGRPs. For PGRP-S1, which is non-catalytic, zinc binding is not established.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The InterPro-based annotation assumes all PGRP domain proteins bind zinc, but this is only true for catalytic amidase PGRPs. PGRP-S1 lacks the conserved His/Cys residues that coordinate the catalytic zinc. Without these residues, there is no functional zinc-binding site. This is an over-annotation based on domain presence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S1 [...] lacks the histidate/zinc-coordination constellation required for amidase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S1 [...] lacks conserved Zn/catalytic residues</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008745" target="_blank" class="term-link">
+                                    GO:0008745
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylmuramoyl-L-alanine amidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0008745" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same issue as the IBA annotation for this term. PGRP-S1 lacks the catalytic residues required for amidase activity. This IEA annotation from InterPro is incorrect for this specific protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Over-annotation based on domain presence. The InterPro domains (IPR002502, IPR006619, IPR036505) correctly identify this as a PGRP family member, but PGRP-S1 specifically lacks the catalytic residues. Only PGRP-S2 and PGRP-S3 in A. gambiae retain amidase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S1 [...] lacks conserved Zn/catalytic residues (predicted non-amidase)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S2/S3 retain these residues and are predicted to have amidase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                    GO:0009253
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0009253" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT for PGRP-S1. Peptidoglycan catabolism requires amidase activity, which PGRP-S1 lacks. PGRP-S1 binds and recognizes peptidoglycan but does not degrade it. The annotation derives from the amidase domain but is not applicable to non-catalytic PGRPs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PGRP-S1 is a non-catalytic receptor that recognizes but does not degrade peptidoglycan. Peptidoglycan catabolism is carried out by catalytic PGRPs (S2, S3, LB in Anopheles) that retain amidase activity. This is an over-annotation based on domain rather than verified function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S1 is [...] a non-catalytic PGN recognition protein [...] functions primarily as a recognition protein rather than a hydrolase</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">amidase roles in Anopheles gut immunity are fulfilled by other PGRPs (e.g., S2/S3, LB) that retain catalytic residues</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042834" target="_blank" class="term-link">
+                                    GO:0042834
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0042834" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct. PGRP-S1 contains a PGRP domain that binds peptidoglycan. While it lacks catalytic activity, the binding function is retained. The GO term definition notes that PGRPs without receptor activity should use this term rather than the immune receptor activity term. However, since PGRP-S1 has receptor/signaling function, this term is less specific than GO:0016019.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation. PGRP-S1 retains the peptidoglycan binding function even though it lacks catalytic activity. The PGRP domain enables recognition and binding of bacterial cell wall components. The IEA annotation from InterPro is appropriate. This is a valid additional annotation alongside the more specific receptor activity term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRPs are pattern-recognition proteins that bind bacterial peptidoglycan (PGN)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S1 [...] non-catalytic PGN recognition protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0045087" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is accurate. PGRP-S1 is specifically involved in innate immunity as a pattern recognition receptor. The annotation is more specific than the general &#39;immune system process&#39; term and accurately reflects PGRP-S1&#39;s role in detecting pathogen-associated molecular patterns (peptidoglycan) to trigger innate immune signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Appropriate annotation for PGRP-S1&#39;s role in innate immunity. PGRPs are key components of the insect innate immune system, functioning as pattern recognition receptors to detect bacterial infection. The IEA annotation is well-supported by the protein&#39;s domain composition and family membership.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Short-form (S) PGRPs [...] can either act as non-catalytic recognition molecules or as catalytic amidases [...] to initiate an innate immune response</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">innate immunity pathways in the malaria vector Anopheles gambiae</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032499" target="_blank" class="term-link">
+                                    GO:0032499
+                                </a>
+                            </span>
+                            <span class="term-label">detection of peptidoglycan</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q7QFK2" data-a="GO:0032499" data-r="GO_REF:0000033" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is an appropriate biological process annotation for PGRP-S1. As a non-catalytic pattern recognition receptor, PGRP-S1&#39;s primary function is to detect bacterial peptidoglycan and convert this stimulus into a molecular signal for immune activation. This process-level annotation complements the molecular function annotation of peptidoglycan immune receptor activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Although not currently in the GOA file, this annotation would accurately capture PGRP-S1&#39;s role in sensing bacterial cell wall components. The term &#39;detection of peptidoglycan&#39; (GO:0032499) describes the series of events in which a peptidoglycan stimulus is received and converted into a molecular signal, which is precisely what non-catalytic PGRPs like PGRP-S1 do.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRPs are pattern-recognition proteins that bind bacterial peptidoglycan (PGN)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PGRP-S1 is [...] most consistent with a non-catalytic PGN recognition role</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Pattern recognition receptor that detects bacterial peptidoglycan to initiate innate immune signaling, likely via the Toll pathway. Functions as a non-catalytic recognition protein rather than an enzyme.</h3>
+                <span class="vote-buttons" data-g="Q7QFK2" data-a="FUNCTION: Pattern recognition receptor that detects bacteria..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016019" target="_blank" class="term-link">
+                            peptidoglycan immune receptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                innate immune response
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                defense response to Gram-positive bacterium
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                extracellular space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PGRP-S1 is best (though weakly) recognized as the putative ortholog of Drosophila PGRP-SA, a Toll-pathway-associated circulating receptor</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PGRP-S1 is [...] most consistent with a non-catalytic PGN recognition role analogous to Drosophila PGRP-SA</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for PGRPS1 in Anopheles gambiae</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PGRP-S1 lacks catalytic residues and is SA-like ortholog</div>
+                        
+                        <div class="finding-text">"PGRP-S1 is best (though weakly) recognized as the putative ortholog of Drosophila PGRP-SA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PGRP-S1 is a non-catalytic receptor, not an amidase</div>
+                        
+                        <div class="finding-text">"PGRP-S1 [...] lacks conserved Zn/catalytic residues (predicted non-amidase)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Short PGRPs S2/S3 retain amidase activity unlike S1</div>
+                        
+                        <div class="finding-text">"among short PGRPs (S1, S2, S3), S2/S3 retain catalytic residues (predicted amidases), whereas S1 does not"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PGRP-S1 specifically activate the Toll pathway in Anopheles gambiae, as predicted by its orthology to Drosophila PGRP-SA?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: George K. Christophides, Elena A. Levashina</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7QFK2" data-a="Q: Does PGRP-S1 specifically activate the Toll pathwa..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the substrate specificity of PGRP-S1 - does it preferentially recognize Lys-type peptidoglycan (Gram-positive) or DAP-type (Gram-negative)?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: George K. Christophides</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7QFK2" data-a="Q: What is the substrate specificity of PGRP-S1 - doe..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> RNAi knockdown of PGRP-S1 followed by challenge with Gram-positive bacteria (e.g., Staphylococcus aureus). Measure Toll pathway activation via expression of Toll-regulated antimicrobial peptides (e.g., defensin) compared to controls.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PGRP-S1 activates Toll pathway signaling upon peptidoglycan stimulation</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: RNAi knockdown with immune challenge</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7QFK2" data-a="EXPERIMENT: RNAi knockdown of PGRP-S1 followed by challenge wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant PGRP-S1 ectodomain. Perform binding assays (surface plasmon resonance or isothermal titration calorimetry) with purified Lys-type and DAP-type peptidoglycan to determine binding affinities and specificities.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PGRP-S1 binds Lys-type peptidoglycan with higher affinity than DAP-type</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Protein binding assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7QFK2" data-a="EXPERIMENT: Express and purify recombinant PGRP-S1 ectodomain...." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PGRPS1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7QFK2" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-30T10:15:37.185391'<br />
+end_time: '2026-01-30T10:25:12.340390'<br />
+duration_seconds: 575.16<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ANOGA<br />
+  gene_id: PGRPS1<br />
+  gene_symbol: PGRPS1<br />
+  uniprot_accession: Q7QFK2<br />
+  protein_description: 'RecName: Full=Peptidoglycan-recognition protein {ECO:0000256|PIRNR:PIRNR037945};'<br />
+  gene_info: Name=PGRPS1 {ECO:0000313|EMBL:EAA06262.4}; Synonyms=1271702 {ECO:0000313|EnsemblMetazoa:AGAP000536-PA};<br />
+    ORFNames=AgaP_AGAP000536 {ECO:0000313|EMBL:EAA06262.4};<br />
+  organism_full: Anopheles gambiae (African malaria mosquito).<br />
+  protein_family: Belongs to the N-acetylmuramoyl-L-alanine amidase 2 family.<br />
+  protein_domains: Amidase/PGRP_sf. (IPR036505); Amidase_domain. (IPR002502); Peptidoglycan_recognition.<br />
+    (IPR017331); PGRP. (IPR015510); PGRP_domain_met/bac. (IPR006619)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 38</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q7QFK2</li>
+<li><strong>Protein Description:</strong> RecName: Full=Peptidoglycan-recognition protein {ECO:0000256|PIRNR:PIRNR037945};</li>
+<li><strong>Gene Information:</strong> Name=PGRPS1 {ECO:0000313|EMBL:EAA06262.4}; Synonyms=1271702 {ECO:0000313|EnsemblMetazoa:AGAP000536-PA}; ORFNames=AgaP_AGAP000536 {ECO:0000313|EMBL:EAA06262.4};</li>
+<li><strong>Organism (full):</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Protein Family:</strong> Belongs to the N-acetylmuramoyl-L-alanine amidase 2 family.</li>
+<li><strong>Key Domains:</strong> Amidase/PGRP_sf. (IPR036505); Amidase_domain. (IPR002502); Peptidoglycan_recognition. (IPR017331); PGRP. (IPR015510); PGRP_domain_met/bac. (IPR006619)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "PGRPS1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'PGRPS1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>PGRPS1</strong> (gene ID: PGRPS1, UniProt: Q7QFK2) in ANOGA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q7QFK2</li>
+<li><strong>Protein Description:</strong> RecName: Full=Peptidoglycan-recognition protein {ECO:0000256|PIRNR:PIRNR037945};</li>
+<li><strong>Gene Information:</strong> Name=PGRPS1 {ECO:0000313|EMBL:EAA06262.4}; Synonyms=1271702 {ECO:0000313|EnsemblMetazoa:AGAP000536-PA}; ORFNames=AgaP_AGAP000536 {ECO:0000313|EMBL:EAA06262.4};</li>
+<li><strong>Organism (full):</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Protein Family:</strong> Belongs to the N-acetylmuramoyl-L-alanine amidase 2 family.</li>
+<li><strong>Key Domains:</strong> Amidase/PGRP_sf. (IPR036505); Amidase_domain. (IPR002502); Peptidoglycan_recognition. (IPR017331); PGRP. (IPR015510); PGRP_domain_met/bac. (IPR006619)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "PGRPS1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Anopheles gambiae (African malaria mosquito).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'PGRPS1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>PGRPS1</strong> (gene ID: PGRPS1, UniProt: Q7QFK2) in ANOGA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research report: Functional annotation of Anopheles gambiae PGRP-S1 (AGAP000536; UniProt Q7QFK2)</p>
+<p>Verification of target identity and context<br />
+- Gene/protein match: PGRP-S1 (AGAP000536) encodes a short-form peptidoglycan recognition protein in Anopheles gambiae that carries a canonical PGRP/amidase-like domain; however, sequence analyses indicate it likely lacks the catalytic zinc-binding residues that confer N-acetylmuramoyl-L-alanine amidase activity in other PGRPs (therefore functions primarily as a recognition protein rather than a hydrolase) (Christophides 2004; Mendes 2010) (https://doi.org/10.1111/j.0105-2896.2004.0127.x; https://doi.org/10.1186/1471-2148-10-9) (christophides2004comparativeandfunctional pages 6-7, mendes2010molecularevolutionof pages 1-2, mendes2010molecularevolutionof pages 7-8, mendes2010molecularevolutionof pages 8-10).<br />
+- Organism: Anopheles gambiae (African malaria mosquito) confirmed throughout cited works on Anopheles immunity and PGRPs (christophides2004comparativeandfunctional pages 6-7, rodgers2020functionalanalysisof pages 6-8).<br />
+- Family/domains: PGRP family with a bacteriophage/bacterial type 2 amidase-like (N-acetylmuramoyl-L-alanine amidase) domain; some insect PGRPs are catalytic amidases, others are non-catalytic receptors; PGRP-S1 falls in the latter category by conservation patterns (Dziarski &amp; Gupta 2006; Christophides 2004; Mendes 2010) (https://doi.org/10.1186/gb-2006-7-8-232; https://doi.org/10.1111/j.0105-2896.2004.0127.x; https://doi.org/10.1186/1471-2148-10-9) (dziarski2006thepeptidoglycanrecognition pages 1-2, christophides2004comparativeandfunctional pages 6-7, mendes2010molecularevolutionof pages 1-2).</p>
+<p>1) Key concepts and definitions (current understanding)<br />
+- PGRPs are pattern-recognition proteins that bind bacterial peptidoglycan (PGN). Short-form (S) PGRPs are generally extracellular/secreted and can either act as non-catalytic recognition molecules or as catalytic amidases that hydrolyze PGN to modulate immune signaling (Dziarski &amp; Gupta 2006) (https://doi.org/10.1186/gb-2006-7-8-232) (dziarski2006thepeptidoglycanrecognition pages 1-2).<br />
+- In Anopheles, seven PGRPs are described; among short PGRPs (S1, S2, S3), S2/S3 retain catalytic residues (predicted amidases), whereas S1 does not and is best (though weakly) recognized as the putative ortholog of Drosophila PGRP-SA, a Toll-pathway-associated circulating receptor (Christophides 2004) (https://doi.org/10.1111/j.0105-2896.2004.0127.x) (christophides2004comparativeandfunctional pages 6-7).<br />
+- IMD/REL2 and Toll pathways: in dipterans, DAP-type PGN sensed by PGRP-LC/LE activates IMD/REL2; Lys-type PGN via PGRP-SA/GNBP activates Toll in flies. In Anopheles, PGRP-LC is a key IMD/REL2 receptor; short amidase PGRPs tune signaling by degrading PGN (Rodgers 2020; Hixson 2024; reviews) (https://doi.org/10.1016/j.ibmb.2019.103288; https://doi.org/10.1098/rstb.2023.0063) (rodgers2020functionalanalysisof pages 6-8, hixson2024innateimmunityin pages 8-9).</p>
+<p>2) Gene/protein-specific function and biochemical properties<br />
+- Catalytic capacity: Multiple comparative analyses indicate PGRP-S1 lacks the histidate/zinc-coordination constellation required for amidase activity. Conversely, PGRP-S2/S3 retain these residues (Christophides 2004; Mendes 2010) (https://doi.org/10.1111/j.0105-2896.2004.0127.x; https://doi.org/10.1186/1471-2148-10-9) (christophides2004comparativeandfunctional pages 6-7, mendes2010molecularevolutionof pages 1-2, mendes2010molecularevolutionof pages 7-8).<br />
+- Biochemical role: PGRP-S1 is therefore most consistent with a non-catalytic PGN recognition protein. By orthology, it aligns weakly with Drosophila PGRP-SA, suggesting a role in presenting PGN to the Toll axis rather than hydrolyzing PGN (Christophides 2004; Meister 2006) (https://doi.org/10.1111/j.0105-2896.2004.0127.x; https://doi.org/10.11588/heidok.00006571) (christophides2004comparativeandfunctional pages 6-7, meister2006theroleof pages 80-87). Direct substrate specificity (DAP- vs Lys-type PGN) and zinc dependence have not been experimentally demonstrated for Anopheles PGRP-S1; inference from sequence indicates absence of zinc-dependent amidase activity (christophides2004comparativeandfunctional pages 6-7, mendes2010molecularevolutionof pages 1-2).</p>
+<p>3) Expression and localization<br />
+- Class-level localization: Short-form PGRPs in insects are secreted/extracellular, present in hemolymph, cuticle, and fat body, and sometimes in gut epithelium/hemocytes (Dziarski &amp; Gupta 2006) (https://doi.org/10.1186/gb-2006-7-8-232) (dziarski2006thepeptidoglycanrecognition pages 1-2).<br />
+- For PGRP-S1 specifically, published Anopheles syntheses classify it among the secreted S-class and consider it the SA-like circulating receptor; however, tissue-resolved expression (midgut vs hemolymph vs hemocytes) for S1 in Anopheles remains sparsely documented in primary experimental studies. Midgut immunity studies in Anopheles predominantly implicate PGRP-LC isoforms and amidase PGRPs (S2/S3 or LB) rather than S1 (Rodgers 2020; Hixson 2024) (https://doi.org/10.1016/j.ibmb.2019.103288; https://doi.org/10.1098/rstb.2023.0063) (rodgers2020functionalanalysisof pages 6-8, hixson2024innateimmunityin pages 8-9).</p>
+<p>4) Pathway roles and biological processes<br />
+- Toll vs IMD in Anopheles: PGRP-LC drives IMD/REL2 signaling that regulates AMPs and shapes midgut microbiota; this influences Plasmodium infection intensities (Rodgers 2020; earlier: Meister 2009) (https://doi.org/10.1016/j.ibmb.2019.103288) (rodgers2020functionalanalysisof pages 6-8). Recent analyses show IMD/REL2 is critical for midgut bacterial homeostasis; loss of REL2 causes Serratia overgrowth and rapid mortality, with complex effects on P. falciparum (bioRxiv 2025 preprint) (https://doi.org/10.1101/2025.03.14.643338) (zakovic2025themajorrole pages 1-5).<br />
+- Amidase PGRPs in gut immunity (context for S1): Catalytic PGRPs attenuate IMD signaling by hydrolyzing PGN, thereby preventing immune overactivation and preserving barrier functions such as the peritrophic matrix (PM). In a malaria-mosquito model, bacterial cell wall components activate the IMD/Rel2 axis that directly promotes peritrophin1 expression and PM formation; knockdown of PGRP-LC/Rel2 reduces Per1 (An. stephensi) (PLOS Biology 2025) (https://doi.org/10.1371/journal.pbio.3002967) (song2025cellwallcomponents pages 1-2). Regionalization studies indicate anterior midgut executes most AMP expression, with amidase PGRPs contributing to tolerance in the posterior midgut (Hixson 2024) (https://doi.org/10.1098/rstb.2023.0063) (hixson2024innateimmunityin pages 8-9).<br />
+- Specific evidence about PGRP-S1’s pathway role in Anopheles remains inferential: its SA-like relationship suggests potential involvement in Gram-positive PGN/Toll-related recognition; however, experimental pathway assignment for S1 in Anopheles is not firmly established in current literature (Christophides 2004; Mendes 2010) (christophides2004comparativeandfunctional pages 6-7, mendes2010molecularevolutionof pages 1-2).</p>
+<p>5) Evolutionary and comparative insights specific to PGRP-S1<br />
+- Chromosomal location and divergence: PGRP-S1 is X-linked (Xag), whereas PGRP-S2/S3 are tandem duplicates on 2L (~95% identity) (Mendes 2010) (https://doi.org/10.1186/1471-2148-10-9) (mendes2010molecularevolutionof pages 7-8).<br />
+- Diversity and selection metrics: In East African populations, PGRP-S1 shows lower nucleotide diversity (π ≈ 0.000–0.008) than S2 (π ≈ 0.009–0.022) and S3 (π ≈ 0.002–0.027), exhibits clear species differentiation between An. gambiae and An. arabiensis (high FST/AMOVA among-species components), and displays neutrality-test departures (e.g., negative Tajima’s D in some samples). By contrast, S2/S3 have Ka/Ks well below 1 (≈0.044/0.058) indicative of purifying selection and show evidence of autosomal introgression/shared haplotypes (Mendes 2010) (https://doi.org/10.1186/1471-2148-10-9) (mendes2010molecularevolutionof pages 1-2, mendes2010molecularevolutionof pages 7-8, mendes2010molecularevolutionof pages 3-7, mendes2010molecularevolutionof pages 2-3).</p>
+<p>6) Recent developments and latest research (prioritizing 2023–2024)<br />
+- Gut immunity regionalization and tolerance mechanisms: 2024 analyses emphasize that mosquito midguts are spatially patterned, with anterior midgut/proventriculus dominating AMP expression and amidase PGRPs implicated in tolerance in the posterior midgut; similar anterior-focused patterns are observed in Anopheles (Hixson 2024, Phil. Trans. R. Soc. B, Mar 2024; open-access review) (https://doi.org/10.1098/rstb.2023.0063) (hixson2024innateimmunityin pages 8-9).<br />
+- Mechanistic linkage of IMD/REL2 to PM formation: while published in 2025, a high-quality PLOS Biology paper in a malaria vector model demonstrates that PGN stimulation via PGRP-LC/Rel2 directly controls peritrophin1 and PM formation in the midgut, integrating microbiota-derived PGN sensing with barrier biogenesis (Song et al. 2025) (https://doi.org/10.1371/journal.pbio.3002967) (song2025cellwallcomponents pages 1-2). This aligns with 2024–2023 reviews reporting amidase PGRPs as negative regulators of IMD and key shapers of microbiota homeostasis (Khan 2023; Li 2024) (https://doi.org/10.3389/fimmu.2023.1272143; https://doi.org/10.1186/s13071-024-06161-4) (daou2024characterizinganophelesgambiae pages 18-22, daou2024characterizinganophelesgambiae pages 22-26).<br />
+- IMD/REL2 centrality in Anopheles midgut homeostasis: Although a 2025 preprint, work from An. gambiae demonstrates REL2’s essential role in post-bloodmeal bacterial control and survival, consistent with the 2023 doctoral work and 2020 functional studies focusing on PGRP-LC and REL2 (Zakovíc et al. 2025; Rodgers 2020; Zakovic 2023) (https://doi.org/10.1101/2025.03.14.643338; https://doi.org/10.1016/j.ibmb.2019.103288; https://doi.org/10.18452/25442) (zakovic2025themajorrole pages 1-5, rodgers2020functionalanalysisof pages 6-8, daou2024characterizinganophelesgambiae pages 22-26).</p>
+<p>7) Current applications and real-world implementations<br />
+- Vector control concepts leverage modulation of mosquito innate immunity and microbiota to reduce Plasmodium transmission. PGRP-LC/IMD-driven antibacterial defenses affect parasite infection intensity, suggesting that tuning PGRP-mediated sensing or amidase activity could alter vector competence (Rodgers 2020; overviews Li 2024) (https://doi.org/10.1016/j.ibmb.2019.103288; https://doi.org/10.1186/s13071-024-06161-4) (rodgers2020functionalanalysisof pages 6-8, daou2024characterizinganophelesgambiae pages 22-26). The anterior-biased AMP expression and posterior tolerance described in 2024 reviews inform targeted paratransgenesis or microbiota engineering strategies to compartmentalize antimicrobial outputs while preserving beneficial symbionts (Hixson 2024) (https://doi.org/10.1098/rstb.2023.0063) (hixson2024innateimmunityin pages 8-9).</p>
+<p>8) Expert opinions and analysis from authoritative sources<br />
+- Authoritative reviews emphasize that in mosquitoes the IMD/REL2 pathway, activated by PGRP-LC and modulated by amidase-type PGRPs, is the dominant antibacterial axis in the gut; amidase PGRPs enforce tolerance to commensals, preventing dysbiosis and barrier disruption. These principles are consistent across Aedes and Anopheles and align with functional midgut studies (Hixson 2024; Khan 2023; Li 2024) (https://doi.org/10.1098/rstb.2023.0063; https://doi.org/10.3389/fimmu.2023.1272143; https://doi.org/10.1186/s13071-024-06161-4) (hixson2024innateimmunityin pages 8-9, daou2024characterizinganophelesgambiae pages 18-22, daou2024characterizinganophelesgambiae pages 22-26).<br />
+- For PGRP-S1 specifically, authoritative genomic syntheses agree it is an SA-like, non-catalytic S-class PGRP and is evolutionarily distinct from the amidase S2/S3 duplicates; direct functional assays in mosquitoes remain limited, so functional assignment relies on conserved features and orthology (Christophides 2004; Mendes 2010) (https://doi.org/10.1111/j.0105-2896.2004.0127.x; https://doi.org/10.1186/1471-2148-10-9) (christophides2004comparativeandfunctional pages 6-7, mendes2010molecularevolutionof pages 1-2, mendes2010molecularevolutionof pages 7-8).</p>
+<p>9) Relevant statistics and data<br />
+- Evolutionary/population data (An. gambiae/arabiensis, East Africa): PGRP-S1 π ≈ 0.000–0.008 (low diversity); PGRP-S2 π ≈ 0.009–0.022; PGRP-S3 π ≈ 0.002–0.027; Ka/Ks S2 ≈ 0.044, S3 ≈ 0.058 (purifying selection); AMOVA indicates strong between-species structure for S1 (FST up to ~0.95 in some comparisons), but not for S2/S3, which show shared haplotypes consistent with autosomal introgression (Mendes 2010) (https://doi.org/10.1186/1471-2148-10-9) (mendes2010molecularevolutionof pages 1-2, mendes2010molecularevolutionof pages 7-8, mendes2010molecularevolutionof pages 3-7, mendes2010molecularevolutionof pages 2-3).<br />
+- Quantitative gut-immunity examples (context): PGRP-LC RNAi increased bacterial load ~2-fold in sugar-fed and ~6-fold post-bloodmeal mosquitoes; amidase PGRP-LB knockdown in a malaria mosquito model altered AMPs/ROS and led to ~500-fold shifts in culturable microbes; REL2 depletion in An. gambiae midgut led to lethal dysbiosis dominated by Serratia within 24 h post-bloodmeal (Daou 2024 summary; Zakovíc 2025 preprint) (daou2024characterizinganophelesgambiae pages 22-26, zakovic2025themajorrole pages 1-5).</p>
+<p>Limitations and ambiguity statement for PGRP-S1<br />
+- The gene symbol PGRP-S1 is unambiguous in the mosquito literature when tied to AGAP000536. However, direct gene-specific experimental data on enzymatic activity, precise substrate specificity (DAP vs Lys), and in vivo pathway assignment in Anopheles are limited. The weight of comparative evidence supports that PGRP-S1 is non-catalytic (lacks amidase Zn/catalytic residues) and is SA-like in orthology, implying a recognition role rather than PGN hydrolysis. Conclusions about pathway involvement (e.g., Toll) are thus inferential and should be tested experimentally (Christophides 2004; Mendes 2010) (christophides2004comparativeandfunctional pages 6-7, mendes2010molecularevolutionof pages 1-2).</p>
+<p>Embedded comparative summary<br />
+|Gene (An. gambiae)|Chromosomal location|Catalytic (amidase) residues conserved?|Predicted / known biochemical role|Orthology / notes|Expression / localization highlights|Immune pathway link &amp; functional context|Quantitative / evolutionary highlights|Key sources (author-year, URL)|<br />
+|---|---|---|---|---|---|---|---|---|<br />
+|PGRP-S1 (AGAP000536; Q7QFK2)|Chromosome X (Xag region)|No — lacks conserved Zn/catalytic residues (predicted non‑amidase)|(Likely) non‑catalytic PGN recognition; receptor/effector activator (not a peptidoglycan hydrolase)|(Weak reciprocal best hit to Drosophila PGRP‑SA; considered the best putative SA‑like ortholog)|Short-form, extracellular/secreted S‑class (hemolymph/fat‑body/circulating) typical of S‑PGRPs; separate from S2/S3 duplicates|(Putative role toward Toll-like recognition (PGRP‑SA analog); not predicted to provide amidase negative regulation of Imd) — may act in recognition rather than PGN degradation|Low nucleotide diversity (π ≈ 0.000–0.008); 13 haplotypes reported; strong species differentiation (high Fst / AMOVA between An. gambiae and An. arabiensis); Ka/Ks elevated vs S2/S3 (caveated) (mendes2010molecularevolutionof pages 1-2, mendes2010molecularevolutionof pages 7-8, mendes2010molecularevolutionof pages 3-7)|(Mendes 2010 https://doi.org/10.1186/1471-2148-10-9) (Christophides 2004 https://doi.org/10.1111/j.0105-2896.2004.0127.x) (Meister 2006 https://doi.org/10.11588/heidok.00006571) (mendes2010molecularevolutionof pages 1-2, christophides2004comparativeandfunctional pages 6-7, meister2006theroleof pages 80-87)|<br />
+|PGRP-S2 (AGAP006343)|Chromosome 2L (tandem with S3)|Yes — retains Zn‑coordinating / catalytic residues (predicted amidase)|(Predicted N‑acetylmuramoyl‑L‑alanine amidase; hydrolyses PGN to modulate immune tone and microbiota)|Tandem duplicate with PGRP‑S3 (~95% coding identity); likely functional duplicate pair|Short extracellular S‑class; expressed/induced in contexts including hemolymph/fat body and gut; S2/S3 show responsiveness to microbiota|(Amidase PGRPs (S2/S3) likely degrade PGN to limit IMD/REL2 overactivation and maintain microbiota tolerance; contribute to regional midgut immune balance)|Higher diversity than S1 (π ≈ 0.009–0.022); Ka/Ks ≈ 0.044 (strong purifying selection); ~25 haplotypes; most variation within populations (low interspecific Fst) (mendes2010molecularevolutionof pages 1-2, mendes2010molecularevolutionof pages 7-8, mendes2010molecularevolutionof pages 3-7)|(Mendes 2010 https://doi.org/10.1186/1471-2148-10-9) (Christophides 2004 https://doi.org/10.1111/j.0105-2896.2004.0127.x) (mendes2010molecularevolutionof pages 1-2, christophides2004comparativeandfunctional pages 6-7)|<br />
+|PGRP-S3 (AGAP006342)|Chromosome 2L (tandem with S2)|Yes — retains Zn‑coordinating / catalytic residues (predicted amidase)|(Predicted amidase; implicated in PGN degradation and microbiota interactions)|Tandem duplicate partner of S2; shared and private haplotypes across populations|Short extracellular S‑class; evidence S3 is induced by gut microbiota (midgut expression reported)|As for S2: amidase activity expected to constrain IMD/REL2 signaling, supporting microbiota homeostasis and preventing PM/epithelial damage when overactivated|π ≈ 0.002–0.027; Ka/Ks ≈ 0.058; highest haplotype complexity (~43 haplotypes); signs of autosomal introgression/shared haplotypes between species (mendes2010molecularevolutionof pages 1-2, mendes2010molecularevolutionof pages 3-7)| (Mendes 2010 https://doi.org/10.1186/1471-2148-10-9) (mendes2010molecularevolutionof pages 1-2, mendes2010molecularevolutionof pages 3-7)|<br />
+|Context: Amidase PGRPs &amp; midgut immunity (2023–2024 summary)|—|Amidase PGRPs (e.g., PGRP‑LB, and An. PGRP‑S2/S3) retain Zn sites required for hydrolytic activity|Enzymatic PGN hydrolysis reduces stimulatory PGN fragments, tuning IMD/REL2 activity; impacts AMP/ROS output and peritrophic matrix (PM) formation, thereby shaping microbiota and vector competence|Conserved functional theme across mosquitoes; amidase PGRPs act as immune‑modulators rather than direct AMP effectors|Often enriched in gut/fat‑body or secreted to lumen/hemolymph depending on family member; midgut regionalization (anterior vigilance vs posterior tolerance) reported|(Mechanistic links: IMD/REL2 activation by DAP‑PGN via PGRP‑LC/LE, amidase PGRPs degrade PGN to limit IMD; midgut PM expression (Per1) is IMD/Rel2‑regulated in Anopheles/An. stephensi studies)|Representative quantitative findings from recent mosquito studies: PGRP‑LC RNAi increased bacterial load ~2× (sugar) and ~6× (post‑bloodmeal); PGRP‑LB knockdown (An. stephensi) altered AMPs/ROS and produced ~500‑fold change in culturable microbes (reported examples) — and midgut REL2 loss causes rapid dysbiosis (daou2024characterizinganophelesgambiae pages 22-26, song2025cellwallcomponents pages 1-2, zakovic2025themajorrole pages 1-5, hixson2024innateimmunityin pages 8-9, rodgers2020functionalanalysisof pages 6-8)|(Daou 2024 (examples) (daou2024characterizinganophelesgambiae pages 22-26), Hixson 2024 https://doi.org/10.1098/rstb.2023.0063 (hixson2024innateimmunityin pages 8-9), Rodgers 2020 https://doi.org/10.1016/j.ibmb.2019.103288 (rodgers2020functionalanalysisof pages 6-8), Song et al. PLOS Biol 2025 (song2025cellwallcomponents pages 1-2))|</p>
+<p><em>Table: Concise comparison of Anopheles gambiae short-form PGRPs (S1–S3) summarizing chromosomal location, catalytic potential, roles, localization, immune links, and key evolutionary/quantitative data with source citations for targeted functional annotation.</em></p>
+<p>Conclusions<br />
+- Anopheles gambiae PGRP-S1 (AGAP000536; Q7QFK2) is a short, secreted PGRP most consistent with a non-catalytic PGN recognition role analogous to Drosophila PGRP-SA. It likely acts in extracellular recognition rather than PGN hydrolysis; amidase roles in Anopheles gut immunity are fulfilled by other PGRPs (e.g., S2/S3, LB) that retain catalytic residues. Contemporary mosquito research (2023–2024) highlights the centrality of IMD/REL2 signaling and amidase PGRPs in shaping midgut microbiota and the peritrophic matrix, with strong regionalization of immune outputs along the gut. While these developments frame PGRP-S1’s likely functional niche, definitive Anopheles-specific biochemical and pathway data for S1 remain an open area for focused experimentation (dziarski2006thepeptidoglycanrecognition pages 1-2, christophides2004comparativeandfunctional pages 6-7, hixson2024innateimmunityin pages 8-9, rodgers2020functionalanalysisof pages 6-8, daou2024characterizinganophelesgambiae pages 22-26).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(christophides2004comparativeandfunctional pages 6-7): George K. Christophides, Dina Vlachou, and Fotis C. Kafatos. Comparative and functional genomics of the innate immune system in the malaria vector anopheles gambiae. Immunological Reviews, 198:127-148, Apr 2004. URL: https://doi.org/10.1111/j.0105-2896.2004.0127.x, doi:10.1111/j.0105-2896.2004.0127.x. This article has 338 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mendes2010molecularevolutionof pages 1-2): Cristina Mendes, Rute Felix, Ana-Margarida Sousa, Joana Lamego, Derek Charlwood, Virgílio E do Rosário, João Pinto, and Henrique Silveira. Molecular evolution of the three short pgrps of the malaria vectors anopheles gambiae and anopheles arabiensis in east africa. BMC Evolutionary Biology, 10:9-9, Jan 2010. URL: https://doi.org/10.1186/1471-2148-10-9, doi:10.1186/1471-2148-10-9. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mendes2010molecularevolutionof pages 7-8): Cristina Mendes, Rute Felix, Ana-Margarida Sousa, Joana Lamego, Derek Charlwood, Virgílio E do Rosário, João Pinto, and Henrique Silveira. Molecular evolution of the three short pgrps of the malaria vectors anopheles gambiae and anopheles arabiensis in east africa. BMC Evolutionary Biology, 10:9-9, Jan 2010. URL: https://doi.org/10.1186/1471-2148-10-9, doi:10.1186/1471-2148-10-9. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mendes2010molecularevolutionof pages 8-10): Cristina Mendes, Rute Felix, Ana-Margarida Sousa, Joana Lamego, Derek Charlwood, Virgílio E do Rosário, João Pinto, and Henrique Silveira. Molecular evolution of the three short pgrps of the malaria vectors anopheles gambiae and anopheles arabiensis in east africa. BMC Evolutionary Biology, 10:9-9, Jan 2010. URL: https://doi.org/10.1186/1471-2148-10-9, doi:10.1186/1471-2148-10-9. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rodgers2020functionalanalysisof pages 6-8): Faye H. Rodgers, Julia A. Cai, Andre N. Pitaluga, Dominique Mengin-Lecreulx, Mathilde Gendrin, and George K. Christophides. Functional analysis of the three major pgrplc isoforms in the midgut of the malaria mosquito anopheles coluzzii. Insect Biochemistry and Molecular Biology, 118:103288, Mar 2020. URL: https://doi.org/10.1016/j.ibmb.2019.103288, doi:10.1016/j.ibmb.2019.103288. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dziarski2006thepeptidoglycanrecognition pages 1-2): Roman Dziarski and Dipika Gupta. The peptidoglycan recognition proteins (pgrps). Genome Biology, 7:232-232, Aug 2006. URL: https://doi.org/10.1186/gb-2006-7-8-232, doi:10.1186/gb-2006-7-8-232. This article has 484 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hixson2024innateimmunityin pages 8-9): Bretta Hixson, Robin Chen, and Nicolas Buchon. Innate immunity in aedes mosquitoes: from pathogen resistance to shaping the microbiota. Philosophical Transactions of the Royal Society B: Biological Sciences, Mar 2024. URL: https://doi.org/10.1098/rstb.2023.0063, doi:10.1098/rstb.2023.0063. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(meister2006theroleof pages 80-87): Stephan Meister. The role of pgrp proteins in innate immunity pathways in the malaria vector anopheles gambiae. ArXiv, Jan 2006. URL: https://doi.org/10.11588/heidok.00006571, doi:10.11588/heidok.00006571. This article has 4 citations.</p>
+</li>
+<li>
+<p>(zakovic2025themajorrole pages 1-5): Suzana Zakovíc, Galo E. Rivera, Remmora Gomaid, Cristina Graham Martinez, Christine Kappler, Eric Marois, and Elena A. Levashina. The major role of the rel2/nf-κb pathway in the regulation of midgut bacterial homeostasis in the malaria vector anopheles gambiae. bioRxiv, Mar 2025. URL: https://doi.org/10.1101/2025.03.14.643338, doi:10.1101/2025.03.14.643338. This article has 3 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(song2025cellwallcomponents pages 1-2): Xiumei Song, Han Zhou, and Jingwen Wang. Cell wall components of gut commensal bacteria stimulate peritrophic matrix formation in malaria vector mosquitoes through activation of the imd pathway. PLOS Biology, 23:e3002967, Jan 2025. URL: https://doi.org/10.1371/journal.pbio.3002967, doi:10.1371/journal.pbio.3002967. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mendes2010molecularevolutionof pages 3-7): Cristina Mendes, Rute Felix, Ana-Margarida Sousa, Joana Lamego, Derek Charlwood, Virgílio E do Rosário, João Pinto, and Henrique Silveira. Molecular evolution of the three short pgrps of the malaria vectors anopheles gambiae and anopheles arabiensis in east africa. BMC Evolutionary Biology, 10:9-9, Jan 2010. URL: https://doi.org/10.1186/1471-2148-10-9, doi:10.1186/1471-2148-10-9. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mendes2010molecularevolutionof pages 2-3): Cristina Mendes, Rute Felix, Ana-Margarida Sousa, Joana Lamego, Derek Charlwood, Virgílio E do Rosário, João Pinto, and Henrique Silveira. Molecular evolution of the three short pgrps of the malaria vectors anopheles gambiae and anopheles arabiensis in east africa. BMC Evolutionary Biology, 10:9-9, Jan 2010. URL: https://doi.org/10.1186/1471-2148-10-9, doi:10.1186/1471-2148-10-9. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(daou2024characterizinganophelesgambiae pages 18-22): H Daou. Characterizing anopheles gambiae susceptibility to oral infections with a panel of human bacterial pathogens. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(daou2024characterizinganophelesgambiae pages 22-26): H Daou. Characterizing anopheles gambiae susceptibility to oral infections with a panel of human bacterial pathogens. Unknown journal, 2024.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>dziarski2006thepeptidoglycanrecognition pages 1-2</li>
+<li>christophides2004comparativeandfunctional pages 6-7</li>
+<li>rodgers2020functionalanalysisof pages 6-8</li>
+<li>zakovic2025themajorrole pages 1-5</li>
+<li>song2025cellwallcomponents pages 1-2</li>
+<li>hixson2024innateimmunityin pages 8-9</li>
+<li>mendes2010molecularevolutionof pages 7-8</li>
+<li>daou2024characterizinganophelesgambiae pages 22-26</li>
+<li>mendes2010molecularevolutionof pages 1-2</li>
+<li>mendes2010molecularevolutionof pages 8-10</li>
+<li>meister2006theroleof pages 80-87</li>
+<li>mendes2010molecularevolutionof pages 3-7</li>
+<li>mendes2010molecularevolutionof pages 2-3</li>
+<li>daou2024characterizinganophelesgambiae pages 18-22</li>
+<li>https://doi.org/10.1111/j.0105-2896.2004.0127.x;</li>
+<li>https://doi.org/10.1186/1471-2148-10-9</li>
+<li>https://doi.org/10.1186/gb-2006-7-8-232;</li>
+<li>https://doi.org/10.1186/gb-2006-7-8-232</li>
+<li>https://doi.org/10.1111/j.0105-2896.2004.0127.x</li>
+<li>https://doi.org/10.1016/j.ibmb.2019.103288;</li>
+<li>https://doi.org/10.1098/rstb.2023.0063</li>
+<li>https://doi.org/10.11588/heidok.00006571</li>
+<li>https://doi.org/10.1016/j.ibmb.2019.103288</li>
+<li>https://doi.org/10.1101/2025.03.14.643338</li>
+<li>https://doi.org/10.1371/journal.pbio.3002967</li>
+<li>https://doi.org/10.3389/fimmu.2023.1272143;</li>
+<li>https://doi.org/10.1186/s13071-024-06161-4</li>
+<li>https://doi.org/10.1101/2025.03.14.643338;</li>
+<li>https://doi.org/10.18452/25442</li>
+<li>https://doi.org/10.1098/rstb.2023.0063;</li>
+<li>https://doi.org/10.1111/j.0105-2896.2004.0127.x,</li>
+<li>https://doi.org/10.1186/1471-2148-10-9,</li>
+<li>https://doi.org/10.1016/j.ibmb.2019.103288,</li>
+<li>https://doi.org/10.1186/gb-2006-7-8-232,</li>
+<li>https://doi.org/10.1098/rstb.2023.0063,</li>
+<li>https://doi.org/10.11588/heidok.00006571,</li>
+<li>https://doi.org/10.1101/2025.03.14.643338,</li>
+<li>https://doi.org/10.1371/journal.pbio.3002967,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q7QFK2
+gene_symbol: PGRPS1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7165
+  label: Anopheles gambiae
+description: &gt;-
+  PGRP-S1 (AGAP000536) is a short-form peptidoglycan recognition protein in Anopheles gambiae
+  that functions as a non-catalytic pattern recognition receptor for bacterial peptidoglycan.
+  Unlike other short PGRPs in this species (PGRP-S2/S3), PGRP-S1 lacks the conserved zinc-binding
+  catalytic residues required for N-acetylmuramoyl-L-alanine amidase activity and therefore
+  does not hydrolyze peptidoglycan. Instead, it serves as the putative ortholog of Drosophila
+  PGRP-SA, suggesting a role in activating Toll pathway-mediated innate immune responses to
+  Gram-positive bacteria. It is a secreted, extracellular protein found in hemolymph.
+existing_annotations:
+- term:
+    id: GO:0005615
+    label: extracellular space
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      PGRP-S1 is a short-form (S-class) peptidoglycan recognition protein, which are
+      characteristically secreted and extracellular. The protein has a signal peptide
+      (residues 1-26) predicted by SignalP, consistent with secretion. Short-form PGRPs
+      in insects are generally found in hemolymph, cuticle, fat body, and gut epithelium.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with PGRP biology. Short-form PGRPs are secreted proteins that function
+      in the extracellular space to detect bacterial peptidoglycan. The UniProt entry
+      confirms a predicted signal peptide (residues 1-26), and the protein belongs to the
+      secreted S-class of PGRPs. The IBA annotation from phylogenetic inference is well-supported.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;Short-form PGRPs in insects are secreted/extracellular, present in hemolymph, cuticle, and fat body, and sometimes in gut epithelium/hemocytes&#34;
+
+- term:
+    id: GO:0006955
+    label: immune response
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      PGRP-S1 is clearly involved in immune response as it is a peptidoglycan recognition
+      protein. However, this term is quite general. The more specific term &#39;innate immune
+      response&#39; (GO:0045087) or &#39;defense response to Gram-positive bacterium&#39; (GO:0050830)
+      would be more informative. Given that other more specific immune annotations exist,
+      this can be kept as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation is correct but redundant with more specific immune annotations.
+      PGRP-S1 functions in innate immunity by detecting bacterial peptidoglycan and
+      initiating immune signaling. The IBA annotation is phylogenetically supported.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 is [...] most consistent with a non-catalytic PGN recognition role analogous to Drosophila PGRP-SA&#34;
+
+- term:
+    id: GO:0008745
+    label: N-acetylmuramoyl-L-alanine amidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation is INCORRECT for PGRP-S1. Multiple comparative analyses demonstrate
+      that PGRP-S1 lacks the conserved histidine and zinc-coordinating residues required
+      for amidase catalytic activity. In contrast, PGRP-S2 and PGRP-S3 in A. gambiae retain
+      these catalytic residues and are predicted to be functional amidases. PGRP-S1 functions
+      as a non-catalytic pattern recognition receptor, not an enzyme.
+    action: REMOVE
+    reason: &gt;-
+      The annotation is based on the presence of an amidase-like domain (Amidase_2/Pfam PF01510),
+      but sequence analysis shows PGRP-S1 lacks the conserved catalytic residues. This represents
+      an over-annotation based on domain presence without considering the loss of key functional
+      residues. The protein is a non-catalytic receptor analogous to Drosophila PGRP-SA.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 [...] lacks conserved Zn/catalytic residues (predicted non-amidase)&#34;
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;among short PGRPs (S1, S2, S3), S2/S3 retain catalytic residues (predicted amidases), whereas S1 does not&#34;
+
+- term:
+    id: GO:0016019
+    label: peptidoglycan immune receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This is the correct molecular function for PGRP-S1. As a non-catalytic PGRP that
+      lacks amidase activity, PGRP-S1 functions primarily as a pattern recognition receptor
+      for bacterial peptidoglycan. It is orthologous to Drosophila PGRP-SA, which activates
+      the Toll pathway upon binding Lys-type peptidoglycan. The GO term definition explicitly
+      notes that only PGRPs with receptor activity (not just binding) should be annotated
+      to this term.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function annotation. PGRP-S1 is a non-catalytic peptidoglycan recognition
+      protein that functions as an immune receptor. The IBA annotation is well-supported
+      by phylogenetic evidence and comparative sequence analysis showing it is the SA-like
+      ortholog in Anopheles. The term correctly captures the signaling/receptor function
+      rather than just binding.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 is best (though weakly) recognized as the putative ortholog of Drosophila PGRP-SA, a Toll-pathway-associated circulating receptor&#34;
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 is [...] most consistent with a non-catalytic PGN recognition role analogous to Drosophila PGRP-SA&#34;
+
+- term:
+    id: GO:0050830
+    label: defense response to Gram-positive bacterium
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation is appropriate based on orthology to Drosophila PGRP-SA, which is
+      specifically involved in defense against Gram-positive bacteria via the Toll pathway.
+      In Drosophila, PGRP-SA recognizes Lys-type peptidoglycan (characteristic of Gram-positive
+      bacteria) and activates Toll signaling. PGRP-S1&#39;s weak but best-hit orthology to
+      PGRP-SA suggests similar specificity.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported by phylogenetic inference. The IBA annotation derives from characterized
+      orthologs in Drosophila where PGRP-SA specifically mediates defense against Gram-positive
+      bacteria. While direct experimental evidence in Anopheles is lacking, the orthology
+      relationship supports this annotation.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;By orthology, it aligns weakly with Drosophila PGRP-SA, suggesting a role in presenting PGN to the Toll axis&#34;
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;Lys-type PGN via PGRP-SA/GNBP activates Toll in flies&#34;
+
+- term:
+    id: GO:0002376
+    label: immune system process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This is a very general term derived from UniProtKB keyword mapping. PGRP-S1 is
+      clearly involved in immune system processes as a pattern recognition receptor.
+      However, more specific terms (innate immune response, defense response to Gram-positive
+      bacterium) are already annotated and more informative.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but too general. The IEA annotation from keyword mapping is accurate but
+      redundant with more specific immune annotations. Keep as non-core since it provides
+      no additional functional insight beyond the more specific terms.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRPs are pattern-recognition proteins that bind bacterial peptidoglycan (PGN)&#34;
+
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is problematic for PGRP-S1. While the PGRP domain in general can
+      coordinate zinc for amidase activity, PGRP-S1 specifically lacks the conserved
+      zinc-coordinating residues. The annotation derives from the InterPro PGRP domain
+      (IPR006619) which can encompass both catalytic and non-catalytic PGRPs. For PGRP-S1,
+      which is non-catalytic, zinc binding is not established.
+    action: REMOVE
+    reason: &gt;-
+      The InterPro-based annotation assumes all PGRP domain proteins bind zinc, but this
+      is only true for catalytic amidase PGRPs. PGRP-S1 lacks the conserved His/Cys residues
+      that coordinate the catalytic zinc. Without these residues, there is no functional
+      zinc-binding site. This is an over-annotation based on domain presence.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 [...] lacks the histidate/zinc-coordination constellation required for amidase activity&#34;
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 [...] lacks conserved Zn/catalytic residues&#34;
+
+- term:
+    id: GO:0008745
+    label: N-acetylmuramoyl-L-alanine amidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Same issue as the IBA annotation for this term. PGRP-S1 lacks the catalytic residues
+      required for amidase activity. This IEA annotation from InterPro is incorrect for
+      this specific protein.
+    action: REMOVE
+    reason: &gt;-
+      Over-annotation based on domain presence. The InterPro domains (IPR002502, IPR006619,
+      IPR036505) correctly identify this as a PGRP family member, but PGRP-S1 specifically
+      lacks the catalytic residues. Only PGRP-S2 and PGRP-S3 in A. gambiae retain amidase
+      activity.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 [...] lacks conserved Zn/catalytic residues (predicted non-amidase)&#34;
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S2/S3 retain these residues and are predicted to have amidase activity&#34;
+
+- term:
+    id: GO:0009253
+    label: peptidoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is INCORRECT for PGRP-S1. Peptidoglycan catabolism requires amidase
+      activity, which PGRP-S1 lacks. PGRP-S1 binds and recognizes peptidoglycan but does
+      not degrade it. The annotation derives from the amidase domain but is not applicable
+      to non-catalytic PGRPs.
+    action: REMOVE
+    reason: &gt;-
+      PGRP-S1 is a non-catalytic receptor that recognizes but does not degrade peptidoglycan.
+      Peptidoglycan catabolism is carried out by catalytic PGRPs (S2, S3, LB in Anopheles)
+      that retain amidase activity. This is an over-annotation based on domain rather than
+      verified function.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 is [...] a non-catalytic PGN recognition protein [...] functions primarily as a recognition protein rather than a hydrolase&#34;
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;amidase roles in Anopheles gut immunity are fulfilled by other PGRPs (e.g., S2/S3, LB) that retain catalytic residues&#34;
+
+- term:
+    id: GO:0042834
+    label: peptidoglycan binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is correct. PGRP-S1 contains a PGRP domain that binds peptidoglycan.
+      While it lacks catalytic activity, the binding function is retained. The GO term
+      definition notes that PGRPs without receptor activity should use this term rather
+      than the immune receptor activity term. However, since PGRP-S1 has receptor/signaling
+      function, this term is less specific than GO:0016019.
+    action: ACCEPT
+    reason: &gt;-
+      Correct annotation. PGRP-S1 retains the peptidoglycan binding function even though
+      it lacks catalytic activity. The PGRP domain enables recognition and binding of
+      bacterial cell wall components. The IEA annotation from InterPro is appropriate.
+      This is a valid additional annotation alongside the more specific receptor activity term.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRPs are pattern-recognition proteins that bind bacterial peptidoglycan (PGN)&#34;
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 [...] non-catalytic PGN recognition protein&#34;
+
+- term:
+    id: GO:0045087
+    label: innate immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This annotation is accurate. PGRP-S1 is specifically involved in innate immunity
+      as a pattern recognition receptor. The annotation is more specific than the general
+      &#39;immune system process&#39; term and accurately reflects PGRP-S1&#39;s role in detecting
+      pathogen-associated molecular patterns (peptidoglycan) to trigger innate immune
+      signaling.
+    action: ACCEPT
+    reason: &gt;-
+      Appropriate annotation for PGRP-S1&#39;s role in innate immunity. PGRPs are key components
+      of the insect innate immune system, functioning as pattern recognition receptors
+      to detect bacterial infection. The IEA annotation is well-supported by the protein&#39;s
+      domain composition and family membership.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;Short-form (S) PGRPs [...] can either act as non-catalytic recognition molecules or as catalytic amidases [...] to initiate an innate immune response&#34;
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;innate immunity pathways in the malaria vector Anopheles gambiae&#34;
+
+- term:
+    id: GO:0032499
+    label: detection of peptidoglycan
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This is an appropriate biological process annotation for PGRP-S1. As a non-catalytic
+      pattern recognition receptor, PGRP-S1&#39;s primary function is to detect bacterial
+      peptidoglycan and convert this stimulus into a molecular signal for immune activation.
+      This process-level annotation complements the molecular function annotation of
+      peptidoglycan immune receptor activity.
+    action: NEW
+    reason: &gt;-
+      Although not currently in the GOA file, this annotation would accurately capture
+      PGRP-S1&#39;s role in sensing bacterial cell wall components. The term &#39;detection of
+      peptidoglycan&#39; (GO:0032499) describes the series of events in which a peptidoglycan
+      stimulus is received and converted into a molecular signal, which is precisely
+      what non-catalytic PGRPs like PGRP-S1 do.
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRPs are pattern-recognition proteins that bind bacterial peptidoglycan (PGN)&#34;
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 is [...] most consistent with a non-catalytic PGN recognition role&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+  title: Deep research summary for PGRPS1 in Anopheles gambiae
+  findings:
+    - statement: PGRP-S1 lacks catalytic residues and is SA-like ortholog
+      supporting_text: &#34;PGRP-S1 is best (though weakly) recognized as the putative ortholog of Drosophila PGRP-SA&#34;
+    - statement: PGRP-S1 is a non-catalytic receptor, not an amidase
+      supporting_text: &#34;PGRP-S1 [...] lacks conserved Zn/catalytic residues (predicted non-amidase)&#34;
+    - statement: Short PGRPs S2/S3 retain amidase activity unlike S1
+      supporting_text: &#34;among short PGRPs (S1, S2, S3), S2/S3 retain catalytic residues (predicted amidases), whereas S1 does not&#34;
+
+core_functions:
+  - description: &gt;-
+      Pattern recognition receptor that detects bacterial peptidoglycan to initiate
+      innate immune signaling, likely via the Toll pathway. Functions as a non-catalytic
+      recognition protein rather than an enzyme.
+    molecular_function:
+      id: GO:0016019
+      label: peptidoglycan immune receptor activity
+    directly_involved_in:
+      - id: GO:0045087
+        label: innate immune response
+      - id: GO:0050830
+        label: defense response to Gram-positive bacterium
+    locations:
+      - id: GO:0005615
+        label: extracellular space
+    supported_by:
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 is best (though weakly) recognized as the putative ortholog of Drosophila PGRP-SA, a Toll-pathway-associated circulating receptor&#34;
+      - reference_id: file:ANOGA/PGRPS1/PGRPS1-deep-research-falcon.md
+        supporting_text: &#34;PGRP-S1 is [...] most consistent with a non-catalytic PGN recognition role analogous to Drosophila PGRP-SA&#34;
+
+suggested_questions:
+  - question: &gt;-
+      Does PGRP-S1 specifically activate the Toll pathway in Anopheles gambiae, as
+      predicted by its orthology to Drosophila PGRP-SA?
+    experts:
+      - George K. Christophides
+      - Elena A. Levashina
+  - question: &gt;-
+      What is the substrate specificity of PGRP-S1 - does it preferentially recognize
+      Lys-type peptidoglycan (Gram-positive) or DAP-type (Gram-negative)?
+    experts:
+      - George K. Christophides
+
+suggested_experiments:
+  - hypothesis: PGRP-S1 activates Toll pathway signaling upon peptidoglycan stimulation
+    description: &gt;-
+      RNAi knockdown of PGRP-S1 followed by challenge with Gram-positive bacteria
+      (e.g., Staphylococcus aureus). Measure Toll pathway activation via expression
+      of Toll-regulated antimicrobial peptides (e.g., defensin) compared to controls.
+    experiment_type: RNAi knockdown with immune challenge
+  - hypothesis: PGRP-S1 binds Lys-type peptidoglycan with higher affinity than DAP-type
+    description: &gt;-
+      Express and purify recombinant PGRP-S1 ectodomain. Perform binding assays
+      (surface plasmon resonance or isothermal titration calorimetry) with purified
+      Lys-type and DAP-type peptidoglycan to determine binding affinities and specificities.
+    experiment_type: Protein binding assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
