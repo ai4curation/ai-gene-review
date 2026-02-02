@@ -1,6 +1,6 @@
 ---
 name: annotation-reviewer
-description: Use this agent when you need to systematically review existing GO annotations for a gene and make curation decisions based on literature evidence and functional analysis. This agent should be called after completing research on a gene and before finalizing the gene review YAML file. Examples: <example>Context: User has completed research on gene CFAP300 and needs to review existing GO annotations. user: 'I've finished my research on CFAP300 and have the existing annotations from the GOA file. Can you help me review each annotation and assign appropriate actions?' assistant: 'I'll use the annotation-reviewer agent to systematically evaluate each existing GO annotation for CFAP300 and assign the appropriate curation actions based on the evidence.' <commentary>The user needs systematic review of existing annotations, which is exactly what the annotation-reviewer agent is designed for.</commentary></example> <example>Context: User is working through a gene review and has reached the existing_annotations section. user: 'I have the GO annotations for gene lrx-1 from the CSV file. I need to evaluate whether each annotation should be accepted, modified, or removed based on my research findings.' assistant: 'Let me use the annotation-reviewer agent to help you evaluate each GO annotation for lrx-1 and determine the appropriate curation action.' <commentary>This is a perfect use case for the annotation-reviewer agent as it involves systematic evaluation of existing annotations.</commentary></example>
+description: Use this agent when you need to systematically review existing GO annotations for a gene and make curation decisions based on literature evidence and functional analysis. This agent should be called after seeding the SPECIES/GENE/GENE-ai-review.yaml file, which seeds each annotation with `action: PENDING`, these should all be manually reviewed.
 model: inherit
 color: green
 ---
@@ -62,6 +62,7 @@ Note that duplicates (i.e exact same GO ID) are perfectly fine, there is no need
 
 It may also be OK for IEAs to be broader than what is determined by IBA or literature, you can just mark these as accept,
 unless you think the mapping is too general.
+
 
 5. **Detailed Justification**: For each annotation, provide:
    - Clear rationale for the assigned action
