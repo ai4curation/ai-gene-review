@@ -63,7 +63,7 @@ def main():
     rule_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"\n{'='*60}")
-    print(f"Rule Analysis and HTML Rendering Demo")
+    print("Rule Analysis and HTML Rendering Demo")
     print(f"{'='*60}\n")
     print(f"Rule ID: {rule_id}")
     print(f"Output directory: {output_dir}\n")
@@ -97,7 +97,7 @@ def main():
 
     if not review_yaml.exists():
         print(f"  ✗ Review YAML not found at {review_yaml}")
-        print(f"    Please create a review YAML file first.")
+        print("    Please create a review YAML file first.")
         return
 
     html_path = render_rule_review_html(rule_id, output_dir)
@@ -113,7 +113,7 @@ def main():
         print(f"  Heatmap PNG:   {heatmap_path}")
     print(f"  Review YAML:   {review_yaml}")
     print(f"  Review HTML:   {html_path}")
-    print(f"\nOpen the HTML file in a browser to view the complete review:")
+    print("\nOpen the HTML file in a browser to view the complete review:")
     print(f"  open {html_path}")
     print()
 

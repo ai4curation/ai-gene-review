@@ -11,7 +11,7 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional
 
 import requests
 import yaml
@@ -295,7 +295,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     analyzer.generate_report(risks, args.output)
 
-    print(f"\nAnalysis complete!")
+    print("\nAnalysis complete!")
     print(f"Report saved to: {args.output}")
     print(f"High risk genes: {len([r for r in risks if r.risk_level == 'HIGH'])}")
     print(f"Medium risk genes: {len([r for r in risks if r.risk_level == 'MEDIUM'])}")

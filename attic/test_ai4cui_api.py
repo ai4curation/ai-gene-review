@@ -14,10 +14,9 @@ pytest.importorskip("fastapi")
 
 from fastapi.testclient import TestClient
 from pathlib import Path
-from unittest.mock import Mock, patch
 from datetime import datetime
 
-from ai4cui.api import app, status_cache, cache_timestamp
+from ai4cui.api import app
 from ai4cui.models import JobStatus, JobStatusEnum, CriteriaResult
 from ai4cui.plugin import CurationPlugin
 from ai4cui.models import Job, ProgressCriteria

@@ -6,57 +6,36 @@
 # description: Schema for gene curation Top level entity is a GeneReview, which is about a single gene (and its equivalent swiss-prot entry). It contains a high level summary of the gene, plus a review of all existing annotations. It also contains a list of core functions, which are GO-CAM-like annotons describing the core evolved functions of the gene.
 # license: https://creativecommons.org/publicdomain/zero/1.0/
 
-import dataclasses
-import re
 from dataclasses import dataclass
-from datetime import (
-    date,
-    datetime,
-    time
-)
 from typing import (
     Any,
     ClassVar,
-    Dict,
-    List,
     Optional,
     Union
 )
 
 from jsonasobj2 import (
-    JsonObj,
     as_dict
 )
 from linkml_runtime.linkml_model.meta import (
     EnumDefinition,
-    PermissibleValue,
-    PvFormulaOptions
+    PermissibleValue
 )
 from linkml_runtime.utils.curienamespace import CurieNamespace
 from linkml_runtime.utils.enumerations import EnumDefinitionImpl
-from linkml_runtime.utils.formatutils import (
-    camelcase,
-    sfx,
-    underscore
-)
 from linkml_runtime.utils.metamodelcore import (
-    bnode,
     empty_dict,
     empty_list
 )
 from linkml_runtime.utils.slot import Slot
 from linkml_runtime.utils.yamlutils import (
     YAMLRoot,
-    extended_float,
-    extended_int,
     extended_str
 )
 from rdflib import (
-    Namespace,
     URIRef
 )
 
-from linkml_runtime.linkml_model.types import Boolean, Float, Integer, String
 from linkml_runtime.utils.metamodelcore import Bool
 
 metamodel_version = "1.7.0"
