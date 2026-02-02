@@ -247,7 +247,7 @@ def main():
             # Parse comprehensive UniProt context
             uniprot_context = parse_uniprot_context(uniprot_file)
             if uniprot_context:
-                print(f"Extracted UniProt context:")
+                print("Extracted UniProt context:")
                 print(f"  Accession: {uniprot_context.get('accession', 'N/A')}")
                 print(f"  Protein: {uniprot_context.get('protein_description', 'N/A')[:80]}...")
                 print(f"  Family: {uniprot_context.get('protein_family', 'N/A')[:80]}...")

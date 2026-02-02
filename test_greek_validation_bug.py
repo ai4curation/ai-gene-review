@@ -5,7 +5,6 @@ This script shows that the validator's normalization works correctly in isolatio
 but there's an issue when the full validation pipeline is run.
 """
 
-import os
 import sys
 from pathlib import Path
 

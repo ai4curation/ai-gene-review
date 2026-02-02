@@ -22,7 +22,7 @@ if len(data['references']) > 1:
         if 'findings' in ref1 and len(ref1['findings']) > 8:
             # Update the supporting text with the version that has smart quotes
             ref1['findings'][8]['supporting_text'] = correct_text
-            print(f"Updated supporting text with smart quotes version")
+            print("Updated supporting text with smart quotes version")
 
 # Write the fixed YAML back
 with open(file_path, 'w') as f:

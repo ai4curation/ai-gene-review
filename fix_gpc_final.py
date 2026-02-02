@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Fix remaining schema issues in GPC4 and GPC6 ai-review.yaml files"""
 import yaml
-import re
 
 def fix_review(filepath):
     print(f"Fixing {filepath}...")

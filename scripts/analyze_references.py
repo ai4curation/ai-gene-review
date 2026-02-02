@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """Analyze reference coverage across all gene reviews."""
 
-import os
 import yaml
-import re
 from pathlib import Path
 
 def analyze_gene_references():
@@ -66,14 +64,14 @@ def print_analysis(results):
     for r in results_sorted[:20]:
         print(f"{r['species']}/{r['gene']:<15} | {r['total_refs']:5} | {r['pmid_count']:4} | {r['pmc_count']:3} | {r['pdb_count']:3} | {r['other_count']:5} | {r['total_findings']:8}")
 
-    print(f"\n=== Summary Statistics ===")
+    print("\n=== Summary Statistics ===")
     print(f"Total genes analyzed: {len(results)}")
     print(f"Average references per gene: {sum(r['total_refs'] for r in results) / len(results):.1f}")
     print(f"Genes with 0 PDB structures: {sum(1 for r in results if r['pdb_count'] == 0)}")
     print(f"Genes with <5 literature refs (PMID/PMC): {sum(1 for r in results if r['pmid_count'] + r['pmc_count'] < 5)}")
     print(f"Genes with no findings: {sum(1 for r in results if r['total_findings'] == 0)}")
 
-    print(f"\n=== Genes needing immediate attention (very low refs) ===")
+    print("\n=== Genes needing immediate attention (very low refs) ===")
     priority_genes = [r for r in results_sorted if r['total_refs'] < 5 or (r['pmid_count'] + r['pmc_count']) < 3]
     for r in priority_genes:
         print(f"- {r['species']}/{r['gene']}: {r['total_refs']} refs, {r['pmid_count']+r['pmc_count']} literature")

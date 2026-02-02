@@ -5,7 +5,6 @@ Strategy: Accept core functions, be selective about specific/redundant terms.
 """
 
 import yaml
-import sys
 
 # Load the P53 review file
 with open('genes/human/P53/P53-ai-review.yaml', 'r') as f:

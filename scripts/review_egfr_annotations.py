@@ -5,7 +5,6 @@ Based on deep research and UniProt evidence for EGFR (P00533).
 """
 
 import yaml
-import sys
 from pathlib import Path
 
 # Define review decisions for each GO term category
@@ -737,12 +736,12 @@ def main():
     save_yaml(data, yaml_path)
 
     # Print statistics
-    print(f"\nReview Statistics:")
+    print("\nReview Statistics:")
     print(f"  Total annotations: {stats['total']}")
     print(f"  Already reviewed: {stats['already_reviewed']}")
     print(f"  Newly reviewed: {stats['reviewed']}")
     print(f"  No match found: {stats['no_match']}")
-    print(f"\nActions assigned:")
+    print("\nActions assigned:")
     for action, count in sorted(stats["by_action"].items()):
         print(f"  {action}: {count}")
 

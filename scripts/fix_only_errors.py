@@ -2,27 +2,7 @@
 """Fix ONLY validation ERRORS in gene review YAML files - DO NOT touch PENDING states."""
 
 import yaml
-import sys
 from pathlib import Path
-
-def fix_go_term_labels(data):
-    """Fix GO term label mismatches by looking up correct labels.
-    ONLY fix if we're sure about the correct label."""
-
-    # These are GO terms that appear in the files with wrong labels
-    go_term_corrections = {
-        # GO:0052878 is NOT "ammonia monooxygenase activity"
-        # According to GO, it's "linoleate 8R-lipoxygenase activity"
-        # This seems wrong for amoA gene - likely need different GO term
-
-        # GO:0018283 is "iron incorporation into metallo-sulfur cluster" not "nitrification"
-        # For nitrification, the correct term might be GO:0019329 "ammonia oxidation"
-    }
-
-    # For amoA, we need to use the correct GO term for ammonia monooxygenase
-    # The issue is GO:0052878 is wrong - we need to find the right term
-
-    return data
 
 def fix_taxon_labels(data):
     """Fix taxon label mismatches - only for clear corrections."""

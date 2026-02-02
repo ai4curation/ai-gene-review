@@ -3,8 +3,6 @@
 Script to add suggested_questions and suggested_experiments fields to gene review YAML files.
 """
 
-import os
-import yaml
 from pathlib import Path
 
 # Define gene-specific suggested questions and experiments

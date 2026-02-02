@@ -5,7 +5,6 @@ Safely fix substring warnings with proper YAML escaping
 
 import re
 import csv
-import yaml
 
 # Read the TSV file
 report_file = '/Users/cjm/repos/ai-gene-review/reports/validation-all.tsv'

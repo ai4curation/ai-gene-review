@@ -7,8 +7,6 @@ referenced in existing_annotations, and adds a supported_by reference
 to the first annotation that has action: ACCEPT or NEW.
 """
 
-import os
-import re
 import sys
 from pathlib import Path
 import yaml
@@ -54,7 +52,7 @@ def has_deep_research_ref(data: dict, file_ref: str) -> bool:
         supported_by = review.get('supported_by', [])
         for support in supported_by:
             ref_id = support.get('reference_id', '')
-            if file_ref in ref_id or (species_gene_part := file_ref.split('/')[-1]) in ref_id:
+            if file_ref in ref_id or file_ref.split('/')[-1] in ref_id:
                 return True
 
     # Also check core_functions

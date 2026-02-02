@@ -74,7 +74,7 @@ def render_yaml_to_markdown(
     
     # Run the command
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
         print(f"Successfully rendered {input_file} to {output_file}")
         return output_file
     except subprocess.CalledProcessError as e:

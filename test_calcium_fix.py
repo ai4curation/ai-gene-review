@@ -7,7 +7,7 @@ validator = SupportingTextSubstringValidator()
 
 # Test 1: Check that [Ca 2+ ] is NOT treated as editorial
 print("Test 1: is_editorial_bracket('Ca 2+ '):", validator.is_editorial_bracket("Ca 2+ "))
-assert validator.is_editorial_bracket("Ca 2+ ") == False, "Ca 2+ should not be editorial"
+assert not validator.is_editorial_bracket("Ca 2+ "), "Ca 2+ should not be editorial"
 print("✓ Pass\n")
 
 # Test 2: Check that it's preserved in parse_bracketed_text
