@@ -1,5 +1,5 @@
 # Auto generated from gene_review.yaml by pythongen.py version: 0.0.1
-# Generation date: 2025-12-02T13:57:12
+# Generation date: 2026-02-02T09:21:18
 # Schema: gene_review
 #
 # id: https://ai4curation.io/ai-gene-review
@@ -70,6 +70,7 @@ DCAT = CurieNamespace('dcat', 'http://www.w3.org/ns/dcat#')
 DCTERMS = CurieNamespace('dcterms', 'http://purl.org/dc/terms/')
 GENE_REVIEW = CurieNamespace('gene_review', 'https://w3id.org/ai4curation/gene_review/')
 LINKML = CurieNamespace('linkml', 'https://w3id.org/linkml/')
+OA = CurieNamespace('oa', 'http://www.w3.org/ns/oa#')
 OWL = CurieNamespace('owl', 'http://www.w3.org/2002/07/owl#')
 RDF = CurieNamespace('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
 RDFS = CurieNamespace('rdfs', 'http://www.w3.org/2000/01/rdf-schema#')
@@ -82,6 +83,14 @@ DEFAULT_ = GENE_REVIEW
 
 # Class references
 class GeneReviewId(extended_str):
+    pass
+
+
+class AlternativeProductId(extended_str):
+    pass
+
+
+class FunctionalIsoformId(extended_str):
     pass
 
 
@@ -121,6 +130,8 @@ class GeneReview(YAMLRoot):
     tags: Optional[Union[str, list[str]]] = empty_list()
     status: Optional[Union[str, "GeneReviewStatusEnum"]] = None
     description: Optional[str] = None
+    alternative_products: Optional[Union[dict[Union[str, AlternativeProductId], Union[dict, "AlternativeProduct"]], list[Union[dict, "AlternativeProduct"]]]] = empty_dict()
+    functional_isoforms: Optional[Union[dict[Union[str, FunctionalIsoformId], Union[dict, "FunctionalIsoform"]], list[Union[dict, "FunctionalIsoform"]]]] = empty_dict()
     references: Optional[Union[dict[Union[str, ReferenceId], Union[dict, "Reference"]], list[Union[dict, "Reference"]]]] = empty_dict()
     existing_annotations: Optional[Union[Union[dict, "ExistingAnnotation"], list[Union[dict, "ExistingAnnotation"]]]] = empty_list()
     core_functions: Optional[Union[Union[dict, "CoreFunction"], list[Union[dict, "CoreFunction"]]]] = empty_list()
@@ -161,6 +172,10 @@ class GeneReview(YAMLRoot):
         if self.description is not None and not isinstance(self.description, str):
             self.description = str(self.description)
 
+        self._normalize_inlined_as_list(slot_name="alternative_products", slot_type=AlternativeProduct, key_name="id", keyed=True)
+
+        self._normalize_inlined_as_list(slot_name="functional_isoforms", slot_type=FunctionalIsoform, key_name="id", keyed=True)
+
         self._normalize_inlined_as_list(slot_name="references", slot_type=Reference, key_name="id", keyed=True)
 
         self._normalize_inlined_as_dict(slot_name="existing_annotations", slot_type=ExistingAnnotation, key_name="evidence_type", keyed=False)
@@ -172,6 +187,131 @@ class GeneReview(YAMLRoot):
         self._normalize_inlined_as_dict(slot_name="suggested_questions", slot_type=Question, key_name="question", keyed=False)
 
         self._normalize_inlined_as_dict(slot_name="suggested_experiments", slot_type=Experiment, key_name="description", keyed=False)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class AlternativeProduct(YAMLRoot):
+    """
+    An alternative splicing product (isoform) of the gene. Corresponds to UniProt isoform entries. Use this to
+    document isoform-specific functions where different isoforms have distinct or even antagonistic biological
+    activities. DEPRECATED: Use FunctionalIsoform instead for curated functional classes.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["AlternativeProduct"]
+    class_class_curie: ClassVar[str] = "gene_review:AlternativeProduct"
+    class_name: ClassVar[str] = "AlternativeProduct"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.AlternativeProduct
+
+    id: Union[str, AlternativeProductId] = None
+    name: Optional[str] = None
+    sequence_note: Optional[str] = None
+    description: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, AlternativeProductId):
+            self.id = AlternativeProductId(self.id)
+
+        if self.name is not None and not isinstance(self.name, str):
+            self.name = str(self.name)
+
+        if self.sequence_note is not None and not isinstance(self.sequence_note, str):
+            self.sequence_note = str(self.sequence_note)
+
+        if self.description is not None and not isinstance(self.description, str):
+            self.description = str(self.description)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class FunctionalIsoform(YAMLRoot):
+    """
+    A curated functional isoform class. Unlike AlternativeProduct (which maps 1:1 to UniProt isoforms), this captures
+    FUNCTIONALLY RELEVANT distinctions that may: - Group multiple UniProt isoforms into a functional class (e.g., WT1
+    +KTS isoforms) - Represent cleavage products from polyproteins (e.g., POMC peptides) - Describe modification
+    states or conformational variants Only create entries when there ARE functionally distinct forms worth
+    documenting.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["FunctionalIsoform"]
+    class_class_curie: ClassVar[str] = "gene_review:FunctionalIsoform"
+    class_name: ClassVar[str] = "FunctionalIsoform"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.FunctionalIsoform
+
+    id: Union[str, FunctionalIsoformId] = None
+    name: str = None
+    type: Union[str, "FunctionalIsoformTypeEnum"] = None
+    description: str = None
+    maps_to: Optional[Union[Union[dict, "FunctionalIsoformMapping"], list[Union[dict, "FunctionalIsoformMapping"]]]] = empty_list()
+    isoform_specific_terms: Optional[Union[dict[Union[str, TermId], Union[dict, "Term"]], list[Union[dict, "Term"]]]] = empty_dict()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, FunctionalIsoformId):
+            self.id = FunctionalIsoformId(self.id)
+
+        if self._is_empty(self.name):
+            self.MissingRequiredField("name")
+        if not isinstance(self.name, str):
+            self.name = str(self.name)
+
+        if self._is_empty(self.type):
+            self.MissingRequiredField("type")
+        if not isinstance(self.type, FunctionalIsoformTypeEnum):
+            self.type = FunctionalIsoformTypeEnum(self.type)
+
+        if self._is_empty(self.description):
+            self.MissingRequiredField("description")
+        if not isinstance(self.description, str):
+            self.description = str(self.description)
+
+        if not isinstance(self.maps_to, list):
+            self.maps_to = [self.maps_to] if self.maps_to is not None else []
+        self.maps_to = [v if isinstance(v, FunctionalIsoformMapping) else FunctionalIsoformMapping(**as_dict(v)) for v in self.maps_to]
+
+        self._normalize_inlined_as_list(slot_name="isoform_specific_terms", slot_type=Term, key_name="id", keyed=True)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class FunctionalIsoformMapping(YAMLRoot):
+    """
+    A mapping from a functional isoform class to underlying UniProt identifiers. Allows grouping multiple UniProt
+    isoforms or chains into a single functional class.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["FunctionalIsoformMapping"]
+    class_class_curie: ClassVar[str] = "gene_review:FunctionalIsoformMapping"
+    class_name: ClassVar[str] = "FunctionalIsoformMapping"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.FunctionalIsoformMapping
+
+    type: Union[str, "FunctionalIsoformMappingTypeEnum"] = None
+    ids: Union[str, list[str]] = None
+    residues: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.type):
+            self.MissingRequiredField("type")
+        if not isinstance(self.type, FunctionalIsoformMappingTypeEnum):
+            self.type = FunctionalIsoformMappingTypeEnum(self.type)
+
+        if self._is_empty(self.ids):
+            self.MissingRequiredField("ids")
+        if not isinstance(self.ids, list):
+            self.ids = [self.ids] if self.ids is not None else []
+        self.ids = [v if isinstance(v, str) else str(v) for v in self.ids]
+
+        if self.residues is not None and not isinstance(self.residues, str):
+            self.residues = str(self.residues)
 
         super().__post_init__(**kwargs)
 
@@ -304,6 +444,7 @@ class SupportingTextInReference(YAMLRoot):
 
     reference_id: Union[str, ReferenceId] = None
     supporting_text: Optional[str] = None
+    supporting_text_fulltext: Optional[str] = None
     full_text_unavailable: Optional[Union[bool, Bool]] = None
     reference_section_type: Optional[Union[str, "ManuscriptSection"]] = None
 
@@ -315,6 +456,9 @@ class SupportingTextInReference(YAMLRoot):
 
         if self.supporting_text is not None and not isinstance(self.supporting_text, str):
             self.supporting_text = str(self.supporting_text)
+
+        if self.supporting_text_fulltext is not None and not isinstance(self.supporting_text_fulltext, str):
+            self.supporting_text_fulltext = str(self.supporting_text_fulltext)
 
         if self.full_text_unavailable is not None and not isinstance(self.full_text_unavailable, Bool):
             self.full_text_unavailable = Bool(self.full_text_unavailable)
@@ -343,6 +487,7 @@ class ExistingAnnotation(YAMLRoot):
     negated: Optional[Union[bool, Bool]] = None
     original_reference_id: Optional[Union[str, ReferenceId]] = None
     retired: Optional[Union[bool, Bool]] = None
+    isoform: Optional[str] = None
     supporting_entities: Optional[Union[str, list[str]]] = empty_list()
     review: Optional[Union[dict, "Review"]] = None
 
@@ -365,6 +510,9 @@ class ExistingAnnotation(YAMLRoot):
 
         if self.retired is not None and not isinstance(self.retired, Bool):
             self.retired = Bool(self.retired)
+
+        if self.isoform is not None and not isinstance(self.isoform, str):
+            self.isoform = str(self.isoform)
 
         if not isinstance(self.supporting_entities, list):
             self.supporting_entities = [self.supporting_entities] if self.supporting_entities is not None else []
@@ -461,6 +609,9 @@ class CoreFunction(YAMLRoot):
 
         if self.in_complex is not None and not isinstance(self.in_complex, Term):
             self.in_complex = Term(**as_dict(self.in_complex))
+
+        if self.description is not None and not isinstance(self.description, str):
+            self.description = str(self.description)
 
         super().__post_init__(**kwargs)
 
@@ -2004,6 +2155,48 @@ class EntryRelationshipEnum(EnumDefinitionImpl):
         description="Type of relationship between entries in a rule",
     )
 
+class FunctionalIsoformTypeEnum(EnumDefinitionImpl):
+    """
+    Type of functional isoform or product. Distinguishes between different mechanisms that produce functionally
+    distinct forms of a gene product.
+    """
+    SPLICE_VARIANT = PermissibleValue(
+        text="SPLICE_VARIANT",
+        description="""Alternative splicing produces functionally distinct isoforms. Maps to one or more UniProt isoform IDs (e.g., P19544-1, P19544-2).""")
+    SPLICE_CLASS = PermissibleValue(
+        text="SPLICE_CLASS",
+        description="""A class of splice variants that share functional properties. Groups multiple UniProt isoform IDs that have similar functions. Example: WT1 +KTS isoforms (multiple UniProt IDs) vs -KTS isoforms.""")
+    CLEAVAGE_PRODUCT = PermissibleValue(
+        text="CLEAVAGE_PRODUCT",
+        description="""Post-translational proteolytic cleavage produces distinct peptides. Maps to UniProt chain IDs (PRO_NNNNNNN from FT PEPTIDE lines). Example: POMC cleavage into ACTH, alpha-MSH, beta-endorphin.""")
+    MODIFICATION_STATE = PermissibleValue(
+        text="MODIFICATION_STATE",
+        description="""Post-translational modification creates functionally distinct forms. Example: Phosphorylated vs unphosphorylated forms with different activities.""")
+    CONFORMATIONAL_STATE = PermissibleValue(
+        text="CONFORMATIONAL_STATE",
+        description="""Different conformational states with distinct functions. Example: GTP-bound vs GDP-bound forms of GTPases.""")
+
+    _defn = EnumDefinition(
+        name="FunctionalIsoformTypeEnum",
+        description="""Type of functional isoform or product. Distinguishes between different mechanisms that produce functionally distinct forms of a gene product.""",
+    )
+
+class FunctionalIsoformMappingTypeEnum(EnumDefinitionImpl):
+    """
+    Type of identifier that a functional isoform maps to
+    """
+    UNIPROT_ISOFORM = PermissibleValue(
+        text="UNIPROT_ISOFORM",
+        description="UniProt isoform ID (e.g., P19544-1, Q07817-2)")
+    UNIPROT_CHAIN = PermissibleValue(
+        text="UNIPROT_CHAIN",
+        description="UniProt chain/peptide ID from FT PEPTIDE (e.g., PRO_0000024969)")
+
+    _defn = EnumDefinition(
+        name="FunctionalIsoformMappingTypeEnum",
+        description="Type of identifier that a functional isoform maps to",
+    )
+
 # Slots
 class slots:
     pass
@@ -2025,6 +2218,12 @@ slots.title = Slot(uri=DCTERMS.title, name="title", curie=DCTERMS.curie('title')
 
 slots.aliases = Slot(uri=GENE_REVIEW.aliases, name="aliases", curie=GENE_REVIEW.curie('aliases'),
                    model_uri=GENE_REVIEW.aliases, domain=None, range=Optional[Union[str, list[str]]])
+
+slots.name = Slot(uri=GENE_REVIEW.name, name="name", curie=GENE_REVIEW.curie('name'),
+                   model_uri=GENE_REVIEW.name, domain=None, range=Optional[str])
+
+slots.sequence_note = Slot(uri=GENE_REVIEW.sequence_note, name="sequence_note", curie=GENE_REVIEW.curie('sequence_note'),
+                   model_uri=GENE_REVIEW.sequence_note, domain=None, range=Optional[str])
 
 slots.tags = Slot(uri=GENE_REVIEW.tags, name="tags", curie=GENE_REVIEW.curie('tags'),
                    model_uri=GENE_REVIEW.tags, domain=None, range=Optional[Union[str, list[str]]])
@@ -2050,6 +2249,9 @@ slots.summary = Slot(uri=GENE_REVIEW.summary, name="summary", curie=GENE_REVIEW.
 slots.supporting_text = Slot(uri=GENE_REVIEW.supporting_text, name="supporting_text", curie=GENE_REVIEW.curie('supporting_text'),
                    model_uri=GENE_REVIEW.supporting_text, domain=None, range=Optional[str])
 
+slots.supporting_text_fulltext = Slot(uri=GENE_REVIEW.supporting_text_fulltext, name="supporting_text_fulltext", curie=GENE_REVIEW.curie('supporting_text_fulltext'),
+                   model_uri=GENE_REVIEW.supporting_text_fulltext, domain=None, range=Optional[str])
+
 slots.full_text_unavailable = Slot(uri=GENE_REVIEW.full_text_unavailable, name="full_text_unavailable", curie=GENE_REVIEW.curie('full_text_unavailable'),
                    model_uri=GENE_REVIEW.full_text_unavailable, domain=None, range=Optional[Union[bool, Bool]])
 
@@ -2064,6 +2266,12 @@ slots.predicate = Slot(uri=RDF.predicate, name="predicate", curie=RDF.curie('pre
 
 slots.taxon = Slot(uri=GENE_REVIEW.taxon, name="taxon", curie=GENE_REVIEW.curie('taxon'),
                    model_uri=GENE_REVIEW.taxon, domain=None, range=Union[dict, Term])
+
+slots.alternative_products = Slot(uri=GENE_REVIEW.alternative_products, name="alternative_products", curie=GENE_REVIEW.curie('alternative_products'),
+                   model_uri=GENE_REVIEW.alternative_products, domain=None, range=Optional[Union[dict[Union[str, AlternativeProductId], Union[dict, AlternativeProduct]], list[Union[dict, AlternativeProduct]]]])
+
+slots.functional_isoforms = Slot(uri=GENE_REVIEW.functional_isoforms, name="functional_isoforms", curie=GENE_REVIEW.curie('functional_isoforms'),
+                   model_uri=GENE_REVIEW.functional_isoforms, domain=None, range=Optional[Union[dict[Union[str, FunctionalIsoformId], Union[dict, FunctionalIsoform]], list[Union[dict, FunctionalIsoform]]]])
 
 slots.existing_annotations = Slot(uri=GENE_REVIEW.existing_annotations, name="existing_annotations", curie=GENE_REVIEW.curie('existing_annotations'),
                    model_uri=GENE_REVIEW.existing_annotations, domain=None, range=Optional[Union[Union[dict, ExistingAnnotation], list[Union[dict, ExistingAnnotation]]]])
@@ -2095,6 +2303,9 @@ slots.original_reference_id = Slot(uri=GENE_REVIEW.original_reference_id, name="
 slots.retired = Slot(uri=GENE_REVIEW.retired, name="retired", curie=GENE_REVIEW.curie('retired'),
                    model_uri=GENE_REVIEW.retired, domain=None, range=Optional[Union[bool, Bool]])
 
+slots.isoform = Slot(uri=GENE_REVIEW.isoform, name="isoform", curie=GENE_REVIEW.curie('isoform'),
+                   model_uri=GENE_REVIEW.isoform, domain=None, range=Optional[str])
+
 slots.review = Slot(uri=GENE_REVIEW.review, name="review", curie=GENE_REVIEW.curie('review'),
                    model_uri=GENE_REVIEW.review, domain=None, range=Optional[Union[dict, Review]])
 
@@ -2124,6 +2335,33 @@ slots.suggested_experiments = Slot(uri=GENE_REVIEW.suggested_experiments, name="
 
 slots.status = Slot(uri=GENE_REVIEW.status, name="status", curie=GENE_REVIEW.curie('status'),
                    model_uri=GENE_REVIEW.status, domain=None, range=Optional[Union[str, "GeneReviewStatusEnum"]])
+
+slots.functionalIsoform__id = Slot(uri=GENE_REVIEW.id, name="functionalIsoform__id", curie=GENE_REVIEW.curie('id'),
+                   model_uri=GENE_REVIEW.functionalIsoform__id, domain=None, range=URIRef)
+
+slots.functionalIsoform__name = Slot(uri=GENE_REVIEW.name, name="functionalIsoform__name", curie=GENE_REVIEW.curie('name'),
+                   model_uri=GENE_REVIEW.functionalIsoform__name, domain=None, range=str)
+
+slots.functionalIsoform__type = Slot(uri=GENE_REVIEW.type, name="functionalIsoform__type", curie=GENE_REVIEW.curie('type'),
+                   model_uri=GENE_REVIEW.functionalIsoform__type, domain=None, range=Union[str, "FunctionalIsoformTypeEnum"])
+
+slots.functionalIsoform__maps_to = Slot(uri=GENE_REVIEW.maps_to, name="functionalIsoform__maps_to", curie=GENE_REVIEW.curie('maps_to'),
+                   model_uri=GENE_REVIEW.functionalIsoform__maps_to, domain=None, range=Optional[Union[Union[dict, FunctionalIsoformMapping], list[Union[dict, FunctionalIsoformMapping]]]])
+
+slots.functionalIsoform__description = Slot(uri=GENE_REVIEW.description, name="functionalIsoform__description", curie=GENE_REVIEW.curie('description'),
+                   model_uri=GENE_REVIEW.functionalIsoform__description, domain=None, range=str)
+
+slots.functionalIsoform__isoform_specific_terms = Slot(uri=GENE_REVIEW.isoform_specific_terms, name="functionalIsoform__isoform_specific_terms", curie=GENE_REVIEW.curie('isoform_specific_terms'),
+                   model_uri=GENE_REVIEW.functionalIsoform__isoform_specific_terms, domain=None, range=Optional[Union[dict[Union[str, TermId], Union[dict, Term]], list[Union[dict, Term]]]])
+
+slots.functionalIsoformMapping__type = Slot(uri=GENE_REVIEW.type, name="functionalIsoformMapping__type", curie=GENE_REVIEW.curie('type'),
+                   model_uri=GENE_REVIEW.functionalIsoformMapping__type, domain=None, range=Union[str, "FunctionalIsoformMappingTypeEnum"])
+
+slots.functionalIsoformMapping__ids = Slot(uri=GENE_REVIEW.ids, name="functionalIsoformMapping__ids", curie=GENE_REVIEW.curie('ids'),
+                   model_uri=GENE_REVIEW.functionalIsoformMapping__ids, domain=None, range=Union[str, list[str]])
+
+slots.functionalIsoformMapping__residues = Slot(uri=GENE_REVIEW.residues, name="functionalIsoformMapping__residues", curie=GENE_REVIEW.curie('residues'),
+                   model_uri=GENE_REVIEW.functionalIsoformMapping__residues, domain=None, range=Optional[str])
 
 slots.coreFunction__description = Slot(uri=GENE_REVIEW.description, name="coreFunction__description", curie=GENE_REVIEW.curie('description'),
                    model_uri=GENE_REVIEW.coreFunction__description, domain=None, range=Optional[str])
@@ -2464,6 +2702,21 @@ slots.taxonomicScopeAssessment__notes = Slot(uri=GENE_REVIEW.notes, name="taxono
 slots.taxonomicScopeAssessment__supported_by = Slot(uri=GENE_REVIEW.supported_by, name="taxonomicScopeAssessment__supported_by", curie=GENE_REVIEW.curie('supported_by'),
                    model_uri=GENE_REVIEW.taxonomicScopeAssessment__supported_by, domain=None, range=Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]])
 
+slots.GeneReview_description = Slot(uri=DCTERMS.description, name="GeneReview_description", curie=DCTERMS.curie('description'),
+                   model_uri=GENE_REVIEW.GeneReview_description, domain=GeneReview, range=Optional[str])
+
+slots.AlternativeProduct_id = Slot(uri=GENE_REVIEW.id, name="AlternativeProduct_id", curie=GENE_REVIEW.curie('id'),
+                   model_uri=GENE_REVIEW.AlternativeProduct_id, domain=AlternativeProduct, range=Union[str, AlternativeProductId])
+
+slots.AlternativeProduct_name = Slot(uri=GENE_REVIEW.name, name="AlternativeProduct_name", curie=GENE_REVIEW.curie('name'),
+                   model_uri=GENE_REVIEW.AlternativeProduct_name, domain=AlternativeProduct, range=Optional[str])
+
+slots.AlternativeProduct_sequence_note = Slot(uri=GENE_REVIEW.sequence_note, name="AlternativeProduct_sequence_note", curie=GENE_REVIEW.curie('sequence_note'),
+                   model_uri=GENE_REVIEW.AlternativeProduct_sequence_note, domain=AlternativeProduct, range=Optional[str])
+
+slots.AlternativeProduct_description = Slot(uri=DCTERMS.description, name="AlternativeProduct_description", curie=DCTERMS.curie('description'),
+                   model_uri=GENE_REVIEW.AlternativeProduct_description, domain=AlternativeProduct, range=Optional[str])
+
 slots.Term_id = Slot(uri=GENE_REVIEW.id, name="Term_id", curie=GENE_REVIEW.curie('id'),
                    model_uri=GENE_REVIEW.Term_id, domain=Term, range=Union[str, TermId])
 
@@ -2472,6 +2725,9 @@ slots.Term_label = Slot(uri=RDFS.label, name="Term_label", curie=RDFS.curie('lab
 
 slots.ExistingAnnotation_term = Slot(uri=GENE_REVIEW.term, name="ExistingAnnotation_term", curie=GENE_REVIEW.curie('term'),
                    model_uri=GENE_REVIEW.ExistingAnnotation_term, domain=ExistingAnnotation, range=Optional[Union[dict, Term]])
+
+slots.CoreFunction_description = Slot(uri=DCTERMS.description, name="CoreFunction_description", curie=DCTERMS.curie('description'),
+                   model_uri=GENE_REVIEW.CoreFunction_description, domain=CoreFunction, range=Optional[str])
 
 slots.AnnotationExtension_predicate = Slot(uri=RDF.predicate, name="AnnotationExtension_predicate", curie=RDF.curie('predicate'),
                    model_uri=GENE_REVIEW.AnnotationExtension_predicate, domain=AnnotationExtension, range=str)

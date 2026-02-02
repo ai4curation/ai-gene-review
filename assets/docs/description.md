@@ -15,10 +15,12 @@ None &#8594;  <sub>0..1</sub> [String](types/String.md)
 
 ## Children
 
+ *  [AlternativeProduct➞description](AlternativeProduct_description.md)
+ *  [CoreFunction➞description](CoreFunction_description.md)
+ *  [GeneReview➞description](GeneReview_description.md)
 
 ## Used by
 
- * [GeneReview](GeneReview.md)
  * [RuleReview](RuleReview.md)
  * [Term](Term.md)
 
