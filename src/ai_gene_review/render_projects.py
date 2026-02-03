@@ -244,13 +244,22 @@ def replace_gene_symbols(
 def process_markdown_content(content: str) -> str:
     """Convert markdown content to HTML with useful extensions.
 
-    Handles mermaid diagrams, tables, code blocks, etc.
+    Handles mermaid diagrams, tables, code blocks, .md to .html link conversion, etc.
 
     Args:
         content: Markdown content
 
     Returns:
         HTML content
+
+    >>> process_markdown_content("[link](foo.md)")
+    '<p><a href="foo.html">link</a></p>'
+    >>> process_markdown_content("[link](SPKW-APOPTOSIS.md)")
+    '<p><a href="SPKW-APOPTOSIS.html">link</a></p>'
+    >>> process_markdown_content("[link](../other/file.md)")
+    '<p><a href="../other/file.html">link</a></p>'
+    >>> "http://example.com/page.md" in process_markdown_content("[ext](http://example.com/page.md)")
+    True
     """
     # Process mermaid blocks for HTML
     def replace_mermaid(match: re.Match) -> str:
@@ -263,6 +272,25 @@ def process_markdown_content(content: str) -> str:
         replace_mermaid,
         content,
         flags=re.DOTALL
+    )
+
+    # Convert local .md links to .html links (but not external URLs)
+    # Pattern matches markdown links like [text](path.md) but not [text](http://...)
+    def convert_md_link(match: re.Match) -> str:
+        text = match.group(1)
+        url = match.group(2)
+        # Don't convert external URLs
+        if url.startswith(('http://', 'https://', 'mailto:')):
+            return match.group(0)
+        # Convert .md to .html
+        if url.endswith('.md'):
+            url = url[:-3] + '.html'
+        return f'[{text}]({url})'
+
+    processed = re.sub(
+        r'\[([^\]]+)\]\(([^)]+)\)',
+        convert_md_link,
+        processed
     )
 
     # Convert markdown to HTML
