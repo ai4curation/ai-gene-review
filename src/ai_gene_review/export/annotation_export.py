@@ -186,7 +186,7 @@ class AnnotationExporter:
             output_path.unlink()
 
         # Convert to DataFrame for DuckDB ingestion
-        df = pd.DataFrame(annotations)
+        df = pd.DataFrame(annotations)  # noqa: F841 (used by DuckDB SQL)
 
         conn = duckdb.connect(str(output_path))
 
@@ -205,7 +205,7 @@ class AnnotationExporter:
             try:
                 redundancies = self.compute_redundancy(annotations, go_adapter)
                 if redundancies:
-                    redundancy_df = pd.DataFrame(redundancies)
+                    redundancy_df = pd.DataFrame(redundancies)  # noqa: F841 (used by DuckDB SQL)
                     conn.execute("CREATE TABLE redundant_with AS SELECT * FROM redundancy_df")
                     conn.execute("CREATE INDEX idx_red_gene ON redundant_with(gene_symbol)")
                     conn.execute("CREATE INDEX idx_red_general ON redundant_with(general_term_id)")
@@ -283,8 +283,6 @@ class AnnotationExporter:
             if genes_checked % 100 == 0:
                 print(f"    Checked {genes_checked}/{len(by_gene)} genes...")
 
-            # Get all term IDs for this gene
-            term_ids = {ann["term_id"] for ann in gene_anns if ann.get("term_id")}
 
             # Check each pair
             for ann1 in gene_anns:
