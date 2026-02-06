@@ -1,0 +1,2381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sucB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sucB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/C5B053" target="_blank" class="term-link">
+                        C5B053
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Methylorubrum extorquens (strain ATCC 14718 / DSM 1338 / JCM 2805 / NCIMB 9133 / AM1)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sucB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="C5B053" data-a="DESCRIPTION: Dihydrolipoyllysine-residue succinyltransferase (E..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Dihydrolipoyllysine-residue succinyltransferase (E2 component) of the 2-oxoglutarate dehydrogenase (OGDH) complex. This enzyme catalyzes the second step in the conversion of 2-oxoglutarate to succinyl-CoA and CO2, transferring a succinyl group from succinyl-dihydrolipoamide to coenzyme A. The E2 subunit forms a 24-polypeptide structural core with octahedral symmetry, onto which the E1 (2-oxoglutarate dehydrogenase) and E3 (dihydrolipoamide dehydrogenase) components assemble. Contains a lipoyl-binding domain (residues 2-77) and a peripheral subunit-binding domain (PSBD, residues 143-180). This is a core TCA cycle enzyme with EC 2.3.1.61. Note: The iRP911 GEM (2011) had this gene with noEC, but UniProt now correctly assigns EC 2.3.1.61, representing a GEM_MISSING_EC case that should be updated.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B053" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol annotation inferred from TreeGrafter phylogenetic analysis. For bacteria like Methylorubrum extorquens, the OGDH complex is located in the cytoplasm/cytosol as bacteria lack mitochondria. In eukaryotes, this enzyme is mitochondrial, but the bacterial homolog would indeed be cytosolic. Deep research confirms that in bacteria OGDHc operates in the cytosol as a soluble megacomplex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Appropriate cellular localization for a bacterial TCA cycle enzyme. Bacteria lack membrane-bound organelles, so the OGDH complex operates in the cytosol. The TreeGrafter annotation is consistent with expected bacterial cell biology.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:C5B053
+                                    
+                                </span>
+                                
+                                <div class="support-text">E2 component of the 2-oxoglutarate dehydrogenase (OGDH)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:METEA/sucB/sucB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">in bacteria it operates in the cytosol as a soluble megacomplex</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004149" target="_blank" class="term-link">
+                                    GO:0004149
+                                </a>
+                            </span>
+                            <span class="term-label">dihydrolipoyllysine-residue succinyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B053" data-a="GO:0004149" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the precise molecular function for the E2 component of the OGDH complex. GO:0004149 catalyzes the reaction: N(6)-[(R)-dihydrolipoyl]-L-lysyl-[protein] + succinyl-CoA = N(6)-[(R)-S(8)-succinyldihydrolipoyl]-L-lysyl-[protein] + CoA. This corresponds exactly to EC 2.3.1.61 assigned to this protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function of the E2 subunit. UniProt assigns EC 2.3.1.61 with evidence from ARBA and RuleBase. The protein contains the characteristic lipoyl-binding domain (residues 2-77) required for this catalytic activity. InterPro signature IPR006255 (SucB) specifically identifies this as the E2 succinyltransferase component.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:C5B053
+                                    
+                                </span>
+                                
+                                <div class="support-text">Dihydrolipoyllysine-residue succinyltransferase component of 2-oxoglutarate dehydrogenase complex</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:METEA/sucB/sucB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">E2o catalyzes succinyl transfer to CoA (forming succinyl-CoA)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B053" data-a="GO:0006099" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The OGDH complex is a central enzyme of the TCA cycle, catalyzing the conversion of 2-oxoglutarate to succinyl-CoA. This is one of the irreversible, regulated steps of the TCA cycle.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process for this enzyme. The 2-oxoglutarate dehydrogenase complex is essential for TCA cycle function, converting 2-oxoglutarate (alpha-ketoglutarate) to succinyl-CoA. UniProt explicitly annotates this protein with the &#34;Tricarboxylic acid cycle&#34; keyword. This is a fundamental, evolutionarily conserved function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:C5B053
+                                    
+                                </span>
+                                
+                                <div class="support-text">Tricarboxylic acid cycle</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:METEA/sucB/sucB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The OGDHc is a central TCA cycle enzyme producing succinyl-CoA and NADH</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B053" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the root transferase activity term, representing a very general classification. The protein does have transferase activity (it transfers succinyl groups), but GO:0004149 is far more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this is a very general term, it is technically correct and derived from UniProtKB keyword mapping. The more specific term GO:0004149 is also annotated, so this general term provides correct hierarchical coverage. For IEA annotations from keyword mapping, general terms are acceptable as they are part of the standard annotation pipeline.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:C5B053
+                                    
+                                </span>
+                                
+                                <div class="support-text">E2 component of the 2-oxoglutarate dehydrogenase (OGDH) complex which catalyzes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:METEA/sucB/sucB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">E2o catalyzes succinyl transfer to CoA (forming succinyl-CoA)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B053" data-a="GO:0016746" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acyltransferase activity is an intermediate-level term between transferase activity and the specific dihydrolipoyllysine-residue succinyltransferase activity. The E2 subunit does transfer an acyl (succinyl) group.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct intermediate-level molecular function. The protein is annotated with the &#34;Acyltransferase&#34; keyword in UniProt. The succinyl group transferred is indeed an acyl group, making this annotation accurate. InterPro signatures IPR001078 (2-oxoacid_DH_actylTfrase) and IPR004167 (PSBD) support this function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:C5B053
+                                    
+                                </span>
+                                
+                                <div class="support-text">Dihydrolipoyllysine-residue succinyltransferase component of 2-oxoglutarate dehydrogenase complex</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:METEA/sucB/sucB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">E2o catalyzes succinyl transfer to CoA (forming succinyl-CoA)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033512" target="_blank" class="term-link">
+                                    GO:0033512
+                                </a>
+                            </span>
+                            <span class="term-label">L-lysine catabolic process to acetyl-CoA via saccharopine</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="C5B053" data-a="GO:0033512" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from UniPathway UPA00868 which indicates the saccharopine pathway for lysine degradation. The OGDH complex can participate in lysine catabolism because 2-oxoglutarate is an intermediate, and the 2-oxoadipate dehydrogenase complex (structurally related to OGDH) uses the same E2 subunit in some organisms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a secondary metabolic role, not the core TCA cycle function. While the UniPathway annotation indicates step 6/6 in the lysine degradation pathway (glutaryl-CoA from L-lysine), this represents a peripheral function. The saccharopine pathway is more prominent in eukaryotes, and it is unclear how significant this pathway is in Methylorubrum extorquens. The core function remains TCA cycle participation. This annotation should be retained but recognized as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:C5B053
+                                    
+                                </span>
+                                
+                                <div class="support-text">PATHWAY: Amino-acid degradation; L-lysine degradation via saccharopine</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045252" target="_blank" class="term-link">
+                                    GO:0045252
+                                </a>
+                            </span>
+                            <span class="term-label">oxoglutarate dehydrogenase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5B053" data-a="GO:0045252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The E2 subunit is a structural and catalytic component of the OGDH complex. According to GO, the E2 forms the core of this multi-enzyme complex, onto which E1 and E3 components assemble.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core cellular component annotation. UniProt states that the protein &#34;Forms a 24-polypeptide structural core with octahedral symmetry&#34; and is &#34;Part of the 2-oxoglutarate dehydrogenase (OGDH) complex composed of E1, E2 and E3.&#34; The InterPro signature IPR006255 (SucB) specifically identifies this as the OGDH E2 component.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:C5B053
+                                    
+                                </span>
+                                
+                                <div class="support-text">Forms a 24-polypeptide structural core with octahedral</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:METEA/sucB/sucB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">E2o core: 24 subunits as eight homotrimers</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Primary enzymatic activity of the E2 subunit, corresponding to EC 2.3.1.61. This is the defining catalytic function of the protein. The OGDH complex is a central TCA cycle enzyme, and sucB forms the structural core.</h3>
+                <span class="vote-buttons" data-g="C5B053" data-a="FUNCTION: Primary enzymatic activity of the E2 subunit, corr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004149" target="_blank" class="term-link">
+                            dihydrolipoyllysine-residue succinyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045252" target="_blank" class="term-link">
+                            oxoglutarate dehydrogenase complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maps UniProt keywords to GO terms; source of GO:0016740 (transferase activity)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic inference for GO:0005829 (cytosol) via PANTHER</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combines InterPro, UniRule, Rhea, EC, and PANTHER evidence</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of primary functional annotations including GO:0004149, GO:0006099, GO:0045252</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:C5B053
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for sucB dihydrolipoyllysine-residue succinyltransferase</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TrEMBL entry (unreviewed) with EC 2.3.1.61</div>
+                        
+                        <div class="finding-text">"Dihydrolipoyllysine-residue succinyltransferase component of 2-oxoglutarate dehydrogenase complex"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains lipoyl-binding domain (2-77) and PSBD domain (143-180)</div>
+                        
+                        <div class="finding-text">"PROSITE; PS50968; BIOTINYL_LIPOYL"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Forms 24-mer structural core of OGDH complex</div>
+                        
+                        <div class="finding-text">"Forms a 24-polypeptide structural core with octahedral symmetry"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19440302" target="_blank" class="term-link">
+                            PMID:19440302
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Methylobacterium genome sequences</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequence paper for M. extorquens AM1 providing gene sequence</div>
+                        
+                        <div class="finding-text">"Methylobacterium genome sequences: a reference blueprint to investigate microbial metabolism of C1 compounds"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:METEA/sucB/sucB-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on sucB E2 component of OGDH complex</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">E2o (sucB) forms the multimeric core scaffold that organizes E1o and E3 for efficient substrate channeling</div>
+                        
+                        <div class="finding-text">"The E2o subunit (sucB) forms the multimeric core scaffold that organizes E1o and E3 for efficient substrate channeling"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In bacteria OGDHc operates in the cytosol as a soluble megacomplex</div>
+                        
+                        <div class="finding-text">"in bacteria it operates in the cytosol as a soluble megacomplex"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OGDHc converts 2-oxoglutarate + CoA + NAD+ to succinyl-CoA + CO2 + NADH</div>
+                        
+                        <div class="finding-text">"The OGDHc converts 2-oxoglutarate + CoA + NAD+ → succinyl-CoA + CO2 + NADH"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sucB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="C5B053" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-02-04T17:17:53.918862'<br />
+end_time: '2026-02-04T17:25:12.826106'<br />
+duration_seconds: 438.91<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: METEA<br />
+  gene_id: sucB<br />
+  gene_symbol: sucB<br />
+  uniprot_accession: C5B053<br />
+  protein_description: 'RecName: Full=Dihydrolipoyllysine-residue succinyltransferase<br />
+    component of 2-oxoglutarate dehydrogenase complex {ECO:0000256|ARBA:ARBA00019511,<br />
+    ECO:0000256|RuleBase:RU361138}; EC=2.3.1.61 {ECO:0000256|ARBA:ARBA00012945, ECO:0000256|RuleBase:RU361138};<br />
+    AltName: Full=2-oxoglutarate dehydrogenase complex component E2 {ECO:0000256|RuleBase:RU361138};'<br />
+  gene_info: Name=sucB {ECO:0000313|EMBL:ACS39403.1}; OrderedLocusNames=MexAM1_META1p1541<br />
+    {ECO:0000313|EMBL:ACS39403.1};<br />
+  organism_full: Methylorubrum extorquens (strain ATCC 14718 / DSM 1338 / JCM 2805<br />
+    / NCIMB 9133 / AM1) (Methylobacterium extorquens).<br />
+  protein_family: Belongs to the 2-oxoacid dehydrogenase family.<br />
+  protein_domains: 2-oxoA_DH_lipoyl-BS. (IPR003016); 2-oxoacid_dehydrogenase. (IPR050537);<br />
+    2-oxoacid_DH_actylTfrase. (IPR001078); Biotin_lipoyl. (IPR000089); CAT-like_dom_sf.<br />
+    (IPR023213)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 27</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> C5B053</li>
+<li><strong>Protein Description:</strong> RecName: Full=Dihydrolipoyllysine-residue succinyltransferase component of 2-oxoglutarate dehydrogenase complex {ECO:0000256|ARBA:ARBA00019511, ECO:0000256|RuleBase:RU361138}; EC=2.3.1.61 {ECO:0000256|ARBA:ARBA00012945, ECO:0000256|RuleBase:RU361138}; AltName: Full=2-oxoglutarate dehydrogenase complex component E2 {ECO:0000256|RuleBase:RU361138};</li>
+<li><strong>Gene Information:</strong> Name=sucB {ECO:0000313|EMBL:ACS39403.1}; OrderedLocusNames=MexAM1_META1p1541 {ECO:0000313|EMBL:ACS39403.1};</li>
+<li><strong>Organism (full):</strong> Methylorubrum extorquens (strain ATCC 14718 / DSM 1338 / JCM 2805 / NCIMB 9133 / AM1) (Methylobacterium extorquens).</li>
+<li><strong>Protein Family:</strong> Belongs to the 2-oxoacid dehydrogenase family.</li>
+<li><strong>Key Domains:</strong> 2-oxoA_DH_lipoyl-BS. (IPR003016); 2-oxoacid_dehydrogenase. (IPR050537); 2-oxoacid_DH_actylTfrase. (IPR001078); Biotin_lipoyl. (IPR000089); CAT-like_dom_sf. (IPR023213)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sucB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Methylorubrum extorquens (strain ATCC 14718 / DSM 1338 / JCM 2805 / NCIMB 9133 / AM1) (Methylobacterium extorquens).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sucB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sucB</strong> (gene ID: sucB, UniProt: C5B053) in METEA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> C5B053</li>
+<li><strong>Protein Description:</strong> RecName: Full=Dihydrolipoyllysine-residue succinyltransferase component of 2-oxoglutarate dehydrogenase complex {ECO:0000256|ARBA:ARBA00019511, ECO:0000256|RuleBase:RU361138}; EC=2.3.1.61 {ECO:0000256|ARBA:ARBA00012945, ECO:0000256|RuleBase:RU361138}; AltName: Full=2-oxoglutarate dehydrogenase complex component E2 {ECO:0000256|RuleBase:RU361138};</li>
+<li><strong>Gene Information:</strong> Name=sucB {ECO:0000313|EMBL:ACS39403.1}; OrderedLocusNames=MexAM1_META1p1541 {ECO:0000313|EMBL:ACS39403.1};</li>
+<li><strong>Organism (full):</strong> Methylorubrum extorquens (strain ATCC 14718 / DSM 1338 / JCM 2805 / NCIMB 9133 / AM1) (Methylobacterium extorquens).</li>
+<li><strong>Protein Family:</strong> Belongs to the 2-oxoacid dehydrogenase family.</li>
+<li><strong>Key Domains:</strong> 2-oxoA_DH_lipoyl-BS. (IPR003016); 2-oxoacid_dehydrogenase. (IPR050537); 2-oxoacid_DH_actylTfrase. (IPR001078); Biotin_lipoyl. (IPR000089); CAT-like_dom_sf. (IPR023213)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sucB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Methylorubrum extorquens (strain ATCC 14718 / DSM 1338 / JCM 2805 / NCIMB 9133 / AM1) (Methylobacterium extorquens).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sucB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sucB</strong> (gene ID: sucB, UniProt: C5B053) in METEA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research report: Functional annotation of sucB (UniProt C5B053) from Methylorubrum extorquens AM1</p>
+<p>1) Key concepts and definitions<br />
+- Gene/protein identity and family<br />
+  • sucB encodes the E2 dihydrolipoyllysine-residue succinyltransferase (also termed DLST or E2o) subunit of the 2-oxoglutarate dehydrogenase complex (OGDHc), a member of the 2-oxoacid dehydrogenase superfamily. In bacteria, the OGDHc is typically encoded by sucA (E1o, 2-oxoglutarate dehydrogenase), sucB (E2o), and lpd (E3, dihydrolipoamide dehydrogenase). This organization and naming are demonstrated experimentally in closely related Alphaproteobacteria (e.g., Sinorhizobium meliloti), providing strong orthology-based confirmation of sucB’s identity and role as E2o in M. extorquens AM1 (OGDHc core-forming E2, lipoyl-lysine catalytic arm) (URL: n/a, thesis; 2014) (meek2014thebiochemicaland pages 101-106, meek2014thebiochemicaland pages 91-101) (maleh2012geneticanalysisof pages 13-19).</p>
+<ul>
+<li>
+<p>Catalyzed reaction (EC 2.3.1.61) and mechanism<br />
+  • The OGDHc converts 2-oxoglutarate + CoA + NAD+ → succinyl‑CoA + CO2 + NADH. Mechanistically: E1o (ThDP-dependent) decarboxylates 2‑oxoglutarate, transferring a succinyl moiety to the lipoyl-lysine on E2o; E2o catalyzes succinyl transfer to CoA (forming succinyl‑CoA); E3 reoxidizes the dihydrolipoyl to lipoamide with reduction of NAD+ to NADH. E2o (sucB product) is the succinyltransferase that harbors the swinging lipoyl arm central to substrate channeling (URL: n/a, thesis; 2014) (meek2014thebiochemicaland pages 101-106, meek2014thebiochemicaland pages 91-101) (maleh2012geneticanalysisof pages 13-19).</p>
+</li>
+<li>
+<p>Domain architecture and lipoylation<br />
+  • Canonical E2o proteins are modular: an N‑terminal lipoyl domain (LD) bearing the modified lysine (lipoyl‑lysine), a flexible linker, a peripheral subunit‑binding domain (PSBD) that docks E1/E3, and a C‑terminal catalytic inner core (ICD) that oligomerizes to form the E2 core. Bacterial/archaeal E2o proteins possess a PSBD that recruits E3 via electrostatic contacts; the LD shuttles intermediates between E1 and E2 active sites (bioRxiv preprint; Oct 2022) (hevler2022mrps36providesa pages 1-2). <br />
+  • Lipoylation pathways: In many bacteria, LipB transfers octanoyl from octanoyl‑ACP to the E2 LD (or GcvH), and LipA (radical SAM enzyme) inserts the two sulfurs to form lipoyl-lysine; alternative relay pathways use LipM/LipL, and salvage uses LplA/LplJ to ligate lipoate/octanoate with pathway-specific determinants (e.g., a Glu three residues N‑terminal to the acceptor Lys governs ligase specificity). LipA is low-abundance (~1,100 molecules/cell in E. coli) relative to E2 substrates (~25,000 molecules), requiring in vivo reconstitution of its auxiliary Fe–S cluster by NfuA/IscU; these data underpin the catalytic nature of lipoylation in cells (MMBR review; Jun 2024; https://doi.org/10.1128/mmbr.00005-24) (cronan2024lipoicacidattachment pages 2-4, cronan2024lipoicacidattachment pages 12-14). Lipoate transport/labeling and enzymatic lipoamidase removal tools are also reviewed (MMBR; 2024) (cronan2024lipoicacidattachment pages 14-16).</p>
+</li>
+<li>
+<p>Cellular role and localization<br />
+  • The OGDHc is a central TCA cycle enzyme producing succinyl‑CoA and NADH. The E2o subunit (sucB) forms the multimeric core scaffold that organizes E1o and E3 for efficient substrate channeling (thesis background; 2012/2014) (maleh2012geneticanalysisof pages 13-19, meek2014thebiochemicaland pages 101-106, meek2014thebiochemicaland pages 91-101). In eukaryotes OGDHc resides in mitochondria; in bacteria it operates in the cytosol as a soluble megacomplex (supported by bacterial E2 architecture and assembly data) (hevler2022mrps36providesa pages 1-2).</p>
+</li>
+</ul>
+<p>2) Recent developments and latest research (2023–2024 prioritized)<br />
+- Native mammalian OGDHc architecture and E2o core<br />
+  • Cryo‑EM/cryo‑ET of native mammalian OGDHc (Sus scrofa) resolved a 24‑mer E2o cubic core (eight homotrimers) at 3.3 Å and mapped the variable, yet patterned, positions of peripheral E1o/E3 around the core. The work highlights conserved modular E2o features (LD, ICD, flexible linkers), and proposes that in mammals E1o’s dual subunit‑binding domain substitutes for a canonical bacterial‑type PSBD. Peripheral subunit numbers/positions vary among complexes, revealing dynamic assembly and suggesting regulation by subunit stoichiometry and LD mobility (Nat Commun; Sep 2024; https://doi.org/10.1038/s41467-024-52792-7) (zhang2024moleculararchitectureof pages 1-2).</p>
+<ul>
+<li>
+<p>Endogenous eukaryotic OGDHc: LD dynamics, tethering, stoichiometry<br />
+  • A 4‑MDa native OGDHc from Chaetomium thermophilum showed a 24‑mer E2o core at 3.35 Å; crosslinking and modeling revealed that LDs sample peripheral E1o/E3 via electrostatic interactions and that linkers operate between “stretched” and “constricted” regimes consistent with dynamic substrate channeling. Peripheral subunits were substoichiometric (e.g., &lt;10 E1o dimers; ~4 E3 tethered via an E3BP‑like subunit), appearing in clustered peripheral densities around the E2 core (Commun Biol; May 2023; https://doi.org/10.1038/s42003-023-04885-0) (skalidis2023structuralanalysisof pages 2-3, skalidis2023structuralanalysisof pages 10-11, skalidis2023structuralanalysisof pages 6-8).</p>
+</li>
+<li>
+<p>Bacterial/actinobacterial contrasts: fused OdhA and altered E2 architectures<br />
+  • In Actinobacteria, OGDH chemistry can be performed by OdhA, a fused “two‑in‑one” E1o–E2o enzyme that assembles as an ~800‑kDa homohexamer with a three‑blade propeller architecture rather than a 24‑mer E2 core. Structural snapshots resolved CoA/succinyl‑CoA poses in the E2o active site and described allosteric regulation via the OdhI FHA protein. These features exemplify diversity in E2 organization and E1/E2 coupling across bacteria (Nat Commun; Aug 2023; https://doi.org/10.1038/s41467-023-40253-6; bioRxiv preprint; Feb 2023; https://doi.org/10.1101/2023.02.23.529587) (yang2023highresolutioncryoem pages 7-8, yang2023highresolutioncryoema pages 4-7, yang2023highresolutioncryoema pages 12-14).</p>
+</li>
+<li>
+<p>Eukaryotic innovations in peripheral subunit recruitment<br />
+  • A 2022 preprint proposes that eukaryotic OGDHc lacks the canonical PSBD in E2o and recruits E3 via MRPS36 acting as an adaptor, revising stoichiometry and topology models (bioRxiv; Oct 2022; https://doi.org/10.1101/2022.10.08.511390) (hevler2022mrps36providesa pages 1-2).</p>
+</li>
+</ul>
+<p>3) Current applications and real-world implementations<br />
+- Lipoylation pathway engineering and chemical biology<br />
+  • Lipoylation enzymes and E2 LDs are exploited as tools: engineered LplA variants can site‑specifically install bioorthogonal tags for protein localization or interaction studies; lipoamidases remove lipoyl groups. These microbial lipoylation systems have been adapted across domains and are being extended (e.g., new lipoyl assembly routes and salvage strategies), offering routes to probe or modulate E2 function and OGDHc activity in vivo (MMBR; 2024; https://doi.org/10.1128/mmbr.00005-24) (cronan2024lipoicacidattachment pages 14-16, cronan2024lipoicacidattachment pages 2-4, cronan2024lipoicacidattachment pages 12-14).</p>
+<ul>
+<li>Structural blueprints enabling mechanistic and therapeutic insight<br />
+  • High‑resolution E2o core structures and maps of LD dynamics/peripheral docking now provide quantitative constraints for kinetic models of substrate channeling, and may inform inhibitor design that targets E2o–E1o/E3 interfaces, LD docking grooves, or lipoylation pathways (Nat Commun 2024; Commun Biol 2023) (zhang2024moleculararchitectureof pages 1-2, skalidis2023structuralanalysisof pages 10-11, skalidis2023structuralanalysisof pages 2-3).</li>
+</ul>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Centrality and essentiality of OGDHc, and the E2o role<br />
+  • Authoritative reviews emphasize lipoylation as essential for the activity of 2‑oxoacid dehydrogenases and highlight variations in lipoylation pathways and specificities that map to E2 domain features (MMBR; 2024) (cronan2024lipoicacidattachment pages 2-4, cronan2024lipoicacidattachment pages 4-7). <br />
+  • Structural studies underscore a conserved 24‑mer E2o core in many organisms, with dynamic, substoichiometric peripheral subunits and highly mobile LDs that likely gate flux and channeling efficiency (Nat Commun 2024; Commun Biol 2023) (zhang2024moleculararchitectureof pages 1-2, skalidis2023structuralanalysisof pages 2-3). <br />
+  • Bacterial diversity exists: actinobacterial OdhA fusion architectures modify E2 oligomerization logic and regulatory couplings, illustrating evolutionary plasticity at the oxoglutarate node (Nat Commun; 2023) (yang2023highresolutioncryoem pages 7-8). </p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Stoichiometry and architecture<br />
+  • E2o core: 24 subunits as eight homotrimers (3.3 Å), peripheral E1/E3 positions variable but patterned (Nat Commun; 2024) (zhang2024moleculararchitectureof pages 1-2). <br />
+  • Endogenous eukaryotic OGDHc: confirmed 24‑mer core; peripheral subunits substoichiometric with estimates of &lt;10 E1o dimers and ~4 E3 tethered via E3BP‑like subunits, arranged in clustered peripheral densities (Commun Biol; 2023) (skalidis2023structuralanalysisof pages 6-8, skalidis2023structuralanalysisof pages 10-11). </p>
+<ul>
+<li>Lipoylation system capacity<br />
+  • In E. coli, LipA abundance (~1,100 molecules) is far below that of its E2 substrates (~25,000 molecules), necessitating catalytic turnover and auxiliary Fe–S cluster repair (MMBR; 2024) (cronan2024lipoicacidattachment pages 12-14). </li>
+</ul>
+<p>Organism-specific perspective: Methylorubrum extorquens AM1<br />
+- Verification and function<br />
+  • The sucB gene in Alphaproteobacteria encodes the E2o (DLST) succinyltransferase of OGDHc; genetic and biochemical work in S. meliloti demonstrates that sucB forms the OGDHc core with lipoyl‑lysine chemistry and couples to sucA and lpd for 2‑oxoglutarate oxidation to succinyl‑CoA/NADH—an arrangement conserved across related taxa, supporting the assignment for M. extorquens AM1 (thesis; 2012/2014) (maleh2012geneticanalysisof pages 13-19, meek2014thebiochemicaland pages 101-106, meek2014thebiochemicaland pages 91-101). </p>
+<ul>
+<li>
+<p>Pathway context and localization<br />
+  • In M. extorquens, OGDHc activity (sucA–sucB–lpd) is expected to operate in the cytosol as part of the oxidative branch of the TCA cycle to supply succinyl‑CoA and NADH during growth on multi‑carbon substrates; the E2o core serves as the scaffold for E1/E3 and requires lipoylation for activity, as in other bacteria (MMBR; 2024; and bacterial E2 architecture background) (cronan2024lipoicacidattachment pages 2-4, hevler2022mrps36providesa pages 1-2).</p>
+</li>
+<li>
+<p>Domains/family<br />
+  • Based on conserved bacterial E2 architecture, the sucB product should contain an N‑terminal lipoyl domain (bearing the modified lysine), a flexible linker, a PSBD for E1/E3 docking (in bacteria), and a catalytic CAT‑family acyltransferase core forming the 24‑mer assembly (bioRxiv preprint; 2022; Nat Commun 2024) (hevler2022mrps36providesa pages 1-2, zhang2024moleculararchitectureof pages 1-2).</p>
+</li>
+<li>
+<p>Experimental implications<br />
+  • Genetic disruption of sucB in related Alphaproteobacteria reduces OGDH activity and perturbs central metabolism, underscoring E2o’s essential catalytic role and the requirement for proper lipoylation (thesis; 2014) (meek2014thebiochemicaland pages 101-106). </p>
+</li>
+</ul>
+<p>Limitations and data gaps<br />
+- Direct AM1-specific primary studies pinpointing sucB locus essentiality/localization were not retrieved here; conclusions for AM1 are drawn from conserved pathway organization in closely related Alphaproteobacteria and general bacterial OGDHc architecture and lipoylation principles (maleh2012geneticanalysisof pages 13-19, meek2014thebiochemicaland pages 101-106, meek2014thebiochemicaland pages 91-101, cronan2024lipoicacidattachment pages 2-4, hevler2022mrps36providesa pages 1-2).</p>
+<p>References with URLs and dates<br />
+- Cronan JE. Lipoic acid attachment to proteins: stimulating new developments. Microbiol Mol Biol Rev. Jun 2024. https://doi.org/10.1128/mmbr.00005-24 (cronan2024lipoicacidattachment pages 2-4, cronan2024lipoicacidattachment pages 12-14, cronan2024lipoicacidattachment pages 14-16, cronan2024lipoicacidattachment pages 4-7).<br />
+- Zhang Y et al. Molecular architecture of the mammalian 2-oxoglutarate dehydrogenase complex. Nat Commun. Sep 2024. https://doi.org/10.1038/s41467-024-52792-7 (zhang2024moleculararchitectureof pages 1-2).<br />
+- Skalidis I et al. Structural analysis of an endogenous 4-megadalton succinyl-CoA-generating metabolon. Commun Biol. May 2023. https://doi.org/10.1038/s42003-023-04885-0 (skalidis2023structuralanalysisof pages 2-3, skalidis2023structuralanalysisof pages 10-11, skalidis2023structuralanalysisof pages 6-8).<br />
+- Yang L et al. High resolution cryo-EM and crystallographic snapshots of the actinobacterial two-in-one 2-oxoglutarate dehydrogenase. Nat Commun. Aug 2023. https://doi.org/10.1038/s41467-023-40253-6 (yang2023highresolutioncryoem pages 7-8). Supporting preprint: Feb 2023. https://doi.org/10.1101/2023.02.23.529587 (yang2023highresolutioncryoema pages 4-7, yang2023highresolutioncryoema pages 12-14).<br />
+- Hevler JF et al. MRPS36 provides a missing link in the eukaryotic 2-oxoglutarate dehydrogenase complex for recruitment of E3 to the E2 core. bioRxiv. Oct 2022. https://doi.org/10.1101/2022.10.08.511390 (hevler2022mrps36providesa pages 1-2).<br />
+- Al Maleh R (thesis). Genetic analysis of the TCA cycle enzyme 2-oxoglutarate dehydrogenase in Sinorhizobium meliloti. 2012. (maleh2012geneticanalysisof pages 13-19).<br />
+- Meek DJ (thesis). The biochemical and genetic characterization of the TCA cycle in Sinorhizobium meliloti. 2014. (meek2014thebiochemicaland pages 101-106, meek2014thebiochemicaland pages 91-101).</p>
+<p>Compliance with critical verification steps<br />
+- Gene symbol and organism: The evidence base confirms that bacterial sucB encodes the E2 component of OGDHc; this is consistent with the provided UniProt entry for M. extorquens AM1 and with conserved Alphaproteobacterial organization (maleh2012geneticanalysisof pages 13-19, meek2014thebiochemicaland pages 101-106, meek2014thebiochemicaland pages 91-101). <br />
+- Protein family/domains: E2o domain composition (LD, PSBD in bacteria, catalytic core) and lipoylation requirement are supported by reviews and recent structural work (hevler2022mrps36providesa pages 1-2, cronan2024lipoicacidattachment pages 2-4, zhang2024moleculararchitectureof pages 1-2). <br />
+- No conflicting “sucB” usage was identified in unrelated proteins within this scope.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(meek2014thebiochemicaland pages 101-106): DJ Meek. The biochemical and genetic characterization of the tca cycle in «sinorhizobium meliloti». Unknown journal, 2014.</p>
+</li>
+<li>
+<p>(meek2014thebiochemicaland pages 91-101): DJ Meek. The biochemical and genetic characterization of the tca cycle in «sinorhizobium meliloti». Unknown journal, 2014.</p>
+</li>
+<li>
+<p>(maleh2012geneticanalysisof pages 13-19): R Al Maleh. Genetic analysis of the tca cycle enzyme 2-oxoglutarate dehydrogenase in sinorhizobium meliloti. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(hevler2022mrps36providesa pages 1-2): Johannes F. Hevler, Pascal Albanese, Alfredo Cabrera-Orefice, Alisa Potter, Andris Jankevics, Jelena Misic, Richard A. Scheltema, Ulrich Brandt, Susanne Arnold, and Albert J.R. Heck. Mrps36 provides a missing link in the eukaryotic 2-oxoglutarate dehydrogenase complex for recruitment of e3 to the e2 core. bioRxiv, Oct 2022. URL: https://doi.org/10.1101/2022.10.08.511390, doi:10.1101/2022.10.08.511390. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(cronan2024lipoicacidattachment pages 2-4): John E. Cronan. Lipoic acid attachment to proteins: stimulating new developments. Microbiology and Molecular Biology Reviews, Jun 2024. URL: https://doi.org/10.1128/mmbr.00005-24, doi:10.1128/mmbr.00005-24. This article has 18 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cronan2024lipoicacidattachment pages 12-14): John E. Cronan. Lipoic acid attachment to proteins: stimulating new developments. Microbiology and Molecular Biology Reviews, Jun 2024. URL: https://doi.org/10.1128/mmbr.00005-24, doi:10.1128/mmbr.00005-24. This article has 18 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cronan2024lipoicacidattachment pages 14-16): John E. Cronan. Lipoic acid attachment to proteins: stimulating new developments. Microbiology and Molecular Biology Reviews, Jun 2024. URL: https://doi.org/10.1128/mmbr.00005-24, doi:10.1128/mmbr.00005-24. This article has 18 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2024moleculararchitectureof pages 1-2): Yitang Zhang, Maofei Chen, Xudong Chen, Minghui Zhang, Jianrui Yin, Zi Yang, Xin Gao, Sensen Zhang, and Maojun Yang. Molecular architecture of the mammalian 2-oxoglutarate dehydrogenase complex. Nature Communications, Sep 2024. URL: https://doi.org/10.1038/s41467-024-52792-7, doi:10.1038/s41467-024-52792-7. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(skalidis2023structuralanalysisof pages 2-3): Ioannis Skalidis, Fotis L. Kyrilis, Christian Tüting, Farzad Hamdi, Toni K. Träger, Jaydeep Belapure, Gerd Hause, Marta Fratini, Francis J. O’Reilly, Ingo Heilmann, Juri Rappsilber, and Panagiotis L. Kastritis. Structural analysis of an endogenous 4-megadalton succinyl-coa-generating metabolon. Communications Biology, May 2023. URL: https://doi.org/10.1038/s42003-023-04885-0, doi:10.1038/s42003-023-04885-0. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(skalidis2023structuralanalysisof pages 10-11): Ioannis Skalidis, Fotis L. Kyrilis, Christian Tüting, Farzad Hamdi, Toni K. Träger, Jaydeep Belapure, Gerd Hause, Marta Fratini, Francis J. O’Reilly, Ingo Heilmann, Juri Rappsilber, and Panagiotis L. Kastritis. Structural analysis of an endogenous 4-megadalton succinyl-coa-generating metabolon. Communications Biology, May 2023. URL: https://doi.org/10.1038/s42003-023-04885-0, doi:10.1038/s42003-023-04885-0. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(skalidis2023structuralanalysisof pages 6-8): Ioannis Skalidis, Fotis L. Kyrilis, Christian Tüting, Farzad Hamdi, Toni K. Träger, Jaydeep Belapure, Gerd Hause, Marta Fratini, Francis J. O’Reilly, Ingo Heilmann, Juri Rappsilber, and Panagiotis L. Kastritis. Structural analysis of an endogenous 4-megadalton succinyl-coa-generating metabolon. Communications Biology, May 2023. URL: https://doi.org/10.1038/s42003-023-04885-0, doi:10.1038/s42003-023-04885-0. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2023highresolutioncryoem pages 7-8): Lu Yang, Tristan Wagner, Ariel Mechaly, Alexandra Boyko, Eduardo M. Bruch, Daniela Megrian, Francesca Gubellini, Pedro M. Alzari, and Marco Bellinzoni. High resolution cryo-em and crystallographic snapshots of the actinobacterial two-in-one 2-oxoglutarate dehydrogenase. Nature Communications, Aug 2023. URL: https://doi.org/10.1038/s41467-023-40253-6, doi:10.1038/s41467-023-40253-6. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2023highresolutioncryoema pages 4-7): Lu Yang, Tristan Wagner, Ariel Mechaly, Alexandra Boyko, Eduardo M. Bruch, Daniela Megrian, Francesca Gubellini, Pedro M. Alzari, and Marco Bellinzoni. High resolution cryo-em and crystallographic snapshots of the large actinobacterial 2-oxoglutarate dehydrogenase: an all-in-one fusion with unique properties. bioRxiv, Feb 2023. URL: https://doi.org/10.1101/2023.02.23.529587, doi:10.1101/2023.02.23.529587. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(yang2023highresolutioncryoema pages 12-14): Lu Yang, Tristan Wagner, Ariel Mechaly, Alexandra Boyko, Eduardo M. Bruch, Daniela Megrian, Francesca Gubellini, Pedro M. Alzari, and Marco Bellinzoni. High resolution cryo-em and crystallographic snapshots of the large actinobacterial 2-oxoglutarate dehydrogenase: an all-in-one fusion with unique properties. bioRxiv, Feb 2023. URL: https://doi.org/10.1101/2023.02.23.529587, doi:10.1101/2023.02.23.529587. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(cronan2024lipoicacidattachment pages 4-7): John E. Cronan. Lipoic acid attachment to proteins: stimulating new developments. Microbiology and Molecular Biology Reviews, Jun 2024. URL: https://doi.org/10.1128/mmbr.00005-24, doi:10.1128/mmbr.00005-24. This article has 18 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>maleh2012geneticanalysisof pages 13-19</li>
+<li>cronan2024lipoicacidattachment pages 14-16</li>
+<li>zhang2024moleculararchitectureof pages 1-2</li>
+<li>yang2023highresolutioncryoem pages 7-8</li>
+<li>cronan2024lipoicacidattachment pages 12-14</li>
+<li>meek2014thebiochemicaland pages 101-106</li>
+<li>meek2014thebiochemicaland pages 91-101</li>
+<li>cronan2024lipoicacidattachment pages 2-4</li>
+<li>skalidis2023structuralanalysisof pages 2-3</li>
+<li>skalidis2023structuralanalysisof pages 10-11</li>
+<li>skalidis2023structuralanalysisof pages 6-8</li>
+<li>yang2023highresolutioncryoema pages 4-7</li>
+<li>yang2023highresolutioncryoema pages 12-14</li>
+<li>cronan2024lipoicacidattachment pages 4-7</li>
+<li>https://doi.org/10.1128/mmbr.00005-24</li>
+<li>https://doi.org/10.1038/s41467-024-52792-7</li>
+<li>https://doi.org/10.1038/s42003-023-04885-0</li>
+<li>https://doi.org/10.1038/s41467-023-40253-6;</li>
+<li>https://doi.org/10.1101/2023.02.23.529587</li>
+<li>https://doi.org/10.1101/2022.10.08.511390</li>
+<li>https://doi.org/10.1038/s41467-023-40253-6</li>
+<li>https://doi.org/10.1101/2022.10.08.511390,</li>
+<li>https://doi.org/10.1128/mmbr.00005-24,</li>
+<li>https://doi.org/10.1038/s41467-024-52792-7,</li>
+<li>https://doi.org/10.1038/s42003-023-04885-0,</li>
+<li>https://doi.org/10.1038/s41467-023-40253-6,</li>
+<li>https://doi.org/10.1101/2023.02.23.529587,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: C5B053
+gene_symbol: sucB
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:272630
+  label: Methylorubrum extorquens (strain ATCC 14718 / DSM 1338 / JCM 2805 / NCIMB
+    9133 / AM1)
+description: &gt;-
+  Dihydrolipoyllysine-residue succinyltransferase (E2 component) of the 2-oxoglutarate
+  dehydrogenase (OGDH) complex. This enzyme catalyzes the second step in the conversion
+  of 2-oxoglutarate to succinyl-CoA and CO2, transferring a succinyl group from
+  succinyl-dihydrolipoamide to coenzyme A. The E2 subunit forms a 24-polypeptide
+  structural core with octahedral symmetry, onto which the E1 (2-oxoglutarate
+  dehydrogenase) and E3 (dihydrolipoamide dehydrogenase) components assemble.
+  Contains a lipoyl-binding domain (residues 2-77) and a peripheral subunit-binding
+  domain (PSBD, residues 143-180). This is a core TCA cycle enzyme with EC 2.3.1.61.
+  Note: The iRP911 GEM (2011) had this gene with noEC, but UniProt now correctly
+  assigns EC 2.3.1.61, representing a GEM_MISSING_EC case that should be updated.
+existing_annotations:
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      Cytosol annotation inferred from TreeGrafter phylogenetic analysis. For bacteria
+      like Methylorubrum extorquens, the OGDH complex is located in the cytoplasm/cytosol
+      as bacteria lack mitochondria. In eukaryotes, this enzyme is mitochondrial, but the
+      bacterial homolog would indeed be cytosolic. Deep research confirms that in bacteria
+      OGDHc operates in the cytosol as a soluble megacomplex.
+    action: ACCEPT
+    reason: &gt;-
+      Appropriate cellular localization for a bacterial TCA cycle enzyme. Bacteria lack
+      membrane-bound organelles, so the OGDH complex operates in the cytosol. The
+      TreeGrafter annotation is consistent with expected bacterial cell biology.
+    supported_by:
+      - reference_id: UniProt:C5B053
+        supporting_text: &#34;E2 component of the 2-oxoglutarate dehydrogenase (OGDH)&#34;
+      - reference_id: file:METEA/sucB/sucB-deep-research-falcon.md
+        supporting_text: &#34;in bacteria it operates in the cytosol as a soluble megacomplex&#34;
+- term:
+    id: GO:0004149
+    label: dihydrolipoyllysine-residue succinyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This is the precise molecular function for the E2 component of the OGDH complex.
+      GO:0004149 catalyzes the reaction: N(6)-[(R)-dihydrolipoyl]-L-lysyl-[protein] +
+      succinyl-CoA = N(6)-[(R)-S(8)-succinyldihydrolipoyl]-L-lysyl-[protein] + CoA.
+      This corresponds exactly to EC 2.3.1.61 assigned to this protein.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function of the E2 subunit. UniProt assigns EC 2.3.1.61 with
+      evidence from ARBA and RuleBase. The protein contains the characteristic
+      lipoyl-binding domain (residues 2-77) required for this catalytic activity.
+      InterPro signature IPR006255 (SucB) specifically identifies this as the E2
+      succinyltransferase component.
+    supported_by:
+      - reference_id: UniProt:C5B053
+        supporting_text: &#34;Dihydrolipoyllysine-residue succinyltransferase component of 2-oxoglutarate dehydrogenase complex&#34;
+      - reference_id: file:METEA/sucB/sucB-deep-research-falcon.md
+        supporting_text: &#34;E2o catalyzes succinyl transfer to CoA (forming succinyl-CoA)&#34;
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      The OGDH complex is a central enzyme of the TCA cycle, catalyzing the conversion
+      of 2-oxoglutarate to succinyl-CoA. This is one of the irreversible, regulated
+      steps of the TCA cycle.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process for this enzyme. The 2-oxoglutarate dehydrogenase complex
+      is essential for TCA cycle function, converting 2-oxoglutarate (alpha-ketoglutarate)
+      to succinyl-CoA. UniProt explicitly annotates this protein with the &#34;Tricarboxylic
+      acid cycle&#34; keyword. This is a fundamental, evolutionarily conserved function.
+    supported_by:
+      - reference_id: UniProt:C5B053
+        supporting_text: &#34;Tricarboxylic acid cycle&#34;
+      - reference_id: file:METEA/sucB/sucB-deep-research-falcon.md
+        supporting_text: &#34;The OGDHc is a central TCA cycle enzyme producing succinyl-CoA and NADH&#34;
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This is the root transferase activity term, representing a very general
+      classification. The protein does have transferase activity (it transfers
+      succinyl groups), but GO:0004149 is far more informative.
+    action: ACCEPT
+    reason: &gt;-
+      While this is a very general term, it is technically correct and derived from
+      UniProtKB keyword mapping. The more specific term GO:0004149 is also annotated,
+      so this general term provides correct hierarchical coverage. For IEA annotations
+      from keyword mapping, general terms are acceptable as they are part of the
+      standard annotation pipeline.
+    supported_by:
+      - reference_id: UniProt:C5B053
+        supporting_text: &#34;E2 component of the 2-oxoglutarate dehydrogenase (OGDH) complex which catalyzes&#34;
+      - reference_id: file:METEA/sucB/sucB-deep-research-falcon.md
+        supporting_text: &#34;E2o catalyzes succinyl transfer to CoA (forming succinyl-CoA)&#34;
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Acyltransferase activity is an intermediate-level term between transferase
+      activity and the specific dihydrolipoyllysine-residue succinyltransferase
+      activity. The E2 subunit does transfer an acyl (succinyl) group.
+    action: ACCEPT
+    reason: &gt;-
+      Correct intermediate-level molecular function. The protein is annotated with
+      the &#34;Acyltransferase&#34; keyword in UniProt. The succinyl group transferred is
+      indeed an acyl group, making this annotation accurate. InterPro signatures
+      IPR001078 (2-oxoacid_DH_actylTfrase) and IPR004167 (PSBD) support this function.
+    supported_by:
+      - reference_id: UniProt:C5B053
+        supporting_text: &#34;Dihydrolipoyllysine-residue succinyltransferase component of 2-oxoglutarate dehydrogenase complex&#34;
+      - reference_id: file:METEA/sucB/sucB-deep-research-falcon.md
+        supporting_text: &#34;E2o catalyzes succinyl transfer to CoA (forming succinyl-CoA)&#34;
+- term:
+    id: GO:0033512
+    label: L-lysine catabolic process to acetyl-CoA via saccharopine
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This annotation derives from UniPathway UPA00868 which indicates the saccharopine
+      pathway for lysine degradation. The OGDH complex can participate in lysine
+      catabolism because 2-oxoglutarate is an intermediate, and the 2-oxoadipate
+      dehydrogenase complex (structurally related to OGDH) uses the same E2 subunit
+      in some organisms.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a secondary metabolic role, not the core TCA cycle function. While the
+      UniPathway annotation indicates step 6/6 in the lysine degradation pathway
+      (glutaryl-CoA from L-lysine), this represents a peripheral function. The
+      saccharopine pathway is more prominent in eukaryotes, and it is unclear how
+      significant this pathway is in Methylorubrum extorquens. The core function
+      remains TCA cycle participation. This annotation should be retained but
+      recognized as non-core.
+    supported_by:
+      - reference_id: UniProt:C5B053
+        supporting_text: &#34;PATHWAY: Amino-acid degradation; L-lysine degradation via saccharopine&#34;
+- term:
+    id: GO:0045252
+    label: oxoglutarate dehydrogenase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      The E2 subunit is a structural and catalytic component of the OGDH complex.
+      According to GO, the E2 forms the core of this multi-enzyme complex, onto
+      which E1 and E3 components assemble.
+    action: ACCEPT
+    reason: &gt;-
+      Core cellular component annotation. UniProt states that the protein &#34;Forms a
+      24-polypeptide structural core with octahedral symmetry&#34; and is &#34;Part of the
+      2-oxoglutarate dehydrogenase (OGDH) complex composed of E1, E2 and E3.&#34; The
+      InterPro signature IPR006255 (SucB) specifically identifies this as the OGDH
+      E2 component.
+    supported_by:
+      - reference_id: UniProt:C5B053
+        supporting_text: &#34;Forms a 24-polypeptide structural core with octahedral&#34;
+      - reference_id: file:METEA/sucB/sucB-deep-research-falcon.md
+        supporting_text: &#34;E2o core: 24 subunits as eight homotrimers&#34;
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Maps UniProt keywords to GO terms; source of GO:0016740 (transferase activity)
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings:
+    - statement: Phylogenetic inference for GO:0005829 (cytosol) via PANTHER
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+    - statement: Combines InterPro, UniRule, Rhea, EC, and PANTHER evidence
+    - statement: Source of primary functional annotations including GO:0004149, GO:0006099, GO:0045252
+- id: UniProt:C5B053
+  title: UniProt entry for sucB dihydrolipoyllysine-residue succinyltransferase
+  findings:
+    - statement: TrEMBL entry (unreviewed) with EC 2.3.1.61
+      supporting_text: &#34;Dihydrolipoyllysine-residue succinyltransferase component of 2-oxoglutarate dehydrogenase complex&#34;
+    - statement: Contains lipoyl-binding domain (2-77) and PSBD domain (143-180)
+      supporting_text: &#34;PROSITE; PS50968; BIOTINYL_LIPOYL&#34;
+    - statement: Forms 24-mer structural core of OGDH complex
+      supporting_text: &#34;Forms a 24-polypeptide structural core with octahedral symmetry&#34;
+- id: PMID:19440302
+  title: Methylobacterium genome sequences
+  full_text_unavailable: true
+  findings:
+    - statement: Genome sequence paper for M. extorquens AM1 providing gene sequence
+      supporting_text: &#34;Methylobacterium genome sequences: a reference blueprint to investigate microbial metabolism of C1 compounds&#34;
+- id: file:METEA/sucB/sucB-deep-research-falcon.md
+  title: Deep research report on sucB E2 component of OGDH complex
+  findings:
+    - statement: E2o (sucB) forms the multimeric core scaffold that organizes E1o and E3 for efficient substrate channeling
+      supporting_text: &#34;The E2o subunit (sucB) forms the multimeric core scaffold that organizes E1o and E3 for efficient substrate channeling&#34;
+    - statement: In bacteria OGDHc operates in the cytosol as a soluble megacomplex
+      supporting_text: &#34;in bacteria it operates in the cytosol as a soluble megacomplex&#34;
+    - statement: OGDHc converts 2-oxoglutarate + CoA + NAD+ to succinyl-CoA + CO2 + NADH
+      supporting_text: &#34;The OGDHc converts 2-oxoglutarate + CoA + NAD+ → succinyl-CoA + CO2 + NADH&#34;
+core_functions:
+  - description: &gt;-
+      Primary enzymatic activity of the E2 subunit, corresponding to EC 2.3.1.61.
+      This is the defining catalytic function of the protein. The OGDH complex is
+      a central TCA cycle enzyme, and sucB forms the structural core.
+    molecular_function:
+      id: GO:0004149
+      label: dihydrolipoyllysine-residue succinyltransferase activity
+    directly_involved_in:
+      - id: GO:0006099
+        label: tricarboxylic acid cycle
+    in_complex:
+      id: GO:0045252
+      label: oxoglutarate dehydrogenase complex
+    locations:
+      - id: GO:0005829
+        label: cytosol
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

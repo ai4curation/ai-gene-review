@@ -1,0 +1,4381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTN1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NTN1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O95631" target="_blank" class="term-link">
+                        O95631
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NTN1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O95631" data-a="DESCRIPTION: Netrin-1 is a secreted laminin-related protein tha..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Netrin-1 is a secreted laminin-related protein that functions as an axon guidance cue. It controls guidance of CNS commissural axons and peripheral motor axons through interactions with its receptors DCC and UNC5 family members. Binding to DCC leads to axon attraction, while binding to UNC5 receptors leads to axon repulsion. Netrin-1 also serves as a survival factor that prevents initiation of apoptosis, and is involved in tumorigenesis through regulation of apoptosis. The protein contains a laminin N-terminal domain, three laminin EGF-like domains, and a C-terminal NTR domain. It is primarily secreted but can also be found in the cytoplasm. Mutations in NTN1 cause congenital mirror movements (MRMV4) through disruption of corticospinal tract development.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0000981" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is clearly erroneous. NTN1 encodes Netrin-1, a secreted laminin-related axon guidance protein. The IBA annotation was propagated from PANTHER:PTN000180816, which erroneously groups NTN1 with POU-domain transcription factors (e.g., POU1F1/Pit-1, POU2F1/Oct-1). NTN1 has no DNA-binding domains - it contains laminin N-terminal domain, laminin EGF-like domains, and NTR domain. UniProt confirms it is a secreted protein that functions extracellularly as an axon guidance cue [UniProt:O95631]. PMID:28945198 confirms &#34;Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule.&#34;
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NTN1 is not a transcription factor. It is a secreted axon guidance molecule with no DNA-binding capability. The phylogenetic tree (PANTHER:PTN000180816) erroneously included NTN1 alongside bona fide POU-domain transcription factors. This is a clear case of erroneous phylogenetic propagation - NTN1 has completely different domain architecture (laminin domains) compared to the POU-domain transcription factors cited in the WITH/FROM field.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28945198" target="_blank" class="term-link">
+                                        PMID:28945198
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule that regulates midline crossing in the CNS.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:O95631
+                                    
+                                </span>
+                                
+                                <div class="support-text">Note=Mainly secreted</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0006357" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is erroneous for the same reason as GO:0000981. NTN1 encodes a secreted axon guidance protein, not a transcription factor. The IBA annotation was incorrectly propagated from POU-domain transcription factors via PANTHER:PTN000180816. NTN1 has no nuclear localization and no DNA-binding domains.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NTN1 does not regulate transcription. It is a secreted extracellular protein that functions as an axon guidance cue. The phylogenetic grouping with POU-domain transcription factors is erroneous - NTN1 has laminin-type domains, not POU/homeodomain DNA-binding domains.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28945198" target="_blank" class="term-link">
+                                        PMID:28945198
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule that regulates midline crossing in the CNS.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000978" target="_blank" class="term-link">
+                                    GO:0000978
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II cis-regulatory region sequence-specific DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0000978" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is erroneous. NTN1 encodes a secreted laminin-related protein that functions as an axon guidance cue. It has no DNA-binding domains and is not localized to the nucleus. The IBA annotation was incorrectly propagated from POU-domain transcription factors that do have sequence-specific DNA binding activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NTN1 does not bind DNA. It is a secreted extracellular protein with laminin N-terminal domain, laminin EGF-like domains, and NTR domain. None of these are DNA-binding domains. The phylogenetic grouping with POU-domain transcription factors (which do have sequence-specific DNA binding) is erroneous.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28945198" target="_blank" class="term-link">
+                                        PMID:28945198
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule that regulates midline crossing in the CNS.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct annotation. NTN1 encodes a secreted protein with a signal peptide (residues 1-24). UniProt confirms subcellular location as &#34;Secreted&#34; and notes it is &#34;Mainly secreted.&#34; This is consistent with its function as an extracellular axon guidance cue.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization for NTN1 function. Netrin-1 is primarily a secreted protein that functions in the extracellular space as a diffusible guidance cue.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28945198" target="_blank" class="term-link">
+                                        PMID:28945198
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule that regulates midline crossing in the CNS.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:O95631
+                                    
+                                </span>
+                                
+                                <div class="support-text">Note=Mainly secreted</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acceptable annotation. While NTN1 is primarily secreted, UniProt confirms cytoplasmic localization, particularly for mutant forms that fail to be secreted. PMID:28945198 shows that pathogenic NTN1 variants are &#34;almost exclusively detected in the intracellular compartment&#34; rather than being secreted normally.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Secondary localization. The protein is primarily secreted but can be detected in cytoplasm, especially for mutant variants that have defective secretion.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28945198" target="_blank" class="term-link">
+                                        PMID:28945198
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the 3 mutated netrin-1 proteins were almost exclusively detected in the intracellular compartment, contrary to WT netrin-1, which is detected in both intracellular and extracellular compartments.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006915" target="_blank" class="term-link">
+                                    GO:0006915
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0006915" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acceptable but imprecise annotation. NTN1 functions as a survival factor that prevents initiation of apoptosis through its receptors. UniProt notes it is &#34;Involved in tumorigenesis by regulating apoptosis.&#34; However, the term &#34;apoptotic process&#34; is too general - NTN1 acts as a negative regulator of apoptosis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation captures involvement in apoptosis but lacks directionality. NTN1 serves as a survival factor that prevents apoptosis initiation. A more specific term would better reflect its anti-apoptotic function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    negative regulation of apoptotic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19721007" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19721007
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Netrin-1 up-regulation in inflammatory bowel diseases is req...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005515" data-r="PMID:19721007" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding annotation. NTN1 binds to multiple receptor proteins including DCC, UNC5 family members, and DSCAM. However, &#34;protein binding&#34; is uninformative. The specific binding partner would be DCC based on the reference.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While NTN1 does bind proteins (its receptors), the generic &#34;protein binding&#34; term is uninformative. More specific receptor binding terms would be preferable.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20434207" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20434207
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Transmembrane receptor DCC associates with protein synthesis...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005515" data-r="PMID:20434207" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding annotation based on interaction with DCC receptor. The reference describes DCC-netrin interaction in context of translation regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the protein-protein interaction is valid, &#34;protein binding&#34; is uninformative. The specific DCC receptor binding would be more appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26190107" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26190107
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A Floor-Plate Extracellular Protein-Protein Interaction Scre...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005515" data-r="PMID:26190107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding annotation. The reference identifies Draxin as a secreted netrin-1 antagonist, suggesting protein-protein interaction between NTN1 and Draxin.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the protein-protein interaction with Draxin is valid, &#34;protein binding&#34; is uninformative. This interaction represents an antagonistic relationship in axon guidance.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28501620" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28501620
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of Netrin-1 and APP receptor bind...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005515" data-r="PMID:28501620" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding annotation based on interaction with APP (amyloid precursor protein). The reference characterizes netrin-1 and APP receptor binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the protein-protein interaction with APP is valid, &#34;protein binding&#34; is uninformative. The specific binding to APP receptor would be more informative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005604" target="_blank" class="term-link">
+                                    GO:0005604
+                                </a>
+                            </span>
+                            <span class="term-label">basement membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005604" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acceptable localization based on ortholog transfer from mouse. Netrins are known to associate with extracellular matrix structures including basement membranes where they function as guidance cues.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Secondary localization. Netrin-1 can associate with basement membrane as part of its extracellular guidance function, but the primary localization is extracellular region.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045202" target="_blank" class="term-link">
+                                    GO:0045202
+                                </a>
+                            </span>
+                            <span class="term-label">synapse</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0045202" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acceptable localization based on ortholog transfer. Netrin-1 plays roles in synapse formation and synaptic connectivity during neural development.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Secondary localization relevant to NTN1&#39;s role in neural development and synapse assembly regulation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051963" target="_blank" class="term-link">
+                                    GO:0051963
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of synapse assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0051963" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acceptable annotation based on ortholog transfer from mouse. Netrin-1 is known to regulate synapse formation during neural development through its guidance functions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Downstream consequence of NTN1&#39;s axon guidance function. Synapse assembly is affected by proper axon pathfinding and target recognition.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061643" target="_blank" class="term-link">
+                                    GO:0061643
+                                </a>
+                            </span>
+                            <span class="term-label">chemorepulsion of axon</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0061643" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core function annotation. NTN1 mediates axon chemorepulsion when bound to UNC5 receptors. UniProt notes &#34;Binding to UNC5C might cause dissociation of UNC5C from polymerized TUBB3 in microtubules and thereby lead to increased microtubule dynamics and axon repulsion.&#34;
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function of NTN1. Axon chemorepulsion is mediated through UNC5 receptor binding and is essential for proper axon pathfinding.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098978" target="_blank" class="term-link">
+                                    GO:0098978
+                                </a>
+                            </span>
+                            <span class="term-label">glutamatergic synapse</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0098978" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acceptable but potentially overly specific localization. This is based on ortholog transfer from mouse. Netrin-1 may be present at glutamatergic synapses but this specificity may be overly detailed for an IEA annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Secondary localization. While NTN1 may be present at glutamatergic synapses, this is a very specific localization that may require direct experimental validation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acceptable annotation based on immunofluorescence data from HPA. While NTN1 is primarily secreted, intracellular detection is expected for proteins in transit through the secretory pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Secondary localization. The protein is primarily secreted but can be detected in cytosol, consistent with transit through the secretory pathway.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28945198" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28945198
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in the netrin-1 gene cause congenital mirror movem...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="PMID:28945198" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core localization annotation with direct experimental evidence. PMID:28945198 directly demonstrates that wild-type netrin-1 is secreted and detected in extracellular compartments, while pathogenic mutants are retained intracellularly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization with strong experimental support. The secretion of NTN1 is essential for its function as an extracellular guidance cue.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28945198" target="_blank" class="term-link">
+                                        PMID:28945198
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the 3 mutated netrin-1 proteins were almost exclusively detected in the intracellular compartment, contrary to WT netrin-1, which is detected in both intracellular and extracellular compartments.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061643" target="_blank" class="term-link">
+                                    GO:0061643
+                                </a>
+                            </span>
+                            <span class="term-label">chemorepulsion of axon</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0061643" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core function annotation transferred from mouse ortholog. Axon chemorepulsion through UNC5 receptors is a well-established function of netrins conserved across species.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function of NTN1. Axon chemorepulsion is a conserved netrin function mediated through UNC5 receptor binding.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006930" target="_blank" class="term-link">
+                                    GO:0006930
+                                </a>
+                            </span>
+                            <span class="term-label">substrate-dependent cell migration, cell extension</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0006930" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acceptable annotation. Netrin-1 influences cell migration and extension through its guidance functions. This is downstream of receptor binding and signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Secondary biological process. Cell migration effects are downstream of NTN1&#39;s primary guidance function through receptor binding.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007265" target="_blank" class="term-link">
+                                    GO:0007265
+                                </a>
+                            </span>
+                            <span class="term-label">Ras protein signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0007265" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Downstream signaling annotation. Netrin-1 receptor binding triggers intracellular signaling cascades including Ras pathway activation. This is part of the downstream response to netrin binding, not a direct function of NTN1 itself.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Downstream signaling consequence. NTN1 does not directly participate in Ras signaling but triggers it through receptor activation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032488" target="_blank" class="term-link">
+                                    GO:0032488
+                                </a>
+                            </span>
+                            <span class="term-label">Cdc42 protein signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0032488" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Downstream signaling annotation. Netrin-1 binding to DCC triggers Cdc42 activation as part of the cytoskeletal remodeling response. Reactome pathway R-HSA-418850 describes &#34;Activation of Cdc42&#34; in netrin signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Downstream signaling consequence. NTN1 triggers Cdc42 signaling through DCC receptor activation, leading to cytoskeletal changes for axon guidance.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045773" target="_blank" class="term-link">
+                                    GO:0045773
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of axon extension</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0045773" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core function annotation. Netrin-1 promotes axon extension through DCC receptor signaling, complementing its chemoattraction and chemorepulsion functions. This is a well-established core function of netrins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function of NTN1. Positive regulation of axon extension through DCC receptor is a fundamental netrin function in axon guidance.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000147" target="_blank" class="term-link">
+                                    GO:2000147
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of cell motility</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:2000147" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acceptable annotation. Netrin-1 promotes cell motility through its guidance functions. This is a broader consequence of its chemotactic activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Secondary biological process. Cell motility regulation is downstream of NTN1&#39;s primary receptor-mediated guidance functions.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-373707
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-373707" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;Netrin-1 induced DCC clustering&#34;. NTN1 functions extracellularly where it binds DCC receptors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization. Extracellular region is the functional location for NTN1&#39;s role in receptor binding and axon guidance.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-373711
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-373711" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;DCC interaction with Netrin-1&#34;. NTN1 is secreted and functions extracellularly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-373713
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-373713" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;DCC heterodimerizes with UNC-5:Netrin-1&#34;. NTN1 functions extracellularly where it binds receptors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-373716
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-373716" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;DCC interacting NCK-1&#34;. NTN1 functions extracellularly as a secreted guidance cue.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-373751
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-373751" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;UNC-5 binds Netrin-1&#34;. NTN1 binds UNC5 receptors extracellularly for repulsive guidance.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-374665
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-374665" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;DCC interaction with SIAH1&#34;. NTN1 functions extracellularly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-374667
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-374667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;DCC interaction with SIAH2&#34;. NTN1 functions extracellularly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-374701
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-374701" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;Phosphorylation of DCC by Fyn&#34;. NTN1 functions extracellularly to trigger this signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-418850
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-418850" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;Activation of Cdc42&#34;. NTN1 functions extracellularly to trigger downstream Cdc42 signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-418856
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-418856" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;Activation of Rac1&#34;. NTN1 functions extracellularly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-418858
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-418858" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;RhoGTPase GEF&#39;s recruited to DCC&#34;. NTN1 functions extracellularly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-418868
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-418868" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;Recruitment of Src and Fyn to DCC:FADK1&#34;. NTN1 functions extracellularly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-418874
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005576" data-r="Reactome:R-HSA-418874" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization annotation from Reactome pathway &#34;Recruitment and activation of N-WASP by Cdc42&#34;. NTN1 functions extracellularly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization confirmed by Reactome pathway annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19196994" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19196994
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DSCAM functions as a netrin receptor in commissural axon pat...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005515" data-r="PMID:19196994" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding annotation based on interaction with DSCAM receptor. PMID:19196994 identifies DSCAM as a netrin receptor in commissural axon pathfinding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the protein-protein interaction with DSCAM is valid and functionally important, &#34;protein binding&#34; is uninformative. Receptor binding would be more appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10102268" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10102268
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Slit proteins bind Robo receptors and have an evolutionarily...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="O95631" data-a="GO:0005515" data-r="PMID:10102268" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding annotation. The reference &#34;Slit proteins bind Robo receptors&#34; is about Slit proteins, not Netrin-1. The annotation may be based on interaction with shared pathway components.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The cited reference is primarily about Slit-Robo interactions, not Netrin-1. The basis for this annotation to NTN1 is unclear without access to the full text.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NTN1 functions as a secreted axon guidance cue that binds to netrin receptors including DCC (for attraction) and UNC5 family members (for repulsion). This receptor binding is the primary molecular function of the protein.</h3>
+                <span class="vote-buttons" data-g="O95631" data-a="FUNCTION: NTN1 functions as a secreted axon guidance cue tha..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990890" target="_blank" class="term-link">
+                            netrin receptor binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061643" target="_blank" class="term-link">
+                                chemorepulsion of axon
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045773" target="_blank" class="term-link">
+                                positive regulation of axon extension
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28945198" target="_blank" class="term-link">
+                                PMID:28945198
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule that regulates midline crossing in the CNS.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10102268" target="_blank" class="term-link">
+                            PMID:10102268
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Slit proteins bind Robo receptors and have an evolutionarily conserved role in repulsive axon guidance.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19196994" target="_blank" class="term-link">
+                            PMID:19196994
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DSCAM functions as a netrin receptor in commissural axon pathfinding.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19721007" target="_blank" class="term-link">
+                            PMID:19721007
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Netrin-1 up-regulation in inflammatory bowel diseases is required for colorectal cancer progression.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20434207" target="_blank" class="term-link">
+                            PMID:20434207
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transmembrane receptor DCC associates with protein synthesis machinery and regulates translation.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26190107" target="_blank" class="term-link">
+                            PMID:26190107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A Floor-Plate Extracellular Protein-Protein Interaction Screen Identifies Draxin as a Secreted Netrin-1 Antagonist.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28501620" target="_blank" class="term-link">
+                            PMID:28501620
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular characterization of Netrin-1 and APP receptor binding: New leads to block the progression of senile plaques in Alzheimer&#39;s disease.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28945198" target="_blank" class="term-link">
+                            PMID:28945198
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mutations in the netrin-1 gene cause congenital mirror movements.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-373707
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Netrin-1 induced DCC clustering</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-373711
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DCC interaction with Netrin-1</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-373713
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DCC heterodimerizes with UNC-5:Netrin-1</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-373716
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DCC interacting NCK-1</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-373751
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UNC-5 binds Netrin-1</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-374665
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DCC interaction with SIAH1</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-374667
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DCC interaction with SIAH2</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-374701
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Phosphorylation of DCC by Fyn</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-418850
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Activation of Cdc42</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-418856
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Activation of Rac1</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-418858
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RhoGTPase GEF&#39;s recruited to DCC</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-418868
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Recruitment of Src and Fyn to DCC:FADK1</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-418874
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Recruitment and activation of N-WASP by Cdc42</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O95631
+gene_symbol: NTN1
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  Netrin-1 is a secreted laminin-related protein that functions as an axon guidance cue.
+  It controls guidance of CNS commissural axons and peripheral motor axons through
+  interactions with its receptors DCC and UNC5 family members. Binding to DCC leads to
+  axon attraction, while binding to UNC5 receptors leads to axon repulsion. Netrin-1
+  also serves as a survival factor that prevents initiation of apoptosis, and is involved
+  in tumorigenesis through regulation of apoptosis. The protein contains a laminin N-terminal
+  domain, three laminin EGF-like domains, and a C-terminal NTR domain. It is primarily secreted
+  but can also be found in the cytoplasm. Mutations in NTN1 cause congenital mirror movements
+  (MRMV4) through disruption of corticospinal tract development.
+existing_annotations:
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation is clearly erroneous. NTN1 encodes Netrin-1, a secreted laminin-related
+      axon guidance protein. The IBA annotation was propagated from PANTHER:PTN000180816, which
+      erroneously groups NTN1 with POU-domain transcription factors (e.g., POU1F1/Pit-1, POU2F1/Oct-1).
+      NTN1 has no DNA-binding domains - it contains laminin N-terminal domain, laminin EGF-like
+      domains, and NTR domain. UniProt confirms it is a secreted protein that functions extracellularly
+      as an axon guidance cue [UniProt:O95631]. PMID:28945198 confirms &#34;Netrin-1 is a secreted
+      protein that was first identified 20 years ago as an axon guidance molecule.&#34;
+    action: REMOVE
+    reason: &gt;-
+      NTN1 is not a transcription factor. It is a secreted axon guidance molecule with no
+      DNA-binding capability. The phylogenetic tree (PANTHER:PTN000180816) erroneously included
+      NTN1 alongside bona fide POU-domain transcription factors. This is a clear case of
+      erroneous phylogenetic propagation - NTN1 has completely different domain architecture
+      (laminin domains) compared to the POU-domain transcription factors cited in the WITH/FROM
+      field.
+    supported_by:
+      - reference_id: PMID:28945198
+        supporting_text: &#34;Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule that regulates midline crossing in the CNS.&#34;
+      - reference_id: UniProt:O95631
+        supporting_text: &#34;Note=Mainly secreted&#34;
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation is erroneous for the same reason as GO:0000981. NTN1 encodes a secreted
+      axon guidance protein, not a transcription factor. The IBA annotation was incorrectly
+      propagated from POU-domain transcription factors via PANTHER:PTN000180816. NTN1 has no
+      nuclear localization and no DNA-binding domains.
+    action: REMOVE
+    reason: &gt;-
+      NTN1 does not regulate transcription. It is a secreted extracellular protein that
+      functions as an axon guidance cue. The phylogenetic grouping with POU-domain transcription
+      factors is erroneous - NTN1 has laminin-type domains, not POU/homeodomain DNA-binding domains.
+    supported_by:
+      - reference_id: PMID:28945198
+        supporting_text: &#34;Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule that regulates midline crossing in the CNS.&#34;
+- term:
+    id: GO:0000978
+    label: RNA polymerase II cis-regulatory region sequence-specific DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation is erroneous. NTN1 encodes a secreted laminin-related protein that
+      functions as an axon guidance cue. It has no DNA-binding domains and is not localized
+      to the nucleus. The IBA annotation was incorrectly propagated from POU-domain transcription
+      factors that do have sequence-specific DNA binding activity.
+    action: REMOVE
+    reason: &gt;-
+      NTN1 does not bind DNA. It is a secreted extracellular protein with laminin N-terminal
+      domain, laminin EGF-like domains, and NTR domain. None of these are DNA-binding domains.
+      The phylogenetic grouping with POU-domain transcription factors (which do have
+      sequence-specific DNA binding) is erroneous.
+    supported_by:
+      - reference_id: PMID:28945198
+        supporting_text: &#34;Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule that regulates midline crossing in the CNS.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Correct annotation. NTN1 encodes a secreted protein with a signal peptide (residues 1-24).
+      UniProt confirms subcellular location as &#34;Secreted&#34; and notes it is &#34;Mainly secreted.&#34;
+      This is consistent with its function as an extracellular axon guidance cue.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization for NTN1 function. Netrin-1 is primarily a secreted protein that
+      functions in the extracellular space as a diffusible guidance cue.
+    supported_by:
+      - reference_id: PMID:28945198
+        supporting_text: &#34;Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule that regulates midline crossing in the CNS.&#34;
+      - reference_id: UniProt:O95631
+        supporting_text: &#34;Note=Mainly secreted&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Acceptable annotation. While NTN1 is primarily secreted, UniProt confirms cytoplasmic
+      localization, particularly for mutant forms that fail to be secreted. PMID:28945198
+      shows that pathogenic NTN1 variants are &#34;almost exclusively detected in the intracellular
+      compartment&#34; rather than being secreted normally.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Secondary localization. The protein is primarily secreted but can be detected in
+      cytoplasm, especially for mutant variants that have defective secretion.
+    supported_by:
+      - reference_id: PMID:28945198
+        supporting_text: &#34;the 3 mutated netrin-1 proteins were almost exclusively detected in the intracellular compartment, contrary to WT netrin-1, which is detected in both intracellular and extracellular compartments.&#34;
+- term:
+    id: GO:0006915
+    label: apoptotic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      Acceptable but imprecise annotation. NTN1 functions as a survival factor that prevents
+      initiation of apoptosis through its receptors. UniProt notes it is &#34;Involved in
+      tumorigenesis by regulating apoptosis.&#34; However, the term &#34;apoptotic process&#34; is
+      too general - NTN1 acts as a negative regulator of apoptosis.
+    action: MODIFY
+    reason: &gt;-
+      The annotation captures involvement in apoptosis but lacks directionality. NTN1
+      serves as a survival factor that prevents apoptosis initiation. A more specific
+      term would better reflect its anti-apoptotic function.
+    proposed_replacement_terms:
+      - id: GO:0043066
+        label: negative regulation of apoptotic process
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19721007
+  review:
+    summary: &gt;-
+      Generic protein binding annotation. NTN1 binds to multiple receptor proteins including
+      DCC, UNC5 family members, and DSCAM. However, &#34;protein binding&#34; is uninformative.
+      The specific binding partner would be DCC based on the reference.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While NTN1 does bind proteins (its receptors), the generic &#34;protein binding&#34; term
+      is uninformative. More specific receptor binding terms would be preferable.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20434207
+  review:
+    summary: &gt;-
+      Generic protein binding annotation based on interaction with DCC receptor. The
+      reference describes DCC-netrin interaction in context of translation regulation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While the protein-protein interaction is valid, &#34;protein binding&#34; is uninformative.
+      The specific DCC receptor binding would be more appropriate.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26190107
+  review:
+    summary: &gt;-
+      Generic protein binding annotation. The reference identifies Draxin as a secreted
+      netrin-1 antagonist, suggesting protein-protein interaction between NTN1 and Draxin.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While the protein-protein interaction with Draxin is valid, &#34;protein binding&#34; is
+      uninformative. This interaction represents an antagonistic relationship in axon guidance.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28501620
+  review:
+    summary: &gt;-
+      Generic protein binding annotation based on interaction with APP (amyloid precursor
+      protein). The reference characterizes netrin-1 and APP receptor binding.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While the protein-protein interaction with APP is valid, &#34;protein binding&#34; is
+      uninformative. The specific binding to APP receptor would be more informative.
+- term:
+    id: GO:0005604
+    label: basement membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      Acceptable localization based on ortholog transfer from mouse. Netrins are known
+      to associate with extracellular matrix structures including basement membranes where
+      they function as guidance cues.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Secondary localization. Netrin-1 can associate with basement membrane as part of
+      its extracellular guidance function, but the primary localization is extracellular region.
+- term:
+    id: GO:0045202
+    label: synapse
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      Acceptable localization based on ortholog transfer. Netrin-1 plays roles in synapse
+      formation and synaptic connectivity during neural development.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Secondary localization relevant to NTN1&#39;s role in neural development and synapse
+      assembly regulation.
+- term:
+    id: GO:0051963
+    label: regulation of synapse assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      Acceptable annotation based on ortholog transfer from mouse. Netrin-1 is known to
+      regulate synapse formation during neural development through its guidance functions.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Downstream consequence of NTN1&#39;s axon guidance function. Synapse assembly is
+      affected by proper axon pathfinding and target recognition.
+- term:
+    id: GO:0061643
+    label: chemorepulsion of axon
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      Core function annotation. NTN1 mediates axon chemorepulsion when bound to UNC5
+      receptors. UniProt notes &#34;Binding to UNC5C might cause dissociation of UNC5C from
+      polymerized TUBB3 in microtubules and thereby lead to increased microtubule dynamics
+      and axon repulsion.&#34;
+    action: ACCEPT
+    reason: &gt;-
+      Core function of NTN1. Axon chemorepulsion is mediated through UNC5 receptor
+      binding and is essential for proper axon pathfinding.
+- term:
+    id: GO:0098978
+    label: glutamatergic synapse
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      Acceptable but potentially overly specific localization. This is based on ortholog
+      transfer from mouse. Netrin-1 may be present at glutamatergic synapses but this
+      specificity may be overly detailed for an IEA annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Secondary localization. While NTN1 may be present at glutamatergic synapses, this
+      is a very specific localization that may require direct experimental validation.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: &gt;-
+      Acceptable annotation based on immunofluorescence data from HPA. While NTN1 is
+      primarily secreted, intracellular detection is expected for proteins in transit
+      through the secretory pathway.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Secondary localization. The protein is primarily secreted but can be detected in
+      cytosol, consistent with transit through the secretory pathway.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IDA
+  original_reference_id: PMID:28945198
+  review:
+    summary: &gt;-
+      Core localization annotation with direct experimental evidence. PMID:28945198 directly
+      demonstrates that wild-type netrin-1 is secreted and detected in extracellular
+      compartments, while pathogenic mutants are retained intracellularly.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization with strong experimental support. The secretion of NTN1 is essential
+      for its function as an extracellular guidance cue.
+    supported_by:
+      - reference_id: PMID:28945198
+        supporting_text: &#34;the 3 mutated netrin-1 proteins were almost exclusively detected in the intracellular compartment, contrary to WT netrin-1, which is detected in both intracellular and extracellular compartments.&#34;
+- term:
+    id: GO:0061643
+    label: chemorepulsion of axon
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      Core function annotation transferred from mouse ortholog. Axon chemorepulsion through
+      UNC5 receptors is a well-established function of netrins conserved across species.
+    action: ACCEPT
+    reason: &gt;-
+      Core function of NTN1. Axon chemorepulsion is a conserved netrin function mediated
+      through UNC5 receptor binding.
+- term:
+    id: GO:0006930
+    label: substrate-dependent cell migration, cell extension
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      Acceptable annotation. Netrin-1 influences cell migration and extension through its
+      guidance functions. This is downstream of receptor binding and signaling.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Secondary biological process. Cell migration effects are downstream of NTN1&#39;s
+      primary guidance function through receptor binding.
+- term:
+    id: GO:0007265
+    label: Ras protein signal transduction
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      Downstream signaling annotation. Netrin-1 receptor binding triggers intracellular
+      signaling cascades including Ras pathway activation. This is part of the downstream
+      response to netrin binding, not a direct function of NTN1 itself.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Downstream signaling consequence. NTN1 does not directly participate in Ras signaling
+      but triggers it through receptor activation.
+- term:
+    id: GO:0032488
+    label: Cdc42 protein signal transduction
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      Downstream signaling annotation. Netrin-1 binding to DCC triggers Cdc42 activation
+      as part of the cytoskeletal remodeling response. Reactome pathway R-HSA-418850
+      describes &#34;Activation of Cdc42&#34; in netrin signaling.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Downstream signaling consequence. NTN1 triggers Cdc42 signaling through DCC receptor
+      activation, leading to cytoskeletal changes for axon guidance.
+- term:
+    id: GO:0045773
+    label: positive regulation of axon extension
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      Core function annotation. Netrin-1 promotes axon extension through DCC receptor
+      signaling, complementing its chemoattraction and chemorepulsion functions. This is
+      a well-established core function of netrins.
+    action: ACCEPT
+    reason: &gt;-
+      Core function of NTN1. Positive regulation of axon extension through DCC receptor
+      is a fundamental netrin function in axon guidance.
+- term:
+    id: GO:2000147
+    label: positive regulation of cell motility
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      Acceptable annotation. Netrin-1 promotes cell motility through its guidance functions.
+      This is a broader consequence of its chemotactic activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Secondary biological process. Cell motility regulation is downstream of NTN1&#39;s
+      primary receptor-mediated guidance functions.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-373707
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;Netrin-1 induced DCC clustering&#34;.
+      NTN1 functions extracellularly where it binds DCC receptors.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization. Extracellular region is the functional location for NTN1&#39;s
+      role in receptor binding and axon guidance.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-373711
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;DCC interaction with Netrin-1&#34;.
+      NTN1 is secreted and functions extracellularly.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-373713
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;DCC heterodimerizes with UNC-5:Netrin-1&#34;.
+      NTN1 functions extracellularly where it binds receptors.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-373716
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;DCC interacting NCK-1&#34;.
+      NTN1 functions extracellularly as a secreted guidance cue.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-373751
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;UNC-5 binds Netrin-1&#34;.
+      NTN1 binds UNC5 receptors extracellularly for repulsive guidance.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-374665
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;DCC interaction with SIAH1&#34;.
+      NTN1 functions extracellularly.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-374667
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;DCC interaction with SIAH2&#34;.
+      NTN1 functions extracellularly.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-374701
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;Phosphorylation of DCC by Fyn&#34;.
+      NTN1 functions extracellularly to trigger this signaling.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-418850
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;Activation of Cdc42&#34;.
+      NTN1 functions extracellularly to trigger downstream Cdc42 signaling.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-418856
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;Activation of Rac1&#34;.
+      NTN1 functions extracellularly.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-418858
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;RhoGTPase GEF&#39;s recruited to DCC&#34;.
+      NTN1 functions extracellularly.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-418868
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;Recruitment of Src and Fyn to DCC:FADK1&#34;.
+      NTN1 functions extracellularly.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-418874
+  review:
+    summary: &gt;-
+      Correct localization annotation from Reactome pathway &#34;Recruitment and activation of N-WASP by Cdc42&#34;.
+      NTN1 functions extracellularly.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization confirmed by Reactome pathway annotation.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19196994
+  review:
+    summary: &gt;-
+      Generic protein binding annotation based on interaction with DSCAM receptor.
+      PMID:19196994 identifies DSCAM as a netrin receptor in commissural axon pathfinding.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While the protein-protein interaction with DSCAM is valid and functionally important,
+      &#34;protein binding&#34; is uninformative. Receptor binding would be more appropriate.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:10102268
+  review:
+    summary: &gt;-
+      Generic protein binding annotation. The reference &#34;Slit proteins bind Robo receptors&#34;
+      is about Slit proteins, not Netrin-1. The annotation may be based on interaction
+      with shared pathway components.
+    action: UNDECIDED
+    reason: &gt;-
+      The cited reference is primarily about Slit-Robo interactions, not Netrin-1. The
+      basis for this annotation to NTN1 is unclear without access to the full text.
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10102268
+  title: Slit proteins bind Robo receptors and have an evolutionarily conserved role
+    in repulsive axon guidance.
+  findings: []
+- id: PMID:19196994
+  title: DSCAM functions as a netrin receptor in commissural axon pathfinding.
+  findings: []
+- id: PMID:19721007
+  title: Netrin-1 up-regulation in inflammatory bowel diseases is required for colorectal
+    cancer progression.
+  findings: []
+- id: PMID:20434207
+  title: Transmembrane receptor DCC associates with protein synthesis machinery and
+    regulates translation.
+  findings: []
+- id: PMID:26190107
+  title: A Floor-Plate Extracellular Protein-Protein Interaction Screen Identifies
+    Draxin as a Secreted Netrin-1 Antagonist.
+  findings: []
+- id: PMID:28501620
+  title: &#39;Molecular characterization of Netrin-1 and APP receptor binding: New leads
+    to block the progression of senile plaques in Alzheimer&#39;&#39;s disease.&#39;
+  findings: []
+- id: PMID:28945198
+  title: Mutations in the netrin-1 gene cause congenital mirror movements.
+  findings: []
+- id: Reactome:R-HSA-373707
+  title: Netrin-1 induced DCC clustering
+  findings: []
+- id: Reactome:R-HSA-373711
+  title: DCC interaction with Netrin-1
+  findings: []
+- id: Reactome:R-HSA-373713
+  title: DCC heterodimerizes with UNC-5:Netrin-1
+  findings: []
+- id: Reactome:R-HSA-373716
+  title: DCC interacting NCK-1
+  findings: []
+- id: Reactome:R-HSA-373751
+  title: UNC-5 binds Netrin-1
+  findings: []
+- id: Reactome:R-HSA-374665
+  title: DCC interaction with SIAH1
+  findings: []
+- id: Reactome:R-HSA-374667
+  title: DCC interaction with SIAH2
+  findings: []
+- id: Reactome:R-HSA-374701
+  title: Phosphorylation of DCC by Fyn
+  findings: []
+- id: Reactome:R-HSA-418850
+  title: Activation of Cdc42
+  findings: []
+- id: Reactome:R-HSA-418856
+  title: Activation of Rac1
+  findings: []
+- id: Reactome:R-HSA-418858
+  title: RhoGTPase GEF&#39;s recruited to DCC
+  findings: []
+- id: Reactome:R-HSA-418868
+  title: Recruitment of Src and Fyn to DCC:FADK1
+  findings: []
+- id: Reactome:R-HSA-418874
+  title: Recruitment and activation of N-WASP by Cdc42
+  findings: []
+core_functions:
+  - molecular_function:
+      id: GO:1990890
+      label: netrin receptor binding
+    description: &gt;-
+      NTN1 functions as a secreted axon guidance cue that binds to netrin receptors
+      including DCC (for attraction) and UNC5 family members (for repulsion). This
+      receptor binding is the primary molecular function of the protein.
+    locations:
+      - id: GO:0005576
+        label: extracellular region
+    directly_involved_in:
+      - id: GO:0061643
+        label: chemorepulsion of axon
+      - id: GO:0045773
+        label: positive regulation of axon extension
+    supported_by:
+      - reference_id: PMID:28945198
+        supporting_text: &#34;Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule that regulates midline crossing in the CNS.&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
