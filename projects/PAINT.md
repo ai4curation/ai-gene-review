@@ -80,22 +80,41 @@ See `projects/PAINT/` folder:
 
 # STATUS
 
-**Project Statistics (2026-01-25):**
+**Project Statistics (2026-02-04):**
 - Total genes in project: 7,594
-- **Comprehensive reviews completed: 165** (2.2%)
-- Genes with gene folders: 325+
-- Genes with deep research: 200+
+- **PAINT genes completed: 207** (2.7%)
+- Total comprehensive reviews: 328
+- Genes with gene folders: 424
+- Genes with deep research: 339
+- Ready for review (have deep research but not complete): 22
 
 ## Progress
 - [x] Infrastructure setup (batch processing, parallel deep research)
-- [x] 165 comprehensive reviews completed
-- [ ] Complete reviews for remaining genes with deep research
+- [x] 207 PAINT gene reviews completed
+- [ ] Complete reviews for remaining 22 genes with deep research
 - [ ] Scale deep research to all genes
 - [ ] Full project completion (7,594 genes)
 
-Last updated: 2026-01-25
+Last updated: 2026-02-04
 
 # NOTES
+
+## 2026-02-04
+
+**Major batch annotation review session**
+- Reviewed 81 genes using annotation-reviewer agent
+- PAINT-specific completions: 165 → 207 (+42)
+- Total completions: 246 → 328 (+82)
+- Remaining with deep research: 104 → 22 (-82)
+
+Notable genes reviewed include:
+- Fe-S cluster assembly pathway: HSCB, HSPA9, IBA57, ISCA1, ISCA2, ISCU, NFS1, NFU1, MMS19, CIAO1, BOLA3
+- Apoptosis/autophagy: BCL2, BCL2L1, BECN1, CASP9, ATG4D, ATG5, ATG7, DRAM1, DRAM2
+- Transcription factors: GATA3, FOXO1, IRF8, OLIG2, ASCL1
+- Signaling: NOTCH1, LRRK2, AXIN1, FAS
+- Disease-relevant: HTT (Huntington), FXN (Friedreich ataxia), CBS (homocystinuria)
+
+Note: Subagent status updates weren't persisting; fixed manually.
 
 ## 2026-01-25
 

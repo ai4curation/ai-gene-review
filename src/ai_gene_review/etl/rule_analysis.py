@@ -134,8 +134,8 @@ def get_swissprot_count_for_interpro(
         Number of matching proteins
 
     Example:
-        >>> count = get_swissprot_count_for_interpro("IPR005982")
-        >>> count > 0
+        >>> count = get_swissprot_count_for_interpro("IPR005982") # doctest: +SKIP
+        >>> count > 0 # doctest: +SKIP
         True
     """
     query_parts = [f"(xref:interpro-{interpro_id})"]
@@ -180,8 +180,8 @@ def get_swissprot_count_for_funfam(
         Number of matching proteins
 
     Example:
-        >>> count = get_swissprot_count_for_funfam("3.50.50.60:FF:000064")
-        >>> count >= 0
+        >>> count = get_swissprot_count_for_funfam("3.50.50.60:FF:000064") # doctest: +SKIP
+        >>> count >= 0 # doctest: +SKIP
         True
     """
     query_parts = [f'("{funfam_id}")']
@@ -226,8 +226,8 @@ def get_swissprot_count_for_panther(
         Number of matching proteins
 
     Example:
-        >>> count = get_swissprot_count_for_panther("PTHR12714")
-        >>> count >= 0
+        >>> count = get_swissprot_count_for_panther("PTHR12714") # doctest: +SKIP
+        >>> count >= 0 # doctest: +SKIP
         True
     """
     query_parts = [f"(xref:panther-{panther_id})"]
@@ -271,8 +271,8 @@ def get_swissprot_count_for_interpro_intersection(
         Number of proteins matching all InterPro IDs
 
     Example:
-        >>> count = get_swissprot_count_for_interpro_intersection(["IPR005982", "IPR008255"])
-        >>> count >= 0
+        >>> count = get_swissprot_count_for_interpro_intersection(["IPR005982", "IPR008255"]) # doctest: +SKIP
+        >>> count >= 0 # doctest: +SKIP
         True
     """
     if not interpro_ids:
@@ -319,8 +319,8 @@ def get_swissprot_count_for_go(
         Number of matching proteins
 
     Example:
-        >>> count = get_swissprot_count_for_go("GO:0003674")
-        >>> count > 0
+        >>> count = get_swissprot_count_for_go("GO:0003674") # doctest: +SKIP
+        >>> count > 0 # doctest: +SKIP
         True
     """
     # UniProt expects numeric ID without "GO:" prefix
@@ -366,11 +366,11 @@ def get_swissprot_count_for_mixed_conditions(
         Number of proteins matching all conditions
 
     Example:
-        >>> count = get_swissprot_count_for_mixed_conditions([
+        >>> count = get_swissprot_count_for_mixed_conditions([ # doctest: +SKIP
         ...     ("interpro", "IPR005982"),
         ...     ("funfam", "3.50.50.60:FF:000064")
         ... ])
-        >>> count >= 0
+        >>> count >= 0 # doctest: +SKIP
         True
     """
     if not conditions:
@@ -423,8 +423,8 @@ def get_interpro_name(interpro_id: str, request_delay: float = 0.1) -> str:
         InterPro entry name, or the ID itself if fetch fails
 
     Example:
-        >>> name = get_interpro_name("IPR005982")
-        >>> len(name) > 0
+        >>> name = get_interpro_name("IPR005982") # doctest: +SKIP
+        >>> len(name) > 0 # doctest: +SKIP
         True
     """
     try:
@@ -481,8 +481,8 @@ def fetch_domain_names(
         Dictionary mapping domain ID to name
 
     Example:
-        >>> names = fetch_domain_names(["IPR005982", "3.50.50.60:FF:000064"])
-        >>> len(names) == 2
+        >>> names = fetch_domain_names(["IPR005982", "3.50.50.60:FF:000064"]) # doctest: +SKIP
+        >>> len(names) == 2 # doctest: +SKIP
         True
     """
     domain_names = {}
@@ -574,8 +574,8 @@ def calculate_jaccard_similarity(
         Jaccard similarity coefficient (0.0 to 1.0)
 
     Example:
-        >>> similarity = calculate_jaccard_similarity("IPR005982", "IPR008255")
-        >>> 0.0 <= similarity <= 1.0
+        >>> similarity = calculate_jaccard_similarity("IPR005982", "IPR008255") # doctest: +SKIP
+        >>> 0.0 <= similarity <= 1.0 # doctest: +SKIP
         True
     """
     count_a = get_swissprot_count_for_interpro(interpro_a, request_delay=request_delay)
@@ -618,13 +618,13 @@ def analyze_interpro_overlap_in_condition_set(
         Dict with pairwise statistics and summary
 
     Example:
-        >>> from ai_gene_review.etl.arba import ConditionSet, Condition, ConditionValue
-        >>> cs = ConditionSet(conditions=[
+        >>> from ai_gene_review.etl.arba import ConditionSet, Condition, ConditionValue # doctest: +SKIP
+        >>> cs = ConditionSet(conditions=[ # doctest: +SKIP
         ...     Condition(condition_type="InterPro id", values=[ConditionValue(value="IPR005982")], is_negative=False),
         ...     Condition(condition_type="InterPro id", values=[ConditionValue(value="IPR008255")], is_negative=False)
         ... ])
-        >>> result = analyze_interpro_overlap_in_condition_set(cs)
-        >>> "pairs" in result and "summary" in result
+        >>> result = analyze_interpro_overlap_in_condition_set(cs) # doctest: +SKIP
+        >>> "pairs" in result and "summary" in result # doctest: +SKIP
         True
     """
     # Extract domain conditions (InterPro, FunFam, and PANTHER)
@@ -813,12 +813,12 @@ def analyze_all_domain_pairs(
         Dict with pairs analysis, summary, and list of external_ipr_ids
 
     Example:
-        >>> from ai_gene_review.etl.arba import ARBAClient
-        >>> from pathlib import Path
-        >>> client = ARBAClient()
-        >>> rule = client.fetch_rule("ARBA00026249")
-        >>> analysis = analyze_all_domain_pairs(rule)
-        >>> "pairs" in analysis and "summary" in analysis
+        >>> from ai_gene_review.etl.arba import ARBAClient # doctest: +SKIP
+        >>> from pathlib import Path # doctest: +SKIP
+        >>> client = ARBAClient() # doctest: +SKIP
+        >>> rule = client.fetch_rule("ARBA00026249") # doctest: +SKIP
+        >>> analysis = analyze_all_domain_pairs(rule) # doctest: +SKIP
+        >>> "pairs" in analysis and "summary" in analysis # doctest: +SKIP
         True
     """
     # Collect all domain conditions from all condition sets
@@ -1059,12 +1059,12 @@ def analyze_rule_post_enrichment(
         ValueError: If rule has more than max_condition_sets condition sets
 
     Example:
-        >>> from ai_gene_review.etl.arba import ARBAClient
-        >>> from pathlib import Path
-        >>> client = ARBAClient()
-        >>> rule = client.fetch_rule("ARBA00026249")
-        >>> analysis = analyze_rule_post_enrichment(rule, Path("rules/arba"))
-        >>> "rule_id" in analysis and "ipr2go_redundancy" in analysis
+        >>> from ai_gene_review.etl.arba import ARBAClient # doctest: +SKIP
+        >>> from pathlib import Path # doctest: +SKIP
+        >>> client = ARBAClient() # doctest: +SKIP
+        >>> rule = client.fetch_rule("ARBA00026249") # doctest: +SKIP
+        >>> analysis = analyze_rule_post_enrichment(rule, Path("rules/arba")) # doctest: +SKIP
+        >>> "rule_id" in analysis and "ipr2go_redundancy" in analysis # doctest: +SKIP
         True
     """
     # Check condition set limit
@@ -1185,12 +1185,12 @@ def export_analysis_to_yaml(analysis: dict, output_path: Path) -> None:
         output_path: Path to write YAML file
 
     Example:
-        >>> from pathlib import Path
-        >>> from ai_gene_review.etl.arba import ARBAClient
-        >>> client = ARBAClient()
-        >>> rule = client.fetch_rule("ARBA00026249")
-        >>> analysis = analyze_rule_post_enrichment(rule, Path("rules/arba"))
-        >>> export_analysis_to_yaml(analysis, Path("/tmp/analysis.yaml"))
+        >>> from pathlib import Path # doctest: +SKIP
+        >>> from ai_gene_review.etl.arba import ARBAClient # doctest: +SKIP
+        >>> client = ARBAClient() # doctest: +SKIP
+        >>> rule = client.fetch_rule("ARBA00026249") # doctest: +SKIP
+        >>> analysis = analyze_rule_post_enrichment(rule, Path("rules/arba")) # doctest: +SKIP
+        >>> export_analysis_to_yaml(analysis, Path("/tmp/analysis.yaml")) # doctest: +SKIP
     """
     with open(output_path, 'w') as f:
         yaml.dump(analysis, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
@@ -1742,7 +1742,7 @@ def render_rule_review_html(
         Path to the generated HTML file
 
     Example:
-        >>> from pathlib import Path
+        >>> from pathlib import Path # doctest: +SKIP
         >>> rule_id = "ARBA00026249"
         >>> cache_dir = Path("rules/arba")
         >>> # html_path = render_rule_review_html(rule_id, cache_dir)

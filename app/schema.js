@@ -92,6 +92,12 @@ window.searchSchema = {
       "sortBy": "alphabetical"
     },
     {
+      "field": "is_swissprot",
+      "label": "Swiss-Prot",
+      "type": "boolean",
+      "sortBy": "alphabetical"
+    },
+    {
       "field": "tags",
       "label": "Tags",
       "type": "array",
@@ -198,6 +204,11 @@ window.searchSchema = {
       "field": "isoform_id",
       "label": "Isoform ID",
       "type": "string"
+    },
+    {
+      "field": "is_swissprot",
+      "label": "Swiss-Prot",
+      "type": "boolean"
     },
     {
       "field": "tags",

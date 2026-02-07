@@ -9,10 +9,10 @@ API Documentation:
 
 Example:
     >>> from ai_gene_review.etl.arba import ARBAClient
-    >>> client = ARBAClient()
+    >>> client = ARBAClient()  # doctest: +SKIP
     >>> # Fetch a single rule
-    >>> rule = client.fetch_rule("ARBA00000001")
-    >>> rule.uni_rule_id
+    >>> rule = client.fetch_rule("ARBA00000001") # doctest: +SKIP
+    >>> rule.uni_rule_id  # doctest: +SKIP
     'ARBA00000001'
 """
 
@@ -492,10 +492,10 @@ class ARBAClient:
     Provides methods to fetch and cache ARBA rules from UniProt.
 
     Example:
-        >>> client = ARBAClient()
+        >>> client = ARBAClient()  # doctest: +SKIP
         >>> # Get total count
-        >>> count = client.get_total_count()
-        >>> count > 80000
+        >>> count = client.get_total_count()  # doctest: +SKIP
+        >>> count > 80000  # doctest: +SKIP
         True
     """
 
@@ -522,9 +522,9 @@ class ARBAClient:
         """Get the total number of ARBA rules.
 
         Example:
-            >>> client = ARBAClient()
-            >>> count = client.get_total_count()
-            >>> count > 80000
+            >>> client = ARBAClient()  # doctest: +SKIP
+            >>> count = client.get_total_count()  # doctest: +SKIP
+            >>> count > 80000  # doctest: +SKIP
             True
         """
         url = f"{self.base_url}/search"
@@ -544,9 +544,9 @@ class ARBAClient:
             ARBARule object or None if not found
 
         Example:
-            >>> client = ARBAClient()
-            >>> rule = client.fetch_rule("ARBA00000001")
-            >>> rule.uni_rule_id
+            >>> client = ARBAClient()  # doctest: +SKIP
+            >>> rule = client.fetch_rule("ARBA00000001") # doctest: +SKIP
+            >>> rule.uni_rule_id  # doctest: +SKIP
             'ARBA00000001'
         """
         # Check cache first
@@ -630,9 +630,9 @@ class ARBAClient:
             ARBARule objects
 
         Example:
-            >>> client = ARBAClient()
-            >>> rules = list(client.iter_all_rules(query="ec:2.3.2.5", batch_size=10))
-            >>> len(rules) >= 0
+            >>> client = ARBAClient()  # doctest: +SKIP
+            >>> rules = list(client.iter_all_rules(query="ec:2.3.2.5", batch_size=10)) # doctest: +SKIP
+            >>> len(rules) >= 0 # doctest: +SKIP
             True
         """
         cursor = None

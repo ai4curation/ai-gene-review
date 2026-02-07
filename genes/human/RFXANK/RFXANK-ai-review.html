@@ -1,0 +1,3779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFXANK - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RFXANK</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O14593" target="_blank" class="term-link">
+                        O14593
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RFXANK";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O14593" data-a="DESCRIPTION: RFXANK (RFX-associated ankyrin-containing protein,..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RFXANK (RFX-associated ankyrin-containing protein, also known as RFX-B) is a regulatory subunit of the RFX heterotetrametric transcription regulatory complex that controls MHC class II gene expression. The RFX complex consists of two RFX5 molecules (the DNA-binding subunit), one RFXAP molecule, and one RFXANK molecule. RFXANK contains five ankyrin repeats that mediate protein-protein interactions, particularly with RFX5 via recognition of a PxLPxI/L motif. RFXANK does NOT bind DNA directly; DNA binding is mediated by RFX5. RFXANK is essential for RFX complex assembly and stability, and mutations cause MHC class II deficiency (bare lymphocyte syndrome type 2, complementation group B). RFXANK functions as a transcription coactivator/coregulator, NOT as a DNA-binding transcription factor.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0045944" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RFXANK is part of the RFX complex that activates transcription of MHC class II genes. The IBA annotation is appropriate as this biological process annotation reflects the functional outcome of RFX complex activity.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The RFX complex, of which RFXANK is an essential component, activates transcription of MHC class II genes. This process-level annotation is accurate and well-supported by phylogenetic inference and experimental data across mammals.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link">
+                                        PMID:9806546
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RFXANK restores MHC-II expression in cell lines from patients in group B</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link">
+                                        PMID:10938133
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The bare lymphocyte syndrome, a severe combined immunodeficiency due to loss of major histocompatibility complex (MHC) class II gene expression, is caused by inherited mutations in the genes encoding the heterotrimeric transcription factor RFX (RFX-B, RFX5, and RFXAP)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RFXANK localizes to the nucleus as part of the RFX transcription regulatory complex. The IBA annotation for nuclear localization is well-supported.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is essential for RFXANK&#39;s function in transcription regulation. Multiple experimental studies confirm nuclear localization of the RFX complex.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20732328" target="_blank" class="term-link">
+                                        PMID:20732328
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Two RFX5 molecules and one RFXAP molecule assemble in the cytoplasm prior to nuclear localization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0003677" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is INCORRECT. RFXANK does NOT bind DNA directly. It contains ankyrin repeats which are protein-protein interaction domains, not DNA-binding domains. The DNA-binding component of the RFX complex is RFX5, which binds the X box motif of MHC-II promoters. The UniProt keyword mapping that generated this annotation appears to be based on the misleading &#34;DNA-binding protein&#34; nomenclature.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RFXANK lacks any DNA-binding domain. Its ankyrin repeats mediate protein-protein interactions with RFX5 and other partners. All experimental evidence indicates that RFX5 is the DNA-binding subunit of the RFX complex, not RFXANK.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link">
+                                        PMID:9806546
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RFXANK contains a protein-protein interaction region consisting of three ankyrin repeats. Its interaction with RFX5 and RFXAP is essential for binding of the RFX complex to MHC-II promoters.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22649097" target="_blank" class="term-link">
+                                        PMID:22649097
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the ankyrin repeat domains of ANKRA2 and its close paralog regulatory factor X-associated ankyrin-containing protein (RFXANK) recognize a PxLPxI/L motif found in diverse binding proteins, including HDAC4, HDAC5, HDAC9, megalin, and regulatory factor X, 5 (RFX5)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0005634" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for nuclear localization based on combined automated methods. This is consistent with experimental evidence showing nuclear localization.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is well-established for RFXANK as part of the nuclear RFX transcription regulatory complex.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link">
+                                        PMID:10938133
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the heterotrimeric transcription factor RFX (RFX-B, RFX5, and RFXAP)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for cytoplasmic localization. The RFX complex assembles in the cytoplasm before nuclear translocation, so cytoplasmic localization is expected.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The RFX5-RFXAP subcomplex assembles in the cytoplasm prior to nuclear localization, consistent with cytoplasmic presence of RFXANK during complex assembly.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20732328" target="_blank" class="term-link">
+                                        PMID:20732328
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Two RFX5 molecules and one RFXAP molecule assemble in the cytoplasm prior to nuclear localization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10938133
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Associations and interactions between bare lymphocyte syndro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0005515" data-r="PMID:10938133" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IPI annotation documents physical interaction between RFX complex components. However, GO:0005515 (protein binding) is too vague and uninformative.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While protein binding is demonstrated, GO:0005515 is not informative. RFXANK has specific roles as part of a transcription regulatory complex. The annotation should be converted to a more specific term reflecting its function.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003713" target="_blank" class="term-link">
+                                    transcription coactivator activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link">
+                                        PMID:10938133
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The results identified specific domains within each of the three RFX subunits that were necessary for RFX complex formation, including the ankyrin repeats of RFX-B.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20211142" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20211142
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An atlas of combinatorial transcriptional regulation in mous...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0005515" data-r="PMID:20211142" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for protein binding from a high-throughput interaction study. GO:0005515 is not informative about the nature of the interaction.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a high-throughput study. The annotation documents physical interactions but GO:0005515 is too vague to be a core annotation.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25752541" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25752541
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ankyrin repeats of ANKRA2 recognize a PxLPxL motif on the 3M...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0005515" data-r="PMID:25752541" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This study characterized the interaction between RFXANK ankyrin repeats and the PxLPxL motif in RFX7 and other proteins. While it documents specific protein-protein interactions, GO:0005515 is not informative.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The study provides structural insight into RFXANK&#39;s ankyrin repeat-mediated interactions, but protein binding is not informative for a protein whose main function is mediated through protein-protein interactions as a coactivator.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25752541" target="_blank" class="term-link">
+                                        PMID:25752541
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ankyrin repeats of ANKRA2 recognize a PxLPxL motif on the 3M syndrome protein CCDC8</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31864703" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31864703
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for the recognition of RFX7 by ANKRA2 and R...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0005515" data-r="PMID:31864703" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for protein binding. GO:0005515 is not informative.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Non-informative GO:0005515 annotation from interaction studies.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0005515" data-r="PMID:33961781" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from proteome-scale interactome study. GO:0005515 is not informative.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome data. GO:0005515 is too generic.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0005515" data-r="PMID:40205054" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from multimodal cell maps study. GO:0005515 is not informative.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome data. GO:0005515 is too generic for RFXANK&#39;s functionally important protein interactions.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042826" target="_blank" class="term-link">
+                                    GO:0042826
+                                </a>
+                            </span>
+                            <span class="term-label">histone deacetylase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0042826" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on ortholog transfer from mouse. The interaction of RFXANK/ANKRA2 family proteins with HDACs is documented in the literature. RFXANK&#39;s ankyrin repeats recognize a PxLPxI/L motif found in HDAC4, HDAC5, and HDAC9.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The related protein ANKRA2 (and by structural homology RFXANK) has been shown to bind class IIa HDACs via their PxLPxI/L motifs. This interaction is documented in PMID:22649097.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22649097" target="_blank" class="term-link">
+                                        PMID:22649097
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the ankyrin repeat domains of ANKRA2 and its close paralog regulatory factor X-associated ankyrin-containing protein (RFXANK) recognize a PxLPxI/L motif found in diverse binding proteins, including HDAC4, HDAC5, HDAC9</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for nucleoplasm localization based on immunofluorescence data from Human Protein Atlas. Consistent with nuclear function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasm localization is consistent with RFXANK&#39;s role in the RFX transcription regulatory complex.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10938133
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Associations and interactions between bare lymphocyte syndro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0005634" data-r="PMID:10938133" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for nuclear localization from experimental study of RFX complex components.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported experimental evidence for nuclear localization.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link">
+                                        PMID:10938133
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mutagenesis of the RFX genes was performed, and the properties of the proteins were analyzed with regard to transactivation, DNA binding, and protein-protein interactions.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045348" target="_blank" class="term-link">
+                                    GO:0045348
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of MHC class II biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10938133
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Associations and interactions between bare lymphocyte syndro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0045348" data-r="PMID:10938133" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core biological function of RFXANK. The RFX complex is essential for MHC class II gene expression, and mutations in RFXANK cause MHC class II deficiency (bare lymphocyte syndrome).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a well-established core function of RFXANK. Mutations in RFXANK abolish MHC class II expression, causing severe immunodeficiency.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link">
+                                        PMID:9806546
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RFXANK restores MHC-II expression in cell lines from patients in group B and is mutated in these patients</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link">
+                                        PMID:10938133
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The bare lymphocyte syndrome, a severe combined immunodeficiency due to loss of major histocompatibility complex (MHC) class II gene expression, is caused by inherited mutations in the genes encoding the heterotrimeric transcription factor RFX (RFX-B, RFX5, and RFXAP)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10938133
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Associations and interactions between bare lymphocyte syndro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0045944" data-r="PMID:10938133" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for positive regulation of transcription. The RFX complex activates transcription of MHC class II genes.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RFXANK is essential for RFX complex function in activating MHC class II gene transcription.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link">
+                                        PMID:10938133
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mutagenesis of the RFX genes was performed, and the properties of the proteins were analyzed with regard to transactivation, DNA binding, and protein-protein interactions.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000977" target="_blank" class="term-link">
+                                    GO:0000977
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II transcription regulatory region sequence-specific DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9806546
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A gene encoding a novel RFX-associated transactivator is mut...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0000977" data-r="PMID:9806546" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation uses the &#34;contributes_to&#34; qualifier (in GOA), indicating RFXANK contributes to the complex&#39;s DNA binding activity. However, RFXANK does NOT bind DNA directly. The DNA-binding component of the RFX complex is RFX5, which contains the DNA-binding domain that recognizes the X box motif. RFXANK&#39;s ankyrin repeats are protein-protein interaction domains that bind RFX5, not DNA. While the &#34;contributes_to&#34; qualifier acknowledges that RFXANK is not the direct DNA-binding subunit, this annotation is still misleading because it implies some direct involvement in DNA binding.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RFXANK does not bind DNA in any capacity. Its ankyrin repeats mediate protein-protein interactions with RFX5 and other partners. The RFX complex binds DNA through RFX5, not RFXANK. While RFXANK is required for proper complex assembly and function, this is mediated entirely through protein-protein interactions, not DNA binding. A &#34;contributes_to&#34; annotation for a DNA-binding term is inappropriate for a protein that has no DNA-binding activity whatsoever.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link">
+                                        PMID:9806546
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RFXANK contains a protein-protein interaction region consisting of three ankyrin repeats. Its interaction with RFX5 and RFXAP is essential for binding of the RFX complex to MHC-II promoters.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22649097" target="_blank" class="term-link">
+                                        PMID:22649097
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the ankyrin repeat domains of ANKRA2 and its close paralog regulatory factor X-associated ankyrin-containing protein (RFXANK) recognize a PxLPxI/L motif found in diverse binding proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001228" target="_blank" class="term-link">
+                                    GO:0001228
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription activator activity, RNA polymerase II-specific</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9806546
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A gene encoding a novel RFX-associated transactivator is mut...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0001228" data-r="PMID:9806546" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation with &#34;contributes_to&#34; qualifier (in GOA) is INCORRECT and should be removed. GO:0001228 is defined as &#34;A DNA-binding transcription factor activity that activates or increases transcription&#34; - this explicitly requires DNA binding as part of the definition. RFXANK does NOT bind DNA. It contains ankyrin repeats (protein-protein interaction domains), not DNA-binding domains. The DNA-binding component of the RFX complex is RFX5, which binds the X box motif. RFXANK should be annotated as a transcription coactivator (GO:0003713), not as having DNA-binding transcription factor activity.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RFXANK is a transcription coactivator/coregulator, NOT a DNA-binding transcription factor. It functions by binding to RFX5 (the DNA-binding subunit) via its ankyrin repeats recognizing the PxLPxI/L motif. The &#34;contributes_to&#34; qualifier does not salvage this annotation because GO:0001228 inherently requires DNA binding as part of its definition. The appropriate molecular function term for RFXANK is GO:0003713 (transcription coactivator activity), which is defined as a transcription coregulator activity that activates transcription via binding to a DNA-binding transcription factor.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003713" target="_blank" class="term-link">
+                                    transcription coactivator activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link">
+                                        PMID:9806546
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RFXANK contains a protein-protein interaction region consisting of three ankyrin repeats. Its interaction with RFX5 and RFXAP is essential for binding of the RFX complex to MHC-II promoters.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22649097" target="_blank" class="term-link">
+                                        PMID:22649097
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the ankyrin repeat domains of ANKRA2 and its close paralog regulatory factor X-associated ankyrin-containing protein (RFXANK) recognize a PxLPxI/L motif found in diverse binding proteins, including HDAC4, HDAC5, HDAC9, megalin, and regulatory factor X, 5 (RFX5). Crystal structures of the ankyrin repeat domain of ANKRA2 in complex with its binding peptides revealed that each of the middle three ankyrin repeats of ANKRA2 recognizes a residue from the PxLPxI/L motif in a tumbler-lock binding mode</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link">
+                                        PMID:10938133
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DNA binding was dependent on RFX complex formation, and transactivation was dependent on a region of RFX5.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090575" target="_blank" class="term-link">
+                                    GO:0090575
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II transcription regulator complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9806546
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A gene encoding a novel RFX-associated transactivator is mut...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0090575" data-r="PMID:9806546" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RFXANK is part of the RFX transcription regulatory complex. This cellular component annotation is appropriate.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RFXANK is one of the four subunits of the heterotetrameric RFX complex that regulates MHC class II transcription.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link">
+                                        PMID:9806546
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the identification of RFXANK, the gene encoding a third subunit of RFX</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20732328" target="_blank" class="term-link">
+                                        PMID:20732328
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RFX comprises three proteins: RFX5 (two copies), RFXAP, and RFXB</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9806546
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A gene encoding a novel RFX-associated transactivator is mut...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0045944" data-r="PMID:9806546" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for positive regulation of transcription based on the discovery paper. RFXANK restores MHC-II expression when introduced into patient cells.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-established experimental evidence that RFXANK is required for positive regulation of MHC class II gene transcription.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link">
+                                        PMID:9806546
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RFXANK restores MHC-II expression in cell lines from patients in group B</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003713" target="_blank" class="term-link">
+                                    GO:0003713
+                                </a>
+                            </span>
+                            <span class="term-label">transcription coactivator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9806546
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A gene encoding a novel RFX-associated transactivator is mut...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O14593" data-a="GO:0003713" data-r="PMID:9806546" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RFXANK functions as a transcription coactivator as part of the RFX complex. It activates transcription of MHC class II genes by binding to the DNA-binding transcription factor RFX5 (via its ankyrin repeats), enabling the assembly and function of the RFX complex on MHC class II promoters. This is the appropriate molecular function annotation for RFXANK&#39;s role in the RFX complex.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0003713 (transcription coactivator activity) is defined as &#34;A transcription coregulator activity that activates or increases the transcription of specific gene sets via binding to a DNA-binding transcription factor at a specific genomic locus, either on its own or as part of a complex.&#34; This precisely describes RFXANK&#39;s function: it activates MHC class II transcription by binding to RFX5 (the DNA-binding transcription factor) as part of the RFX complex. This annotation should replace the incorrect GO:0001228 annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link">
+                                        PMID:9806546
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RFXANK contains a protein-protein interaction region consisting of three ankyrin repeats. Its interaction with RFX5 and RFXAP is essential for binding of the RFX complex to MHC-II promoters.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link">
+                                        PMID:10938133
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The results identified specific domains within each of the three RFX subunits that were necessary for RFX complex formation, including the ankyrin repeats of RFX-B. DNA binding was dependent on RFX complex formation, and transactivation was dependent on a region of RFX5.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22649097" target="_blank" class="term-link">
+                                        PMID:22649097
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the ankyrin repeat domains of ANKRA2 and its close paralog regulatory factor X-associated ankyrin-containing protein (RFXANK) recognize a PxLPxI/L motif found in diverse binding proteins, including... regulatory factor X, 5 (RFX5)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RFXANK functions as a transcription coactivator in the RFX complex. It binds to RFX5 (the DNA-binding subunit) via its ankyrin repeats, enabling assembly of the heterotetrameric RFX complex that activates MHC class II gene transcription.
+</h3>
+                <span class="vote-buttons" data-g="O14593" data-a="FUNCTION: RFXANK functions as a transcription coactivator in..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003713" target="_blank" class="term-link">
+                            transcription coactivator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045348" target="_blank" class="term-link">
+                                positive regulation of MHC class II biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9806546" target="_blank" class="term-link">
+                            PMID:9806546
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A gene encoding a novel RFX-associated transactivator is mutated in the majority of MHC class II deficiency patients.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RFXANK is the third subunit of the RFX complex</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RFXANK contains ankyrin repeats (protein-protein interaction domains)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RFXANK interaction with RFX5 and RFXAP is essential for RFX complex binding to MHC-II promoters</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RFXANK mutations cause MHC class II deficiency (complementation group B)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10938133" target="_blank" class="term-link">
+                            PMID:10938133
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Associations and interactions between bare lymphocyte syndrome factors.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The heterotrimeric RFX complex consists of RFX-B (RFXANK), RFX5, and RFXAP</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ankyrin repeats of RFX-B are necessary for RFX complex formation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DNA binding is dependent on RFX complex formation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Transactivation is dependent on a region of RFX5</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RFX5 interacts with CIITA</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20211142" target="_blank" class="term-link">
+                            PMID:20211142
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An atlas of combinatorial transcriptional regulation in mouse and man.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20732328" target="_blank" class="term-link">
+                            PMID:20732328
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Solution structure of the heterotrimeric complex between the interaction domains of RFX5 and RFXAP from the RFX gene regulatory complex.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RFX comprises RFX5 (two copies), RFXAP, and RFXB (RFXANK)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RFX5 and RFXAP assemble in cytoplasm prior to nuclear localization</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The RFX5-RFXAP complex binds RFXB with high affinity</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22649097" target="_blank" class="term-link">
+                            PMID:22649097
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Sequence-specific recognition of a PxLPxI/L motif by an ankyrin repeat tumbler lock.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RFXANK ankyrin repeats recognize PxLPxI/L motif in RFX5</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RFXANK also binds HDAC4, HDAC5, HDAC9 via their PxLPxI/L motifs</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Disease-causing mutations in RFXANK affect residues critical for RFX5 binding</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure reveals tumbler-lock binding mode</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25752541" target="_blank" class="term-link">
+                            PMID:25752541
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ankyrin repeats of ANKRA2 recognize a PxLPxL motif on the 3M syndrome protein CCDC8.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RFXANK interacts with RFX7 via its ankyrin repeats</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31864703" target="_blank" class="term-link">
+                            PMID:31864703
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural basis for the recognition of RFX7 by ANKRA2 and RFXANK.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should RFXAP also be reclassified as a transcription coactivator rather than having DNA-binding transcription factor annotations? The same logic applies - RFXAP does not bind DNA directly.
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O14593" data-a="Q: Should RFXAP also be reclassified as a transcripti..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are the GO annotations for RFX5 appropriately capturing its role as the DNA-binding subunit of the RFX complex?
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O14593" data-a="Q: Are the GO annotations for RFX5 appropriately capt..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should there be a specific GO term for &#34;regulatory subunit of transcription factor complex&#34; to better capture the roles of proteins like RFXANK and RFXAP?
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O14593" data-a="Q: Should there be a specific GO term for &#34;regulatory..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq comparing RFX5 binding with and without RFXANK to definitively demonstrate that RFXANK does not contribute to DNA binding specificity.
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: RFXANK does not contribute directly to DNA binding specificity</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O14593" data-a="EXPERIMENT: ChIP-seq comparing RFX5 binding with and without R..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> EMSA experiments testing purified RFXANK alone vs. RFX5 alone vs. complete RFX complex to demonstrate that only RFX5-containing complexes bind DNA.
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Only RFX5 provides DNA-binding activity to the RFX complex</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O14593" data-a="EXPERIMENT: EMSA experiments testing purified RFXANK alone vs...." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O14593
+gene_symbol: RFXANK
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;
+  RFXANK (RFX-associated ankyrin-containing protein, also known as RFX-B) is a regulatory
+  subunit of the RFX heterotetrametric transcription regulatory complex that controls MHC
+  class II gene expression. The RFX complex consists of two RFX5 molecules (the DNA-binding
+  subunit), one RFXAP molecule, and one RFXANK molecule. RFXANK contains five ankyrin repeats
+  that mediate protein-protein interactions, particularly with RFX5 via recognition of a
+  PxLPxI/L motif. RFXANK does NOT bind DNA directly; DNA binding is mediated by RFX5.
+  RFXANK is essential for RFX complex assembly and stability, and mutations cause MHC class II
+  deficiency (bare lymphocyte syndrome type 2, complementation group B). RFXANK functions as
+  a transcription coactivator/coregulator, NOT as a DNA-binding transcription factor.
+alternative_products:
+- name: 1 (Long)
+  id: O14593-1
+- name: 2 (RFX-B-delta5)
+  id: O14593-2
+  sequence_note: VSP_000283, VSP_000284, VSP_054618
+- name: &#39;3&#39;
+  id: O14593-3
+  sequence_note: VSP_000284
+existing_annotations:
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      RFXANK is part of the RFX complex that activates transcription of MHC class II genes.
+      The IBA annotation is appropriate as this biological process annotation reflects
+      the functional outcome of RFX complex activity.
+    action: ACCEPT
+    reason: &gt;
+      The RFX complex, of which RFXANK is an essential component, activates transcription
+      of MHC class II genes. This process-level annotation is accurate and well-supported
+      by phylogenetic inference and experimental data across mammals.
+    supported_by:
+      - reference_id: PMID:9806546
+        supporting_text: &#34;RFXANK restores MHC-II expression in cell lines from patients in group B&#34;
+      - reference_id: PMID:10938133
+        supporting_text: &#34;The bare lymphocyte syndrome, a severe combined immunodeficiency due to loss of major histocompatibility complex (MHC) class II gene expression, is caused by inherited mutations in the genes encoding the heterotrimeric transcription factor RFX (RFX-B, RFX5, and RFXAP)&#34;
+
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      RFXANK localizes to the nucleus as part of the RFX transcription regulatory complex.
+      The IBA annotation for nuclear localization is well-supported.
+    action: ACCEPT
+    reason: &gt;
+      Nuclear localization is essential for RFXANK&#39;s function in transcription regulation.
+      Multiple experimental studies confirm nuclear localization of the RFX complex.
+    supported_by:
+      - reference_id: PMID:20732328
+        supporting_text: &#34;Two RFX5 molecules and one RFXAP molecule assemble in the cytoplasm prior to nuclear localization&#34;
+
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This IEA annotation is INCORRECT. RFXANK does NOT bind DNA directly. It contains
+      ankyrin repeats which are protein-protein interaction domains, not DNA-binding domains.
+      The DNA-binding component of the RFX complex is RFX5, which binds the X box motif
+      of MHC-II promoters. The UniProt keyword mapping that generated this annotation
+      appears to be based on the misleading &#34;DNA-binding protein&#34; nomenclature.
+    action: REMOVE
+    reason: &gt;
+      RFXANK lacks any DNA-binding domain. Its ankyrin repeats mediate protein-protein
+      interactions with RFX5 and other partners. All experimental evidence indicates
+      that RFX5 is the DNA-binding subunit of the RFX complex, not RFXANK.
+    supported_by:
+      - reference_id: PMID:9806546
+        supporting_text: &#34;RFXANK contains a protein-protein interaction region consisting of three ankyrin repeats. Its interaction with RFX5 and RFXAP is essential for binding of the RFX complex to MHC-II promoters.&#34;
+      - reference_id: PMID:22649097
+        supporting_text: &#34;the ankyrin repeat domains of ANKRA2 and its close paralog regulatory factor X-associated ankyrin-containing protein (RFXANK) recognize a PxLPxI/L motif found in diverse binding proteins, including HDAC4, HDAC5, HDAC9, megalin, and regulatory factor X, 5 (RFX5)&#34;
+
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      IEA annotation for nuclear localization based on combined automated methods.
+      This is consistent with experimental evidence showing nuclear localization.
+    action: ACCEPT
+    reason: &gt;
+      Nuclear localization is well-established for RFXANK as part of the nuclear
+      RFX transcription regulatory complex.
+    supported_by:
+      - reference_id: PMID:10938133
+        supporting_text: &#34;the heterotrimeric transcription factor RFX (RFX-B, RFX5, and RFXAP)&#34;
+
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      IEA annotation for cytoplasmic localization. The RFX complex assembles in the
+      cytoplasm before nuclear translocation, so cytoplasmic localization is expected.
+    action: ACCEPT
+    reason: &gt;
+      The RFX5-RFXAP subcomplex assembles in the cytoplasm prior to nuclear localization,
+      consistent with cytoplasmic presence of RFXANK during complex assembly.
+    supported_by:
+      - reference_id: PMID:20732328
+        supporting_text: &#34;Two RFX5 molecules and one RFXAP molecule assemble in the cytoplasm prior to nuclear localization&#34;
+
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:10938133
+  review:
+    summary: &gt;
+      This IPI annotation documents physical interaction between RFX complex components.
+      However, GO:0005515 (protein binding) is too vague and uninformative.
+    action: MODIFY
+    reason: &gt;
+      While protein binding is demonstrated, GO:0005515 is not informative. RFXANK
+      has specific roles as part of a transcription regulatory complex. The annotation
+      should be converted to a more specific term reflecting its function.
+    proposed_replacement_terms:
+      - id: GO:0003713
+        label: transcription coactivator activity
+    supported_by:
+      - reference_id: PMID:10938133
+        supporting_text: &#34;The results identified specific domains within each of the three RFX subunits that were necessary for RFX complex formation, including the ankyrin repeats of RFX-B.&#34;
+
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20211142
+  review:
+    summary: &gt;
+      IPI annotation for protein binding from a high-throughput interaction study.
+      GO:0005515 is not informative about the nature of the interaction.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      This is a high-throughput study. The annotation documents physical interactions
+      but GO:0005515 is too vague to be a core annotation.
+
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25752541
+  review:
+    summary: &gt;
+      This study characterized the interaction between RFXANK ankyrin repeats and
+      the PxLPxL motif in RFX7 and other proteins. While it documents specific
+      protein-protein interactions, GO:0005515 is not informative.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The study provides structural insight into RFXANK&#39;s ankyrin repeat-mediated
+      interactions, but protein binding is not informative for a protein whose
+      main function is mediated through protein-protein interactions as a coactivator.
+    supported_by:
+      - reference_id: PMID:25752541
+        supporting_text: &#34;Ankyrin repeats of ANKRA2 recognize a PxLPxL motif on the 3M syndrome protein CCDC8&#34;
+
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31864703
+  review:
+    summary: &gt;
+      IPI annotation for protein binding. GO:0005515 is not informative.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      Non-informative GO:0005515 annotation from interaction studies.
+
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  review:
+    summary: &gt;
+      IPI annotation from proteome-scale interactome study. GO:0005515 is not informative.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      High-throughput interactome data. GO:0005515 is too generic.
+
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  review:
+    summary: &gt;
+      IPI annotation from multimodal cell maps study. GO:0005515 is not informative.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      High-throughput interactome data. GO:0005515 is too generic for RFXANK&#39;s
+      functionally important protein interactions.
+
+- term:
+    id: GO:0042826
+    label: histone deacetylase binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;
+      This annotation is based on ortholog transfer from mouse. The interaction
+      of RFXANK/ANKRA2 family proteins with HDACs is documented in the literature.
+      RFXANK&#39;s ankyrin repeats recognize a PxLPxI/L motif found in HDAC4, HDAC5, and HDAC9.
+    action: ACCEPT
+    reason: &gt;
+      The related protein ANKRA2 (and by structural homology RFXANK) has been shown
+      to bind class IIa HDACs via their PxLPxI/L motifs. This interaction is documented
+      in PMID:22649097.
+    supported_by:
+      - reference_id: PMID:22649097
+        supporting_text: &#34;the ankyrin repeat domains of ANKRA2 and its close paralog regulatory factor X-associated ankyrin-containing protein (RFXANK) recognize a PxLPxI/L motif found in diverse binding proteins, including HDAC4, HDAC5, HDAC9&#34;
+
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: &gt;
+      IDA annotation for nucleoplasm localization based on immunofluorescence data
+      from Human Protein Atlas. Consistent with nuclear function.
+    action: ACCEPT
+    reason: &gt;
+      Nucleoplasm localization is consistent with RFXANK&#39;s role in the RFX
+      transcription regulatory complex.
+
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:10938133
+  review:
+    summary: &gt;
+      IDA annotation for nuclear localization from experimental study of
+      RFX complex components.
+    action: ACCEPT
+    reason: &gt;
+      Well-supported experimental evidence for nuclear localization.
+    supported_by:
+      - reference_id: PMID:10938133
+        supporting_text: &#34;Mutagenesis of the RFX genes was performed, and the properties of the proteins were analyzed with regard to transactivation, DNA binding, and protein-protein interactions.&#34;
+
+- term:
+    id: GO:0045348
+    label: positive regulation of MHC class II biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:10938133
+  review:
+    summary: &gt;
+      This is the core biological function of RFXANK. The RFX complex is essential
+      for MHC class II gene expression, and mutations in RFXANK cause MHC class II
+      deficiency (bare lymphocyte syndrome).
+    action: ACCEPT
+    reason: &gt;
+      This is a well-established core function of RFXANK. Mutations in RFXANK abolish
+      MHC class II expression, causing severe immunodeficiency.
+    supported_by:
+      - reference_id: PMID:9806546
+        supporting_text: &#34;RFXANK restores MHC-II expression in cell lines from patients in group B and is mutated in these patients&#34;
+      - reference_id: PMID:10938133
+        supporting_text: &#34;The bare lymphocyte syndrome, a severe combined immunodeficiency due to loss of major histocompatibility complex (MHC) class II gene expression, is caused by inherited mutations in the genes encoding the heterotrimeric transcription factor RFX (RFX-B, RFX5, and RFXAP)&#34;
+
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IDA
+  original_reference_id: PMID:10938133
+  review:
+    summary: &gt;
+      IDA annotation for positive regulation of transcription. The RFX complex
+      activates transcription of MHC class II genes.
+    action: ACCEPT
+    reason: &gt;
+      RFXANK is essential for RFX complex function in activating MHC class II
+      gene transcription.
+    supported_by:
+      - reference_id: PMID:10938133
+        supporting_text: &#34;Mutagenesis of the RFX genes was performed, and the properties of the proteins were analyzed with regard to transactivation, DNA binding, and protein-protein interactions.&#34;
+
+- term:
+    id: GO:0000977
+    label: RNA polymerase II transcription regulatory region sequence-specific DNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:9806546
+  review:
+    summary: &gt;
+      This annotation uses the &#34;contributes_to&#34; qualifier (in GOA), indicating RFXANK contributes
+      to the complex&#39;s DNA binding activity. However, RFXANK does NOT bind DNA directly.
+      The DNA-binding component of the RFX complex is RFX5, which contains the DNA-binding
+      domain that recognizes the X box motif. RFXANK&#39;s ankyrin repeats are protein-protein
+      interaction domains that bind RFX5, not DNA. While the &#34;contributes_to&#34; qualifier
+      acknowledges that RFXANK is not the direct DNA-binding subunit, this annotation
+      is still misleading because it implies some direct involvement in DNA binding.
+    action: REMOVE
+    reason: &gt;
+      RFXANK does not bind DNA in any capacity. Its ankyrin repeats mediate protein-protein
+      interactions with RFX5 and other partners. The RFX complex binds DNA through RFX5,
+      not RFXANK. While RFXANK is required for proper complex assembly and function,
+      this is mediated entirely through protein-protein interactions, not DNA binding.
+      A &#34;contributes_to&#34; annotation for a DNA-binding term is inappropriate for a protein
+      that has no DNA-binding activity whatsoever.
+    supported_by:
+      - reference_id: PMID:9806546
+        supporting_text: &#34;RFXANK contains a protein-protein interaction region consisting of three ankyrin repeats. Its interaction with RFX5 and RFXAP is essential for binding of the RFX complex to MHC-II promoters.&#34;
+      - reference_id: PMID:22649097
+        supporting_text: &#34;the ankyrin repeat domains of ANKRA2 and its close paralog regulatory factor X-associated ankyrin-containing protein (RFXANK) recognize a PxLPxI/L motif found in diverse binding proteins&#34;
+
+- term:
+    id: GO:0001228
+    label: DNA-binding transcription activator activity, RNA polymerase II-specific
+  evidence_type: IDA
+  original_reference_id: PMID:9806546
+  review:
+    summary: &gt;
+      This annotation with &#34;contributes_to&#34; qualifier (in GOA) is INCORRECT and should be removed.
+      GO:0001228 is defined as &#34;A DNA-binding transcription factor activity that activates
+      or increases transcription&#34; - this explicitly requires DNA binding as part of the
+      definition. RFXANK does NOT bind DNA. It contains ankyrin repeats (protein-protein
+      interaction domains), not DNA-binding domains. The DNA-binding component of the
+      RFX complex is RFX5, which binds the X box motif. RFXANK should be annotated as
+      a transcription coactivator (GO:0003713), not as having DNA-binding transcription
+      factor activity.
+    action: MODIFY
+    reason: &gt;
+      RFXANK is a transcription coactivator/coregulator, NOT a DNA-binding transcription
+      factor. It functions by binding to RFX5 (the DNA-binding subunit) via its ankyrin
+      repeats recognizing the PxLPxI/L motif. The &#34;contributes_to&#34; qualifier does not
+      salvage this annotation because GO:0001228 inherently requires DNA binding as
+      part of its definition. The appropriate molecular function term for RFXANK is
+      GO:0003713 (transcription coactivator activity), which is defined as a transcription
+      coregulator activity that activates transcription via binding to a DNA-binding
+      transcription factor.
+    proposed_replacement_terms:
+      - id: GO:0003713
+        label: transcription coactivator activity
+    additional_reference_ids:
+      - PMID:22649097
+    supported_by:
+      - reference_id: PMID:9806546
+        supporting_text: &#34;RFXANK contains a protein-protein interaction region consisting of three ankyrin repeats. Its interaction with RFX5 and RFXAP is essential for binding of the RFX complex to MHC-II promoters.&#34;
+      - reference_id: PMID:22649097
+        supporting_text: &#34;the ankyrin repeat domains of ANKRA2 and its close paralog regulatory factor X-associated ankyrin-containing protein (RFXANK) recognize a PxLPxI/L motif found in diverse binding proteins, including HDAC4, HDAC5, HDAC9, megalin, and regulatory factor X, 5 (RFX5). Crystal structures of the ankyrin repeat domain of ANKRA2 in complex with its binding peptides revealed that each of the middle three ankyrin repeats of ANKRA2 recognizes a residue from the PxLPxI/L motif in a tumbler-lock binding mode&#34;
+      - reference_id: PMID:10938133
+        supporting_text: &#34;DNA binding was dependent on RFX complex formation, and transactivation was dependent on a region of RFX5.&#34;
+
+- term:
+    id: GO:0090575
+    label: RNA polymerase II transcription regulator complex
+  evidence_type: IPI
+  original_reference_id: PMID:9806546
+  review:
+    summary: &gt;
+      RFXANK is part of the RFX transcription regulatory complex. This cellular
+      component annotation is appropriate.
+    action: ACCEPT
+    reason: &gt;
+      RFXANK is one of the four subunits of the heterotetrameric RFX complex that
+      regulates MHC class II transcription.
+    supported_by:
+      - reference_id: PMID:9806546
+        supporting_text: &#34;the identification of RFXANK, the gene encoding a third subunit of RFX&#34;
+      - reference_id: PMID:20732328
+        supporting_text: &#34;RFX comprises three proteins: RFX5 (two copies), RFXAP, and RFXB&#34;
+
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IDA
+  original_reference_id: PMID:9806546
+  review:
+    summary: &gt;
+      IDA annotation for positive regulation of transcription based on the discovery
+      paper. RFXANK restores MHC-II expression when introduced into patient cells.
+    action: ACCEPT
+    reason: &gt;
+      Well-established experimental evidence that RFXANK is required for positive
+      regulation of MHC class II gene transcription.
+    supported_by:
+      - reference_id: PMID:9806546
+        supporting_text: &#34;RFXANK restores MHC-II expression in cell lines from patients in group B&#34;
+
+# Proposed NEW annotations
+- term:
+    id: GO:0003713
+    label: transcription coactivator activity
+  evidence_type: IDA
+  original_reference_id: PMID:9806546
+  review:
+    summary: &gt;
+      RFXANK functions as a transcription coactivator as part of the RFX complex.
+      It activates transcription of MHC class II genes by binding to the DNA-binding
+      transcription factor RFX5 (via its ankyrin repeats), enabling the assembly and
+      function of the RFX complex on MHC class II promoters. This is the appropriate
+      molecular function annotation for RFXANK&#39;s role in the RFX complex.
+    action: NEW
+    reason: &gt;
+      GO:0003713 (transcription coactivator activity) is defined as &#34;A transcription
+      coregulator activity that activates or increases the transcription of specific
+      gene sets via binding to a DNA-binding transcription factor at a specific genomic
+      locus, either on its own or as part of a complex.&#34; This precisely describes
+      RFXANK&#39;s function: it activates MHC class II transcription by binding to RFX5
+      (the DNA-binding transcription factor) as part of the RFX complex. This annotation
+      should replace the incorrect GO:0001228 annotation.
+    additional_reference_ids:
+      - PMID:10938133
+      - PMID:22649097
+    supported_by:
+      - reference_id: PMID:9806546
+        supporting_text: &#34;RFXANK contains a protein-protein interaction region consisting of three ankyrin repeats. Its interaction with RFX5 and RFXAP is essential for binding of the RFX complex to MHC-II promoters.&#34;
+      - reference_id: PMID:10938133
+        supporting_text: &#34;The results identified specific domains within each of the three RFX subunits that were necessary for RFX complex formation, including the ankyrin repeats of RFX-B. DNA binding was dependent on RFX complex formation, and transactivation was dependent on a region of RFX5.&#34;
+      - reference_id: PMID:22649097
+        supporting_text: &#34;the ankyrin repeat domains of ANKRA2 and its close paralog regulatory factor X-associated ankyrin-containing protein (RFXANK) recognize a PxLPxI/L motif found in diverse binding proteins, including... regulatory factor X, 5 (RFX5)&#34;
+
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:9806546
+  title: A gene encoding a novel RFX-associated transactivator is mutated in the majority
+    of MHC class II deficiency patients.
+  findings:
+    - statement: RFXANK is the third subunit of the RFX complex
+    - statement: RFXANK contains ankyrin repeats (protein-protein interaction domains)
+    - statement: RFXANK interaction with RFX5 and RFXAP is essential for RFX complex binding to MHC-II promoters
+    - statement: RFXANK mutations cause MHC class II deficiency (complementation group B)
+- id: PMID:10938133
+  title: Associations and interactions between bare lymphocyte syndrome factors.
+  findings:
+    - statement: The heterotrimeric RFX complex consists of RFX-B (RFXANK), RFX5, and RFXAP
+    - statement: Ankyrin repeats of RFX-B are necessary for RFX complex formation
+    - statement: DNA binding is dependent on RFX complex formation
+    - statement: Transactivation is dependent on a region of RFX5
+    - statement: RFX5 interacts with CIITA
+- id: PMID:20211142
+  title: An atlas of combinatorial transcriptional regulation in mouse and man.
+  findings: []
+- id: PMID:20732328
+  title: Solution structure of the heterotrimeric complex between the interaction
+    domains of RFX5 and RFXAP from the RFX gene regulatory complex.
+  findings:
+    - statement: RFX comprises RFX5 (two copies), RFXAP, and RFXB (RFXANK)
+    - statement: RFX5 and RFXAP assemble in cytoplasm prior to nuclear localization
+    - statement: The RFX5-RFXAP complex binds RFXB with high affinity
+- id: PMID:22649097
+  title: Sequence-specific recognition of a PxLPxI/L motif by an ankyrin repeat tumbler
+    lock.
+  findings:
+    - statement: RFXANK ankyrin repeats recognize PxLPxI/L motif in RFX5
+    - statement: RFXANK also binds HDAC4, HDAC5, HDAC9 via their PxLPxI/L motifs
+    - statement: Disease-causing mutations in RFXANK affect residues critical for RFX5 binding
+    - statement: Crystal structure reveals tumbler-lock binding mode
+- id: PMID:25752541
+  title: Ankyrin repeats of ANKRA2 recognize a PxLPxL motif on the 3M syndrome protein
+    CCDC8.
+  findings:
+    - statement: RFXANK interacts with RFX7 via its ankyrin repeats
+- id: PMID:31864703
+  title: Structural basis for the recognition of RFX7 by ANKRA2 and RFXANK.
+  findings: []
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings: []
+
+core_functions:
+  - description: &gt;
+      RFXANK functions as a transcription coactivator in the RFX complex. It binds
+      to RFX5 (the DNA-binding subunit) via its ankyrin repeats, enabling assembly
+      of the heterotetrameric RFX complex that activates MHC class II gene transcription.
+    molecular_function:
+      id: GO:0003713
+      label: transcription coactivator activity
+    directly_involved_in:
+      - id: GO:0045348
+        label: positive regulation of MHC class II biosynthetic process
+    locations:
+      - id: GO:0005634
+        label: nucleus
+
+proposed_new_terms: []
+
+suggested_questions:
+  - question: &gt;
+      Should RFXAP also be reclassified as a transcription coactivator rather than
+      having DNA-binding transcription factor annotations? The same logic applies -
+      RFXAP does not bind DNA directly.
+  - question: &gt;
+      Are the GO annotations for RFX5 appropriately capturing its role as the DNA-binding
+      subunit of the RFX complex?
+  - question: &gt;
+      Should there be a specific GO term for &#34;regulatory subunit of transcription factor complex&#34;
+      to better capture the roles of proteins like RFXANK and RFXAP?
+
+suggested_experiments:
+  - description: &gt;
+      ChIP-seq comparing RFX5 binding with and without RFXANK to definitively demonstrate
+      that RFXANK does not contribute to DNA binding specificity.
+    hypothesis: RFXANK does not contribute directly to DNA binding specificity
+  - description: &gt;
+      EMSA experiments testing purified RFXANK alone vs. RFX5 alone vs. complete RFX complex
+      to demonstrate that only RFX5-containing complexes bind DNA.
+    hypothesis: Only RFX5 provides DNA-binding activity to the RFX complex
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

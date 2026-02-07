@@ -9,10 +9,10 @@ API Documentation:
 
 Example:
     >>> from ai_gene_review.etl.unirule import UniRuleClient
-    >>> client = UniRuleClient()
+    >>> client = UniRuleClient()  # doctest: +SKIP
     >>> # Fetch a single rule
-    >>> rule = client.fetch_rule("UR000000070")
-    >>> rule.uni_rule_id
+    >>> rule = client.fetch_rule("UR000000070") # doctest: +SKIP
+    >>> rule.uni_rule_id  # doctest: +SKIP
     'UR000000070'
 """
 
@@ -206,9 +206,9 @@ class UniRuleClient:
     """Client for the UniProt UniRule REST API.
 
     Example:
-        >>> client = UniRuleClient()
-        >>> count = client.get_total_count()
-        >>> count > 9000
+        >>> client = UniRuleClient()  # doctest: +SKIP
+        >>> count = client.get_total_count()  # doctest: +SKIP
+        >>> count > 9000  # doctest: +SKIP
         True
     """
 

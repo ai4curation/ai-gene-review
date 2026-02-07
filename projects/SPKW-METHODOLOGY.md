@@ -138,3 +138,68 @@ ORDER BY annotation_count DESC;
 1. Exploring poorly-curated organisms
 2. Wanting to see the full scope of SPKW coverage
 3. Debugging or validating the closure-filtered results
+
+---
+
+## Stratifying by Swiss-Prot vs TrEMBL
+
+### Why This Matters
+
+Keywords are assigned differently based on reviewed status:
+- **Swiss-Prot** (reviewed): Keywords are **manually assigned by curators**
+- **TrEMBL** (unreviewed): Keywords are **automatically assigned** via RuleBase/Spearmint/ARBA
+
+This distinction affects interpretation: over-annotations in Swiss-Prot entries indicate problems in the **KW→GO mapping**, while TrEMBL over-annotations could be from bad mappings OR bad automatic keyword assignment.
+
+### Distribution Across SPKW Subprojects
+
+| Organism | Swiss-Prot | TrEMBL | SP % | Method |
+|----------|-----------|--------|------|--------|
+| **Human** | 46,236 (15,172 proteins) | 186 (67) | **99.6%** | swissprot table |
+| **T4 Phage** | 459 (128) | 2 (1) | **99.6%** | swissprot table |
+| **E. coli O157** | 6,850 (2,419) | 881 (320) | **88.6%** | ID heuristic |
+| **P. putida** | 2,345 (677) | 4,945 (2,233) | **32.2%** | swissprot table |
+| **Virus (all)** | 23,747 (5,509) | 156,933 (52,452) | 13.1% | swissprot table |
+| **A. gambiae** | 668 (250) | 17,119 (6,504) | **3.8%** | swissprot table |
+| **Global UniProt** | 35.7M (11.2M) | 202M (77.7M) | **15%** | ID heuristic |
+| S. pombe | ? | ? | ? | Uses gene IDs (SPAC...) |
+| D. melanogaster | ? | ? | ? | Uses gene IDs (FBgn...) |
+| A. thaliana | - | - | - | No SPKW in TAIR database |
+
+### Query: Stratify by Reviewed Status
+
+For databases with `swissprot` table:
+
+```sql
+WITH spkw AS (
+    SELECT g.db_object_id,
+           CASE WHEN sp.uniprot_accession IS NOT NULL
+                THEN 'Swiss-Prot' ELSE 'TrEMBL' END as status
+    FROM gaf_association g
+    LEFT JOIN swissprot sp ON g.db_object_id = sp.uniprot_accession
+    WHERE g.supporting_references = 'GO_REF:0000043'
+)
+SELECT status, COUNT(*) as annotations, COUNT(DISTINCT db_object_id) as proteins
+FROM spkw GROUP BY status;
+```
+
+For databases without `swissprot` table (use ID length heuristic):
+
+```sql
+SELECT
+    CASE
+        WHEN LENGTH(db_object_id) = 6 THEN 'Swiss-Prot'
+        WHEN LENGTH(db_object_id) = 10 THEN 'TrEMBL'
+        ELSE 'Other'
+    END as status,
+    COUNT(*) as annotations
+FROM gaf_association
+WHERE supporting_references = 'GO_REF:0000043'
+GROUP BY status;
+```
+
+### Limitations
+
+- **MOD databases** (PomBase, FlyBase, TAIR) use organism-specific IDs, not UniProt accessions
+- ID length heuristic is ~95% accurate but not perfect
+- Some entries promoted from TrEMBL to Swiss-Prot retain automatic keywords
