@@ -6,18 +6,18 @@ Exports flattened annotation data to multiple formats:
 - DuckDB (queryable database)
 - data.js (for browser app)
 
-Example:
-    >>> from ai_gene_review.export import AnnotationExporter
-    >>> from pathlib import Path
-    >>> exporter = AnnotationExporter()
-    >>> files = list(Path('genes').glob('**/*-ai-review.yaml'))
-    >>> # Get flat data as list of dicts
-    >>> data = exporter.export_from_files(files)
-    >>> # Export to various formats
-    >>> exporter.export_to_json(files, 'output.json')
-    >>> exporter.export_to_jsonl(files, 'output.jsonl')
-    >>> exporter.export_to_duckdb(files, 'output.duckdb')
-    >>> exporter.export_to_datajs(files, 'app/data.js')
+Example::
+    from ai_gene_review.export import AnnotationExporter
+    from pathlib import Path
+    exporter = AnnotationExporter()
+    files = list(Path('genes').glob('**/*-ai-review.yaml'))
+    # Get flat data as list of dicts
+    data = exporter.export_from_files(files)
+    # Export to various formats
+    exporter.export_to_json(files, 'output.json')
+    exporter.export_to_jsonl(files, 'output.jsonl')
+    exporter.export_to_duckdb(files, 'output.duckdb')
+    exporter.export_to_datajs(files, 'app/data.js')
 """
 
 import json
