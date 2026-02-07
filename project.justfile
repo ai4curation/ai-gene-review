@@ -936,7 +936,43 @@ export-annotations-tsv output_file="exports/exported_annotations.tsv":
 # Export existing_annotations to JSON format (for linkml-browser)
 export-annotations-json output_file="exports/exported_annotations.json":
     @mkdir -p exports
-    uv run python -c "from ai_gene_review.export import JSONExporter; from pathlib import Path; exporter = JSONExporter(); files = list(Path('genes').glob('**/*-ai-review.yaml')); print(f'Found {len(files)} files'); exporter.export_to_json(files, '{{output_file}}'); print(f'Exported to {{output_file}}')"
+    uv run python -c "from ai_gene_review.export import AnnotationExporter; from pathlib import Path; exporter = AnnotationExporter(); files = list(Path('genes').glob('**/*-ai-review.yaml')); print(f'Found {len(files)} files'); n = exporter.export_to_json(files, '{{output_file}}'); print(f'Exported {n} annotations to {{output_file}}')"
+
+# Export existing_annotations to JSONL format (one JSON object per line)
+export-annotations-jsonl output_file="exports/exported_annotations.jsonl":
+    @mkdir -p exports
+    uv run python -c "from ai_gene_review.export import AnnotationExporter; from pathlib import Path; exporter = AnnotationExporter(); files = list(Path('genes').glob('**/*-ai-review.yaml')); print(f'Found {len(files)} files'); n = exporter.export_to_jsonl(files, '{{output_file}}'); print(f'Exported {n} annotations to {{output_file}}')"
+
+# Export existing_annotations to DuckDB database (queryable SQL, with redundancy analysis)
+export-annotations-duckdb output_file="exports/annotations.duckdb":
+    @mkdir -p exports
+    uv run python -c "from ai_gene_review.export import AnnotationExporter; from pathlib import Path; exporter = AnnotationExporter(); files = list(Path('genes').glob('**/*-ai-review.yaml')); print(f'Found {len(files)} files'); n = exporter.export_to_duckdb(files, '{{output_file}}', include_redundancy=True); print(f'Exported {n} annotations to {{output_file}}')"
+
+# Export existing_annotations to DuckDB (fast mode, no redundancy analysis)
+export-annotations-duckdb-fast output_file="exports/annotations.duckdb":
+    @mkdir -p exports
+    uv run python -c "from ai_gene_review.export import AnnotationExporter; from pathlib import Path; exporter = AnnotationExporter(); files = list(Path('genes').glob('**/*-ai-review.yaml')); print(f'Found {len(files)} files'); n = exporter.export_to_duckdb(files, '{{output_file}}', include_redundancy=False); print(f'Exported {n} annotations to {{output_file}}')"
+
+# Export existing_annotations to data.js for browser app
+export-annotations-datajs output_file="app/data.js":
+    @mkdir -p app
+    uv run python -c "from ai_gene_review.export import AnnotationExporter; from pathlib import Path; exporter = AnnotationExporter(); files = list(Path('genes').glob('**/*-ai-review.yaml')); print(f'Found {len(files)} files'); n = exporter.export_to_datajs(files, '{{output_file}}'); print(f'Exported {n} annotations to {{output_file}}')"
+
+# Query the annotations DuckDB database
+# Example: just query-annotations "SELECT taxon_label, COUNT(*) FROM annotations GROUP BY taxon_label"
+query-annotations query:
+    @if [ ! -f exports/annotations.duckdb ]; then just export-annotations-duckdb; fi
+    uv run python -c "import duckdb; conn = duckdb.connect('exports/annotations.duckdb'); print(conn.execute('{{query}}').fetchdf().to_string())"
+
+# Show SPKW annotations that are redundant with more specific experimental evidence
+spkw-redundant-with-experimental:
+    @if [ ! -f exports/annotations.duckdb ]; then just export-annotations-duckdb; fi
+    uv run python scripts/query_redundancy.py spkw-redundant
+
+# Show regulatory conflation patterns (SPKW says "X", experimental says "regulates X")
+spkw-regulatory-conflation:
+    @if [ ! -f exports/annotations.duckdb ]; then just export-annotations-duckdb; fi
+    uv run python scripts/query_redundancy.py spkw-regulatory
 
 # Generate statistics HTML report from annotation data
 stats output_file="docs/stats_report.html":

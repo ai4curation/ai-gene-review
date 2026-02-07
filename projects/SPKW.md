@@ -55,8 +55,9 @@ Not all SPKW-unique annotations are over-annotations:
 ## Project Status
 
 - **Started**: 2025-12-23
-- **Last updated**: 2026-01-31
-- **Total genes reviewed**: ~90 across all organisms
+- **Last updated**: 2026-02-04
+- **Total genes reviewed**: 95 across 8 organisms
+- **Compiled data**: [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv)
 
 ### Phase 1 (Original)
 - [x] MAP3K5 - COMPLETE
@@ -82,3 +83,30 @@ Not all SPKW-unique annotations are over-annotations:
 3. **Distinguish toxins from effectors** - direct cytotoxicity vs signaling modulation
 4. **Validate family-level keywords** - subfunctionalization can invalidate family annotations
 5. **Expression ≠ function** - upregulation during a process doesn't mean functional involvement
+
+## Swiss-Prot vs TrEMBL Analysis
+
+**Key finding**: Keywords on Swiss-Prot entries are **manually assigned by curators**, not by ARBA/UniRule automatic systems. This means:
+
+| Organism | Swiss-Prot % | Implication |
+|----------|-------------|-------------|
+| Human | 99.6% | Over-annotations reflect manual curator keyword choices |
+| T4 Phage | 99.6% | Same - curators chose these keywords |
+| E. coli O157 | 88.6% | Mostly manual |
+| P. putida | 32.2% | Mixed manual/automatic |
+| A. gambiae | 3.8% | Mostly automatic keyword assignment |
+
+**Of 71 genes with over-annotation issues: 70 are Swiss-Prot (99%)**
+
+This confirms the problem is in the **KW→GO mapping layer**, not keyword assignment. See [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md) for stratification queries.
+
+---
+
+## Session Notes
+
+### 2026-02-04
+
+- Researched UniProt keyword assignment process (confirmed: Swiss-Prot = manual)
+- Created [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv) compiling 95 reviewed genes
+- Added Swiss-Prot vs TrEMBL stratification to methodology
+- Cross-species analysis: issue rates 10-40%, all Swiss-Prot dominated
