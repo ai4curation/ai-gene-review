@@ -974,6 +974,11 @@ spkw-regulatory-conflation:
     @if [ ! -f exports/annotations.duckdb ]; then just export-annotations-duckdb; fi
     uv run python scripts/query_redundancy.py spkw-regulatory
 
+# Run full SPKW redundancy analysis
+spkw-analysis:
+    @if [ ! -f exports/annotations.duckdb ]; then just export-annotations-duckdb; fi
+    uv run python scripts/query_redundancy.py all
+
 # Generate statistics HTML report from annotation data
 stats output_file="docs/stats_report.html":
     @echo "📊 Generating statistics report..."

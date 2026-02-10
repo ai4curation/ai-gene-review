@@ -221,6 +221,7 @@ def test_calculate_jaccard_similarity_arba00026249():
     assert 0.0 <= similarity_23 <= 1.0
 
 
+@pytest.mark.integration
 def test_analyze_interpro_overlap_in_condition_set(arba00026249_rule):
     """Test overlap analysis for condition set with 3 InterPro IDs.
 
@@ -383,6 +384,7 @@ def test_analyze_rule_post_enrichment_arba00026249(tmp_path, arba00026249_rule):
     assert total_annotations > 0
 
 
+@pytest.mark.integration
 def test_analyze_rule_post_enrichment_no_interpro(tmp_path):
     """Test analysis for rule with no InterPro conditions.
 
