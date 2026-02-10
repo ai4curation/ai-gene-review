@@ -3,8 +3,9 @@
 > **Editor Brief (as of 2026-02-09):**
 > GO:0051082 "unfolded protein binding" and GO:0031249 "denatured protein binding" are proposed
 > for obsoletion ([go-ontology#30962](https://github.com/geneontology/go-ontology/issues/30962)).
-> We reviewed all 33 human genes with experimental annotations to these terms (~189 EXP annotations
-> to GO:0051082 across all species). Each gene's GO:0051082 annotation was reclassified to a
+> We reviewed all 33 human genes plus 3 non-human genes (SAN1/yeast, Fbxo2/mouse, HSPH1/hamster)
+> with experimental annotations to these terms (~189 EXP annotations
+> to GO:0051082 across all species). Each gene's GO:0051082/GO:0031249 annotation was reclassified to a
 > mechanism-specific MF term. **Decisions from GO editors are needed on**: (1) creation of a
 > "holdase chaperone activity" term ([go-ontology#30552](https://github.com/geneontology/go-ontology/issues/30552)),
 > and (2) whether "misfolded protein sensor activity" should be created for E3 ligases/F-box
@@ -171,9 +172,9 @@ because it has that second term as well; this is not an additional human gene.
 
 ### GO:0031249 (denatured protein binding)
 - HSPA1A (P0DMV8) - already in Tier 1 (same gene; listed here because it also has GO:0031249)
-- [ ] SAN1 (yeast) - E3 ligase, misfolded protein sensor
-- [ ] Fbxo2 (mouse) - F-box protein, glycoprotein sensor
-- [ ] HSPH1 (hamster) - Hsp110, holdase
+- [x] SAN1 (yeast) - E3 ligase, misfolded protein sensor → MODIFY GO:0031249 to GO:0051787 (misfolded protein binding)
+- [x] Fbxo2 (mouse) - F-box protein, glycoprotein sensor → MODIFY GO:0031249 (glycan-mediated recognition, not general denatured protein binding)
+- [x] HSPH1 (hamster) - Hsp110, holdase → MODIFY GO:0031249 to GO:0044183 (holdase placeholder) + core NEF function (GO:0000774)
 
 ## Categories of Annotated Proteins (all species)
 
@@ -200,6 +201,15 @@ Based on the ~189 experimental annotations across all species:
 
 <details>
 <summary>Curation session notes (click to expand)</summary>
+
+## 2026-02-09 (session 6 - NON-HUMAN GENES)
+
+- **3 non-human genes completed**: SAN1 (yeast), Fbxo2 (mouse), HSPH1 (Chinese hamster/CRIGR)
+- SAN1: E3 ubiquitin ligase for nuclear protein quality control; GO:0031249 → MODIFY to GO:0051787 (misfolded protein binding)
+- Fbxo2: SCF(Fbxo2) substrate adaptor recognizing N-glycans on misfolded glycoproteins; GO:0031249 addressed via glycan-mediated mechanism
+- HSPH1: Hsp110 holdase + NEF for Hsp70; GO:0031249 → MODIFY to GO:0044183 (holdase placeholder)
+- All 3 validate (0 errors; minor warnings about deep research cross-referencing)
+- **All 36 genes (33 human + 3 non-human) now complete**
 
 ## 2026-02-09 (session 5 - COMPLETION)
 
