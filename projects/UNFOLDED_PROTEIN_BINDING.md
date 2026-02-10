@@ -31,20 +31,28 @@ How GO:0051082 annotations were reclassified:
 | Foldase (HSP70, DnaJ, prefoldin) | MODIFY | GO:0044183 protein folding chaperone | Active ATP-dependent folding | HSPA1A, DNAJB1, PFDN1 |
 | Holdase (sHSP, crystallin, CLU) | MODIFY | GO:0044183 *(placeholder, see [holdase caveat](#holdase-caveat))* | Closest available; needs holdase term | CRYAA, HSPB6, CLU |
 | Disaggregase (HSP70 subset) | MODIFY | GO:0140545 ATP-dependent protein disaggregase activity | Distinct disaggregation activity | HSPA1A, HSPA1B, HSPA8 |
+| Co-chaperone NEF (GrpE-like) | REMOVE | *(none — not direct UPB)* | Regulates HSP70 nucleotide cycle, does not bind unfolded substrate directly | GRPEL1 |
 | ER/quality control sensor | REMOVE or MARK_AS_OVER_ANNOTATED | *(none — not chaperones)* | Substrate recognition for ligase/GT, not chaperoning | SYVN1, ERLEC1, UGGT1 |
 | HSP90 co-chaperone | MARK_AS_OVER_ANNOTATED | *(none — co-chaperone, not UPB)* | These assist HSP90, not direct unfolded protein binding | AHSA1, PTGES3, TMEM67 |
 | Other specific MF | MODIFY | Gene-specific term | Function better captured by existing GO term | NPM1 → GO:0140713, AIP → GO:0051879 |
 
 ## Impact Summary
 
-| Action | Count | Mechanism classes |
+Primary GO:0051082 reclassification decisions (mutually exclusive; 33 unique human genes):
+
+| Primary action | Count | Notes |
 |--------|-------|-------------------|
-| MODIFY → GO:0044183 | 22 | 13 foldase, 6 holdase (caveat), 3 co-chaperone/other |
-| MODIFY → GO:0140545 | 3 | 3 disaggregase (also have GO:0044183) |
-| MODIFY → other specific MF | 2 | NPM1 (histone chaperone), AIP (Hsp90 binding) |
-| MARK_AS_OVER_ANNOTATED | 5 | 2 sensor, 3 co-chaperone |
-| REMOVE | 2 | 2 sensor (not chaperone activity) |
+| MODIFY → GO:0044183 | 23 | Foldase + holdase placeholder set |
+| MODIFY → other specific MF | 2 | NPM1 (GO:0140713), AIP (GO:0051879) |
+| MARK_AS_OVER_ANNOTATED | 5 | Sensor/co-chaperone cases where UPB overstates direct activity |
+| REMOVE | 3 | SYVN1, ERLEC1, GRPEL1 |
 | **Total** | **33** | |
+
+Additional non-exclusive co-annotations:
+
+| Additional term | Count | Genes |
+|--------|-------|-------------------|
+| GO:0140545 ATP-dependent protein disaggregase activity | 3 | HSPA1A, HSPA1B, HSPA8 |
 
 ## Before/After Examples
 
@@ -85,8 +93,10 @@ Existing GO terms used as replacements:
 - **GO:0140545** ATP-dependent protein disaggregase activity — solubilizes protein aggregates *(existing)*
 - **GO:0140713** histone chaperone activity — for NPM1 *(existing)*
 - **GO:0051879** Hsp90 protein binding — for AIP *(existing)*
-- **GO:0060211** regulation of nuclear-transcribed mRNA poly(A) tail shortening — for GRPEL1 *(existing)*
-- **GO:1904378** maintenance of unfolded protein involved in ERAD pathway *(existing, not used for any human gene)*
+- **GO:0000774** adenyl-nucleotide exchange factor activity — core MF for GRPEL1 (UPB removed) *(existing)*
+
+This project focuses on MF replacement for GO:0051082/GO:0031249. BP terms discussed in
+individual gene reviews (for example GO:0030150 in GRPEL1) are not listed as MF replacements here.
 
 Proposed new terms (not yet in GO):
 
@@ -112,6 +122,9 @@ a more specific holdase term once one is created in GO.
 ---
 
 ## Human Gene Checklist
+
+33 unique human genes are in scope below. HSPA1A appears again in the GO:0031249 subsection
+because it has that second term as well; this is not an additional human gene.
 
 ### Tier 1 - Classical Chaperones (foldase)
 - [x] HSPA1A (P0DMV8) - HSP70, foldase → MODIFY to GO:0044183 + GO:0140545
@@ -150,14 +163,14 @@ a more specific holdase term once one is created in GO.
 - [x] CLU (P10909) - clusterin, extracellular holdase → MODIFY to GO:0044183 (holdase, see [caveat](#holdase-caveat))
 - [x] SCG5 (P05408) - neuroendocrine protein 7B2 → MODIFY to GO:0044183
 - [x] TOMM20 (Q15388) - mitochondrial import receptor → MARK_AS_OVER_ANNOTATED
-- [x] GRPEL1 (Q9HAV7) - GrpE homolog → MODIFY to GO:0060211 + GO:0044183
+- [x] GRPEL1 (Q9HAV7) - GrpE homolog (NEF) → REMOVE (not direct unfolded-substrate binder; core MF GO:0000774)
 - [x] AIP (O00170) - AH receptor interacting protein → MODIFY to GO:0051879
 - [x] AHSA1 (O95433) - HSP90 co-chaperone → MARK_AS_OVER_ANNOTATED
 - [x] PTGES3 (Q15185) - HSP90 co-chaperone / PGE synthase → MARK_AS_OVER_ANNOTATED
 - [x] TMEM67 (Q5HYA8) - meckelin → MARK_AS_OVER_ANNOTATED
 
 ### GO:0031249 (denatured protein binding)
-- [x] HSPA1A (P0DMV8) - already in Tier 1
+- HSPA1A (P0DMV8) - already in Tier 1 (same gene; listed here because it also has GO:0031249)
 - [ ] SAN1 (yeast) - E3 ligase, misfolded protein sensor
 - [ ] Fbxo2 (mouse) - F-box protein, glycoprotein sensor
 - [ ] HSPH1 (hamster) - Hsp110, holdase
