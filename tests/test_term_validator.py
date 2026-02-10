@@ -146,6 +146,7 @@ def test_validate_terms_in_data():
 
 
 @pytest.mark.integration
+@pytest.mark.vcr_skip  # oaklib downloads multi-GB sqlite databases, incompatible with VCR
 def test_validate_term_real_api():
     """Test term validation with real OLS API.
 

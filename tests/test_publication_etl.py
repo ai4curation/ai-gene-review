@@ -203,6 +203,7 @@ def test_cache_publication():
         assert new_mtime > original_mtime  # File was updated
 
 
+@pytest.mark.integration
 def test_cache_publication_invalid_pmid():
     """Test caching with an invalid PMID."""
     pmid = "99999999999"  # Unlikely to exist

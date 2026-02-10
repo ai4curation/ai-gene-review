@@ -41,9 +41,17 @@ test-full: test pytest-integration
 pytest:
   uv run pytest tests
 
-# include integration tests
+# Run integration tests (replays VCR cassettes)
 pytest-integration:
-	$(RUN) pytest -m ""
+	uv run pytest -m integration --vcr-record=none
+
+# Record VCR cassettes for integration tests (requires network)
+record-cassettes:
+	uv run pytest -m integration --vcr-record=new_episodes -x -v
+
+# Re-record all VCR cassettes from scratch (requires network)
+rerecord-cassettes:
+	uv run pytest -m integration --vcr-record=all -x -v
 
 doctest:
   uv run pytest  --doctest-modules src

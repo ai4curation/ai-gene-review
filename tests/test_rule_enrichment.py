@@ -75,6 +75,7 @@ def test_enrich_condition_value_taxon():
     assert result.source == "ncbi_taxonomy"
 
 
+@pytest.mark.integration
 def test_enrich_condition_value_interpro():
     """Test enriching an InterPro condition value."""
     enricher = LabelEnricher()
@@ -84,6 +85,7 @@ def test_enrich_condition_value_interpro():
     # Label may or may not be fetched depending on network
 
 
+@pytest.mark.integration
 def test_enrich_condition_value_funfam():
     """Test enriching a FunFam condition value."""
     enricher = LabelEnricher()
@@ -92,6 +94,7 @@ def test_enrich_condition_value_funfam():
     assert result.curie == "CATH.FunFam:1.10.510.10:FF:000100"
 
 
+@pytest.mark.integration
 def test_enrich_go_annotation():
     """Test enriching a GO annotation."""
     enricher = LabelEnricher()
