@@ -1,0 +1,3072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSPH1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HSPH1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q60446" target="_blank" class="term-link">
+                        Q60446
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Cricetulus griseus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HSPH1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q60446" data-a="DESCRIPTION: HSPH1 (Hsp105/Hsp110) is a member of the Hsp110 fa..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HSPH1 (Hsp105/Hsp110) is a member of the Hsp110 family, a significantly diverged subgroup of the Hsp70 superfamily. It has two core molecular functions: (1) holdase chaperone activity, preventing the aggregation of heat-denatured proteins by maintaining them in a soluble, folding-competent state (significantly more efficient than Hsc70 at this function), and (2) nucleotide exchange factor (NEF) activity for Hsp70 family members (HSPA1A, HSPA1B), promoting ADP release and triggering substrate release. Importantly, HSPH1 does NOT itself refold denatured proteins; refolding requires Hsc70/Hdj-1. HSPH1 also inhibits HSPA8/HSC70 ATPase activity. Overexpression confers substantial thermoresistance in vivo.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>holdase chaperone activity</h3>
+                <span class="vote-buttons" data-g="Q60446" data-a="holdase chaperone activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Binding of unfolded or misfolded proteins to prevent their aggregation, without actively catalyzing refolding. This activity maintains client proteins in a soluble, folding-competent state for subsequent refolding by other chaperone systems.</p>
+            
+
+            
+            <p><strong>Justification:</strong> Multiple proteins including HSPH1/Hsp110, small HSPs (CRYAA, CRYAB, HSPB6), and clusterin (CLU) function as holdases rather than foldases. The current GO term GO:0044183 (protein folding chaperone) implies active folding, which does not accurately describe holdase function. See go-ontology#30552.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                    protein folding chaperone
+                </a>
+            </p>
+            
+
+            
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0005634" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter-inferred nuclear localization. UniProt subcellular location for Q60446 lists only cytoplasm (by similarity to human Q92598). However, the deep research review (HSPH1-deep-research-falcon.md) notes that Hsp105alpha (HSPH1) localizes constitutively to both cytoplasm and nucleus in multiple mammalian tissues, including brain. The TreeGrafter inference is therefore supported by recent literature on mammalian orthologs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is supported by literature on mammalian HSPH1 orthologs. The deep research review cites Chuang et al. 2024 as reporting constitutive cytoplasmic and nuclear localization. However, the primary functional compartment is the cytosol where the holdase and NEF activities operate. Keeping as non-core since it is a secondary localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CRIGR/HSPH1/HSPH1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Constitutive cytoplasmic and nuclear localization is reported for Hsp105alpha (HSPH1) [in mammalian tissues]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter-inferred cytosol localization, consistent with UniProt annotation of cytoplasm for HSPH1 (by similarity to human Q92598). HSPH1 is a cytoplasmic chaperone and its holdase and NEF functions operate in the cytoplasm. The deep research review (HSPH1-deep-research-falcon.md) confirms cytosolic localization as the primary site of HSPH1 function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytosol is the primary localization for HSPH1, consistent with UniProt annotation of cytoplasm and with its known functions as a cytoplasmic chaperone and NEF.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                                        PMID:9395504
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hsp110 is one of the principal molecular chaperones of mammalian cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0006457" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter-inferred involvement in protein folding. HSPH1 is involved in protein folding homeostasis, but importantly it is a holdase, not a foldase. It maintains denatured proteins in a folding-competent state but does NOT actively refold them (PMID:9395504). Refolding requires Hsc70/Hdj-1. The term &#39;protein folding&#39; is acceptable as a broad biological process annotation since HSPH1 participates in the protein folding pathway (by handing off substrates to the Hsc70/Hdj-1 refolding machinery), but its direct activity is holding, not folding. As a NEF, HSPH1 also accelerates Hsp70 cycling which supports the overall protein folding process (deep research review, HSPH1-deep-research-falcon.md).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HSPH1 participates in the protein folding pathway by preventing aggregation and maintaining substrates in a folding-competent state for subsequent refolding by Hsc70/Hdj-1. The BP term &#39;protein folding&#39; is broadly acceptable but HSPH1 is a holdase, not a foldase, so this is kept as non-core. Its direct role is prevention of aggregation rather than active folding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                                        PMID:9395504
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hsp110 is highly efficient in selectively recognizing denatured proteins and maintaining them in a soluble, folding-competent state</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                                        PMID:9395504
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hsp110-bound proteins can then be refolded by the addition of rabbit reticulocyte lysate or hsc70 and Hdj-1, whereas Hdj-1 does not itself function as a co-chaperone in folding with hsp110</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB-KW:KW-0547 (Nucleotide-binding) keyword mapping. HSPH1 belongs to the Hsp70 superfamily and possesses the conserved nucleotide-binding domain (NBD). This is correct but overly general; ATP binding (GO:0005524) is more specific and is already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleotide binding is correct for HSPH1, which has a conserved Hsp70-type nucleotide-binding domain. While more general than the co-annotated GO:0005524 (ATP binding), the IEA mapping from UniProt keyword is valid. Both annotations can coexist since the IEA is broader.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined IEA annotation from InterPro:IPR013126 (Hsp_70_fam) and UniProtKB-KW:KW-0067 (ATP-binding). HSPH1 has a conserved Hsp70-type nucleotide-binding domain and binds ATP. While Hsp110 family members have greatly reduced ATPase activity compared to canonical Hsp70s, they do bind ATP, which is important for their NEF function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is a core property of HSPH1. The Hsp110 family binds ATP through their conserved NBD. UniProt keywords and InterPro domain classification both support this annotation. ATP binding is required for the NEF function of HSPH1.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB subcellular location vocabulary mapping (SL-0086). UniProt explicitly states cytoplasm localization for HSPH1 (by similarity to human Q92598). This is the primary localization and is consistent with its chaperone/NEF functions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is the primary subcellular localization for HSPH1. UniProt annotation (by similarity) and the protein&#39;s established cytoplasmic functions support this.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                                        PMID:9395504
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hsp110 is one of the principal molecular chaperones of mammalian cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006950" target="_blank" class="term-link">
+                                    GO:0006950
+                                </a>
+                            </span>
+                            <span class="term-label">response to stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0006950" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA-inferred involvement in response to stress. HSPH1 is a heat shock protein whose expression is upregulated under stress conditions. UniProt keywords include &#39;Stress response&#39;. This is correct but very general; the more specific term GO:0034605 (cellular response to heat) is already annotated with IDA evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Response to stress is valid for this heat shock protein but is very general. The more specific IDA-supported annotation to GO:0034605 (cellular response to heat) captures the core stress response function. Keeping this broader IEA annotation as non-core since it adds no information beyond the specific IDA annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0016887" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-inferred ATP hydrolysis activity from IPR013126 (Hsp_70_fam). While HSPH1 belongs to the Hsp70 superfamily and has the conserved ATPase domain architecture, Hsp110 family members have greatly reduced intrinsic ATPase activity compared to canonical Hsp70 chaperones. The deep research review (HSPH1-deep-research-falcon.md) emphasizes that HSPH1 functions primarily as a NEF rather than an ATPase. The ATPase annotation from the broad Hsp70 family InterPro entry is misleading for this diverged subfamily.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Hsp110 family members have significantly reduced ATPase activity compared to canonical Hsp70 proteins. The InterPro family IPR013126 covers the entire Hsp70 superfamily, and while the domain architecture is conserved, Hsp110 members have diverged to function primarily as holdases and NEFs rather than as ATPases. Annotating HSPH1 with GO:0016887 (ATP hydrolysis activity) overstates its catalytic function. The core molecular functions are holdase chaperone activity and NEF activity (GO:0000774).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031249" target="_blank" class="term-link">
+                                    GO:0031249
+                                </a>
+                            </span>
+                            <span class="term-label">denatured protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9395504
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hsp110 protects heat-denatured proteins and confers cellular...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0031249" data-r="PMID:9395504" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation based on Oh et al. 1997, which demonstrated that Hsp110 is highly efficient at recognizing heat-denatured proteins and maintaining them in a soluble, folding-competent state. This is a genuine holdase chaperone function. GO:0031249 is being obsoleted (go-ontology#30962). The appropriate replacement is GO:0044183 (protein folding chaperone) as a placeholder, with the caveat that HSPH1 is a holdase, not a foldase, and a more specific holdase term is needed (go-ontology#30552).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0031249 (denatured protein binding) is being obsoleted. The experimental evidence from PMID:9395504 clearly demonstrates holdase chaperone activity: Hsp110 prevents aggregation of heat-denatured proteins and maintains them in a folding-competent state. GO:0044183 (protein folding chaperone) is the closest available replacement MF term, used as a placeholder until a specific holdase chaperone activity term is created (go-ontology#30552). Note that HSPH1 does NOT refold proteins itself; refolding requires Hsc70/Hdj-1.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    protein folding chaperone
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                                        PMID:9395504
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hsp110 is highly efficient in selectively recognizing denatured proteins and maintaining them in a soluble, folding-competent state and is significantly more efficient in performing this function than is hsc70</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                                        PMID:9395504
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hsp110-bound proteins can then be refolded by the addition of rabbit reticulocyte lysate or hsc70 and Hdj-1, whereas Hdj-1 does not itself function as a co-chaperone in folding with hsp110</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034605" target="_blank" class="term-link">
+                                    GO:0034605
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to heat</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9395504
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hsp110 protects heat-denatured proteins and confers cellular...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0034605" data-r="PMID:9395504" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation based on Oh et al. 1997, which demonstrated that overexpression of Hsp110 in vivo conferred substantial heat resistance to both Rat-1 and HeLa cells. This is a core biological process for HSPH1 as a heat shock protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported by direct experimental evidence from PMID:9395504 showing that Hsp110 overexpression confers thermoresistance. HSPH1 is one of the primary heat shock proteins in mammalian cells, and cellular response to heat is a core biological process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                                        PMID:9395504
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the overexpression in vivo of hsp110 conferred substantial heat resistance to both Rat-1 and HeLa cells</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                                        PMID:9395504
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hsp110 is one of the principal molecular chaperones of mammalian cells and represents a newly identified component of the primary protection/repair pathway for denatured proteins and thermotolerance expression in vivo</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                                    GO:0000774
+                                </a>
+                            </span>
+                            <span class="term-label">adenyl-nucleotide exchange factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0000774" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from human HSPH1 (Q92598). UniProt describes HSPH1 as acting as a nucleotide-exchange factor (NEF) for HSPA1A and HSPA1B, promoting the release of ADP thereby triggering substrate release (by similarity to mouse Q61699 and human Q92598). This is one of the two core molecular functions of Hsp110 family members. The deep research review (HSPH1-deep-research-falcon.md) confirms that HSPH1 operates as a NEF for cytosolic Hsp70s, binding the Hsp70 NBD to catalyze ADP-to-ATP exchange.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NEF activity is a core molecular function of the Hsp110 family. While the evidence for Chinese hamster HSPH1 specifically is by similarity (ISS), the NEF function is well-conserved across mammalian Hsp110 orthologs and is supported by UniProt annotation (by similarity to Q61699 mouse and Q92598 human). This represents one of the two principal molecular functions of HSPH1 (the other being holdase activity).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    GO:0044183
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding chaperone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9395504
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hsp110 protects heat-denatured proteins and confers cellular...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q60446" data-a="GO:0044183" data-r="PMID:9395504" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation as the replacement MF term for the obsoleting GO:0031249. PMID:9395504 provides direct experimental evidence that Hsp110 functions as a chaperone that prevents aggregation of denatured proteins and maintains them in a folding-competent state. This is a holdase chaperone function (placeholder annotation pending creation of a specific holdase term per go-ontology#30552).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation replaces the obsoleting GO:0031249 (denatured protein binding) with the closest available MF term. HSPH1 is a holdase chaperone that binds denatured proteins to prevent aggregation. GO:0044183 is a placeholder until a specific holdase chaperone activity term is created (go-ontology#30552).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                                        PMID:9395504
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hsp110 is highly efficient in selectively recognizing denatured proteins and maintaining them in a soluble, folding-competent state</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Holdase chaperone activity: HSPH1 binds heat-denatured proteins and prevents their aggregation, maintaining them in a soluble, folding-competent state. This function is significantly more efficient than Hsc70. HSPH1 does NOT actively refold proteins; refolding requires Hsc70/Hdj-1. This is a placeholder annotation using GO:0044183 until a specific holdase chaperone activity term is created (go-ontology#30552).</h3>
+                <span class="vote-buttons" data-g="Q60446" data-a="FUNCTION: Holdase chaperone activity: HSPH1 binds heat-denat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                            protein folding chaperone
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034605" target="_blank" class="term-link">
+                                cellular response to heat
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                                PMID:9395504
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">hsp110 is highly efficient in selectively recognizing denatured proteins and maintaining them in a soluble, folding-competent state</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Nucleotide exchange factor (NEF) activity for Hsp70 family members: HSPH1 promotes the release of ADP from HSPA1A/HSPA1B, triggering substrate release from the Hsp70 chaperone cycle. Also inhibits HSPA8/HSC70 ATPase and chaperone activities.</h3>
+                <span class="vote-buttons" data-g="Q60446" data-a="FUNCTION: Nucleotide exchange factor (NEF) activity for Hsp7..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                            adenyl-nucleotide exchange factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034605" target="_blank" class="term-link">
+                                cellular response to heat
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                                PMID:9395504
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">hsp110 is one of the principal molecular chaperones of mammalian cells and represents a newly identified component of the primary protection/repair pathway for denatured proteins and thermotolerance expression in vivo</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9395504" target="_blank" class="term-link">
+                            PMID:9395504
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Hsp110 protects heat-denatured proteins and confers cellular thermoresistance.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Hsp110 is highly efficient at preventing aggregation of heat-denatured proteins, functioning as a holdase chaperone that maintains substrates in a folding-competent state. It is significantly more efficient than Hsc70 at this holdase function.</div>
+                        
+                        <div class="finding-text">"hsp110 is highly efficient in selectively recognizing denatured proteins and maintaining them in a soluble, folding-competent state and is significantly more efficient in performing this function than is hsc70"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Hsp110 does not refold denatured proteins itself; refolding requires Hsc70 and Hdj-1. Hdj-1 does not function as a co-chaperone with Hsp110.</div>
+                        
+                        <div class="finding-text">"hsp110-bound proteins can then be refolded by the addition of rabbit reticulocyte lysate or hsc70 and Hdj-1, whereas Hdj-1 does not itself function as a co-chaperone in folding with hsp110"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Overexpression of Hsp110 confers substantial thermoresistance in vivo.</div>
+                        
+                        <div class="finding-text">"the overexpression in vivo of hsp110 conferred substantial heat resistance to both Rat-1 and HeLa cells"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7797574" target="_blank" class="term-link">
+                            PMID:7797574
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of a major subfamily of large hsp70-like proteins through the cloning of the mammalian 110-kDa heat shock protein.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HSPH1 (Hsp110) was identified as a member of a significantly diverged subgroup of the Hsp70 protein family.</div>
+                        
+                        <div class="finding-text">"Identification of a major subfamily of large hsp70-like proteins through the cloning of the mammalian 110-kDa heat shock protein"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:CRIGR/HSPH1/HSPH1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research review of HSPH1 function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HSPH1 operates as a NEF for cytosolic Hsp70s, catalyzing ADP-to-ATP exchange on the Hsp70 NBD to reset the chaperone for subsequent substrate cycles.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HSPH1 participates in the Hsp70-DNAJ-HSPH1 disaggregase complex that can disaggregate heat-denatured luciferase and disease-associated amyloids.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Constitutive cytoplasmic and nuclear localization is reported for Hsp105alpha (HSPH1) in mammalian tissues.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Chinese hamster HSPH1 have the same NEF activity for Hsp70 as the mouse and human orthologs? The ISS annotation is based on similarity but has not been directly demonstrated for the Chinese hamster protein.</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Subjeck JR</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q60446" data-a="Q: Does Chinese hamster HSPH1 have the same NEF activ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the intrinsic ATPase activity level of HSPH1? While Hsp110 family members are known to have reduced ATPase activity compared to canonical Hsp70, the exact level for Chinese hamster HSPH1 has not been characterized.</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Subjeck JR</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q60446" data-a="Q: What is the intrinsic ATPase activity level of HSP..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vitro nucleotide exchange assay using purified Chinese hamster HSPH1 and Hsp70 (HSPA1A). Measure ADP release rates from Hsp70 in the presence and absence of HSPH1 using fluorescent nucleotide analogs.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Chinese hamster HSPH1 functions as a NEF for hamster Hsp70 family members, similar to the characterized function of mouse and human orthologs.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biochemical assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q60446" data-a="EXPERIMENT: In vitro nucleotide exchange assay using purified ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Comparative ATPase assay measuring the rate of ATP hydrolysis by purified HSPH1 versus HSPA1A using a malachite green phosphate detection assay.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HSPH1 has significantly lower intrinsic ATPase activity compared to canonical Hsp70 family members.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biochemical assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q60446" data-a="EXPERIMENT: Comparative ATPase assay measuring the rate of ATP..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(HSPH1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q60446" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-02-09T23:08:39.788018'<br />
+end_time: '2026-02-09T23:17:34.251236'<br />
+duration_seconds: 534.46<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: CRIGR<br />
+  gene_id: HSPH1<br />
+  gene_symbol: HSPH1<br />
+  uniprot_accession: Q60446<br />
+  protein_description: 'RecName: Full=Heat shock protein 105 kDa; AltName: Full=Heat<br />
+    shock 110 kDa protein;'<br />
+  gene_info: Name=HSPH1; Synonyms=HSP105, HSP110;<br />
+  organism_full: Cricetulus griseus (Chinese hamster) (Cricetulus barabensis griseus).<br />
+  protein_family: Belongs to the heat shock protein 70 family. .<br />
+  protein_domains: ATPase_NBD. (IPR043129); Heat_shock_70_CS. (IPR018181); HSP70_C_sf.<br />
+    (IPR029048); HSP70_peptide-bd_sf. (IPR029047); Hsp_70_fam. (IPR013126)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 17</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q60446</li>
+<li><strong>Protein Description:</strong> RecName: Full=Heat shock protein 105 kDa; AltName: Full=Heat shock 110 kDa protein;</li>
+<li><strong>Gene Information:</strong> Name=HSPH1; Synonyms=HSP105, HSP110;</li>
+<li><strong>Organism (full):</strong> Cricetulus griseus (Chinese hamster) (Cricetulus barabensis griseus).</li>
+<li><strong>Protein Family:</strong> Belongs to the heat shock protein 70 family. .</li>
+<li><strong>Key Domains:</strong> ATPase_NBD. (IPR043129); Heat_shock_70_CS. (IPR018181); HSP70_C_sf. (IPR029048); HSP70_peptide-bd_sf. (IPR029047); Hsp_70_fam. (IPR013126)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "HSPH1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Cricetulus griseus (Chinese hamster) (Cricetulus barabensis griseus).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'HSPH1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>HSPH1</strong> (gene ID: HSPH1, UniProt: Q60446) in CRIGR.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q60446</li>
+<li><strong>Protein Description:</strong> RecName: Full=Heat shock protein 105 kDa; AltName: Full=Heat shock 110 kDa protein;</li>
+<li><strong>Gene Information:</strong> Name=HSPH1; Synonyms=HSP105, HSP110;</li>
+<li><strong>Organism (full):</strong> Cricetulus griseus (Chinese hamster) (Cricetulus barabensis griseus).</li>
+<li><strong>Protein Family:</strong> Belongs to the heat shock protein 70 family. .</li>
+<li><strong>Key Domains:</strong> ATPase_NBD. (IPR043129); Heat_shock_70_CS. (IPR018181); HSP70_C_sf. (IPR029048); HSP70_peptide-bd_sf. (IPR029047); Hsp_70_fam. (IPR013126)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "HSPH1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Cricetulus griseus (Chinese hamster) (Cricetulus barabensis griseus).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'HSPH1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>HSPH1</strong> (gene ID: HSPH1, UniProt: Q60446) in CRIGR.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- Identity: The target is HSPH1 (aliases HSP110/HSP105), a large Hsp70-like chaperone; UniProt Q60446 corresponds to HSPH1 from Cricetulus griseus (Chinese hamster). Literature on mammalian HSPH1 describes the same protein class and domain architecture, supporting cross-species functional inference (Hsp70-like NBD and SBD) (boopathy2024characterizingtheregulationb pages 34-39, chuang2024definingasmallmolecule pages 5-8).</p>
+<p>Comprehensive research report on HSPH1 (HSP110/HSP105)</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Definition and family: HSPH1 encodes a large heat shock protein of the Hsp110 subfamily within the Hsp70 superfamily. It contains an Hsp70-like N-terminal nucleotide-binding domain (NBD/ATPase) and a substrate-binding domain (SBD) (conceptual alignment with Hsp70 architecture described in 2024 sources) (boopathy2024characterizingtheregulationb pages 34-39). Functionally, HSPH1 operates as a nucleotide-exchange factor (NEF) for Hsp70s, catalyzing ADP-to-ATP exchange on the Hsp70 NBD to reset the chaperone for subsequent substrate cycles (boopathy2024characterizingtheregulationb pages 34-39). URL/date: 2024 review summary (no DOI provided in excerpt) (boopathy2024characterizingtheregulationb pages 34-39).<br />
+- Mechanistic role in the Hsp70 system: As a NEF, HSPH1 binding to Hsp70’s NBD accelerates nucleotide exchange; ATP rebinding opens Hsp70 and promotes client release. HSPH1 thereby increases Hsp70 folding throughput and participates in chaperone-mediated disaggregation with Hsp70 and J-domain proteins (DNAJs) (chuang2024definingasmallmolecule pages 1-5, chuang2024definingasmallmolecule pages 22-25). URL/date: Chuang et al., bioRxiv, Jan 2024, https://doi.org/10.1101/2024.01.11.575109 (chuang2024definingasmallmolecule pages 1-5, chuang2024definingasmallmolecule pages 22-25).<br />
+- Holdase-like properties: Under severe stress, HSPH1 has been described to help keep heat-denatured clients soluble and refolding-competent, complementing Hsp70 action (tandon2024athreedimensionalvalveonchip pages 12-14). URL/date: Tandon et al., Acta Biomaterialia, Sep 2024, https://doi.org/10.1016/j.actbio.2024.07.036 (tandon2024athreedimensionalvalveonchip pages 12-14).</p>
+<p>2) Recent developments and latest research (2023–2024 priority)<br />
+- Small-molecule modulation of the Hsp70–HSPH1 disaggregase: A 2024 study defined dihydropyrimidine scaffolds that stimulate human Hsp70–DNAJ–HSPH1 disaggregase activity. The reference compound 115-7c increased disaggregation approximately two-fold in vitro, and an optimized analog (“compound 18”) enhanced activity across a range of Hsp70/Hsp40/Hsp110 stoichiometries with selectivity for DnaJB1/DnaJB4-containing sets, without detectable cytotoxicity in cell assays (bioRxiv, Jan 2024) (chuang2024definingasmallmolecule pages 1-5, chuang2024definingasmallmolecule pages 5-8, chuang2024definingasmallmolecule pages 25-29). URL/date: https://doi.org/10.1101/2024.01.11.575109 (chuang2024definingasmallmolecule pages 1-5, chuang2024definingasmallmolecule pages 5-8, chuang2024definingasmallmolecule pages 25-29).<br />
+- Disaggregation mechanism and stoichiometry: The same 2024 work showed both human HSPH1 (Hsp105) and HSPH2 (Apg2) stimulate Hsp70-mediated disaggregation and reactivation of luciferase and can promote dissolution of disease-relevant amyloids (e.g., α-synuclein), with outcomes depending on Hsp70/Hsp40/Hsp110 ratios; inappropriate stoichiometry can impair activity (bioRxiv, Jan 2024) (chuang2024definingasmallmolecule pages 5-8, chuang2024definingasmallmolecule pages 22-25). URL/date: https://doi.org/10.1101/2024.01.11.575109 (chuang2024definingasmallmolecule pages 5-8, chuang2024definingasmallmolecule pages 22-25).<br />
+- System-level induction in neuronal heat stress: In human neuronal models, heat exposure induced coordinated upregulation of HSPH1 alongside DNAJB1 and BAG3 within the Hsp70 network, consistent with HSF1-driven heat shock response dynamics (Biology, Mar 2023) (alharbi2023profilingthehsp70 pages 17-18). URL/date: https://doi.org/10.3390/biology12030416 (alharbi2023profilingthehsp70 pages 17-18).<br />
+- Disease model observation (microphysiological system): In a 3D valve-on-chip model of early calcific aortic valve disease, HSPH1 abundance increased in diseased tissues, consistent with roles in proteostasis under stress and potential links to survival signaling pathways (Acta Biomaterialia, Sep 2024) (tandon2024athreedimensionalvalveonchip pages 12-14). URL/date: https://doi.org/10.1016/j.actbio.2024.07.036 (tandon2024athreedimensionalvalveonchip pages 12-14).</p>
+<p>3) Primary function, substrates/clients, and localization<br />
+- Primary biochemical function: HSPH1 is a NEF for cytosolic Hsp70s (e.g., HSPA1A/HSPA8), binding the Hsp70 NBD to catalyze ADP→ATP exchange; this resets Hsp70 to the open, low-affinity state, releasing bound substrate and enabling additional folding cycles (boopathy2024characterizingtheregulationb pages 34-39). This enhances Hsp70 folding activity and supports disaggregation (boopathy2024characterizingtheregulationb pages 34-39). URL/date: 2024 review summary (no DOI provided in excerpt) (boopathy2024characterizingtheregulationb pages 34-39).<br />
+- Disaggregation substrates: In reconstituted human systems, Hsp70–DNAJ–HSPH1/2 can disaggregate heat-denatured luciferase and disease-associated amyloids including α-synuclein; related studies cite activity on tau and polyQ-expanded proteins in Hsp70 disaggregase paradigms (bioRxiv, 2024; literature compilation) (chuang2024definingasmallmolecule pages 1-5, chuang2024definingasmallmolecule pages 5-8, ansari2025investigatingtherole pages 139-140). URL/date: https://doi.org/10.1101/2024.01.11.575109 (chuang2024definingasmallmolecule pages 1-5, chuang2024definingasmallmolecule pages 5-8); summary citing multi-article evidence (ansari2025investigatingtherole pages 139-140).<br />
+- Cellular localization: HSPH1 (Hsp105α) localizes constitutively to cytoplasm and nucleus in multiple mammalian tissues, including brain; a stress-inducible Hsp105β splice variant exists (not always tested in vitro) (chuang2024definingasmallmolecule pages 5-8). URL/date: bioRxiv, Jan 2024, https://doi.org/10.1101/2024.01.11.575109 (chuang2024definingasmallmolecule pages 5-8).</p>
+<p>4) Pathways, protein quality control, and organelle/stress compartment dynamics<br />
+- HSF1-driven heat shock response: HSPH1 is induced as part of the HSF1-regulated chaperone network during heat shock, with reported rapid transcript and delayed protein accumulation kinetics in neuronal heat-stress models (peak gene induction ~1 h; protein upregulated over the subsequent hours) (Biology, Mar 2023) (alharbi2023profilingthehsp70 pages 17-18). URL/date: https://doi.org/10.3390/biology12030416 (alharbi2023profilingthehsp70 pages 17-18).<br />
+- Hsp70 co-chaperone circuitry and fate decisions: BAG3 biases Hsp70 clients toward autophagy (aggrephagy), while CHIP (a U-box E3) promotes ubiquitination leading to proteasomal degradation; HSPH1, by accelerating Hsp70 cycling, functionally couples into these fate pathways and contributes to disaggregation upstream of BAG3- or CHIP-directed clearance (boopathy2024characterizingtheregulationb pages 34-39). URL/date: 2024 review summary (no DOI provided in excerpt) (boopathy2024characterizingtheregulationb pages 34-39).<br />
+- Stress granules and translation recovery: Hsp70 systems participate in stress granule disassembly and translation restart; HSPH1, as the principal cytosolic Hsp70 NEF in metazoans, supports this process by enabling efficient Hsp70 cycles under stress (boopathy2024characterizingtheregulationb pages 34-39). URL/date: 2024 review summary (no DOI provided in excerpt) (boopathy2024characterizingtheregulationb pages 34-39).<br />
+- Aggrephagy and proteasome/autophagy crosstalk: Mechanistic compendia indicate that Hsp70 disaggregation machinery (with HSPH1/NEF activity) intersects with proteolysis/autophagy pathways for aggregate processing. Summaries emphasize that Hsp110 shapes early steps of disaggregation by Hsp70 and that disaggregation can feed into proteolytic routing depending on co-chaperone context (compilation citing 2024–2025 primary studies) (ansari2025investigatingtherole pages 139-140, ansari2025investigatingtherolea pages 139-140). URL/date: 2025 review citing 2024 mechanistic work (no DOI in excerpt) (ansari2025investigatingtherole pages 139-140, ansari2025investigatingtherolea pages 139-140).</p>
+<p>5) Oncologic and disease correlations; expert analyses<br />
+- Cancer biology and signaling: Reviews and summaries link HSPH1 to survival signaling (e.g., NF-κB) and proliferation under stress; HSPH1 can modulate pathways such as β-catenin via PP2A recruitment and is reported to be phosphorylated by CK2 (site Ser509) (MDPI IJMS review, Jan 2024) (zhang2024heatshockproteins pages 19-19). URL/date: https://doi.org/10.3390/ijms25020876 (zhang2024heatshockproteins pages 19-19).<br />
+- Biomarker and therapeutic context: In the 3D valve-on-chip study, HSPH1 abundance increased in diseased samples, positioning it among proteostasis-linked changes associated with early disease processes (Acta Biomaterialia, Sep 2024) (tandon2024athreedimensionalvalveonchip pages 12-14). URL/date: https://doi.org/10.1016/j.actbio.2024.07.036 (tandon2024athreedimensionalvalveonchip pages 12-14). Additional oncology-focused compendia highlight emergent HSP110 inhibitors and roles in tumor stress adaptation and drug resistance (summary of recent studies) (ansari2025investigatingtherolea pages 139-140). URL/date: 2025 review citing 2020–2024 primary works (no DOI in excerpt) (ansari2025investigatingtherolea pages 139-140).<br />
+- Expert network perspective: The 2024 small-molecule work emphasizes that chaperone stoichiometry is a critical determinant of disaggregase output in human cells and neurons, suggesting tissue-specific vulnerabilities if Hsp70/Hsp40/HSPH1 ratios drift with stress or aging (bioRxiv, Jan 2024) (chuang2024definingasmallmolecule pages 25-29). URL/date: https://doi.org/10.1101/2024.01.11.575109 (chuang2024definingasmallmolecule pages 25-29).</p>
+<p>6) Subcellular dynamics and stress-induced relocalization<br />
+- Cytosol and nucleus: Constitutive cytoplasmic and nuclear localization is reported for Hsp105α (HSPH1) (bioRxiv, Jan 2024) (chuang2024definingasmallmolecule pages 5-8). URL/date: https://doi.org/10.1101/2024.01.11.575109 (chuang2024definingasmallmolecule pages 5-8).<br />
+- Stress granules: Hsp70 systems contribute to stress granule disassembly and translational recovery after stress; by serving as the NEF for Hsp70, HSPH1 supports efficient chaperone cycling in these compartments (boopathy2024characterizingtheregulationb pages 34-39). URL/date: 2024 review summary (no DOI provided in excerpt) (boopathy2024characterizingtheregulationb pages 34-39).</p>
+<p>7) Chinese hamster/CHO evidence and orthology-based inference<br />
+- Direct Cricetulus griseus/CHO data: We did not retrieve specific CHO/Hamster primary studies for HSPH1 within 2020–2026 searches above. Given the strong conservation of Hsp110/Hsp70 systems and domain architecture, the mammalian evidence for HSPH1’s NEF role, cytosolic/nuclear localization, and participation in disaggregation is highly likely to translate to Chinese hamster HSPH1 (UniProt Q60446) (boopathy2024characterizingtheregulationb pages 34-39, chuang2024definingasmallmolecule pages 5-8). Where species-specific findings are absent, conclusions are inferred by orthology and conserved domain function (boopathy2024characterizingtheregulationb pages 34-39, chuang2024definingasmallmolecule pages 5-8).</p>
+<p>8) Current applications and real-world implementations; relevant statistics<br />
+- Therapeutic modulation: In vitro, the Hsp70–DNAJ–HSPH1 disaggregase can be pharmacologically enhanced; the small molecule 115-7c produced about a two-fold increase in disaggregation activity against model substrates, and “compound 18” further optimized activity across multiple chaperone combinations while remaining non-toxic in tested paradigms (bioRxiv, Jan 2024) (chuang2024definingasmallmolecule pages 1-5, chuang2024definingasmallmolecule pages 25-29). URL/date: https://doi.org/10.1101/2024.01.11.575109 (chuang2024definingasmallmolecule pages 1-5, chuang2024definingasmallmolecule pages 25-29).<br />
+- Disease-model implementation: A 3D valve-on-chip platform modeling early calcific aortic valve disease reported increased HSPH1 abundance in diseased tissues, aligning with proteostasis stress signatures in pathogenesis (Acta Biomaterialia, Sep 2024) (tandon2024athreedimensionalvalveonchip pages 12-14). URL/date: https://doi.org/10.1016/j.actbio.2024.07.036 (tandon2024athreedimensionalvalveonchip pages 12-14).<br />
+- Cancer-focused expert analysis: Summaries from 2024–2025 compilations describe HSPH1 as part of adaptive survival networks in tumors and discuss emerging HSP110 inhibitors in preclinical studies; while specific hazard ratios are not provided in the excerpts here, these sources position HSPH1 as a potential biomarker/target in oncology, warranting context- and tumor-type-specific validation (zhang2024heatshockproteins pages 19-19, ansari2025investigatingtherolea pages 139-140). URL/date: https://doi.org/10.3390/ijms25020876 (2024) (zhang2024heatshockproteins pages 19-19); 2025 review (no DOI in excerpt) (ansari2025investigatingtherolea pages 139-140).</p>
+<p>Mechanistic summary and functional annotation (for HSPH1, Cricetulus griseus, UniProt Q60446)<br />
+- Molecular function: Hsp70 NEF activity that accelerates ADP→ATP exchange on Hsp70 NBD to promote client release and increase folding/disaggregation throughput; large Hsp70-like chaperone with NBD and SBD (boopathy2024characterizingtheregulationb pages 34-39, chuang2024definingasmallmolecule pages 1-5).<br />
+- Biological processes: Protein folding; protein disaggregation with Hsp70 and J-domain proteins; maintenance of proteostasis under heat and proteotoxic stress; interface with client routing to autophagy (via BAG3) or UPS (via CHIP) (chuang2024definingasmallmolecule pages 1-5, boopathy2024characterizingtheregulationb pages 34-39).<br />
+- Cellular localization: Cytosol and nucleus under basal conditions; participates in stress responses influencing stress-granule dynamics and translation recovery (chuang2024definingasmallmolecule pages 5-8, boopathy2024characterizingtheregulationb pages 34-39).<br />
+- Pathways: Heat shock response (HSF1-regulated induction); Hsp70 chaperone cycle; proteostasis/quality control interconnections with autophagy and proteasome systems (alharbi2023profilingthehsp70 pages 17-18, boopathy2024characterizingtheregulationb pages 34-39, ansari2025investigatingtherole pages 139-140).<br />
+- Applications: Pharmacologic stimulation of Hsp70–HSPH1 disaggregase; disease-model upregulation in microphysiological systems; oncology biomarker/target potential (chuang2024definingasmallmolecule pages 1-5, tandon2024athreedimensionalvalveonchip pages 12-14, zhang2024heatshockproteins pages 19-19, ansari2025investigatingtherolea pages 139-140).</p>
+<p>Notes on evidence quality and recency<br />
+- 2024 primary preprint provides detailed mechanistic and pharmacologic insights (chuang2024definingasmallmolecule pages 1-5, chuang2024definingasmallmolecule pages 5-8, chuang2024definingasmallmolecule pages 25-29). 2024 Acta Biomaterialia offers peer-reviewed disease-model evidence (tandon2024athreedimensionalvalveonchip pages 12-14). 2023 neuronal study corroborates network induction and timing under heat stress (alharbi2023profilingthehsp70 pages 17-18). Reviews/summaries integrate additional mechanistic connections and cancer relevance (boopathy2024characterizingtheregulationb pages 34-39, zhang2024heatshockproteins pages 19-19, ansari2025investigatingtherolea pages 139-140).</p>
+<p>References (URLs and publication dates)<br />
+- Chuang et al., Defining a small-molecule stimulator of the human Hsp70-disaggregase system with selectivity for DnaJB proteins. bioRxiv, Jan 2024. URL: https://doi.org/10.1101/2024.01.11.575109 (chuang2024definingasmallmolecule pages 1-5, chuang2024definingasmallmolecule pages 5-8, chuang2024definingasmallmolecule pages 25-29, chuang2024definingasmallmolecule pages 22-25).<br />
+- Tandon et al., A three-dimensional valve-on-chip microphysiological system implicates cell cycle progression, cholesterol metabolism and protein homeostasis in early calcific aortic valve disease progression. Acta Biomaterialia, 186:167–184, Sep 2024. URL: https://doi.org/10.1016/j.actbio.2024.07.036 (tandon2024athreedimensionalvalveonchip pages 12-14).<br />
+- Alharbi et al., Profiling the Hsp70 chaperone network in heat-induced proteotoxic stress models of human neurons. Biology, 12:416, Mar 2023. URL: https://doi.org/10.3390/biology12030416 (alharbi2023profilingthehsp70 pages 17-18).<br />
+- Boopathy, Characterizing the regulation of the inducible HSP70 mRNA in yeasts and mammalian cells subjected to heat shock. 2024 (mechanism summary; NEF/disaggregation; stress granules and BAG3/CHIP routing noted in excerpts) (boopathy2024characterizingtheregulationb pages 34-39).<br />
+- Zhang and Bi, Heat Shock Proteins and Breast Cancer. International Journal of Molecular Sciences, 25:876, Jan 2024. URL: https://doi.org/10.3390/ijms25020876 (zhang2024heatshockproteins pages 19-19).<br />
+- Ansari, Investigating the Role of Hsp110 in Prion Propagation and Fragmentation. 2025 (cites 2024 mechanistic studies on Hsp110 shaping early disaggregation steps and links to proteolytic pathways; used here as a compendium) (ansari2025investigatingtherole pages 139-140, ansari2025investigatingtherolea pages 139-140).</p>
+<p>Species alignment statement<br />
+- No contradictions were found regarding HSPH1 naming or protein family/domain features. Where Cricetulus/CHO-specific data were absent, function/localization were inferred from conserved mammalian HSPH1 ortholog evidence and the shared Hsp70-like NBD/SBD domain architecture (boopathy2024characterizingtheregulationb pages 34-39, chuang2024definingasmallmolecule pages 5-8).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(boopathy2024characterizingtheregulationb pages 34-39): LR Alagar Boopathy. Characterizing the regulation of the inducible hsp70 mrna in yeasts and mammalian cells subjected to heat shock. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(chuang2024definingasmallmolecule pages 5-8): Edward Chuang, Ryan R. Cupo, Jeffrey R. Bevan, Mikhaila L. Rice, Shuli Mao, Erica L. Gorenberg, Korrie L. Mack, Donna M. Huryn, Peter Wipf, Jeffrey L. Brodsky, and James Shorter. Defining a small-molecule stimulator of the human hsp70-disaggregase system with selectivity for dnajb proteins. bioRxiv, Jan 2024. URL: https://doi.org/10.1101/2024.01.11.575109, doi:10.1101/2024.01.11.575109. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(chuang2024definingasmallmolecule pages 1-5): Edward Chuang, Ryan R. Cupo, Jeffrey R. Bevan, Mikhaila L. Rice, Shuli Mao, Erica L. Gorenberg, Korrie L. Mack, Donna M. Huryn, Peter Wipf, Jeffrey L. Brodsky, and James Shorter. Defining a small-molecule stimulator of the human hsp70-disaggregase system with selectivity for dnajb proteins. bioRxiv, Jan 2024. URL: https://doi.org/10.1101/2024.01.11.575109, doi:10.1101/2024.01.11.575109. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(chuang2024definingasmallmolecule pages 22-25): Edward Chuang, Ryan R. Cupo, Jeffrey R. Bevan, Mikhaila L. Rice, Shuli Mao, Erica L. Gorenberg, Korrie L. Mack, Donna M. Huryn, Peter Wipf, Jeffrey L. Brodsky, and James Shorter. Defining a small-molecule stimulator of the human hsp70-disaggregase system with selectivity for dnajb proteins. bioRxiv, Jan 2024. URL: https://doi.org/10.1101/2024.01.11.575109, doi:10.1101/2024.01.11.575109. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(tandon2024athreedimensionalvalveonchip pages 12-14): Ishita Tandon, Alan E. Woessner, Laίs A. Ferreira, Christine Shamblin, Gustavo Vaca-Diez, Amanda Walls, Patrick Kuczwara, Alexis Applequist, Denise F. Nascimento, Swastika Tandon, Jin-Woo Kim, Manuel Rausch, Tomasz Timek, Muralidhar Padala, Michael T. Kinter, Dennis Province, Stephanie D. Byrum, Kyle P. Quinn, and Kartik Balachandran. A three-dimensional valve-on-chip microphysiological system implicates cell cycle progression, cholesterol metabolism and protein homeostasis in early calcific aortic valve disease progression. Acta Biomaterialia, 186:167-184, Sep 2024. URL: https://doi.org/10.1016/j.actbio.2024.07.036, doi:10.1016/j.actbio.2024.07.036. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chuang2024definingasmallmolecule pages 25-29): Edward Chuang, Ryan R. Cupo, Jeffrey R. Bevan, Mikhaila L. Rice, Shuli Mao, Erica L. Gorenberg, Korrie L. Mack, Donna M. Huryn, Peter Wipf, Jeffrey L. Brodsky, and James Shorter. Defining a small-molecule stimulator of the human hsp70-disaggregase system with selectivity for dnajb proteins. bioRxiv, Jan 2024. URL: https://doi.org/10.1101/2024.01.11.575109, doi:10.1101/2024.01.11.575109. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(alharbi2023profilingthehsp70 pages 17-18): Bothina Mohammed Alharbi, Tahani H. Albinhassan, Razan Ali Alzahrani, Abderrezak Bouchama, Sameer Mohammad, Awatif Abdulaziz Alomari, May Nasser Bin-Jumah, Entissar S. AlSuhaibani, and Shuja Shafi Malik. Profiling the hsp70 chaperone network in heat-induced proteotoxic stress models of human neurons. Biology, 12:416, Mar 2023. URL: https://doi.org/10.3390/biology12030416, doi:10.3390/biology12030416. This article has 7 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(ansari2025investigatingtherole pages 139-140): M Ansari. Investigating the role of hsp110 in prion propagation and fragmentation. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(ansari2025investigatingtherolea pages 139-140): M Ansari. Investigating the role of hsp110 in prion propagation and fragmentation. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(zhang2024heatshockproteins pages 19-19): Miao Zhang and Xiaowen Bi. Heat shock proteins and breast cancer. International Journal of Molecular Sciences, 25:876, Jan 2024. URL: https://doi.org/10.3390/ijms25020876, doi:10.3390/ijms25020876. This article has 38 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>boopathy2024characterizingtheregulationb pages 34-39</li>
+<li>tandon2024athreedimensionalvalveonchip pages 12-14</li>
+<li>ansari2025investigatingtherole pages 139-140</li>
+<li>chuang2024definingasmallmolecule pages 5-8</li>
+<li>zhang2024heatshockproteins pages 19-19</li>
+<li>ansari2025investigatingtherolea pages 139-140</li>
+<li>chuang2024definingasmallmolecule pages 25-29</li>
+<li>chuang2024definingasmallmolecule pages 1-5</li>
+<li>chuang2024definingasmallmolecule pages 22-25</li>
+<li>https://doi.org/10.1101/2024.01.11.575109</li>
+<li>https://doi.org/10.1016/j.actbio.2024.07.036</li>
+<li>https://doi.org/10.3390/biology12030416</li>
+<li>https://doi.org/10.3390/ijms25020876</li>
+<li>https://doi.org/10.1101/2024.01.11.575109,</li>
+<li>https://doi.org/10.1016/j.actbio.2024.07.036,</li>
+<li>https://doi.org/10.3390/biology12030416,</li>
+<li>https://doi.org/10.3390/ijms25020876,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q60446
+gene_symbol: HSPH1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:10029
+  label: Cricetulus griseus
+description: &gt;-
+  HSPH1 (Hsp105/Hsp110) is a member of the Hsp110 family, a significantly diverged subgroup
+  of the Hsp70 superfamily. It has two core molecular functions: (1) holdase chaperone activity,
+  preventing the aggregation of heat-denatured proteins by maintaining them in a soluble,
+  folding-competent state (significantly more efficient than Hsc70 at this function), and
+  (2) nucleotide exchange factor (NEF) activity for Hsp70 family members (HSPA1A, HSPA1B),
+  promoting ADP release and triggering substrate release. Importantly, HSPH1 does NOT itself
+  refold denatured proteins; refolding requires Hsc70/Hdj-1. HSPH1 also inhibits HSPA8/HSC70
+  ATPase activity. Overexpression confers substantial thermoresistance in vivo.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      TreeGrafter-inferred nuclear localization. UniProt subcellular location for Q60446
+      lists only cytoplasm (by similarity to human Q92598). However, the deep research
+      review (HSPH1-deep-research-falcon.md) notes that Hsp105alpha (HSPH1) localizes
+      constitutively to both cytoplasm and nucleus in multiple mammalian tissues,
+      including brain. The TreeGrafter inference is therefore supported by recent
+      literature on mammalian orthologs.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Nuclear localization is supported by literature on mammalian HSPH1 orthologs.
+      The deep research review cites Chuang et al. 2024 as reporting constitutive
+      cytoplasmic and nuclear localization. However, the primary functional
+      compartment is the cytosol where the holdase and NEF activities operate.
+      Keeping as non-core since it is a secondary localization.
+    additional_reference_ids:
+      - file:CRIGR/HSPH1/HSPH1-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:CRIGR/HSPH1/HSPH1-deep-research-falcon.md
+        supporting_text: &gt;-
+          Constitutive cytoplasmic and nuclear localization is reported for Hsp105alpha
+          (HSPH1) [in mammalian tissues]
+
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      TreeGrafter-inferred cytosol localization, consistent with UniProt annotation of
+      cytoplasm for HSPH1 (by similarity to human Q92598). HSPH1 is a cytoplasmic chaperone
+      and its holdase and NEF functions operate in the cytoplasm. The deep research review
+      (HSPH1-deep-research-falcon.md) confirms cytosolic localization as the primary site
+      of HSPH1 function.
+    action: ACCEPT
+    reason: &gt;-
+      Cytosol is the primary localization for HSPH1, consistent with UniProt annotation
+      of cytoplasm and with its known functions as a cytoplasmic chaperone and NEF.
+    supported_by:
+      - reference_id: PMID:9395504
+        supporting_text: &gt;-
+          hsp110 is one of the principal molecular chaperones of mammalian cells
+
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      TreeGrafter-inferred involvement in protein folding. HSPH1 is involved in protein
+      folding homeostasis, but importantly it is a holdase, not a foldase. It maintains
+      denatured proteins in a folding-competent state but does NOT actively refold them
+      (PMID:9395504). Refolding requires Hsc70/Hdj-1. The term &#39;protein folding&#39; is
+      acceptable as a broad biological process annotation since HSPH1 participates in
+      the protein folding pathway (by handing off substrates to the Hsc70/Hdj-1 refolding
+      machinery), but its direct activity is holding, not folding. As a NEF, HSPH1 also
+      accelerates Hsp70 cycling which supports the overall protein folding process (deep
+      research review, HSPH1-deep-research-falcon.md).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      HSPH1 participates in the protein folding pathway by preventing aggregation and
+      maintaining substrates in a folding-competent state for subsequent refolding by
+      Hsc70/Hdj-1. The BP term &#39;protein folding&#39; is broadly acceptable but HSPH1 is a
+      holdase, not a foldase, so this is kept as non-core. Its direct role is prevention
+      of aggregation rather than active folding.
+    supported_by:
+      - reference_id: PMID:9395504
+        supporting_text: &gt;-
+          hsp110 is highly efficient in selectively recognizing denatured proteins and
+          maintaining them in a soluble, folding-competent state
+      - reference_id: PMID:9395504
+        supporting_text: &gt;-
+          hsp110-bound proteins can then be refolded by the addition of rabbit
+          reticulocyte lysate or hsc70 and Hdj-1, whereas Hdj-1 does not itself
+          function as a co-chaperone in folding with hsp110
+
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation from UniProtKB-KW:KW-0547 (Nucleotide-binding) keyword mapping.
+      HSPH1 belongs to the Hsp70 superfamily and possesses the conserved nucleotide-binding
+      domain (NBD). This is correct but overly general; ATP binding (GO:0005524) is more
+      specific and is already annotated.
+    action: ACCEPT
+    reason: &gt;-
+      Nucleotide binding is correct for HSPH1, which has a conserved Hsp70-type
+      nucleotide-binding domain. While more general than the co-annotated GO:0005524
+      (ATP binding), the IEA mapping from UniProt keyword is valid. Both annotations
+      can coexist since the IEA is broader.
+
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Combined IEA annotation from InterPro:IPR013126 (Hsp_70_fam) and UniProtKB-KW:KW-0067
+      (ATP-binding). HSPH1 has a conserved Hsp70-type nucleotide-binding domain and binds ATP.
+      While Hsp110 family members have greatly reduced ATPase activity compared to canonical
+      Hsp70s, they do bind ATP, which is important for their NEF function.
+    action: ACCEPT
+    reason: &gt;-
+      ATP binding is a core property of HSPH1. The Hsp110 family binds ATP through
+      their conserved NBD. UniProt keywords and InterPro domain classification both
+      support this annotation. ATP binding is required for the NEF function of HSPH1.
+
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation from UniProtKB subcellular location vocabulary mapping (SL-0086).
+      UniProt explicitly states cytoplasm localization for HSPH1 (by similarity to human
+      Q92598). This is the primary localization and is consistent with its chaperone/NEF
+      functions.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasm is the primary subcellular localization for HSPH1. UniProt annotation
+      (by similarity) and the protein&#39;s established cytoplasmic functions support this.
+    supported_by:
+      - reference_id: PMID:9395504
+        supporting_text: &gt;-
+          hsp110 is one of the principal molecular chaperones of mammalian cells
+
+- term:
+    id: GO:0006950
+    label: response to stress
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      ARBA-inferred involvement in response to stress. HSPH1 is a heat shock protein
+      whose expression is upregulated under stress conditions. UniProt keywords include
+      &#39;Stress response&#39;. This is correct but very general; the more specific term
+      GO:0034605 (cellular response to heat) is already annotated with IDA evidence.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Response to stress is valid for this heat shock protein but is very general.
+      The more specific IDA-supported annotation to GO:0034605 (cellular response to
+      heat) captures the core stress response function. Keeping this broader IEA
+      annotation as non-core since it adds no information beyond the specific IDA
+      annotation.
+
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      InterPro-inferred ATP hydrolysis activity from IPR013126 (Hsp_70_fam). While HSPH1
+      belongs to the Hsp70 superfamily and has the conserved ATPase domain architecture,
+      Hsp110 family members have greatly reduced intrinsic ATPase activity compared to
+      canonical Hsp70 chaperones. The deep research review (HSPH1-deep-research-falcon.md)
+      emphasizes that HSPH1 functions primarily as a NEF rather than an ATPase. The ATPase
+      annotation from the broad Hsp70 family InterPro entry is misleading for this
+      diverged subfamily.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Hsp110 family members have significantly reduced ATPase activity compared to
+      canonical Hsp70 proteins. The InterPro family IPR013126 covers the entire Hsp70
+      superfamily, and while the domain architecture is conserved, Hsp110 members have
+      diverged to function primarily as holdases and NEFs rather than as ATPases.
+      Annotating HSPH1 with GO:0016887 (ATP hydrolysis activity) overstates its
+      catalytic function. The core molecular functions are holdase chaperone activity
+      and NEF activity (GO:0000774).
+
+- term:
+    id: GO:0031249
+    label: denatured protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:9395504
+  review:
+    summary: &gt;-
+      IDA annotation based on Oh et al. 1997, which demonstrated that Hsp110 is highly
+      efficient at recognizing heat-denatured proteins and maintaining them in a soluble,
+      folding-competent state. This is a genuine holdase chaperone function. GO:0031249
+      is being obsoleted (go-ontology#30962). The appropriate replacement is GO:0044183
+      (protein folding chaperone) as a placeholder, with the caveat that HSPH1 is a
+      holdase, not a foldase, and a more specific holdase term is needed
+      (go-ontology#30552).
+    action: MODIFY
+    reason: &gt;-
+      GO:0031249 (denatured protein binding) is being obsoleted. The experimental
+      evidence from PMID:9395504 clearly demonstrates holdase chaperone activity:
+      Hsp110 prevents aggregation of heat-denatured proteins and maintains them in
+      a folding-competent state. GO:0044183 (protein folding chaperone) is the closest
+      available replacement MF term, used as a placeholder until a specific holdase
+      chaperone activity term is created (go-ontology#30552). Note that HSPH1 does NOT
+      refold proteins itself; refolding requires Hsc70/Hdj-1.
+    proposed_replacement_terms:
+      - id: GO:0044183
+        label: protein folding chaperone
+    supported_by:
+      - reference_id: PMID:9395504
+        supporting_text: &gt;-
+          hsp110 is highly efficient in selectively recognizing denatured proteins and
+          maintaining them in a soluble, folding-competent state and is significantly more
+          efficient in performing this function than is hsc70
+      - reference_id: PMID:9395504
+        supporting_text: &gt;-
+          hsp110-bound proteins can then be refolded by the addition of rabbit
+          reticulocyte lysate or hsc70 and Hdj-1, whereas Hdj-1 does not itself
+          function as a co-chaperone in folding with hsp110
+
+- term:
+    id: GO:0034605
+    label: cellular response to heat
+  evidence_type: IDA
+  original_reference_id: PMID:9395504
+  review:
+    summary: &gt;-
+      IDA annotation based on Oh et al. 1997, which demonstrated that overexpression
+      of Hsp110 in vivo conferred substantial heat resistance to both Rat-1 and HeLa
+      cells. This is a core biological process for HSPH1 as a heat shock protein.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported by direct experimental evidence from PMID:9395504 showing that
+      Hsp110 overexpression confers thermoresistance. HSPH1 is one of the primary heat
+      shock proteins in mammalian cells, and cellular response to heat is a core
+      biological process.
+    supported_by:
+      - reference_id: PMID:9395504
+        supporting_text: &gt;-
+          the overexpression in vivo of hsp110 conferred substantial heat resistance
+          to both Rat-1 and HeLa cells
+      - reference_id: PMID:9395504
+        supporting_text: &gt;-
+          hsp110 is one of the principal molecular chaperones of mammalian cells and
+          represents a newly identified component of the primary protection/repair
+          pathway for denatured proteins and thermotolerance expression in vivo
+
+- term:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation transferred from human HSPH1 (Q92598). UniProt describes HSPH1
+      as acting as a nucleotide-exchange factor (NEF) for HSPA1A and HSPA1B, promoting
+      the release of ADP thereby triggering substrate release (by similarity to mouse
+      Q61699 and human Q92598). This is one of the two core molecular functions of
+      Hsp110 family members. The deep research review (HSPH1-deep-research-falcon.md)
+      confirms that HSPH1 operates as a NEF for cytosolic Hsp70s, binding the Hsp70
+      NBD to catalyze ADP-to-ATP exchange.
+    action: ACCEPT
+    reason: &gt;-
+      NEF activity is a core molecular function of the Hsp110 family. While the evidence
+      for Chinese hamster HSPH1 specifically is by similarity (ISS), the NEF function is
+      well-conserved across mammalian Hsp110 orthologs and is supported by UniProt
+      annotation (by similarity to Q61699 mouse and Q92598 human). This represents one
+      of the two principal molecular functions of HSPH1 (the other being holdase activity).
+    additional_reference_ids:
+      - file:CRIGR/HSPH1/HSPH1-deep-research-falcon.md
+
+# New annotations not in the existing GOA set
+
+- term:
+    id: GO:0044183
+    label: protein folding chaperone
+  evidence_type: IDA
+  original_reference_id: PMID:9395504
+  review:
+    summary: &gt;-
+      Proposed new annotation as the replacement MF term for the obsoleting GO:0031249.
+      PMID:9395504 provides direct experimental evidence that Hsp110 functions as a
+      chaperone that prevents aggregation of denatured proteins and maintains them in
+      a folding-competent state. This is a holdase chaperone function (placeholder
+      annotation pending creation of a specific holdase term per go-ontology#30552).
+    action: NEW
+    reason: &gt;-
+      This annotation replaces the obsoleting GO:0031249 (denatured protein binding)
+      with the closest available MF term. HSPH1 is a holdase chaperone that binds
+      denatured proteins to prevent aggregation. GO:0044183 is a placeholder until
+      a specific holdase chaperone activity term is created (go-ontology#30552).
+    supported_by:
+      - reference_id: PMID:9395504
+        supporting_text: &gt;-
+          hsp110 is highly efficient in selectively recognizing denatured proteins and
+          maintaining them in a soluble, folding-competent state
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:9395504
+  title: Hsp110 protects heat-denatured proteins and confers cellular thermoresistance.
+  findings:
+    - statement: &gt;-
+        Hsp110 is highly efficient at preventing aggregation of heat-denatured proteins,
+        functioning as a holdase chaperone that maintains substrates in a folding-competent
+        state. It is significantly more efficient than Hsc70 at this holdase function.
+      supporting_text: &gt;-
+        hsp110 is highly efficient in selectively recognizing denatured proteins and
+        maintaining them in a soluble, folding-competent state and is significantly more
+        efficient in performing this function than is hsc70
+    - statement: &gt;-
+        Hsp110 does not refold denatured proteins itself; refolding requires Hsc70 and
+        Hdj-1. Hdj-1 does not function as a co-chaperone with Hsp110.
+      supporting_text: &gt;-
+        hsp110-bound proteins can then be refolded by the addition of rabbit
+        reticulocyte lysate or hsc70 and Hdj-1, whereas Hdj-1 does not itself
+        function as a co-chaperone in folding with hsp110
+    - statement: &gt;-
+        Overexpression of Hsp110 confers substantial thermoresistance in vivo.
+      supporting_text: &gt;-
+        the overexpression in vivo of hsp110 conferred substantial heat resistance
+        to both Rat-1 and HeLa cells
+- id: PMID:7797574
+  title: Identification of a major subfamily of large hsp70-like proteins through
+    the cloning of the mammalian 110-kDa heat shock protein.
+  findings:
+    - statement: &gt;-
+        HSPH1 (Hsp110) was identified as a member of a significantly diverged subgroup
+        of the Hsp70 protein family.
+      supporting_text: &gt;-
+        Identification of a major subfamily of large hsp70-like proteins through the
+        cloning of the mammalian 110-kDa heat shock protein
+      reference_section_type: TITLE
+- id: file:CRIGR/HSPH1/HSPH1-deep-research-falcon.md
+  title: Deep research review of HSPH1 function
+  findings:
+    - statement: &gt;-
+        HSPH1 operates as a NEF for cytosolic Hsp70s, catalyzing ADP-to-ATP exchange
+        on the Hsp70 NBD to reset the chaperone for subsequent substrate cycles.
+    - statement: &gt;-
+        HSPH1 participates in the Hsp70-DNAJ-HSPH1 disaggregase complex that can
+        disaggregate heat-denatured luciferase and disease-associated amyloids.
+    - statement: &gt;-
+        Constitutive cytoplasmic and nuclear localization is reported for Hsp105alpha
+        (HSPH1) in mammalian tissues.
+core_functions:
+  - description: &gt;-
+      Holdase chaperone activity: HSPH1 binds heat-denatured proteins and prevents their
+      aggregation, maintaining them in a soluble, folding-competent state. This function
+      is significantly more efficient than Hsc70. HSPH1 does NOT actively refold proteins;
+      refolding requires Hsc70/Hdj-1. This is a placeholder annotation using GO:0044183
+      until a specific holdase chaperone activity term is created (go-ontology#30552).
+    molecular_function:
+      id: GO:0044183
+      label: protein folding chaperone
+    directly_involved_in:
+      - id: GO:0034605
+        label: cellular response to heat
+    locations:
+      - id: GO:0005829
+        label: cytosol
+    supported_by:
+      - reference_id: PMID:9395504
+        supporting_text: &gt;-
+          hsp110 is highly efficient in selectively recognizing denatured proteins and
+          maintaining them in a soluble, folding-competent state
+  - description: &gt;-
+      Nucleotide exchange factor (NEF) activity for Hsp70 family members: HSPH1 promotes
+      the release of ADP from HSPA1A/HSPA1B, triggering substrate release from the Hsp70
+      chaperone cycle. Also inhibits HSPA8/HSC70 ATPase and chaperone activities.
+    molecular_function:
+      id: GO:0000774
+      label: adenyl-nucleotide exchange factor activity
+    directly_involved_in:
+      - id: GO:0034605
+        label: cellular response to heat
+    locations:
+      - id: GO:0005829
+        label: cytosol
+    supported_by:
+      - reference_id: PMID:9395504
+        supporting_text: &gt;-
+          hsp110 is one of the principal molecular chaperones of mammalian cells and
+          represents a newly identified component of the primary protection/repair
+          pathway for denatured proteins and thermotolerance expression in vivo
+proposed_new_terms:
+  - proposed_name: holdase chaperone activity
+    proposed_definition: &gt;-
+      Binding of unfolded or misfolded proteins to prevent their aggregation, without
+      actively catalyzing refolding. This activity maintains client proteins in a soluble,
+      folding-competent state for subsequent refolding by other chaperone systems.
+    justification: &gt;-
+      Multiple proteins including HSPH1/Hsp110, small HSPs (CRYAA, CRYAB, HSPB6),
+      and clusterin (CLU) function as holdases rather than foldases. The current
+      GO term GO:0044183 (protein folding chaperone) implies active folding, which
+      does not accurately describe holdase function. See go-ontology#30552.
+    proposed_parent:
+      id: GO:0044183
+      label: protein folding chaperone
+suggested_questions:
+  - question: &gt;-
+      Does Chinese hamster HSPH1 have the same NEF activity for Hsp70 as the mouse
+      and human orthologs? The ISS annotation is based on similarity but has not been
+      directly demonstrated for the Chinese hamster protein.
+    experts:
+      - Subjeck JR
+  - question: &gt;-
+      What is the intrinsic ATPase activity level of HSPH1? While Hsp110 family members
+      are known to have reduced ATPase activity compared to canonical Hsp70, the exact
+      level for Chinese hamster HSPH1 has not been characterized.
+    experts:
+      - Subjeck JR
+suggested_experiments:
+  - hypothesis: &gt;-
+      Chinese hamster HSPH1 functions as a NEF for hamster Hsp70 family members,
+      similar to the characterized function of mouse and human orthologs.
+    description: &gt;-
+      In vitro nucleotide exchange assay using purified Chinese hamster HSPH1 and
+      Hsp70 (HSPA1A). Measure ADP release rates from Hsp70 in the presence and
+      absence of HSPH1 using fluorescent nucleotide analogs.
+    experiment_type: biochemical assay
+  - hypothesis: &gt;-
+      HSPH1 has significantly lower intrinsic ATPase activity compared to canonical
+      Hsp70 family members.
+    description: &gt;-
+      Comparative ATPase assay measuring the rate of ATP hydrolysis by purified
+      HSPH1 versus HSPA1A using a malachite green phosphate detection assay.
+    experiment_type: biochemical assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
