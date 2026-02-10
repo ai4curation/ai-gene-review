@@ -383,9 +383,16 @@ class AnnotationExporter:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
+        # Strip null/None values and empty lists to reduce file size.
+        # In JS, accessing a missing key returns undefined (falsy, same as null).
+        compact = [
+            {k: v for k, v in ann.items() if v is not None and v != []}
+            for ann in annotations
+        ]
+
         with open(output_path, "w") as f:
             f.write("window.searchData = ")
-            json.dump(annotations, f, indent=2, default=str)
+            json.dump(compact, f, indent=2, default=str)
             f.write(";\n")
             f.write("window.dispatchEvent(new Event('searchDataReady'));\n")
 
