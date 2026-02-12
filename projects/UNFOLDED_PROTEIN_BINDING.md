@@ -1,17 +1,20 @@
 # Unfolded Protein Binding Annotation Review
 
-> **Editor Brief (as of 2026-02-11, revised with editor feedback):**
+> **Editor Brief (as of 2026-02-11, revised after editor feedback + go-ontology#30552 review):**
 > GO:0051082 "unfolded protein binding" and GO:0031249 "denatured protein binding" are proposed
 > for obsoletion ([go-ontology#30962](https://github.com/geneontology/go-ontology/issues/30962)).
 > We reviewed all 33 human genes plus 3 non-human genes (SAN1/yeast, Fbxo2/mouse, HSPH1/hamster)
 > with experimental annotations to these terms (~189 EXP annotations
 > to GO:0051082 across all species). Each gene's GO:0051082/GO:0031249 annotation was reclassified to a
-> mechanism-specific MF term. **Decisions from GO editors are needed on**: (1) refinement of
-> GO:0140309 "unfolded protein carrier activity" as the holdase term (label, def, synonym scope),
-> (2) whether GO:0140309 carrier/escort semantics fit in-situ holdases (crystallins, sHSPs),
-> (3) whether "misfolded protein sensor activity" should be created for E3 ligases/F-box
-> proteins, and (4) how to annotate J-domain co-chaperone MF given that GO:0003767 "co-chaperone
-> activity" is obsolete. Detailed review YAMLs are in `genes/human/<GENE>/`.
+> mechanism-specific MF term. **Critical finding**: GO:0140309 "unfolded protein carrier activity"
+> was created specifically for TIM carrier-holdases ([go-ontology#30552](https://github.com/geneontology/go-ontology/issues/30552))
+> and does **not** fit in-situ holdases (crystallins, sHSPs, CLU). A general "holdase chaperone
+> activity" term was discussed in #30552 but never created — this is now the primary NTR needed.
+> **Decisions from GO editors are needed on**: (1) NTR for general holdase chaperone activity
+> (non-carrier), (2) whether "misfolded protein sensor activity" should be created for E3
+> ligases/F-box proteins, (3) how to annotate J-domain co-chaperone MF given that GO:0003767
+> "co-chaperone activity" is obsolete, and (4) whether GO:0051082 obsoletion should be blocked
+> until the holdase NTR exists. Detailed review YAMLs are in `genes/human/<GENE>/`.
 > Validate with: `just validate-all` (writes `reports/validation-all.tsv`).
 
 ## Terminology
@@ -21,8 +24,9 @@ These mechanism classes are used throughout this document:
 | Term | GO term | Definition | ATP? | Example |
 |------|---------|-----------|------|---------|
 | **Foldase** | GO:0044183 protein folding chaperone | Actively assists protein folding through iterative binding/release cycles | Yes | GroEL/ES, TRiC/CCT |
-| **Holdase** | GO:0140309 unfolded protein carrier activity | Binds unfolded/misfolded proteins to prevent aggregation; does not actively refold | No | CRYAB (alpha-crystallin), CLU |
-| **Foldase/holdase** | GO:0044183 + GO:0140309 | Context-dependent: can function as foldase or holdase depending on conditions, clients, de novo vs quality control | Yes | HSPA1A (HSP70) |
+| **Holdase** | *(NTR needed: holdase chaperone activity)* | Binds unfolded/misfolded proteins to prevent aggregation in situ; does not actively refold or transport between compartments | No | CRYAB (alpha-crystallin), CLU |
+| **Carrier-holdase** | GO:0140309 unfolded protein carrier activity | Binds unfolded protein and escorts it between cellular components, preventing aggregation in transit | No | Tim9-Tim10, Tim8-Tim13 (small TIMs) |
+| **Foldase/holdase** | GO:0044183 + holdase NTR | Context-dependent: can function as foldase or holdase depending on conditions, clients, de novo vs quality control | Yes | HSPA1A (HSP70) |
 | **Co-chaperone** | *(see [co-chaperone note](#co-chaperone-note))* | Binds to chaperone to activate its ATPase and/or deliver substrates; does not independently fold proteins | N/A | DNAJB1 (J-domain), AHSA1 (HSP90 activator) |
 | **Disaggregase** | GO:0140545 | Solubilizes existing protein aggregates | Yes | HSPA1A (with DNAJ + HSPH1) |
 | **Sensor** | *(proposed: misfolded protein sensor activity)* | Recognizes misfolded proteins as substrates for degradation (E3 ligase, lectin) | N/A | SYVN1 (HRD1), UGGT1 |
@@ -34,10 +38,10 @@ How GO:0051082 annotations were reclassified:
 | Mechanism | Action | Replacement term | Rationale | Example |
 |-----------|--------|-----------------|-----------|---------|
 | Foldase (strictly: GroEL/ES, TRiC) | MODIFY | GO:0044183 protein folding chaperone | Active ATP-dependent folding; strictly foldase proteins | PFDN1 (delivers to TRiC) |
-| Foldase/holdase (HSP70 family) | MODIFY | GO:0044183 protein folding chaperone | HSP70 functions as foldase or holdase depending on context (conditions, clients, de novo vs quality control); curators should review per experimental evidence | HSPA1A, HSPA8 |
+| Foldase/holdase (HSP70 family) | MODIFY | GO:0044183 protein folding chaperone | HSP70 functions as foldase or holdase depending on context (conditions, clients, de novo vs quality control); curators should review per experimental evidence. Holdase aspect awaits [holdase NTR](#holdase-annotation-gap) | HSPA1A, HSPA8 |
 | Co-chaperone, J-domain | MODIFY | GO:0044183 *(interim, see [co-chaperone note](#co-chaperone-note))* | J-domain proteins are substrate adaptors and HSP70 ATPase activators, not independent foldases; GO:0044183 used as interim since GO:0003767 "co-chaperone activity" is obsolete | DNAJB1, DNAJA2 |
-| Co-chaperone, J-domain holdase | MODIFY | GO:0140309 unfolded protein carrier activity | J-domain proteins with independent holdase activity (aggregation suppression, no refolding) | DNAJB6, DNAJB8 |
-| Holdase (sHSP, crystallin, CLU) | MODIFY | GO:0140309 unfolded protein carrier activity *(see [holdase caveat](#holdase-caveat))* | ATP-independent aggregation prevention; GO:0140309 is the existing holdase term | CRYAA, HSPB6, CLU |
+| Co-chaperone, J-domain holdase | MODIFY | holdase NTR *(retain GO:0051082 until NTR created)* | J-domain proteins with independent holdase activity (aggregation suppression, no refolding). GO:0140309 is carrier-specific and does not fit; see [holdase annotation gap](#holdase-annotation-gap) | DNAJB6, DNAJB8 |
+| Holdase (sHSP, crystallin, CLU) | MODIFY | holdase NTR *(retain GO:0051082 until NTR created)* | ATP-independent in-situ aggregation prevention. GO:0140309 does not fit — it was created for carrier-holdases (TIM chaperones); see [holdase annotation gap](#holdase-annotation-gap) | CRYAA, HSPB6, CLU |
 | Disaggregase (HSP70 subset) | MODIFY | GO:0140545 ATP-dependent protein disaggregase activity | Distinct disaggregation activity | HSPA1A, HSPA1B, HSPA8 |
 | Co-chaperone NEF (GrpE-like) | REMOVE | *(none — not direct UPB)* | Regulates HSP70 nucleotide cycle, does not bind unfolded substrate directly | GRPEL1 |
 | ER/quality control sensor | REMOVE or MARK_AS_OVER_ANNOTATED | *(none — not chaperones)* | Substrate recognition for ligase/GT, not chaperoning | SYVN1, ERLEC1, UGGT1 |
@@ -50,8 +54,8 @@ Primary GO:0051082 reclassification decisions (mutually exclusive; 33 unique hum
 
 | Primary action | Count | Notes |
 |--------|-------|-------------------|
-| MODIFY → GO:0044183 (foldase) | 16 | HSP70 family (6), J-domain co-chaperones as interim (4), prefoldin (6, incl. VBP1) — note: HSP70 may also warrant GO:0140309 depending on experimental context |
-| MODIFY → GO:0140309 (holdase) | 7 | sHSPs/crystallins (3), CLU, SCG5, DNAJB6, DNAJB8 — see [holdase caveat](#holdase-caveat). Also HSPH1 (non-human, not in 33 count) |
+| MODIFY → GO:0044183 (foldase) | 16 | HSP70 family (6), J-domain co-chaperones as interim (4), prefoldin (6, incl. VBP1) — note: HSP70 holdase aspect awaits holdase NTR |
+| MODIFY → holdase NTR (pending) | 7 | sHSPs/crystallins (3), CLU, SCG5, DNAJB6, DNAJB8 — retain GO:0051082 until NTR created. Also HSPH1 (non-human, not in 33 count). See [holdase annotation gap](#holdase-annotation-gap) |
 | MODIFY → other specific MF | 2 | NPM1 (GO:0140713), AIP (GO:0051879) |
 | MARK_AS_OVER_ANNOTATED | 5 | Sensor/co-chaperone cases where UPB overstates direct activity |
 | REMOVE | 3 | SYVN1, ERLEC1, GRPEL1 |
@@ -65,14 +69,16 @@ Additional non-exclusive co-annotations:
 
 > **Note on counts**: Some genes may need dual foldase+holdase annotation (e.g. HSP70 family)
 > depending on experimental context. J-domain co-chaperone counts use GO:0044183 as interim
-> pending editor guidance on co-chaperone MF representation.
+> pending editor guidance on co-chaperone MF representation. 7 holdase genes cannot be properly
+> reannotated until a general holdase NTR is created — GO:0051082 obsoletion should be blocked
+> on this.
 
 ## Before/After Examples
 
 | Gene | Old annotation | New annotation | Evidence | Rationale |
 |------|---------------|----------------|----------|-----------|
-| HSPA1A | GO:0051082 unfolded protein binding (IDA, PMID:21231916) | GO:0044183 protein folding chaperone (foldase) + GO:0140545 disaggregase | IDA | HSP70 is an ATP-dependent foldase; also disaggregates with DNAJ/HSPH1. Note: HSP70 can also act as holdase in some contexts — curators should consider dual annotation with GO:0140309 |
-| CRYAB | GO:0051082 unfolded protein binding (IDA, PMID:20159986) | GO:0140309 unfolded protein carrier activity (holdase) | IDA | sHSP holdase; prevents aggregation without active refolding. See [holdase caveat](#holdase-caveat) re: carrier semantics |
+| HSPA1A | GO:0051082 unfolded protein binding (IDA, PMID:21231916) | GO:0044183 protein folding chaperone (foldase) + GO:0140545 disaggregase | IDA | HSP70 is an ATP-dependent foldase; also disaggregates with DNAJ/HSPH1. Holdase aspect awaits holdase NTR |
+| CRYAB | GO:0051082 unfolded protein binding (IDA, PMID:20159986) | holdase NTR *(retain GO:0051082 until created)* | IDA | sHSP holdase; prevents aggregation in situ without active refolding or inter-compartment transport. GO:0140309 does not fit (carrier-specific) |
 | DNAJB1 | GO:0051082 unfolded protein binding (IDA, PMID:21231916) | GO:0044183 protein folding chaperone *(interim)* | IDA | J-domain co-chaperone: substrate adaptor + HSP70 ATPase activator. Not an independent foldase. GO:0044183 used as interim; see [co-chaperone note](#co-chaperone-note) |
 | SYVN1 | GO:0051082 unfolded protein binding (IDA, PMID:14593114) | REMOVE | IDA | HRD1 is an E3 ubiquitin ligase; recognizes misfolded substrates for degradation, not chaperoning. Candidate for proposed "misfolded protein sensor activity" |
 | UGGT1 | GO:0051082 unfolded protein binding (IDA, PMID:24790089) | MARK_AS_OVER_ANNOTATED | IDA | Glycoprotein quality sensor for GT activity, not a chaperone |
@@ -82,20 +88,33 @@ Additional non-exclusive co-annotations:
 
 Ontology changes needed to properly annotate genes in this set:
 
-1. **Refine GO:0140309 "unfolded protein carrier activity" as the holdase term**
-   ([go-ontology#30552](https://github.com/geneontology/go-ontology/issues/30552)) —
-   GO:0140309 already exists and captures holdase function, but needs refinement:
-   - **Proposed def**: "A protein carrier activity that binds to an unfolded protein to prevent
-     aggregation and escorts it between two different cellular components."
-     (Current def puts aggregation prevention after the period as secondary.)
-   - **Synonym**: Change "holdase" from broad to **exact** synonym.
-   - **Label**: Consider using biologist-friendly "foldase" as exact synonym for GO:0044183
-     and "holdase" as exact synonym (or even primary label) for GO:0140309.
-   - **Carrier semantics issue**: GO:0140309 is under GO:0140597 "protein carrier chaperone"
-     and its def requires escort between cellular components. Some holdases (CRYAA, CRYAB,
-     HSPB6) prevent aggregation **in situ** without transporting between compartments. Does
-     GO:0140309 fit these, or is a broader sibling/parent term needed for non-escort holdases?
-   - Affects: DNAJB6, DNAJB8, CRYAA, CRYAB, HSPB6, CLU, SCG5, HSPH1.
+1. **NTR: general holdase chaperone activity** — The most critical gap. GO:0140309
+   "unfolded protein carrier activity" was created in Nov 2025 specifically for TIM carrier-holdases
+   (Tim9-Tim10, Tim8-Tim13) that escort unfolded proteins across the mitochondrial IMS
+   ([go-ontology#30552](https://github.com/geneontology/go-ontology/issues/30552)). Its definition
+   requires escort "between two different cellular components" and it is a child of GO:0140597
+   "protein carrier chaperone." Val and Pascale acknowledged in #30552 that a more general holdase
+   term was needed but deferred it: *"we thought it would be better to add this specific term as
+   it was needed immediately for annotation, and add the more general parent 'holdase' when it was
+   requested for annotation"* (Val, 2025-11-04). Raymond also flagged that an ER holdase
+   (PMID:30287478) doesn't fit GO:0140309. "holdase" is explicitly a **BROAD** synonym on
+   GO:0140309, confirming it is not the general holdase term.
+   - **We are now requesting this term.** 7 genes in this review (CRYAA, CRYAB, HSPB6, CLU, SCG5,
+     DNAJB6, DNAJB8) plus HSPH1 (non-human) are in-situ holdases that prevent aggregation without
+     inter-compartment escort. They cannot be annotated to GO:0140309.
+   - **Proposed term**: "holdase chaperone activity" — Def: "Binding to an unfolded or misfolded
+     protein to prevent its aggregation without actively catalyzing refolding. The holdase maintains
+     the client protein in a soluble, folding-competent state." Parent: direct child of
+     GO:0003674 molecular_function (per #30552 discussion; "protein carrier chaperone" is wrong
+     for non-carriers). GO:0140309 would become a child of this new term (carrier-holdases are
+     a subtype of holdases).
+   - **Relationship to Raymond's proposal**: Raymond (in [go-annotation#5581](https://github.com/geneontology/go-annotation/issues/5581))
+     proposed creating foldase/holdase subtypes under GO:0051082. We recommend against this because
+     (a) GO:0051082 is a "binding" term and Val/Pascale want "activity" terms, (b) GO:0044183
+     already covers foldase, and (c) a standalone holdase term is more composable than a subtype
+     of a binding term being obsoleted.
+   - **Until this NTR is created, GO:0051082 obsoletion should be blocked** for holdase genes.
+   - Affects: CRYAA, CRYAB, HSPB6, CLU, SCG5, DNAJB6, DNAJB8, HSPH1.
 
 2. **Misfolded protein sensor activity** — Recognition of misfolded protein conformation to
    target substrates for quality-control degradation (distinct from chaperone activity). Would
@@ -112,14 +131,14 @@ Ontology changes needed to properly annotate genes in this set:
 
 ## What We Need from GO Editors
 
-- [ ] **Holdase term (GO:0140309)**: Refine def to foreground aggregation prevention; change "holdase" from broad to exact synonym
-- [ ] **Holdase carrier semantics**: Does GO:0140309 (under "protein carrier chaperone") fit in-situ holdases (CRYAA, CRYAB, HSPB6) that prevent aggregation without escort/transport? If not, propose a broader sibling or parent term
-- [ ] **Preferred labels**: Confirm "foldase" as synonym for GO:0044183 and "holdase" as synonym for GO:0140309
+- [ ] **Holdase NTR (BLOCKING)**: Create general "holdase chaperone activity" term for in-situ holdases. GO:0140309 is carrier-specific (created for TIM chaperones in #30552) and does not fit 7 genes in this review. See [holdase annotation gap](#holdase-annotation-gap) for proposed def and parentage
+- [ ] **Block GO:0051082 obsoletion** until holdase NTR exists — 7 holdase genes have no valid replacement term without it
+- [ ] **Preferred labels**: Add "foldase" as exact synonym for GO:0044183; "holdase" should be exact synonym on the new general holdase term (currently BROAD on GO:0140309, which is correct since GO:0140309 is carrier-specific)
 - [ ] **Co-chaperone MF gap**: How should J-domain co-chaperone function be annotated? GO:0003767 is obsolete; GO:0044183 is used as interim but obscures the co-chaperone mechanism. Affects all J-domain proteins
-- [ ] **HSP70 dual annotation**: Confirm that HSP70-family genes may need both GO:0044183 (foldase) and GO:0140309 (holdase) depending on experimental context
+- [ ] **HSP70 dual annotation**: Confirm that HSP70-family genes may need both GO:0044183 (foldase) and the holdase NTR depending on experimental context
 - [ ] **PTGES3 co-chaperone mechanism**: Clarify whether PTGES3 is an HSP90 activator, substrate adaptor, or both
 - [ ] **Misfolded protein sensor**: Decide whether "misfolded protein sensor activity" warrants a new term — affects SYVN1, SAN1, Fbxo2 and ubiquitin degradation pathways
-- [ ] Proceed with obsoletion of GO:0051082 and GO:0031249 once replacement terms are in place
+- [ ] Proceed with obsoletion of GO:0051082 and GO:0031249 once holdase NTR and other replacement terms are in place
 
 ---
 
@@ -128,29 +147,36 @@ Ontology changes needed to properly annotate genes in this set:
 Existing GO terms used as replacements:
 
 - **GO:0044183** protein folding chaperone (="foldase") — assists protein folding *(existing)*
-- **GO:0140309** unfolded protein carrier activity (="holdase") — binds unfolded protein to prevent aggregation *(existing; needs refinement, see above)*
 - **GO:0140545** ATP-dependent protein disaggregase activity — solubilizes protein aggregates *(existing)*
 - **GO:0140713** histone chaperone activity — for NPM1 *(existing)*
 - **GO:0051879** Hsp90 protein binding — for AIP *(existing; note: binding term, not function)*
 - **GO:0000774** adenyl-nucleotide exchange factor activity — core MF for GRPEL1 (UPB removed) *(existing)*
+
+**Not used** (despite initial consideration):
+
+- **GO:0140309** unfolded protein carrier activity — This is a carrier-holdase term created
+  specifically for TIM chaperones ([go-ontology#30552](https://github.com/geneontology/go-ontology/issues/30552)).
+  Its definition requires escort between cellular components. None of the holdase genes in
+  this review (crystallins, sHSPs, CLU, SCG5, DNAJB6, DNAJB8) are carrier-holdases.
 
 This project focuses on MF replacement for GO:0051082/GO:0031249. BP terms discussed in
 individual gene reviews (for example GO:0030150 in GRPEL1) are not listed as MF replacements here.
 
 Proposed new terms (not yet in GO):
 
+- **"holdase chaperone activity"** — Def: "Binding to an unfolded or misfolded protein to prevent
+  its aggregation without actively catalyzing refolding. The holdase maintains the client protein
+  in a soluble, folding-competent state." Parent: direct child of GO:0003674. GO:0140309 (carrier-holdase)
+  would become a child of this term. **This is the primary NTR needed to unblock GO:0051082 obsoletion.**
+  Affects 7 human genes + HSPH1.
 - **"misfolded protein sensor activity"** — Def: Recognition of misfolded protein conformation to initiate
   quality-control degradation. Distinct from chaperone activity. Useful for ubiquitin degradation pathways.
 
 Proposed refinements to existing terms:
 
-- **GO:0140309** — Refine def to: "A protein carrier activity that binds to an unfolded protein
-  to prevent aggregation and escorts it between two different cellular components." Change "holdase"
-  from broad to exact synonym. See [holdase caveat](#holdase-caveat) for open question about
-  carrier/escort semantics for in-situ holdases.
 - **GO:0044183** — Add "foldase" as exact synonym.
 
-### Holdase caveat
+### Holdase annotation gap
 
 Several genes in this review are **holdases** rather than foldases. Holdases bind unfolded or
 misfolded proteins to prevent their aggregation, but they lack ATPase activity and do **not**
@@ -159,16 +185,26 @@ activity of HSP70-type chaperones. Some proteins (notably HSP70) can function as
 and holdase depending on conditions, clients, and whether the context is de novo folding or
 quality control.
 
-GO:0140309 "unfolded protein carrier activity" is the existing holdase term, with "holdase" as
-a synonym (currently broad; we propose changing to exact). The affected holdase genes (DNAJB6,
-DNAJB8, CRYAA, CRYAB, HSPB6, CLU, SCG5) should be annotated to GO:0140309.
+**GO:0140309 "unfolded protein carrier activity" does not fit these genes.** Review of the
+original term request ([go-ontology#30552](https://github.com/geneontology/go-ontology/issues/30552))
+shows that GO:0140309 was created in Nov 2025 specifically for TIM carrier-holdases (Tim9-Tim10,
+Tim8-Tim13) that escort unfolded proteins across the mitochondrial IMS. Key evidence:
 
-**Open question for GO editors**: GO:0140309 is defined as a "protein carrier activity" that
-"escorts [protein] between two different cellular components." Some holdases (small HSPs like
-CRYAA, CRYAB, HSPB6) prevent aggregation **in situ** without transporting substrates between
-compartments (e.g. small Tims are strictly holdases in the IMS). Does GO:0140309 fit these
-in-situ holdases, or is a broader term needed that captures aggregation prevention without
-requiring inter-compartment escort?
+- Its definition requires escort "between two different cellular components"
+- It is a child of GO:0140597 "protein carrier chaperone"
+- "holdase" is explicitly a **BROAD** synonym (not exact), because not all holdases are carriers
+- Val (2025-11-04): *"we were aware that there were holdases that did not bind to unfolded
+  proteins [in transit], but we needed a use case"* for the carrier-holdase
+- Raymond flagged that an ER holdase (PMID:30287478) doesn't fit GO:0140309; Val agreed a
+  separate holdase term is needed
+
+The holdase genes in this review (CRYAA, CRYAB, HSPB6, CLU, SCG5, DNAJB6, DNAJB8) all prevent
+aggregation **in situ** — they do not escort substrates between compartments. HSPH1 (non-human)
+is likewise an in-situ holdase. These genes require a new general "holdase chaperone activity"
+term (see [Open Ontology Gaps](#open-ontology-gaps) item 1).
+
+**Until the holdase NTR is created, these 7 genes should retain GO:0051082** — the obsoletion
+of GO:0051082 should be blocked on this NTR.
 
 ### Co-chaperone note
 
@@ -197,25 +233,25 @@ to their co-chaperone function — these are annotated to GO:0140309 for their h
 because it has that second term as well; this is not an additional human gene.
 
 ### Tier 1a - HSP70 family (foldase/holdase, context-dependent)
-- [x] HSPA1A (P0DMV8) - HSP70, foldase/holdase → MODIFY to GO:0044183 + GO:0140545; consider also GO:0140309 per experimental context
-- [x] HSPA1B (P0DMV9) - HSP70, foldase/holdase → MODIFY to GO:0044183 + GO:0140545; consider also GO:0140309
-- [x] HSPA2 (P54652) - HSP70, foldase/holdase → MODIFY to GO:0044183; consider also GO:0140309
-- [x] HSPA6 (P17066) - HSP70, foldase/holdase → MODIFY to GO:0044183; consider also GO:0140309
-- [x] HSPA8 (P11142) - HSC70, foldase/holdase → MODIFY to GO:0044183 + GO:0140545; consider also GO:0140309
-- [x] HSPA1L (P34931) - HSP70, foldase/holdase → MODIFY to GO:0044183; consider also GO:0140309
+- [x] HSPA1A (P0DMV8) - HSP70, foldase/holdase → MODIFY to GO:0044183 + GO:0140545; holdase aspect awaits holdase NTR
+- [x] HSPA1B (P0DMV9) - HSP70, foldase/holdase → MODIFY to GO:0044183 + GO:0140545; holdase aspect awaits holdase NTR
+- [x] HSPA2 (P54652) - HSP70, foldase/holdase → MODIFY to GO:0044183; holdase aspect awaits holdase NTR
+- [x] HSPA6 (P17066) - HSP70, foldase/holdase → MODIFY to GO:0044183; holdase aspect awaits holdase NTR
+- [x] HSPA8 (P11142) - HSC70, foldase/holdase → MODIFY to GO:0044183 + GO:0140545; holdase aspect awaits holdase NTR
+- [x] HSPA1L (P34931) - HSP70, foldase/holdase → MODIFY to GO:0044183; holdase aspect awaits holdase NTR
 
 ### Tier 1b - J-domain co-chaperones (see [co-chaperone note](#co-chaperone-note))
 - [x] DNAJB1 (P25685) - HSP40, foldase-type co-chaperone → MODIFY to GO:0044183 *(interim; substrate adaptor + HSP70 ATPase activator)*
 - [x] DNAJB2 (P25686) - HSP40, co-chaperone → MODIFY to GO:0044183 *(interim)*
 - [x] DNAJA2 (O60884) - HSP40, foldase-type co-chaperone → MODIFY to GO:0044183 *(interim)*
 - [x] DNAJA4 (Q8WW22) - HSP40, co-chaperone → MODIFY to GO:0044183 *(interim)*
-- [x] DNAJB6 (O75190) - HSP40, holdase-type co-chaperone → MODIFY to GO:0140309 (independent holdase activity)
-- [x] DNAJB8 (Q8NHS0) - HSP40, holdase-type co-chaperone → MODIFY to GO:0140309 (independent holdase activity)
+- [x] DNAJB6 (O75190) - HSP40, holdase-type co-chaperone → holdase NTR *(retain GO:0051082 until created; independent in-situ holdase, not carrier)*
+- [x] DNAJB8 (Q8NHS0) - HSP40, holdase-type co-chaperone → holdase NTR *(retain GO:0051082 until created; independent in-situ holdase, not carrier)*
 
 ### Tier 2 - Small HSPs / Holdases
-- [x] CRYAA (P02489) - alpha-crystallin, holdase → MODIFY to GO:0140309 (see [holdase caveat](#holdase-caveat))
-- [x] CRYAB (P02511) - alpha-crystallin, holdase → MODIFY to GO:0140309
-- [x] HSPB6 (O14558) - small HSP, holdase → MODIFY to GO:0140309
+- [x] CRYAA (P02489) - alpha-crystallin, holdase → holdase NTR *(retain GO:0051082; in-situ holdase, not carrier)*
+- [x] CRYAB (P02511) - alpha-crystallin, holdase → holdase NTR *(retain GO:0051082; in-situ holdase, not carrier)*
+- [x] HSPB6 (O14558) - small HSP, holdase → holdase NTR *(retain GO:0051082; in-situ holdase, not carrier)*
 
 ### Tier 3 - Prefoldin Complex
 - [x] PFDN1 (O60925) - prefoldin subunit → MODIFY to GO:0044183
@@ -232,8 +268,8 @@ because it has that second term as well; this is not an additional human gene.
 
 ### Tier 5 - Other / Unusual
 - [x] NPM1 (P06748) - nucleophosmin → MODIFY to GO:0140713 + GO:0140142 + GO:0044183 + GO:0019901
-- [x] CLU (P10909) - clusterin, extracellular holdase → MODIFY to GO:0140309 (holdase, see [caveat](#holdase-caveat))
-- [x] SCG5 (P05408) - neuroendocrine protein 7B2 → MODIFY to GO:0140309 (holdase)
+- [x] CLU (P10909) - clusterin, extracellular holdase → holdase NTR *(retain GO:0051082; in-situ/extracellular holdase, not carrier)*
+- [x] SCG5 (P05408) - neuroendocrine protein 7B2 → holdase NTR *(retain GO:0051082; secretory pathway holdase, not carrier)*
 - [x] TOMM20 (Q15388) - mitochondrial import receptor → MARK_AS_OVER_ANNOTATED
 - [x] GRPEL1 (Q9HAV7) - GrpE homolog (NEF) → REMOVE (not direct unfolded-substrate binder; core MF GO:0000774)
 - [x] AIP (O00170) - AH receptor interacting protein → MODIFY to GO:0051879
@@ -245,7 +281,7 @@ because it has that second term as well; this is not an additional human gene.
 - HSPA1A (P0DMV8) - already in Tier 1 (same gene; listed here because it also has GO:0031249)
 - [x] SAN1 (yeast) - E3 ligase, misfolded protein sensor → MODIFY GO:0031249 to GO:0051787 (misfolded protein binding)
 - [x] Fbxo2 (mouse) - F-box protein, glycoprotein sensor → MODIFY GO:0031249 (glycan-mediated recognition, not general denatured protein binding)
-- [x] HSPH1 (hamster) - Hsp110, holdase → MODIFY GO:0031249 to GO:0140309 (holdase) + core NEF function (GO:0000774)
+- [x] HSPH1 (hamster) - Hsp110, holdase → MODIFY GO:0031249 to holdase NTR *(retain GO:0031249 until created)* + core NEF function (GO:0000774)
 
 ## Categories of Annotated Proteins (all species)
 
@@ -272,6 +308,22 @@ Based on the ~189 experimental annotations across all species:
 
 <details>
 <summary>Curation session notes (click to expand)</summary>
+
+## 2026-02-11 (session 8 - GO:0140309 CARRIER CORRECTION)
+
+- **Critical correction**: GO:0140309 is NOT a general holdase term
+  - Reviewed full discussion in [go-ontology#30552](https://github.com/geneontology/go-ontology/issues/30552)
+  - GO:0140309 was created Nov 2025 specifically for TIM carrier-holdases (Tim9-Tim10, Tim8-Tim13)
+  - Definition requires escort "between two different cellular components"; child of GO:0140597 "protein carrier chaperone"
+  - "holdase" is BROAD synonym (not exact), confirming it's not the general holdase term
+  - Val acknowledged general holdase term needed but deferred: "add the more general parent 'holdase' when it was requested for annotation"
+  - Raymond flagged ER holdase (PMID:30287478) doesn't fit; Val agreed separate term needed
+- **All 7 holdase genes (CRYAA, CRYAB, HSPB6, CLU, SCG5, DNAJB6, DNAJB8) + HSPH1 changed from GO:0140309 to "holdase NTR pending"**
+- Primary NTR is now "holdase chaperone activity" (general, non-carrier) — GO:0140309 would become a child
+- GO:0051082 obsoletion should be blocked until holdase NTR exists
+- Added note on Raymond's foldase/holdase subtype proposal and why standalone term is preferred
+- Fixed small Tims example (they ARE carrier-holdases, so were wrong as example of non-carrier holdases)
+- HSP70 holdase aspect now references holdase NTR instead of GO:0140309
 
 ## 2026-02-11 (session 7 - EDITOR FEEDBACK)
 
