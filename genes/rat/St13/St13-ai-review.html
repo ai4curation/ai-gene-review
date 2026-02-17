@@ -1,0 +1,3478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>St13 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>St13</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P50503" target="_blank" class="term-link">
+                        P50503
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Rattus norvegicus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "St13";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P50503" data-a="DESCRIPTION: Hsc70-interacting protein (Hip/ST13) is a TPR-cont..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Hsc70-interacting protein (Hip/ST13) is a TPR-containing co-chaperone that regulates the Hsp70 chaperone cycle. Hip forms homo-oligomers (tetramers) and binds the ATPase domain of Hsc70, stabilizing the ADP-bound state which has high affinity for substrate proteins (PMID:7585962). By slowing ADP dissociation from Hsc70, Hip attenuates active cycling and enhances aggregation prevention (PMID:23812373). Hip possesses its own chaperone activity, binding non-native proteins but unable to facilitate their refolding independently (PMID:9183013). Hip competes with BAG-1 (a nucleotide exchange factor) for binding to the Hsc70 ATPase domain (PMID:9528774).</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0006457" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hip/St13 participates in protein folding as a co-chaperone of the Hsc70 system. Hohfeld et al. (PMID:7585962) showed that Hip cooperates with Hsc70/Hsp40 in the folding reaction cycle. The IBA annotation from phylogenetic inference is consistent with the known biology.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein folding is a core biological process for Hip. As a co-chaperone that stabilizes the substrate-binding state of Hsc70, Hip directly participates in the protein folding cycle. The IBA annotation is phylogenetically sound and supported by multiple experimental studies.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link">
+                                        PMID:7585962
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Hsc70-interacting protein Hip, a tetratricopeptide repeat protein, participates in the regulation of the eukaryotic 70 kDa heat shock cognate Hsc70.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030544" target="_blank" class="term-link">
+                                    GO:0030544
+                                </a>
+                            </span>
+                            <span class="term-label">Hsp70 protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0030544" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hsp70 protein binding is the core molecular function of Hip. Multiple studies demonstrate direct binding of Hip to the ATPase domain of Hsc70 (PMID:7585962, PMID:8999928, PMID:9528774, PMID:23812373). The IBA annotation is well-supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the defining molecular function of Hip - direct binding to Hsp70 family members. The IBA annotation is phylogenetically sound and supported by extensive experimental evidence from multiple groups.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link">
+                                        PMID:7585962
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">One Hip oligomer binds the ATPase domains of at least two Hsc70 molecules dependent on activation of the Hsc70 ATPase by Hsp40.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProt subcellular location mapping. UniProt annotates St13 to the cytoplasm. Consistent with IDA evidence for cytosol localization (PMID:7585962).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is well-established and consistent with the more specific cytosol annotation. The IEA annotation is correct though broader than the IDA-supported GO:0005829 (cytosol).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                                    GO:0046983
+                                </a>
+                            </span>
+                            <span class="term-label">protein dimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0046983" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro mapping. Hip forms homo-oligomers (tetramers, not dimers). Li et al. (PMID:23812373) solved the crystal structure of the dimerization domain. The N-terminal domain mediates homo-oligomerization (PMID:8999928). While the protein does dimerize as part of tetramer formation, this is a structural property rather than a functional molecular activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While Hip does self-associate (forming tetramers via its N-terminal dimerization domain), protein dimerization activity is a structural feature rather than the functional molecular activity of interest. The core function is Hsp70 protein binding (GO:0030544), and the self-association is a prerequisite for this function rather than the function itself.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21808025" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21808025
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    C terminus of Hsc70-interacting protein (CHIP)-mediated degr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0005515" data-r="PMID:21808025" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from Zhang et al. (2011), a study on CHIP-mediated degradation of hippocampal estrogen receptor-alpha. St13/Hip was identified as an interactor in the context of the Hsc70/CHIP complex. However, GO:0005515 (protein binding) is uninformative for a co-chaperone that has multiple specific binding partners.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein binding is too vague for a co-chaperone. Hip has well-characterized specific binding interactions with Hsc70 (GO:0030544), which is already annotated. The generic protein binding term does not add useful functional information.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23812373" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23812373
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and function of Hip, an attenuator of the Hsp70 ch...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0042802" data-r="PMID:23812373" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from Li et al. (2013), who solved crystal structures of the Hip dimerization domain showing direct homotypic interactions. Hip forms homo-oligomers (tetramers) via its N-terminal domain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The crystal structure (PMID:23812373) provides definitive evidence for identical protein binding. Hip forms functional homo-oligomers, and self-association is required for its co-chaperone function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23812373" target="_blank" class="term-link">
+                                        PMID:23812373
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here we present crystal structures of the dimerization domain and the tetratricopeptide repeat (TPR) domain of rat Hip.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7585962
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hip, a novel cochaperone involved in the eukaryotic Hsc70/Hs...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0005829" data-r="PMID:7585962" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Hohfeld et al. (1995), who identified Hip as a cytosolic protein interacting with Hsc70. Hip was purified from reticulocyte lysate, confirming cytosolic localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytosol localization is well-established from the original identification of Hip as a cytosolic co-chaperone. This is a core cellular component annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link">
+                                        PMID:7585962
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Hsc70-interacting protein Hip, a tetratricopeptide repeat protein, participates in the regulation of the eukaryotic 70 kDa heat shock cognate Hsc70.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009617" target="_blank" class="term-link">
+                                    GO:0009617
+                                </a>
+                            </span>
+                            <span class="term-label">response to bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000121
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0009617" data-r="GO_REF:0000121" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISO annotation transferred from mammalian orthologs via RGD. The connection between Hip/St13 and response to bacterium is not obvious from the known co-chaperone biology. This may relate to the role of Hsp70 chaperones in immune responses, but it is not a core function of Hip itself.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Unable to assess the basis for this annotation without access to the original experimental evidence in the source species. The connection between a cytosolic Hsc70 co-chaperone and response to bacterium is not immediately clear from known Hip biology and may represent an indirect or peripheral effect.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019904" target="_blank" class="term-link">
+                                    GO:0019904
+                                </a>
+                            </span>
+                            <span class="term-label">protein domain specific binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8999928" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8999928
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of functional domains of the eukaryotic co-...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0019904" data-r="PMID:8999928" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Irmer and Hohfeld (1997), who mapped the Hsc70-binding site of Hip to its TPR domain and showed it interacts specifically with the ATPase domain of Hsc70. This demonstrates domain-specific binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The study directly demonstrates that Hip binds specifically to the ATPase domain of Hsc70 through its TPR domain. This is a clear case of protein domain specific binding supported by deletion mapping and in vitro interaction assays.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8999928" target="_blank" class="term-link">
+                                        PMID:8999928
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the Hsc70-binding site of Hip was mapped to a domain comprising multiple tetratricopeptide repeats and flanking charged alpha-helices. Affinity chromatography confirmed direct interaction of isolated Hip fragments and protein fusions bearing this region with the ATPase domain of Hsc70 in an ATP- and salt-dependent manner.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019904" target="_blank" class="term-link">
+                                    GO:0019904
+                                </a>
+                            </span>
+                            <span class="term-label">protein domain specific binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9528774" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9528774
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The carboxy-terminal domain of Hsc70 provides binding sites ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0019904" data-r="PMID:9528774" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from Demand et al. (1998), who showed that Hip interacts exclusively with the amino-terminal ATPase domain of Hsc70, while Hsp40 and Hop bind the carboxy-terminal domain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This study provides complementary evidence for domain-specific binding, demonstrating that Hip binds exclusively to the ATPase domain of Hsc70, separate from the binding sites for Hsp40 and Hop.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9528774" target="_blank" class="term-link">
+                                        PMID:9528774
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hip interacts exclusively with the amino-terminal ATPase domain of Hsc70... Hsc70 possesses separate nonoverlapping binding sites for Hsp40, Hip, and Hop.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030544" target="_blank" class="term-link">
+                                    GO:0030544
+                                </a>
+                            </span>
+                            <span class="term-label">Hsp70 protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9528774" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9528774
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The carboxy-terminal domain of Hsc70 provides binding sites ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0030544" data-r="PMID:9528774" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from Demand et al. (1998), demonstrating physical interaction between Hip and Hsc70. Consistent with the IBA and IDA annotations for the same term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct physical interaction evidence for Hip binding to Hsc70, consistent with multiple other lines of evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9528774" target="_blank" class="term-link">
+                                        PMID:9528774
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hip interacts exclusively with the amino-terminal ATPase domain of Hsc70.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032564" target="_blank" class="term-link">
+                                    GO:0032564
+                                </a>
+                            </span>
+                            <span class="term-label">dATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9183013" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9183013
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the molecular-chaperone function of the ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0032564" data-r="PMID:9183013" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Bruce and Churchich (1997), who showed that recombinant Hip recognizes anthraniloyl-dATP, anthraniloyl-ADP, and TNP-ATP by fluorescence measurements, despite not catalyzing ATP hydrolysis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The experimental evidence directly demonstrates nucleotide recognition by Hip using fluorescence measurements. While Hip does not hydrolyze ATP, it does bind nucleotide analogs. The annotation is supported by the direct assay evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9183013" target="_blank" class="term-link">
+                                        PMID:9183013
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fluorescence measurements indicated that the chaperone recognizes anthraniloyl-dATP, anthraniloyl-ADP, and 2&#39;-O-trinitrophenyl-ATP.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                                    GO:0032991
+                                </a>
+                            </span>
+                            <span class="term-label">protein-containing complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9528774" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9528774
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The carboxy-terminal domain of Hsc70 provides binding sites ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0032991" data-r="PMID:9528774" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Demand et al. (1998). Hip is part of a multi-protein complex with Hsc70, Hsp40, and other co-chaperones. However, GO:0032991 (protein-containing complex) is extremely generic and uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While Hip does participate in protein complexes, GO:0032991 is the root term for all protein complexes and provides no useful information about which complex. A more specific complex term would be informative, though no specific GO term exists for the Hsc70/Hip/Hsp40 complex.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8999928" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8999928
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of functional domains of the eukaryotic co-...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0042802" data-r="PMID:8999928" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from Irmer and Hohfeld (1997), who identified the N-terminal homo-oligomerization domain of Hip.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The study directly demonstrates self-association of Hip through its N-terminal domain, supporting identical protein binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8999928" target="_blank" class="term-link">
+                                        PMID:8999928
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a domain required for homo-oligomerization was identified at the extreme amino terminus of Hip.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9183013" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9183013
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the molecular-chaperone function of the ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0051082" data-r="PMID:9183013" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Bruce and Churchich (1997). The paper showed that Hip binds specifically to reduced, carboxymethylated alpha-lactalbumin (a non-native protein) but not the native form. However, Hip was unable to facilitate refolding and actually inhibited it. GO:0051082 is proposed for obsoletion. Hip functions as a co-chaperone rather than as an independent chaperone that productively handles unfolded substrates.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0051082 (unfolded protein binding) is proposed for obsoletion. While Bruce and Churchich (PMID:9183013) did show binding to denatured protein, Hip functions as a co-chaperone that stabilizes the Hsc70-substrate complex rather than as an independent unfolded protein handler. The appropriate replacement is GO:0044183 (protein folding chaperone), which captures the co-chaperone role in the protein folding machinery.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    protein folding chaperone
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9183013" target="_blank" class="term-link">
+                                        PMID:9183013
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The role of Hip as a molecular chaperone has been confirmed by its ability to strongly bind to the reduced, carboxymethylated form of alpha-lactalbumin. This interaction is specific for non-native domains since native alpha-lactalbumin fails to interact with Hip.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051087" target="_blank" class="term-link">
+                                    GO:0051087
+                                </a>
+                            </span>
+                            <span class="term-label">protein-folding chaperone binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9528774" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9528774
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The carboxy-terminal domain of Hsc70 provides binding sites ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0051087" data-r="PMID:9528774" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from Demand et al. (1998), who showed Hip interacts with Hsc70 (a protein-folding chaperone). This is essentially the same interaction as GO:0030544 (Hsp70 protein binding) but from a different perspective.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Hip binds to Hsc70, which is a protein-folding chaperone. This annotation is complementary to GO:0030544 and captures the binding from the perspective of the chaperone partner type.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9528774" target="_blank" class="term-link">
+                                        PMID:9528774
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hip interacts exclusively with the amino-terminal ATPase domain of Hsc70.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061084" target="_blank" class="term-link">
+                                    GO:0061084
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of protein refolding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9183013" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9183013
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the molecular-chaperone function of the ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0061084" data-r="PMID:9183013" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Bruce and Churchich (1997). The paper showed that Hip inhibited the refolding of alkaline phosphatase and malate dehydrogenase at near stoichiometric levels, and this inhibition could not be reversed by ATP addition. This is an in vitro observation with purified Hip alone; in the context of the Hsc70 system, Hip actually promotes protein folding by stabilizing the Hsc70-substrate complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The experimental evidence clearly shows Hip inhibits protein refolding in vitro when acting alone (without Hsc70). This is a direct assay result that is correctly annotated. The annotation captures the intrinsic holdase-like activity of Hip, distinct from its positive role in the Hsc70 chaperone cycle.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9183013" target="_blank" class="term-link">
+                                        PMID:9183013
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hip inhibited the refolding of alkaline phosphatase and malic dehydrogenase. Inhibition occurred at near stoichiometric levels of Hip and could not be reversed by the addition of ATP.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                                    GO:0032991
+                                </a>
+                            </span>
+                            <span class="term-label">protein-containing complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7585962
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hip, a novel cochaperone involved in the eukaryotic Hsc70/Hs...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0032991" data-r="PMID:7585962" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Hohfeld et al. (1995). Hip was identified as part of the Hsc70/Hsp40 chaperone complex. As noted above, GO:0032991 is extremely generic.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the same overly generic term. GO:0032991 (protein-containing complex) is too broad to be informative. The specific complex membership is better captured by the protein-protein interaction annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7585962
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hip, a novel cochaperone involved in the eukaryotic Hsc70/Hs...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0042802" data-r="PMID:7585962" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Hohfeld et al. (1995), who showed Hip forms homo-oligomers. Consistent with the IPI annotations for the same term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The original Hip paper demonstrated self-association as part of its characterization. This provides additional evidence for identical protein binding.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044877" target="_blank" class="term-link">
+                                    GO:0044877
+                                </a>
+                            </span>
+                            <span class="term-label">protein-containing complex binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7585962
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hip, a novel cochaperone involved in the eukaryotic Hsc70/Hs...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0044877" data-r="PMID:7585962" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Hohfeld et al. (1995). Hip binds to the Hsc70/Hsp40 complex. This is somewhat redundant with the more specific Hsp70 protein binding annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While somewhat redundant with GO:0030544 (Hsp70 protein binding), this annotation captures that Hip interacts with a multi-protein chaperone complex, not just isolated Hsc70. Hip binding to Hsc70 requires prior activation of the Hsc70 ATPase by Hsp40 (PMID:7585962), so the complex context is relevant.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link">
+                                        PMID:7585962
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">One Hip oligomer binds the ATPase domains of at least two Hsc70 molecules dependent on activation of the Hsc70 ATPase by Hsp40.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903334" target="_blank" class="term-link">
+                                    GO:1903334
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7585962
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hip, a novel cochaperone involved in the eukaryotic Hsc70/Hs...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:1903334" data-r="PMID:7585962" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Hohfeld et al. (1995). Hip stabilizes the ADP state of Hsc70 that has high affinity for substrate protein, thereby promoting the productive folding cycle. Through its own chaperone activity, it may contribute to Hsc70-substrate interactions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Hip positively regulates protein folding by stabilizing the Hsc70-substrate complex. This is the core biological process role of Hip in the context of the Hsc70 chaperone system, as distinct from its isolated holdase activity (GO:0061084).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link">
+                                        PMID:7585962
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hip stabilizes the ADP state of Hsc70 that has a high affinity for substrate protein. Through its own chaperone activity, Hip may contribute to the interaction of Hsc70 with various target proteins.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019904" target="_blank" class="term-link">
+                                    GO:0019904
+                                </a>
+                            </span>
+                            <span class="term-label">protein domain specific binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7585962
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hip, a novel cochaperone involved in the eukaryotic Hsc70/Hs...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0019904" data-r="PMID:7585962" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Hohfeld et al. (1995). The original paper showed Hip binds the ATPase domain of Hsc70. Consistent with the more detailed domain mapping in PMID:8999928.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The original characterization demonstrated domain-specific binding of Hip to the Hsc70 ATPase domain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030544" target="_blank" class="term-link">
+                                    GO:0030544
+                                </a>
+                            </span>
+                            <span class="term-label">Hsp70 protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7585962
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hip, a novel cochaperone involved in the eukaryotic Hsc70/Hs...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50503" data-a="GO:0030544" data-r="PMID:7585962" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from the original Hip paper (Hohfeld et al. 1995), demonstrating direct interaction between Hip and Hsc70. This is the core molecular function annotation for Hip.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The definitive experimental demonstration of Hip binding to Hsc70, the core molecular function of this co-chaperone.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link">
+                                        PMID:7585962
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">One Hip oligomer binds the ATPase domains of at least two Hsc70 molecules dependent on activation of the Hsc70 ATPase by Hsp40.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hip/St13 functions as a co-chaperone that stabilizes the ADP-bound state of Hsc70, promoting substrate retention and enhancing the productive protein folding cycle. It binds the ATPase domain of Hsc70 via its TPR domain, attenuating the Hsp70 ATPase cycle and competing with nucleotide exchange factors.</h3>
+                <span class="vote-buttons" data-g="P50503" data-a="FUNCTION: Hip/St13 functions as a co-chaperone that stabiliz..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030544" target="_blank" class="term-link">
+                            Hsp70 protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                protein folding
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903334" target="_blank" class="term-link">
+                                positive regulation of protein folding
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000121.md" target="_blank" class="term-link">
+                            GO_REF:0000121
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RGD ISO annotations to rat from other mammalian species</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21808025" target="_blank" class="term-link">
+                            PMID:21808025
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">C terminus of Hsc70-interacting protein (CHIP)-mediated degradation of hippocampal estrogen receptor-alpha and the critical period hypothesis of estrogen neuroprotection.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23812373" target="_blank" class="term-link">
+                            PMID:23812373
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure and function of Hip, an attenuator of the Hsp70 chaperone cycle.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7585962" target="_blank" class="term-link">
+                            PMID:7585962
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Hip, a novel cochaperone involved in the eukaryotic Hsc70/Hsp40 reaction cycle.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8999928" target="_blank" class="term-link">
+                            PMID:8999928
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of functional domains of the eukaryotic co-chaperone Hip.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9183013" target="_blank" class="term-link">
+                            PMID:9183013
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of the molecular-chaperone function of the heat-shock-cognate-70-interacting protein.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9528774" target="_blank" class="term-link">
+                            PMID:9528774
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The carboxy-terminal domain of Hsc70 provides binding sites for a distinct set of chaperone cofactors.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P50503
+gene_symbol: St13
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:10116
+  label: Rattus norvegicus
+description: &gt;-
+  Hsc70-interacting protein (Hip/ST13) is a TPR-containing co-chaperone that
+  regulates the Hsp70 chaperone cycle. Hip forms homo-oligomers (tetramers) and
+  binds the ATPase domain of Hsc70, stabilizing the ADP-bound state which has
+  high affinity for substrate proteins (PMID:7585962). By slowing ADP
+  dissociation from Hsc70, Hip attenuates active cycling and enhances
+  aggregation prevention (PMID:23812373). Hip possesses its own chaperone
+  activity, binding non-native proteins but unable to facilitate their refolding
+  independently (PMID:9183013). Hip competes with BAG-1 (a nucleotide exchange
+  factor) for binding to the Hsc70 ATPase domain (PMID:9528774).
+existing_annotations:
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Hip/St13 participates in protein folding as a co-chaperone of the Hsc70
+      system. Hohfeld et al. (PMID:7585962) showed that Hip cooperates with
+      Hsc70/Hsp40 in the folding reaction cycle. The IBA annotation from
+      phylogenetic inference is consistent with the known biology.
+    action: ACCEPT
+    reason: &gt;-
+      Protein folding is a core biological process for Hip. As a co-chaperone
+      that stabilizes the substrate-binding state of Hsc70, Hip directly
+      participates in the protein folding cycle. The IBA annotation is
+      phylogenetically sound and supported by multiple experimental studies.
+    supported_by:
+      - reference_id: PMID:7585962
+        supporting_text: &gt;-
+          The Hsc70-interacting protein Hip, a tetratricopeptide repeat protein,
+          participates in the regulation of the eukaryotic 70 kDa heat shock cognate
+          Hsc70.
+- term:
+    id: GO:0030544
+    label: Hsp70 protein binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Hsp70 protein binding is the core molecular function of Hip. Multiple
+      studies demonstrate direct binding of Hip to the ATPase domain of Hsc70
+      (PMID:7585962, PMID:8999928, PMID:9528774, PMID:23812373). The IBA
+      annotation is well-supported.
+    action: ACCEPT
+    reason: &gt;-
+      This is the defining molecular function of Hip - direct binding to
+      Hsp70 family members. The IBA annotation is phylogenetically sound and
+      supported by extensive experimental evidence from multiple groups.
+    supported_by:
+      - reference_id: PMID:7585962
+        supporting_text: &gt;-
+          One Hip oligomer binds the ATPase domains of at least two Hsc70 molecules
+          dependent on activation of the Hsc70 ATPase by Hsp40.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation from UniProt subcellular location mapping. UniProt
+      annotates St13 to the cytoplasm. Consistent with IDA evidence for
+      cytosol localization (PMID:7585962).
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is well-established and consistent with the
+      more specific cytosol annotation. The IEA annotation is correct though
+      broader than the IDA-supported GO:0005829 (cytosol).
+- term:
+    id: GO:0046983
+    label: protein dimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation from InterPro mapping. Hip forms homo-oligomers
+      (tetramers, not dimers). Li et al. (PMID:23812373) solved the crystal
+      structure of the dimerization domain. The N-terminal domain mediates
+      homo-oligomerization (PMID:8999928). While the protein does dimerize
+      as part of tetramer formation, this is a structural property rather
+      than a functional molecular activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While Hip does self-associate (forming tetramers via its N-terminal
+      dimerization domain), protein dimerization activity is a structural
+      feature rather than the functional molecular activity of interest.
+      The core function is Hsp70 protein binding (GO:0030544), and the
+      self-association is a prerequisite for this function rather than
+      the function itself.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21808025
+  review:
+    summary: &gt;-
+      IPI annotation from Zhang et al. (2011), a study on CHIP-mediated
+      degradation of hippocampal estrogen receptor-alpha. St13/Hip was
+      identified as an interactor in the context of the Hsc70/CHIP complex.
+      However, GO:0005515 (protein binding) is uninformative for a co-chaperone
+      that has multiple specific binding partners.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Protein binding is too vague for a co-chaperone. Hip has well-characterized
+      specific binding interactions with Hsc70 (GO:0030544), which is already
+      annotated. The generic protein binding term does not add useful functional
+      information.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23812373
+  review:
+    summary: &gt;-
+      IPI annotation from Li et al. (2013), who solved crystal structures
+      of the Hip dimerization domain showing direct homotypic interactions.
+      Hip forms homo-oligomers (tetramers) via its N-terminal domain.
+    action: ACCEPT
+    reason: &gt;-
+      The crystal structure (PMID:23812373) provides definitive evidence
+      for identical protein binding. Hip forms functional homo-oligomers,
+      and self-association is required for its co-chaperone function.
+    supported_by:
+      - reference_id: PMID:23812373
+        supporting_text: &gt;-
+          Here we present crystal structures of the dimerization domain and the
+          tetratricopeptide repeat (TPR) domain of rat Hip.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:7585962
+  review:
+    summary: &gt;-
+      IDA annotation from Hohfeld et al. (1995), who identified Hip as a
+      cytosolic protein interacting with Hsc70. Hip was purified from
+      reticulocyte lysate, confirming cytosolic localization.
+    action: ACCEPT
+    reason: &gt;-
+      Cytosol localization is well-established from the original identification
+      of Hip as a cytosolic co-chaperone. This is a core cellular component
+      annotation.
+    supported_by:
+      - reference_id: PMID:7585962
+        supporting_text: &gt;-
+          The Hsc70-interacting protein Hip, a tetratricopeptide repeat protein,
+          participates in the regulation of the eukaryotic 70 kDa heat shock cognate
+          Hsc70.
+- term:
+    id: GO:0009617
+    label: response to bacterium
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000121
+  review:
+    summary: &gt;-
+      ISO annotation transferred from mammalian orthologs via RGD. The
+      connection between Hip/St13 and response to bacterium is not obvious
+      from the known co-chaperone biology. This may relate to the role of
+      Hsp70 chaperones in immune responses, but it is not a core function
+      of Hip itself.
+    action: UNDECIDED
+    reason: &gt;-
+      Unable to assess the basis for this annotation without access to the
+      original experimental evidence in the source species. The connection
+      between a cytosolic Hsc70 co-chaperone and response to bacterium is
+      not immediately clear from known Hip biology and may represent an
+      indirect or peripheral effect.
+- term:
+    id: GO:0019904
+    label: protein domain specific binding
+  evidence_type: IDA
+  original_reference_id: PMID:8999928
+  review:
+    summary: &gt;-
+      IDA annotation from Irmer and Hohfeld (1997), who mapped the Hsc70-binding
+      site of Hip to its TPR domain and showed it interacts specifically with
+      the ATPase domain of Hsc70. This demonstrates domain-specific binding.
+    action: ACCEPT
+    reason: &gt;-
+      The study directly demonstrates that Hip binds specifically to the
+      ATPase domain of Hsc70 through its TPR domain. This is a clear case
+      of protein domain specific binding supported by deletion mapping and
+      in vitro interaction assays.
+    supported_by:
+      - reference_id: PMID:8999928
+        supporting_text: &gt;-
+          the Hsc70-binding site of Hip was mapped to a domain comprising
+          multiple tetratricopeptide repeats and flanking charged alpha-helices.
+          Affinity chromatography confirmed direct interaction of isolated Hip
+          fragments and protein fusions bearing this region with the ATPase domain
+          of Hsc70 in an ATP- and salt-dependent manner.
+- term:
+    id: GO:0019904
+    label: protein domain specific binding
+  evidence_type: IPI
+  original_reference_id: PMID:9528774
+  review:
+    summary: &gt;-
+      IPI annotation from Demand et al. (1998), who showed that Hip interacts
+      exclusively with the amino-terminal ATPase domain of Hsc70, while Hsp40
+      and Hop bind the carboxy-terminal domain.
+    action: ACCEPT
+    reason: &gt;-
+      This study provides complementary evidence for domain-specific binding,
+      demonstrating that Hip binds exclusively to the ATPase domain of Hsc70,
+      separate from the binding sites for Hsp40 and Hop.
+    supported_by:
+      - reference_id: PMID:9528774
+        supporting_text: &gt;-
+          Hip interacts exclusively with the amino-terminal ATPase domain of
+          Hsc70... Hsc70 possesses separate nonoverlapping binding sites for
+          Hsp40, Hip, and Hop.
+- term:
+    id: GO:0030544
+    label: Hsp70 protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:9528774
+  review:
+    summary: &gt;-
+      IPI annotation from Demand et al. (1998), demonstrating physical
+      interaction between Hip and Hsc70. Consistent with the IBA and IDA
+      annotations for the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Direct physical interaction evidence for Hip binding to Hsc70,
+      consistent with multiple other lines of evidence.
+    supported_by:
+      - reference_id: PMID:9528774
+        supporting_text: &gt;-
+          Hip interacts exclusively with the amino-terminal ATPase domain of Hsc70.
+- term:
+    id: GO:0032564
+    label: dATP binding
+  evidence_type: IDA
+  original_reference_id: PMID:9183013
+  review:
+    summary: &gt;-
+      IDA annotation from Bruce and Churchich (1997), who showed that
+      recombinant Hip recognizes anthraniloyl-dATP, anthraniloyl-ADP, and
+      TNP-ATP by fluorescence measurements, despite not catalyzing ATP
+      hydrolysis.
+    action: ACCEPT
+    reason: &gt;-
+      The experimental evidence directly demonstrates nucleotide recognition
+      by Hip using fluorescence measurements. While Hip does not hydrolyze
+      ATP, it does bind nucleotide analogs. The annotation is supported
+      by the direct assay evidence.
+    supported_by:
+      - reference_id: PMID:9183013
+        supporting_text: &gt;-
+          fluorescence measurements indicated that the chaperone recognizes
+          anthraniloyl-dATP, anthraniloyl-ADP, and 2&#39;-O-trinitrophenyl-ATP.
+- term:
+    id: GO:0032991
+    label: protein-containing complex
+  evidence_type: IDA
+  original_reference_id: PMID:9528774
+  review:
+    summary: &gt;-
+      IDA annotation from Demand et al. (1998). Hip is part of a multi-protein
+      complex with Hsc70, Hsp40, and other co-chaperones. However, GO:0032991
+      (protein-containing complex) is extremely generic and uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While Hip does participate in protein complexes, GO:0032991 is the
+      root term for all protein complexes and provides no useful information
+      about which complex. A more specific complex term would be informative,
+      though no specific GO term exists for the Hsc70/Hip/Hsp40 complex.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:8999928
+  review:
+    summary: &gt;-
+      IPI annotation from Irmer and Hohfeld (1997), who identified the
+      N-terminal homo-oligomerization domain of Hip.
+    action: ACCEPT
+    reason: &gt;-
+      The study directly demonstrates self-association of Hip through its
+      N-terminal domain, supporting identical protein binding.
+    supported_by:
+      - reference_id: PMID:8999928
+        supporting_text: &gt;-
+          a domain required for homo-oligomerization was identified at the
+          extreme amino terminus of Hip.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:9183013
+  review:
+    summary: &gt;-
+      IDA annotation from Bruce and Churchich (1997). The paper showed that
+      Hip binds specifically to reduced, carboxymethylated alpha-lactalbumin
+      (a non-native protein) but not the native form. However, Hip was unable
+      to facilitate refolding and actually inhibited it. GO:0051082 is
+      proposed for obsoletion. Hip functions as a co-chaperone rather than
+      as an independent chaperone that productively handles unfolded substrates.
+    action: MODIFY
+    reason: &gt;-
+      GO:0051082 (unfolded protein binding) is proposed for obsoletion.
+      While Bruce and Churchich (PMID:9183013) did show binding to denatured
+      protein, Hip functions as a co-chaperone that stabilizes the Hsc70-substrate
+      complex rather than as an independent unfolded protein handler. The
+      appropriate replacement is GO:0044183 (protein folding chaperone), which
+      captures the co-chaperone role in the protein folding machinery.
+    proposed_replacement_terms:
+      - id: GO:0044183
+        label: protein folding chaperone
+    supported_by:
+      - reference_id: PMID:9183013
+        supporting_text: &gt;-
+          The role of Hip as a molecular chaperone has been confirmed by its
+          ability to strongly bind to the reduced, carboxymethylated form of
+          alpha-lactalbumin. This interaction is specific for non-native domains
+          since native alpha-lactalbumin fails to interact with Hip.
+- term:
+    id: GO:0051087
+    label: protein-folding chaperone binding
+  evidence_type: IPI
+  original_reference_id: PMID:9528774
+  review:
+    summary: &gt;-
+      IPI annotation from Demand et al. (1998), who showed Hip interacts with
+      Hsc70 (a protein-folding chaperone). This is essentially the same
+      interaction as GO:0030544 (Hsp70 protein binding) but from a different
+      perspective.
+    action: ACCEPT
+    reason: &gt;-
+      Hip binds to Hsc70, which is a protein-folding chaperone. This annotation
+      is complementary to GO:0030544 and captures the binding from the
+      perspective of the chaperone partner type.
+    supported_by:
+      - reference_id: PMID:9528774
+        supporting_text: &gt;-
+          Hip interacts exclusively with the amino-terminal ATPase domain of Hsc70.
+- term:
+    id: GO:0061084
+    label: negative regulation of protein refolding
+  evidence_type: IDA
+  original_reference_id: PMID:9183013
+  review:
+    summary: &gt;-
+      IDA annotation from Bruce and Churchich (1997). The paper showed that
+      Hip inhibited the refolding of alkaline phosphatase and malate
+      dehydrogenase at near stoichiometric levels, and this inhibition could
+      not be reversed by ATP addition. This is an in vitro observation with
+      purified Hip alone; in the context of the Hsc70 system, Hip actually
+      promotes protein folding by stabilizing the Hsc70-substrate complex.
+    action: ACCEPT
+    reason: &gt;-
+      The experimental evidence clearly shows Hip inhibits protein refolding
+      in vitro when acting alone (without Hsc70). This is a direct assay
+      result that is correctly annotated. The annotation captures the
+      intrinsic holdase-like activity of Hip, distinct from its positive
+      role in the Hsc70 chaperone cycle.
+    supported_by:
+      - reference_id: PMID:9183013
+        supporting_text: &gt;-
+          Hip inhibited the refolding of alkaline phosphatase and malic
+          dehydrogenase. Inhibition occurred at near stoichiometric levels
+          of Hip and could not be reversed by the addition of ATP.
+- term:
+    id: GO:0032991
+    label: protein-containing complex
+  evidence_type: IDA
+  original_reference_id: PMID:7585962
+  review:
+    summary: &gt;-
+      IDA annotation from Hohfeld et al. (1995). Hip was identified as part
+      of the Hsc70/Hsp40 chaperone complex. As noted above, GO:0032991 is
+      extremely generic.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Duplicate of the same overly generic term. GO:0032991 (protein-containing
+      complex) is too broad to be informative. The specific complex membership
+      is better captured by the protein-protein interaction annotations.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:7585962
+  review:
+    summary: &gt;-
+      IDA annotation from Hohfeld et al. (1995), who showed Hip forms
+      homo-oligomers. Consistent with the IPI annotations for the same term.
+    action: ACCEPT
+    reason: &gt;-
+      The original Hip paper demonstrated self-association as part of its
+      characterization. This provides additional evidence for identical
+      protein binding.
+- term:
+    id: GO:0044877
+    label: protein-containing complex binding
+  evidence_type: IDA
+  original_reference_id: PMID:7585962
+  review:
+    summary: &gt;-
+      IDA annotation from Hohfeld et al. (1995). Hip binds to the Hsc70/Hsp40
+      complex. This is somewhat redundant with the more specific Hsp70 protein
+      binding annotation.
+    action: ACCEPT
+    reason: &gt;-
+      While somewhat redundant with GO:0030544 (Hsp70 protein binding), this
+      annotation captures that Hip interacts with a multi-protein chaperone
+      complex, not just isolated Hsc70. Hip binding to Hsc70 requires prior
+      activation of the Hsc70 ATPase by Hsp40 (PMID:7585962), so the complex
+      context is relevant.
+    supported_by:
+      - reference_id: PMID:7585962
+        supporting_text: &gt;-
+          One Hip oligomer binds the ATPase domains of at least two Hsc70 molecules
+          dependent on activation of the Hsc70 ATPase by Hsp40.
+- term:
+    id: GO:1903334
+    label: positive regulation of protein folding
+  evidence_type: IDA
+  original_reference_id: PMID:7585962
+  review:
+    summary: &gt;-
+      IDA annotation from Hohfeld et al. (1995). Hip stabilizes the ADP
+      state of Hsc70 that has high affinity for substrate protein, thereby
+      promoting the productive folding cycle. Through its own chaperone
+      activity, it may contribute to Hsc70-substrate interactions.
+    action: ACCEPT
+    reason: &gt;-
+      Hip positively regulates protein folding by stabilizing the
+      Hsc70-substrate complex. This is the core biological process role
+      of Hip in the context of the Hsc70 chaperone system, as distinct from
+      its isolated holdase activity (GO:0061084).
+    supported_by:
+      - reference_id: PMID:7585962
+        supporting_text: &gt;-
+          Hip stabilizes the ADP state of Hsc70 that has a high affinity
+          for substrate protein. Through its own chaperone activity, Hip
+          may contribute to the interaction of Hsc70 with various target proteins.
+- term:
+    id: GO:0019904
+    label: protein domain specific binding
+  evidence_type: IDA
+  original_reference_id: PMID:7585962
+  review:
+    summary: &gt;-
+      IDA annotation from Hohfeld et al. (1995). The original paper showed
+      Hip binds the ATPase domain of Hsc70. Consistent with the more
+      detailed domain mapping in PMID:8999928.
+    action: ACCEPT
+    reason: &gt;-
+      The original characterization demonstrated domain-specific binding
+      of Hip to the Hsc70 ATPase domain.
+- term:
+    id: GO:0030544
+    label: Hsp70 protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:7585962
+  review:
+    summary: &gt;-
+      IDA annotation from the original Hip paper (Hohfeld et al. 1995),
+      demonstrating direct interaction between Hip and Hsc70. This is the
+      core molecular function annotation for Hip.
+    action: ACCEPT
+    reason: &gt;-
+      The definitive experimental demonstration of Hip binding to Hsc70,
+      the core molecular function of this co-chaperone.
+    supported_by:
+      - reference_id: PMID:7585962
+        supporting_text: &gt;-
+          One Hip oligomer binds the ATPase domains of at least two Hsc70 molecules
+          dependent on activation of the Hsc70 ATPase by Hsp40.
+core_functions:
+- description: &gt;-
+    Hip/St13 functions as a co-chaperone that stabilizes the ADP-bound state of
+    Hsc70, promoting substrate retention and enhancing the productive protein
+    folding cycle. It binds the ATPase domain of Hsc70 via its TPR domain,
+    attenuating the Hsp70 ATPase cycle and competing with nucleotide exchange
+    factors.
+  molecular_function:
+    id: GO:0030544
+    label: Hsp70 protein binding
+  directly_involved_in:
+    - id: GO:0006457
+      label: protein folding
+    - id: GO:1903334
+      label: positive regulation of protein folding
+  locations:
+    - id: GO:0005829
+      label: cytosol
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000121
+  title: RGD ISO annotations to rat from other mammalian species
+  findings: []
+- id: PMID:21808025
+  title: C terminus of Hsc70-interacting protein (CHIP)-mediated degradation of hippocampal
+    estrogen receptor-alpha and the critical period hypothesis of estrogen neuroprotection.
+  findings: []
+- id: PMID:23812373
+  title: Structure and function of Hip, an attenuator of the Hsp70 chaperone cycle.
+  findings: []
+- id: PMID:7585962
+  title: Hip, a novel cochaperone involved in the eukaryotic Hsc70/Hsp40 reaction
+    cycle.
+  findings: []
+- id: PMID:8999928
+  title: Characterization of functional domains of the eukaryotic co-chaperone Hip.
+  findings: []
+- id: PMID:9183013
+  title: Characterization of the molecular-chaperone function of the heat-shock-cognate-70-interacting
+    protein.
+  findings: []
+- id: PMID:9528774
+  title: The carboxy-terminal domain of Hsc70 provides binding sites for a distinct
+    set of chaperone cofactors.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

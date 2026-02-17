@@ -1,0 +1,2967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cryabb - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cryabb</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A8M9Q8E3" target="_blank" class="term-link">
+                        A0A8M9Q8E3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Danio rerio</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cryabb";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="DESCRIPTION: Zebrafish alpha-crystallin B chain b (cryabb, also..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Zebrafish alpha-crystallin B chain b (cryabb, also known as cryab2 or alphaB2-crystallin) is a member of the small heat shock protein (sHSP/HSP20) family. It is one of two zebrafish alphaB-crystallin paralogs arising from the teleost whole-genome duplication. Unlike cryaba which became lens-specific, cryabb retains the broad expression pattern of its mammalian ortholog CRYAB, with constitutive expression in heart, brain, skeletal muscle, liver, and lens (PMID:16420472). cryabb has greater chaperone-like activity than human CRYAB at 25-30 degrees C, while human CRYAB provides greater protection at 35-40 degrees C (PMID:16420472). cryabb maintained the widespread protective role found in mammalian CRYAB after gene duplication, while cryaba adopted a more restricted lens role (PMID:16420472). Morpholino knockdown of cryabb causes skeletal muscle defects, myofibril disassembly, heart failure, and locomotory impairment in zebrafish embryos (PMID:25866181). Loss of cryabb also contributes to maintenance of lens transparency (PMID:38705506), though its primary role appears to be in muscle and stress protection rather than lens structure. The protein belongs to the sHSP/HSP20 family with an alpha-crystallin domain and an N-terminal crystallin domain. UniProt annotates it with keywords for eye lens protein, metal-binding, and zinc.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    GO:0043066
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0043066" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic inference from mammalian alpha-crystallins (CRYAA, CRYAB, HSPB1) which have documented anti-apoptotic roles. cryabb retains the broad expression pattern and protective functions of mammalian CRYAB (PMID:16420472), making this inference more applicable than for the lens-specific cryaba paralog. However, anti-apoptosis is a downstream biological process rather than a core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Anti-apoptotic activity is a recognized function of the sHSP family and is more relevant for cryabb than cryaba given that cryabb retained the widespread protective role of mammalian CRYAB (PMID:16420472). However, this represents a downstream biological process rather than a core molecular function. Retained as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for cytoplasmic localization, inferred phylogenetically from multiple sHSP orthologs. Consistent with the known biology of alpha-crystallins as cytoplasmic proteins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is well-established for alpha-crystallins and sHSPs. The IBA inference is phylogenetically sound and consistent with IEA annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for nuclear localization based on phylogenetic inference from mammalian sHSPs that translocate to the nucleus under stress conditions. Nuclear localization is not the primary site of action for alpha-crystallins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization has been reported for some mammalian sHSP orthologs. The IBA inference is phylogenetically supported but represents a secondary or stress-dependent localization. Retained as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009408" target="_blank" class="term-link">
+                                    GO:0009408
+                                </a>
+                            </span>
+                            <span class="term-label">response to heat</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0009408" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for heat stress response, inferred phylogenetically from multiple sHSP orthologs. cryabb belongs to the sHSP/HSP20 family and has robust chaperone-like activity (PMID:16420472), maintaining the widespread protective role of mammalian CRYAB. This is a well-supported annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> cryabb is a member of the sHSP family with demonstrated chaperone-like activity (PMID:16420472). It retained the broad protective function of mammalian CRYAB after gene duplication. Response to heat is a core function for this protein.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042026" target="_blank" class="term-link">
+                                    GO:0042026
+                                </a>
+                            </span>
+                            <span class="term-label">protein refolding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0042026" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for protein refolding, inferred primarily from Drosophila sHSP orthologs. Alpha-crystallins function as holdases rather than foldases -- they prevent aggregation of denaturing proteins but do not actively refold them. cryabb has robust chaperone-like (holdase) activity at physiological temperatures (PMID:16420472). The protein refolding term is inaccurate for a holdase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Alpha-crystallins are holdase chaperones that prevent aggregation of unfolded proteins but do not catalyze refolding. GO:0042026 implies active refolding activity, which is inaccurate for cryabb. GO:0140309 (unfolded protein carrier activity) is not appropriate because it is carrier-specific (per go-ontology#30552). Retain until a holdase chaperone activity NTR is created.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    unfolded protein binding (retain until holdase NTR is created)
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16420472" target="_blank" class="term-link">
+                                        PMID:16420472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">At 25 degrees C and 30 degrees C, zebrafish alphaB2 showed greater chaperone-like activity than human alphaB-crystallin, and at 35 degrees C and 40 degrees C, the human protein provided greater protection against aggregation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0051082" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for unfolded protein binding based on phylogenetic inference from multiple sHSP orthologs. GO:0051082 is proposed for obsoletion. cryabb has demonstrated chaperone-like activity (PMID:16420472). The holdase function should be captured by GO:0140309.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0051082 is proposed for obsoletion. The holdase activity of cryabb has been demonstrated by in vitro chaperone assays showing robust prevention of substrate aggregation (PMID:16420472). GO:0140309 (unfolded protein carrier activity) is not appropriate because it is carrier-specific (per go-ontology#30552). Retain until a holdase chaperone activity NTR is created.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    unfolded protein binding (retain until holdase NTR is created)
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16420472" target="_blank" class="term-link">
+                                        PMID:16420472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">At 25 degrees C and 30 degrees C, zebrafish alphaB2 showed greater chaperone-like activity than human alphaB-crystallin, and at 35 degrees C and 40 degrees C, the human protein provided greater protection against aggregation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0005198" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on ARBA machine learning models. cryabb has the more specific annotation GO:0005212 (structural constituent of eye lens) from IEA, and its primary molecular function is holdase chaperone activity rather than a generic structural role. However, cryabb does have expression in the lens and the UniProt keyword KW-0273 (Eye lens protein) is annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While GO:0005198 is general, it is not incorrect -- cryabb contributes to structural integrity in multiple tissues including lens and muscle. The more specific term GO:0005212 is also annotated. Acceptable as an IEA inference.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005212" target="_blank" class="term-link">
+                                    GO:0005212
+                                </a>
+                            </span>
+                            <span class="term-label">structural constituent of eye lens</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0005212" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on InterPro domain match (IPR003090 Alpha-crystallin_N) and UniProt keyword (KW-0273 Eye lens protein). cryabb is expressed in the lens and contributes to lens transparency (PMID:38705506), though its primary role is in broad tissue protection rather than lens structure.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> cryabb does contribute to lens transparency (PMID:38705506), but unlike cryaba, it retained the broad expression and protective function of mammalian CRYAB (PMID:16420472). The structural lens role is secondary to its widespread chaperone function. Retained as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0005737" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for cytoplasmic localization based on ARBA machine learning models. Consistent with the IBA annotation for the same term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is well-established. This IEA annotation is consistent with the IBA annotation. Acceptable as automated confirmation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009892" target="_blank" class="term-link">
+                                    GO:0009892
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0009892" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on ARBA machine learning models. This is a very broad biological process term. Alpha-crystallins can regulate metabolic processes through their chaperone activity, but GO:0009892 is too general to be informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0009892 (negative regulation of metabolic process) is excessively broad and uninformative. While sHSPs can influence metabolic processes indirectly through their chaperone activity, this IEA annotation does not capture any specific function of cryabb. The annotation likely reflects a generic ARBA prediction from sequence features shared by many proteins.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    GO:0043066
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0043066" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for negative regulation of apoptotic process based on ARBA machine learning models. Consistent with the IBA annotation for the same term and the known anti-apoptotic function of mammalian CRYAB.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is consistent with the IBA annotation for the same term. The anti-apoptotic function is well-established for mammalian CRYAB and likely conserved in cryabb. However, this is a downstream biological process rather than a core molecular function. Retained as non-core consistent with the IBA.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProt keyword mapping (KW-0479 Metal-binding). The UniProt entry has keywords for zinc and metal-binding based on ARBA evidence. While the annotation is technically correct, it is very general. The more specific term GO:0008270 (zinc ion binding) would be more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is too general. UniProt keywords indicate zinc binding for this protein. A more specific term would be more informative.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    zinc ion binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036438" target="_blank" class="term-link">
+                                    GO:0036438
+                                </a>
+                            </span>
+                            <span class="term-label">maintenance of lens transparency</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38705506" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38705506
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Loss of αBa-crystallin, but not αA-crystallin, increases age...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0036438" data-r="PMID:38705506" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for maintenance of lens transparency based on Posner et al. 2024 (PMID:38705506). The study examined individual mutant zebrafish lines for all three alpha-crystallin genes. While the primary finding was that cryaba loss led to the greatest increase in cataract, the study also evaluated cryabb mutants for lens transparency. cryabb contributes to lens maintenance but its primary role is in broad tissue protection.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The experimental evidence from PMID:38705506 supports a role for cryabb in lens transparency maintenance. However, cryabb&#39;s primary function is as a broadly expressed protective chaperone (PMID:16420472), and its lens role is secondary compared to cryaba. Retained as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38705506" target="_blank" class="term-link">
+                                        PMID:38705506
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">zebrafish express one lens-specific alphaA-crystallin gene (cryaa), they express two alphaB-crystallin genes, with one evolving lens specificity (cryaba) and the other retaining the broad expression of its mammalian ortholog (cryabb).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007519" target="_blank" class="term-link">
+                                    GO:0007519
+                                </a>
+                            </span>
+                            <span class="term-label">skeletal muscle tissue development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25866181" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25866181
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vivo characterization of human myofibrillar myopathy gene...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0007519" data-r="PMID:25866181" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for skeletal muscle tissue development based on Buhrdel et al. 2015 (PMID:25866181). Morpholino knockdown of MFM disease genes including cryabb led to compromised skeletal muscle function due to myofibrillar degeneration. This is more relevant for cryabb than cryaba because cryabb retains the broad muscle expression of mammalian CRYAB (PMID:16420472).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> cryabb retains the widespread expression including muscle tissue that is characteristic of mammalian CRYAB (PMID:16420472). The morpholino knockdown evidence (PMID:25866181) supports a direct role in skeletal muscle tissue development/maintenance. This is a core function for cryabb.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25866181" target="_blank" class="term-link">
+                                        PMID:25866181
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">targeted ablation of MFM genes in zebrafish led to compromised skeletal muscle function mostly due to myofibrillar degeneration as well as severe heart failure.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007626" target="_blank" class="term-link">
+                                    GO:0007626
+                                </a>
+                            </span>
+                            <span class="term-label">locomotory behavior</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25866181" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25866181
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vivo characterization of human myofibrillar myopathy gene...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0007626" data-r="PMID:25866181" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for locomotory behavior based on Buhrdel et al. 2015 (PMID:25866181). Morpholino knockdown of cryabb led to compromised skeletal muscle function affecting locomotion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The locomotory behavior phenotype from cryabb knockdown (PMID:25866181) is a downstream consequence of myofibrillar degeneration rather than a direct role in locomotion. Retained as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030239" target="_blank" class="term-link">
+                                    GO:0030239
+                                </a>
+                            </span>
+                            <span class="term-label">myofibril assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25866181" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25866181
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vivo characterization of human myofibrillar myopathy gene...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0030239" data-r="PMID:25866181" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for myofibril assembly based on Buhrdel et al. 2015 (PMID:25866181). Morpholino knockdown of cryabb led to myofibrillar degeneration. This is consistent with the known role of mammalian CRYAB in maintaining myofibrillar integrity, and cryabb retains the broad muscle expression of its mammalian ortholog (PMID:16420472).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> cryabb retains the broad muscle expression of mammalian CRYAB (PMID:16420472) and morpholino knockdown causes myofibrillar degeneration (PMID:25866181). Myofibril assembly/maintenance is a core function for cryabb, consistent with the known role of mammalian CRYAB as a major myofibrillar myopathy gene.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060047" target="_blank" class="term-link">
+                                    GO:0060047
+                                </a>
+                            </span>
+                            <span class="term-label">heart contraction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25866181" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25866181
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vivo characterization of human myofibrillar myopathy gene...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0060047" data-r="PMID:25866181" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for heart contraction based on Buhrdel et al. 2015 (PMID:25866181). Morpholino knockdown of MFM genes including cryabb led to severe heart failure. cryabb retains the cardiac expression of mammalian CRYAB (PMID:16420472).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> cryabb retains the broad expression including heart tissue characteristic of mammalian CRYAB (PMID:16420472). The heart failure phenotype from knockdown (PMID:25866181) supports a direct role in cardiac function. This is a core function for cryabb, consistent with human CRYAB being a cardiomyopathy gene.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16420472" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16420472
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Gene duplication and separation of functions in alphaB-cryst...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0051082" data-r="PMID:16420472" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation based on Smith et al. 2006 (PMID:16420472), which characterized the chaperone-like activity of alphaB2-crystallin (cryabb). The study measured the ability of recombinant cryabb to prevent chemically induced aggregation of alpha-lactalbumin and lysozyme at temperatures from 25 to 40 degrees C. cryabb showed greater chaperone-like activity than human CRYAB at 25-30 degrees C. GO:0051082 is proposed for obsoletion; the holdase function should be captured by GO:0140309.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0051082 is proposed for obsoletion. The chaperone-like activity assays in PMID:16420472 directly demonstrate holdase function for cryabb -- prevention of chemically induced aggregation of substrate proteins. GO:0140309 (unfolded protein carrier activity) is the recommended replacement term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    unfolded protein binding (retain until holdase NTR is created)
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16420472" target="_blank" class="term-link">
+                                        PMID:16420472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">At 25 degrees C and 30 degrees C, zebrafish alphaB2 showed greater chaperone-like activity than human alphaB-crystallin, and at 35 degrees C and 40 degrees C, the human protein provided greater protection against aggregation.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16420472" target="_blank" class="term-link">
+                                        PMID:16420472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">zebrafish alphaB2 maintained the widespread protective role also found in mammalian alphaB-crystallin, while zebrafish alphaB1 adopted a more restricted, nonchaperone role in the lens.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000015
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ND (no data) annotation indicating that no specific cellular component has been experimentally determined for cryabb. This is a placeholder annotation. However, IBA evidence supports cytoplasmic and nuclear localization, and IEA evidence supports cytoplasmic localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ND annotations are standard placeholders indicating no experimental data is available for a particular aspect. While there are IBA and IEA annotations for specific compartments, no direct experimental localization data exists for cryabb. This ND annotation is valid as a factual statement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>cryabb is the broadly expressed zebrafish alphaB-crystallin paralog that retained the widespread protective function of mammalian CRYAB after gene duplication (PMID:16420472). It has robust holdase chaperone activity, preventing aggregation of denaturing proteins at physiological temperatures (PMID:16420472). cryabb is expressed in heart, brain, skeletal muscle, liver, and lens. Its chaperone activity supports myofibrillar integrity and cardiac function, consistent with human CRYAB being a myofibrillar myopathy and cardiomyopathy gene (PMID:25866181).</h3>
+                <span class="vote-buttons" data-g="A0A8M9Q8E3" data-a="FUNCTION: cryabb is the broadly expressed zebrafish alphaB-c..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                            unfolded protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009408" target="_blank" class="term-link">
+                                response to heat
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030239" target="_blank" class="term-link">
+                                myofibril assembly
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007519" target="_blank" class="term-link">
+                                skeletal muscle tissue development
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060047" target="_blank" class="term-link">
+                                heart contraction
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16420472" target="_blank" class="term-link">
+                            PMID:16420472
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene duplication and separation of functions in alphaB-crystallin from zebrafish (Danio rerio).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Zebrafish express two alphaB-crystallins. cryabb (alphaB2) has constitutive expression in heart, brain, skeletal muscle, liver, and lens, retaining the broad expression of mammalian CRYAB. cryabb shows greater chaperone-like activity than human CRYAB at 25-30 degrees C. After gene duplication, cryabb maintained the widespread protective role of mammalian CRYAB while cryaba adopted a lens-specific role.</div>
+                        
+                        <div class="finding-text">"zebrafish alphaB2 maintained the widespread protective role also found in mammalian alphaB-crystallin, while zebrafish alphaB1 adopted a more restricted, nonchaperone role in the lens."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25866181" target="_blank" class="term-link">
+                            PMID:25866181
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">In vivo characterization of human myofibrillar myopathy genes in zebrafish.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Morpholino knockdown of myofibrillar myopathy genes including cryabb in zebrafish led to compromised skeletal muscle function, myofibrillar degeneration, and severe heart failure.</div>
+                        
+                        <div class="finding-text">"targeted ablation of MFM genes in zebrafish led to compromised skeletal muscle function mostly due to myofibrillar degeneration as well as severe heart failure."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38705506" target="_blank" class="term-link">
+                            PMID:38705506
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Loss of αBa-crystallin, but not αA-crystallin, increases age-related cataract in the zebrafish lens.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The study examined all three alpha-crystallin mutant zebrafish lines for age-related cataract. cryabb contributes to lens maintenance alongside cryaa and cryaba.</div>
+                        
+                        <div class="finding-text">"zebrafish express one lens-specific alphaA-crystallin gene (cryaa), they express two alphaB-crystallin genes, with one evolving lens specificity (cryaba) and the other retaining the broad expression of its mammalian ortholog (cryabb)."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A8M9Q8E3
+gene_symbol: cryabb
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:7955
+  label: Danio rerio
+description: &gt;-
+  Zebrafish alpha-crystallin B chain b (cryabb, also known as cryab2 or
+  alphaB2-crystallin) is a member of the small heat shock protein (sHSP/HSP20) family.
+  It is one of two zebrafish alphaB-crystallin paralogs arising from the teleost
+  whole-genome duplication. Unlike cryaba which became lens-specific, cryabb retains
+  the broad expression pattern of its mammalian ortholog CRYAB, with constitutive
+  expression in heart, brain, skeletal muscle, liver, and lens (PMID:16420472). cryabb
+  has greater chaperone-like activity than human CRYAB at 25-30 degrees C, while human
+  CRYAB provides greater protection at 35-40 degrees C (PMID:16420472). cryabb
+  maintained the widespread protective role found in mammalian CRYAB after gene
+  duplication, while cryaba adopted a more restricted lens role (PMID:16420472).
+  Morpholino knockdown of cryabb causes skeletal muscle defects, myofibril
+  disassembly, heart failure, and locomotory impairment in zebrafish embryos
+  (PMID:25866181). Loss of cryabb also contributes to maintenance of lens transparency
+  (PMID:38705506), though its primary role appears to be in muscle and stress
+  protection rather than lens structure. The protein belongs to the sHSP/HSP20 family
+  with an alpha-crystallin domain and an N-terminal crystallin domain. UniProt
+  annotates it with keywords for eye lens protein, metal-binding, and zinc.
+existing_annotations:
+- term:
+    id: GO:0043066
+    label: negative regulation of apoptotic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation based on phylogenetic inference from mammalian alpha-crystallins
+      (CRYAA, CRYAB, HSPB1) which have documented anti-apoptotic roles. cryabb
+      retains the broad expression pattern and protective functions of mammalian
+      CRYAB (PMID:16420472), making this inference more applicable than for the
+      lens-specific cryaba paralog. However, anti-apoptosis is a downstream
+      biological process rather than a core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Anti-apoptotic activity is a recognized function of the sHSP family and is
+      more relevant for cryabb than cryaba given that cryabb retained the widespread
+      protective role of mammalian CRYAB (PMID:16420472). However, this represents
+      a downstream biological process rather than a core molecular function. Retained
+      as non-core.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for cytoplasmic localization, inferred phylogenetically from
+      multiple sHSP orthologs. Consistent with the known biology of alpha-crystallins
+      as cytoplasmic proteins.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is well-established for alpha-crystallins and sHSPs.
+      The IBA inference is phylogenetically sound and consistent with IEA annotations.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for nuclear localization based on phylogenetic inference from
+      mammalian sHSPs that translocate to the nucleus under stress conditions. Nuclear
+      localization is not the primary site of action for alpha-crystallins.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Nuclear localization has been reported for some mammalian sHSP orthologs. The
+      IBA inference is phylogenetically supported but represents a secondary or
+      stress-dependent localization. Retained as non-core.
+- term:
+    id: GO:0009408
+    label: response to heat
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for heat stress response, inferred phylogenetically from
+      multiple sHSP orthologs. cryabb belongs to the sHSP/HSP20 family and has
+      robust chaperone-like activity (PMID:16420472), maintaining the widespread
+      protective role of mammalian CRYAB. This is a well-supported annotation.
+    action: ACCEPT
+    reason: &gt;-
+      cryabb is a member of the sHSP family with demonstrated chaperone-like
+      activity (PMID:16420472). It retained the broad protective function of
+      mammalian CRYAB after gene duplication. Response to heat is a core function
+      for this protein.
+- term:
+    id: GO:0042026
+    label: protein refolding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for protein refolding, inferred primarily from Drosophila sHSP
+      orthologs. Alpha-crystallins function as holdases rather than foldases -- they
+      prevent aggregation of denaturing proteins but do not actively refold them.
+      cryabb has robust chaperone-like (holdase) activity at physiological
+      temperatures (PMID:16420472). The protein refolding term is inaccurate for
+      a holdase.
+    action: MODIFY
+    reason: &gt;-
+      Alpha-crystallins are holdase chaperones that prevent aggregation of unfolded
+      proteins but do not catalyze refolding. GO:0042026 implies active refolding
+      activity, which is inaccurate for cryabb. GO:0140309 (unfolded protein carrier
+      activity) is not appropriate because it is carrier-specific (per
+      go-ontology#30552). Retain until a holdase chaperone activity NTR is created.
+    proposed_replacement_terms:
+      - id: GO:0051082
+        label: unfolded protein binding (retain until holdase NTR is created)
+    supported_by:
+      - reference_id: PMID:16420472
+        supporting_text: &gt;-
+          At 25 degrees C and 30 degrees C, zebrafish alphaB2 showed greater
+          chaperone-like activity than human alphaB-crystallin, and at 35 degrees C
+          and 40 degrees C, the human protein provided greater protection against
+          aggregation.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for unfolded protein binding based on phylogenetic inference from
+      multiple sHSP orthologs. GO:0051082 is proposed for obsoletion. cryabb has
+      demonstrated chaperone-like activity (PMID:16420472). The holdase function should
+      be captured by GO:0140309.
+    action: MODIFY
+    reason: &gt;-
+      GO:0051082 is proposed for obsoletion. The holdase activity of cryabb has been
+      demonstrated by in vitro chaperone assays showing robust prevention of substrate
+      aggregation (PMID:16420472). GO:0140309 (unfolded protein carrier activity) is
+      not appropriate because it is carrier-specific (per go-ontology#30552). Retain
+      until a holdase chaperone activity NTR is created.
+    proposed_replacement_terms:
+      - id: GO:0051082
+        label: unfolded protein binding (retain until holdase NTR is created)
+    supported_by:
+      - reference_id: PMID:16420472
+        supporting_text: &gt;-
+          At 25 degrees C and 30 degrees C, zebrafish alphaB2 showed greater
+          chaperone-like activity than human alphaB-crystallin, and at 35 degrees C
+          and 40 degrees C, the human protein provided greater protection against
+          aggregation.
+- term:
+    id: GO:0005198
+    label: structural molecule activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation based on ARBA machine learning models. cryabb has the more
+      specific annotation GO:0005212 (structural constituent of eye lens) from
+      IEA, and its primary molecular function is holdase chaperone activity rather
+      than a generic structural role. However, cryabb does have expression in the
+      lens and the UniProt keyword KW-0273 (Eye lens protein) is annotated.
+    action: ACCEPT
+    reason: &gt;-
+      While GO:0005198 is general, it is not incorrect -- cryabb contributes to
+      structural integrity in multiple tissues including lens and muscle. The more
+      specific term GO:0005212 is also annotated. Acceptable as an IEA inference.
+- term:
+    id: GO:0005212
+    label: structural constituent of eye lens
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation based on InterPro domain match (IPR003090 Alpha-crystallin_N)
+      and UniProt keyword (KW-0273 Eye lens protein). cryabb is expressed in the
+      lens and contributes to lens transparency (PMID:38705506), though its primary
+      role is in broad tissue protection rather than lens structure.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      cryabb does contribute to lens transparency (PMID:38705506), but unlike cryaba,
+      it retained the broad expression and protective function of mammalian CRYAB
+      (PMID:16420472). The structural lens role is secondary to its widespread
+      chaperone function. Retained as non-core.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation for cytoplasmic localization based on ARBA machine learning
+      models. Consistent with the IBA annotation for the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is well-established. This IEA annotation is consistent
+      with the IBA annotation. Acceptable as automated confirmation.
+- term:
+    id: GO:0009892
+    label: negative regulation of metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation based on ARBA machine learning models. This is a very broad
+      biological process term. Alpha-crystallins can regulate metabolic processes
+      through their chaperone activity, but GO:0009892 is too general to be
+      informative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0009892 (negative regulation of metabolic process) is excessively broad
+      and uninformative. While sHSPs can influence metabolic processes indirectly
+      through their chaperone activity, this IEA annotation does not capture any
+      specific function of cryabb. The annotation likely reflects a generic ARBA
+      prediction from sequence features shared by many proteins.
+- term:
+    id: GO:0043066
+    label: negative regulation of apoptotic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation for negative regulation of apoptotic process based on ARBA
+      machine learning models. Consistent with the IBA annotation for the same
+      term and the known anti-apoptotic function of mammalian CRYAB.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This IEA annotation is consistent with the IBA annotation for the same term.
+      The anti-apoptotic function is well-established for mammalian CRYAB and likely
+      conserved in cryabb. However, this is a downstream biological process rather
+      than a core molecular function. Retained as non-core consistent with the IBA.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation based on UniProt keyword mapping (KW-0479 Metal-binding). The
+      UniProt entry has keywords for zinc and metal-binding based on ARBA evidence.
+      While the annotation is technically correct, it is very general. The more
+      specific term GO:0008270 (zinc ion binding) would be more informative.
+    action: MODIFY
+    reason: &gt;-
+      The annotation is too general. UniProt keywords indicate zinc binding for this
+      protein. A more specific term would be more informative.
+    proposed_replacement_terms:
+      - id: GO:0008270
+        label: zinc ion binding
+- term:
+    id: GO:0036438
+    label: maintenance of lens transparency
+  evidence_type: IMP
+  original_reference_id: PMID:38705506
+  review:
+    summary: &gt;-
+      IMP annotation for maintenance of lens transparency based on Posner et al. 2024
+      (PMID:38705506). The study examined individual mutant zebrafish lines for all
+      three alpha-crystallin genes. While the primary finding was that cryaba loss led
+      to the greatest increase in cataract, the study also evaluated cryabb mutants for
+      lens transparency. cryabb contributes to lens maintenance but its primary role
+      is in broad tissue protection.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The experimental evidence from PMID:38705506 supports a role for cryabb in lens
+      transparency maintenance. However, cryabb&#39;s primary function is as a broadly
+      expressed protective chaperone (PMID:16420472), and its lens role is secondary
+      compared to cryaba. Retained as non-core.
+    supported_by:
+      - reference_id: PMID:38705506
+        supporting_text: &gt;-
+          zebrafish express one lens-specific alphaA-crystallin gene (cryaa), they
+          express two alphaB-crystallin genes, with one evolving lens specificity
+          (cryaba) and the other retaining the broad expression of its mammalian
+          ortholog (cryabb).
+- term:
+    id: GO:0007519
+    label: skeletal muscle tissue development
+  evidence_type: IMP
+  original_reference_id: PMID:25866181
+  review:
+    summary: &gt;-
+      IMP annotation for skeletal muscle tissue development based on Buhrdel et al.
+      2015 (PMID:25866181). Morpholino knockdown of MFM disease genes including
+      cryabb led to compromised skeletal muscle function due to myofibrillar
+      degeneration. This is more relevant for cryabb than cryaba because cryabb
+      retains the broad muscle expression of mammalian CRYAB (PMID:16420472).
+    action: ACCEPT
+    reason: &gt;-
+      cryabb retains the widespread expression including muscle tissue that is
+      characteristic of mammalian CRYAB (PMID:16420472). The morpholino knockdown
+      evidence (PMID:25866181) supports a direct role in skeletal muscle tissue
+      development/maintenance. This is a core function for cryabb.
+    supported_by:
+      - reference_id: PMID:25866181
+        supporting_text: &gt;-
+          targeted ablation of MFM genes in zebrafish led to compromised skeletal
+          muscle function mostly due to myofibrillar degeneration as well as severe
+          heart failure.
+- term:
+    id: GO:0007626
+    label: locomotory behavior
+  evidence_type: IMP
+  original_reference_id: PMID:25866181
+  review:
+    summary: &gt;-
+      IMP annotation for locomotory behavior based on Buhrdel et al. 2015
+      (PMID:25866181). Morpholino knockdown of cryabb led to compromised skeletal
+      muscle function affecting locomotion.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The locomotory behavior phenotype from cryabb knockdown (PMID:25866181) is a
+      downstream consequence of myofibrillar degeneration rather than a direct role
+      in locomotion. Retained as non-core.
+- term:
+    id: GO:0030239
+    label: myofibril assembly
+  evidence_type: IMP
+  original_reference_id: PMID:25866181
+  review:
+    summary: &gt;-
+      IMP annotation for myofibril assembly based on Buhrdel et al. 2015
+      (PMID:25866181). Morpholino knockdown of cryabb led to myofibrillar
+      degeneration. This is consistent with the known role of mammalian CRYAB
+      in maintaining myofibrillar integrity, and cryabb retains the broad
+      muscle expression of its mammalian ortholog (PMID:16420472).
+    action: ACCEPT
+    reason: &gt;-
+      cryabb retains the broad muscle expression of mammalian CRYAB (PMID:16420472)
+      and morpholino knockdown causes myofibrillar degeneration (PMID:25866181).
+      Myofibril assembly/maintenance is a core function for cryabb, consistent
+      with the known role of mammalian CRYAB as a major myofibrillar myopathy gene.
+- term:
+    id: GO:0060047
+    label: heart contraction
+  evidence_type: IMP
+  original_reference_id: PMID:25866181
+  review:
+    summary: &gt;-
+      IMP annotation for heart contraction based on Buhrdel et al. 2015
+      (PMID:25866181). Morpholino knockdown of MFM genes including cryabb led to
+      severe heart failure. cryabb retains the cardiac expression of mammalian CRYAB
+      (PMID:16420472).
+    action: ACCEPT
+    reason: &gt;-
+      cryabb retains the broad expression including heart tissue characteristic of
+      mammalian CRYAB (PMID:16420472). The heart failure phenotype from knockdown
+      (PMID:25866181) supports a direct role in cardiac function. This is a core
+      function for cryabb, consistent with human CRYAB being a cardiomyopathy gene.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:16420472
+  review:
+    summary: &gt;-
+      IDA annotation based on Smith et al. 2006 (PMID:16420472), which characterized
+      the chaperone-like activity of alphaB2-crystallin (cryabb). The study measured
+      the ability of recombinant cryabb to prevent chemically induced aggregation of
+      alpha-lactalbumin and lysozyme at temperatures from 25 to 40 degrees C. cryabb
+      showed greater chaperone-like activity than human CRYAB at 25-30 degrees C.
+      GO:0051082 is proposed for obsoletion; the holdase function should be captured
+      by GO:0140309.
+    action: MODIFY
+    reason: &gt;-
+      GO:0051082 is proposed for obsoletion. The chaperone-like activity assays in
+      PMID:16420472 directly demonstrate holdase function for cryabb -- prevention
+      of chemically induced aggregation of substrate proteins. GO:0140309 (unfolded
+      protein carrier activity) is the recommended replacement term.
+    proposed_replacement_terms:
+      - id: GO:0051082
+        label: unfolded protein binding (retain until holdase NTR is created)
+    supported_by:
+      - reference_id: PMID:16420472
+        supporting_text: &gt;-
+          At 25 degrees C and 30 degrees C, zebrafish alphaB2 showed greater
+          chaperone-like activity than human alphaB-crystallin, and at 35 degrees C
+          and 40 degrees C, the human protein provided greater protection against
+          aggregation.
+      - reference_id: PMID:16420472
+        supporting_text: &gt;-
+          zebrafish alphaB2 maintained the widespread protective role also found in
+          mammalian alphaB-crystallin, while zebrafish alphaB1 adopted a more
+          restricted, nonchaperone role in the lens.
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  review:
+    summary: &gt;-
+      ND (no data) annotation indicating that no specific cellular component has been
+      experimentally determined for cryabb. This is a placeholder annotation. However,
+      IBA evidence supports cytoplasmic and nuclear localization, and IEA evidence
+      supports cytoplasmic localization.
+    action: ACCEPT
+    reason: &gt;-
+      ND annotations are standard placeholders indicating no experimental data is
+      available for a particular aspect. While there are IBA and IEA annotations for
+      specific compartments, no direct experimental localization data exists for
+      cryabb. This ND annotation is valid as a factual statement.
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:16420472
+  title: Gene duplication and separation of functions in alphaB-crystallin from zebrafish
+    (Danio rerio).
+  findings:
+    - statement: &gt;-
+        Zebrafish express two alphaB-crystallins. cryabb (alphaB2) has
+        constitutive expression in heart, brain, skeletal muscle, liver, and lens,
+        retaining the broad expression of mammalian CRYAB. cryabb shows greater
+        chaperone-like activity than human CRYAB at 25-30 degrees C. After gene
+        duplication, cryabb maintained the widespread protective role of mammalian
+        CRYAB while cryaba adopted a lens-specific role.
+      supporting_text: &gt;-
+        zebrafish alphaB2 maintained the widespread protective role also found in
+        mammalian alphaB-crystallin, while zebrafish alphaB1 adopted a more
+        restricted, nonchaperone role in the lens.
+- id: PMID:25866181
+  title: In vivo characterization of human myofibrillar myopathy genes in zebrafish.
+  findings:
+    - statement: &gt;-
+        Morpholino knockdown of myofibrillar myopathy genes including cryabb in
+        zebrafish led to compromised skeletal muscle function, myofibrillar
+        degeneration, and severe heart failure.
+      supporting_text: &gt;-
+        targeted ablation of MFM genes in zebrafish led to compromised skeletal
+        muscle function mostly due to myofibrillar degeneration as well as severe
+        heart failure.
+- id: PMID:38705506
+  title: &#34;Loss of \u03B1Ba-crystallin, but not \u03B1A-crystallin, increases age-related\
+    \ cataract in the zebrafish lens.&#34;
+  findings:
+    - statement: &gt;-
+        The study examined all three alpha-crystallin mutant zebrafish lines for
+        age-related cataract. cryabb contributes to lens maintenance alongside
+        cryaa and cryaba.
+      supporting_text: &gt;-
+        zebrafish express one lens-specific alphaA-crystallin gene (cryaa), they
+        express two alphaB-crystallin genes, with one evolving lens specificity
+        (cryaba) and the other retaining the broad expression of its mammalian
+        ortholog (cryabb).
+core_functions:
+  - molecular_function:
+      id: GO:0051082
+      label: unfolded protein binding
+    directly_involved_in:
+      - id: GO:0009408
+        label: response to heat
+      - id: GO:0030239
+        label: myofibril assembly
+      - id: GO:0007519
+        label: skeletal muscle tissue development
+      - id: GO:0060047
+        label: heart contraction
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    description: &gt;-
+      cryabb is the broadly expressed zebrafish alphaB-crystallin paralog that
+      retained the widespread protective function of mammalian CRYAB after gene
+      duplication (PMID:16420472). It has robust holdase chaperone activity,
+      preventing aggregation of denaturing proteins at physiological temperatures
+      (PMID:16420472). cryabb is expressed in heart, brain, skeletal muscle, liver,
+      and lens. Its chaperone activity supports myofibrillar integrity and cardiac
+      function, consistent with human CRYAB being a myofibrillar myopathy and
+      cardiomyopathy gene (PMID:25866181).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

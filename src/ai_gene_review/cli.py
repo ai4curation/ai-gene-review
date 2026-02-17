@@ -977,6 +977,84 @@ def backfill_isoforms(
 
 
 @app.command()
+def backfill_qualifiers(
+    yaml_file: Annotated[Path, typer.Argument(help="Gene review YAML file to update")],
+    goa_file: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--goa", "-g", help="GOA TSV file (auto-detected if not provided)"
+        ),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run", help="Show what would be updated without modifying files"
+        ),
+    ] = False,
+):
+    """Backfill contributes_to qualifier on MF annotations from GOA data.
+
+    Only records 'contributes_to' -- no qualifier means 'enables' (the default).
+    Does NOT modify annotations that already have a qualifier field.
+
+    Examples:
+        ai-gene-review backfill-qualifiers genes/yeast/SET1/SET1-ai-review.yaml
+        ai-gene-review backfill-qualifiers test.yaml --goa custom-goa.tsv
+        ai-gene-review backfill-qualifiers test.yaml --dry-run
+    """
+    yaml_file = Path(yaml_file)
+
+    if not yaml_file.exists():
+        typer.echo(f"Error: YAML file not found: {yaml_file}", err=True)
+        raise typer.Exit(code=1)
+
+    validator = GOAValidator()
+
+    if dry_run:
+        try:
+            goa_path = goa_file
+            if goa_path is None:
+                yaml_stem = yaml_file.stem
+                if yaml_stem.endswith("-ai-review"):
+                    gene_name = yaml_stem[:-10]
+                    goa_path = yaml_file.parent / f"{gene_name}-goa.tsv"
+                else:
+                    typer.echo("Error: Could not derive GOA file path", err=True)
+                    raise typer.Exit(code=1)
+
+            goa_annotations = validator.parse_goa_file(goa_path)
+            contributes = [
+                a for a in goa_annotations
+                if validator._is_contributes_to(a.qualifier, a.go_aspect)
+            ]
+            if not contributes:
+                typer.echo("No contributes_to annotations found in GOA file")
+                return
+
+            typer.echo(f"Found {len(contributes)} contributes_to annotations:")
+            for ann in contributes:
+                typer.echo(f"  {ann.go_id} {ann.go_term} ({ann.evidence_code}, {ann.reference})")
+
+            typer.echo("\nUse without --dry-run to apply these updates")
+        except (ValueError, FileNotFoundError) as e:
+            typer.echo(f"Error: {e}", err=True)
+            raise typer.Exit(code=1)
+        return
+
+    try:
+        updated_count, output_path = validator.backfill_qualifiers(yaml_file, goa_file)
+
+        if updated_count > 0:
+            typer.echo(f"Updated {updated_count} annotations with qualifier info in {output_path}")
+        else:
+            typer.echo("No annotations needed qualifier updates")
+
+    except (ValueError, FileNotFoundError) as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
 def fetch_gene_pmids(
     organism: Annotated[str, typer.Argument(help="Organism name")],
     gene: Annotated[str, typer.Argument(help="Gene symbol")],

@@ -498,6 +498,87 @@ backfill-isoforms-all:
     done
     echo "Total: Processed $total genes, updated $updated with isoform info"
 
+# Backfill qualifier field on existing annotations for a specific gene
+backfill-qualifiers organism gene:
+    uv run ai-gene-review backfill-qualifiers genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
+
+# Backfill qualifier field for all genes in an organism
+backfill-qualifiers-organism organism:
+    #!/usr/bin/env bash
+    echo "Backfilling qualifier info for all {{organism}} genes..."
+    count=0
+    updated=0
+    for yaml in genes/{{organism}}/*/*-ai-review.yaml; do
+        if [ -f "$yaml" ]; then
+            gene=$(basename $(dirname "$yaml"))
+            result=$(uv run ai-gene-review backfill-qualifiers "$yaml" 2>&1)
+            if echo "$result" | grep -q "Updated [1-9]"; then
+                echo "$gene: $result"
+                updated=$((updated + 1))
+            fi
+            count=$((count + 1))
+        fi
+    done
+    echo "Processed $count genes, updated $updated with qualifier info"
+
+# Backfill qualifier field for ALL genes
+backfill-qualifiers-all:
+    #!/usr/bin/env bash
+    echo "Backfilling qualifier info for ALL genes..."
+    total=0
+    updated=0
+    for organism_dir in genes/*/; do
+        if [ -d "$organism_dir" ]; then
+            organism=$(basename "$organism_dir")
+            echo "Processing organism: $organism"
+            for yaml in "$organism_dir"/*/*-ai-review.yaml; do
+                if [ -f "$yaml" ]; then
+                    gene=$(basename $(dirname "$yaml"))
+                    result=$(uv run ai-gene-review backfill-qualifiers "$yaml" 2>&1)
+                    if echo "$result" | grep -q "Updated [1-9]"; then
+                        echo "  $gene: $result"
+                        updated=$((updated + 1))
+                    fi
+                    total=$((total + 1))
+                fi
+            done
+        fi
+    done
+    echo "Total: Processed $total genes, updated $updated with qualifier info"
+
+# ============== Slides ==============
+
+# Generate presentation slides for a project (Marp)
+# Example: just gen-slides UNFOLDED_PROTEIN_BINDING
+gen-project-slides project:
+    #!/usr/bin/env bash
+    slides_dir="projects/{{project}}/slides"
+    if [ ! -d "$slides_dir" ]; then
+        echo "No slides directory found: $slides_dir"
+        exit 1
+    fi
+    for md in "$slides_dir"/*-slides.md; do
+        if [ -f "$md" ]; then
+            base="${md%.md}"
+            echo "Building slides: $md"
+            marp --no-stdin "$md" --allow-local-files -o "${base}.html"
+            marp --no-stdin "$md" --allow-local-files --pdf -o "${base}.pdf"
+            echo "  -> ${base}.html"
+            echo "  -> ${base}.pdf"
+        fi
+    done
+
+# Generate all project slides
+gen-all-slides:
+    #!/usr/bin/env bash
+    for slides_dir in projects/*/slides; do
+        if [ -d "$slides_dir" ]; then
+            project=$(basename $(dirname "$slides_dir"))
+            echo "Building slides for $project..."
+            just gen-project-slides "$project"
+        fi
+    done
+
 # ============== Rendering ==============
 
 # Render a single gene review YAML as HTML (custom renderer)

@@ -1,0 +1,3210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edem2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Edem2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9VK27" target="_blank" class="term-link">
+                        Q9VK27
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "Edem2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9VK27" data-a="DESCRIPTION: Drosophila EDEM2 (CG5682) is an ER-resident alpha-..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Drosophila EDEM2 (CG5682) is an ER-resident alpha-mannosidase-like protein that functions in ER-associated degradation (ERAD) of misfolded glycoproteins. Despite sequence similarity to glycosyl hydrolase family 47 mannosidases, EDEM2 primarily functions as an ERAD substrate recognition factor (lectin/sensor) that recognizes misfolded glycoproteins via their mannose- trimmed N-glycans and targets them for ubiquitin-dependent proteasomal degradation. Drosophila EDEM2 is most similar to mammalian EDEM3 (PMID:25716426). The protein is transcriptionally upregulated by ER stress and plays a protective role by promoting degradation of misfolded proteins such as mutant alpha-1-antitrypsin variants NHK and ATZ (PMID:25716426). EDEM2 co-localizes with Hsc3 (Drosophila BiP ortholog) in the ER (PMID:25716426). The GO:0051082 unfolded protein binding annotation reflects its recognition of misfolded glycoprotein substrates for ERAD, but this is a quality control sensor function, not chaperone activity. Per UPB project guidelines, ER quality control sensors should have GO:0051082 removed or marked as over-annotated.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004571" target="_blank" class="term-link">
+                                    GO:0004571
+                                </a>
+                            </span>
+                            <span class="term-label">mannosyl-oligosaccharide 1,2-alpha-mannosidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0004571" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for mannosyl-oligosaccharide 1,2-alpha-mannosidase activity. Drosophila EDEM2 belongs to glycosyl hydrolase family 47 and contains the catalytic domain and active site residues characteristic of alpha-1,2-mannosidases (UniProt features show four active site residues). While EDEMs were initially considered lectins, recent studies have revealed that some EDEMs can function as mannosidases (PMID:25716426: &#34;recent studies have revealed that EDEMs can function as mannosidases&#34;). The IBA annotation is phylogenetically appropriate given the conserved catalytic residues. However, whether Drosophila EDEM2 has actual catalytic mannosidase activity versus acting primarily as a lectin/sensor has not been directly demonstrated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EDEM2 belongs to GH47 family with conserved active site residues. The IBA annotation is phylogenetically sound across EDEM family members. Recent literature supports that EDEMs can have mannosidase activity (PMID:25716426). This is a core molecular function annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">recent studies have revealed that EDEMs can function as mannosidases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030968" target="_blank" class="term-link">
+                                    GO:0030968
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum unfolded protein response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0030968" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for ER unfolded protein response. This is well supported by experimental data in Drosophila showing that EDEM2 expression is transcriptionally induced by ER stress (PMID:25716426: &#34;Drosophila EDEM2 expression was transcriptionally induced&#34; upon DTT treatment). Furthermore, EDEM2 knockdown in combination with EDEM1 leads to increased Hsc3 levels under ER stress conditions (PMID:25716426: &#34;this increase was even more pronounced when both EDEM1 and EDEM2 were knocked down&#34;). The IBA annotation is consistent with the IMP and IGI annotations from the same gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EDEM2 is transcriptionally induced by ER stress and plays a protective role during the UPR by promoting degradation of misfolded proteins. The IBA is consistent with IMP (PMID:25716426) and IGI (PMID:19805114) evidence for this same term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Drosophila EDEM2 expression was transcriptionally induced</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">this increase was even more pronounced when both EDEM1 and EDEM2 were knocked down</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097466" target="_blank" class="term-link">
+                                    GO:0097466
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin-dependent glycoprotein ERAD pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0097466" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for ubiquitin-dependent glycoprotein ERAD pathway. This is strongly supported by experimental evidence. PMID:25716426 demonstrated that Drosophila EDEMs promote ubiquitination and degradation of misfolded A1AT glycoprotein variants, and knockdown leads to accumulation of glycosylated ERAD substrates. The IBA annotation is consistent with the IMP annotation from PMID:25716426.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ERAD is the core biological process function of EDEM2. The IBA annotation is well supported by direct experimental evidence showing EDEM2 promotes ubiquitin-dependent degradation of misfolded glycoproteins (PMID:25716426).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The co-expression of EDEM1 or EDEM2 with ATZ increased the level of ubiquitinated ATZ</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Drosophila EDEM1 and EDEM2 target misfolded A1AT variants for proteasomal degradation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for ER localization. Directly confirmed by IDA evidence from PMID:25716426 showing co-localization with Hsc3 (Drosophila BiP ortholog) in the ER. UniProt also lists ER as the subcellular location. The IBA annotation is consistent with the IDA and IEA annotations for the same term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ER localization is the primary constitutive location of EDEM2, directly demonstrated by immunolocalization (PMID:25716426). The IBA is well supported.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunolabeling with anti-myc antibody revealed that the Drosophila EDEMs co-localized with Hsc3, the Drosophila orthologue of mammalian BIP. This result is consistent with the hypothesis that Drosophila EDEMs reside in the ER</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044322" target="_blank" class="term-link">
+                                    GO:0044322
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum quality control compartment</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0044322" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for ER quality control compartment, inferred from involvement in ER mannose trimming (GO:1904380). EDEM2 functions in the ERAD quality control pathway, recognizing misfolded glycoproteins for degradation. The ER quality control compartment is functionally appropriate for an ERAD component.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EDEM2 is an ER quality control factor involved in ERAD substrate recognition. The ER quality control compartment localization is consistent with its function in glycoprotein quality control and degradation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004571" target="_blank" class="term-link">
+                                    GO:0004571
+                                </a>
+                            </span>
+                            <span class="term-label">mannosyl-oligosaccharide 1,2-alpha-mannosidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0004571" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for mannosyl-oligosaccharide 1,2-alpha-mannosidase activity from InterPro domain mapping (GH47 family). Consistent with the IBA annotation for the same term. EDEM2 contains the GH47 catalytic domain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with IBA annotation and GH47 family membership. The InterPro mapping is appropriate for this domain-based molecular function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0005509" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for calcium ion binding from InterPro domain mapping. UniProt lists a Ca2+ binding site at position 487, and GH47 mannosidases are known to require calcium as a cofactor (UniProt COFACTOR section: &#34;Ca(2+)&#34;). This is consistent with the enzyme&#39;s catalytic requirements.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Calcium binding is documented in the UniProt record as a cofactor for the GH47 mannosidase domain. The InterPro mapping is appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0005783" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for ER localization from UniProt subcellular location mapping. Consistent with the IBA and IDA annotations for the same term. UniProt lists ER as the subcellular location.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with IBA and IDA evidence for ER localization. Redundant but acceptable.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for carbohydrate metabolic process from InterPro domain mapping. This is a very broad parent term. The more specific terms for ER mannose trimming (GO:1904380) and ERAD pathway (GO:0097466, GO:0036503) are already annotated and are much more informative. While technically correct as a parent, this adds little value.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Too broad to be informative. EDEM2 is involved in ER mannose trimming and ERAD, not general carbohydrate metabolism. The more specific terms GO:1904380, GO:0097466, and GO:0036503 are already annotated and are much more informative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006986" target="_blank" class="term-link">
+                                    GO:0006986
+                                </a>
+                            </span>
+                            <span class="term-label">response to unfolded protein</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0006986" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for response to unfolded protein from UniProt keyword mapping (Unfolded protein response keyword). EDEM2 is transcriptionally induced by ER stress (PMID:25716426) and participates in the ERAD response to misfolded proteins. This is a broader term than the more specific GO:0030968 &#34;ER unfolded protein response&#34; which is already annotated. Acceptable as a parent term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EDEM2 is part of the cellular response to unfolded proteins in the ER. While more specific terms are annotated (GO:0030968), this broader IEA term is acceptable and consistent with the gene&#39;s role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for membrane from InterPro domain mapping. EDEM2 is an ER-resident protein. While the UniProt entry does not explicitly annotate a transmembrane domain (it has a signal peptide), the ER localization and potential membrane association are plausible. This is a very generic CC term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Acceptable as a broad localization term. EDEM2 is associated with the ER membrane system. The more specific ER annotation is more informative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for hydrolase activity from UniProt keyword mapping. EDEM2 belongs to the GH47 glycosyl hydrolase family. This is a broad parent term; the more specific GO:0004571 is already annotated. Acceptable as a parent term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct as a broad parent term for the GH47 mannosidase activity. The more specific GO:0004571 is already annotated.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016798" target="_blank" class="term-link">
+                                    GO:0016798
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on glycosyl bonds</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0016798" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for hydrolase activity acting on glycosyl bonds from UniProt keyword mapping. EDEM2 belongs to GH47 family. This is an intermediate-specificity term between GO:0016787 (hydrolase activity) and GO:0004571 (mannosyl-oligosaccharide 1,2-alpha-mannosidase activity). Acceptable.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct intermediate-level MF term for GH47 family membership. Consistent with the more specific GO:0004571 annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for metal ion binding from UniProt keyword mapping. EDEM2 binds calcium as a cofactor (UniProt COFACTOR section). This is a generic term; GO:0005509 &#34;calcium ion binding&#34; is already annotated and is more specific.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct as a broad parent of GO:0005509 calcium ion binding. Redundant with the more specific term but acceptable.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904380" target="_blank" class="term-link">
+                                    GO:1904380
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum mannose trimming</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:1904380" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for ER mannose trimming from InterPro domain mapping. EDEM2 is part of the mannose trimming machinery that processes misfolded glycoproteins for ERAD. The annotation is consistent with the mannosidase activity (GO:0004571) and ERAD pathway (GO:0097466) annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ER mannose trimming is a core biological process for EDEM2, directly related to its role in ERAD substrate recognition via mannose trimming of N-glycans. The InterPro mapping is appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25716426
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of Drosophila EDEMs in the degradation of the alpha-1-a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0005783" data-r="PMID:25716426" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for ER localization from PMID:25716426. This study directly demonstrated by immunofluorescence that epitope-tagged Drosophila EDEM2 co-localizes with Hsc3 (Drosophila BiP) in the ER when expressed in embryo amnioserosa cells (PMID:25716426: &#34;Immunolabeling with anti-myc antibody revealed that the Drosophila EDEMs co-localized with Hsc3&#34;).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct IDA evidence from immunofluorescence co-localization with the ER marker Hsc3 (PMID:25716426). This is the strongest evidence for EDEM2 ER localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunolabeling with anti-myc antibody revealed that the Drosophila EDEMs co-localized with Hsc3, the Drosophila orthologue of mammalian BIP. This result is consistent with the hypothesis that Drosophila EDEMs reside in the ER</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030968" target="_blank" class="term-link">
+                                    GO:0030968
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum unfolded protein response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25716426
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of Drosophila EDEMs in the degradation of the alpha-1-a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0030968" data-r="PMID:25716426" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for ER unfolded protein response from PMID:25716426. The study showed that knockdown of both EDEM1 and EDEM2 led to increased Hsc3 (BiP) levels under ER stress conditions, and that EDEM2 expression is transcriptionally induced by ER stress (DTT treatment). This demonstrates that EDEM2 plays a protective role in the UPR by promoting degradation of misfolded proteins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported IMP evidence showing that EDEM2 loss of function exacerbates ER stress (increased Hsc3 levels) and that EDEM2 is transcriptionally induced by ER stress (PMID:25716426). This is a core biological process annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Drosophila EDEM2 expression was transcriptionally induced</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The level of Hsc3 increased after 4 h, and this increase was even more pronounced when both EDEM1 and EDEM2 were knocked down</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034976" target="_blank" class="term-link">
+                                    GO:0034976
+                                </a>
+                            </span>
+                            <span class="term-label">response to endoplasmic reticulum stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25716426
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of Drosophila EDEMs in the degradation of the alpha-1-a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0034976" data-r="PMID:25716426" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEP annotation for response to ER stress from PMID:25716426. Based on expression pattern evidence: EDEM2 mRNA is transcriptionally induced by ER stress agents (DTT, tunicamycin, thapsigargin). The IEP evidence is appropriate for the expression-based observation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Appropriate IEP annotation based on transcriptional induction of EDEM2 by multiple ER stress agents (PMID:25716426). Consistent with the broader UPR role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Drosophila EDEM2 expression was transcriptionally induced</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097466" target="_blank" class="term-link">
+                                    GO:0097466
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin-dependent glycoprotein ERAD pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25716426
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of Drosophila EDEMs in the degradation of the alpha-1-a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0097466" data-r="PMID:25716426" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for ubiquitin-dependent glycoprotein ERAD pathway from PMID:25716426. The study demonstrated that EDEM2 knockdown leads to accumulation of glycosylated A1AT mutant variants, and EDEM2 overexpression promotes their ubiquitination and degradation. This is the core biological process function of EDEM2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong IMP evidence showing EDEM2 promotes ubiquitin-dependent degradation of misfolded glycoproteins. Knockdown causes accumulation; overexpression accelerates degradation and increases ubiquitination (PMID:25716426). Core function annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The level of ATZ increased by approximately 2-fold after the knockdown of EDEM1 and EDEM2 by dsRNA in Drosophila S2 cells</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The co-expression of EDEM1 or EDEM2 with ATZ increased the level of ubiquitinated ATZ</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004571" target="_blank" class="term-link">
+                                    GO:0004571
+                                </a>
+                            </span>
+                            <span class="term-label">mannosyl-oligosaccharide 1,2-alpha-mannosidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19805114" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19805114
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Suppression of retinal degeneration in Drosophila by stimula...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0004571" data-r="PMID:19805114" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISM annotation for mannosyl-oligosaccharide 1,2-alpha-mannosidase activity from PMID:19805114 (sequence model-based inference). EDEM2 contains the GH47 catalytic domain with conserved active site residues. The ISM evidence is based on sequence analysis. Consistent with IBA and IEA annotations for the same term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the IBA and IEA annotations. The ISM evidence based on conserved active site residues is appropriate for this enzyme family assignment.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030968" target="_blank" class="term-link">
+                                    GO:0030968
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum unfolded protein response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19805114" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19805114
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Suppression of retinal degeneration in Drosophila by stimula...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0030968" data-r="PMID:19805114" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI annotation for ER unfolded protein response from PMID:19805114. This study showed that loss-of-function of ERAD factors (including EDEM2) resulted in increased levels of misfolded Rh-1 in ninaE mutant flies, while co-expression of ERAD factors reduced Rh-1 levels and suppressed ER stress reporter activation (PMID:19805114: &#34;co-expression of certain ERAD factors was sufficient to reduce Rh-1 protein levels and to completely suppress ER stress reporter activation&#34;). The IGI evidence (genetic interaction with ninaE mutants) supports EDEM2 role in UPR.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IGI evidence from genetic interaction with ninaE (Rh-1) mutants supports EDEM2 involvement in the ER unfolded protein response. ERAD factor overexpression suppressed ER stress in the Drosophila retinal degeneration model (PMID:19805114).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19805114" target="_blank" class="term-link">
+                                        PMID:19805114
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">co-expression of certain ERAD factors was sufficient to reduce Rh-1 protein levels and to completely suppress ER stress reporter activation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036503" target="_blank" class="term-link">
+                                    GO:0036503
+                                </a>
+                            </span>
+                            <span class="term-label">ERAD pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19805114" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19805114
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Suppression of retinal degeneration in Drosophila by stimula...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0036503" data-r="PMID:19805114" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI annotation for ERAD pathway from PMID:19805114. The study demonstrated that loss-of-function of ERAD factors including EDEM2 increased levels of misfolded Rh-1, and that ERAD factor overexpression reduced misfolded Rh-1 levels. The genetic interaction evidence supports EDEM2 involvement in ERAD.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ERAD is the core biological process for EDEM2. The IGI evidence from the Drosophila retinal degeneration model (PMID:19805114) supports this annotation. Consistent with the more specific GO:0097466 annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19805114" target="_blank" class="term-link">
+                                        PMID:19805114
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">loss-of-function of these putative ERAD factors resulted in increased levels of Rh-1 in ninaE mutant flies</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19805114" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19805114
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Suppression of retinal degeneration in Drosophila by stimula...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VK27" data-a="GO:0051082" data-r="PMID:19805114" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for unfolded protein binding from PMID:19805114. The IPI evidence is based on physical interaction between EDEM2 and the misfolded Rh-1 protein (the WITH/FROM column lists FB:FBgn0002940, which is ninaE/Rh1). However, EDEM2 is an ERAD substrate recognition factor (lectin/sensor) that recognizes misfolded glycoproteins for degradation, not a chaperone that prevents aggregation. The interaction with misfolded Rh-1 is in the context of ERAD substrate recognition and targeting for degradation, not chaperone holdase or foldase activity. Per UPB project decision rules, ER quality control sensors should have GO:0051082 removed or marked as over-annotated. EDEM2 recognizes misfolded glycoprotein substrates via their N-glycan structures, which is fundamentally different from chaperone-mediated binding to unfolded polypeptide segments.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EDEM2 is an ERAD substrate recognition factor (lectin/sensor), not a chaperone. Its interaction with misfolded Rh-1 (PMID:19805114) reflects ERAD substrate recognition for degradation, not chaperone activity. Per UPB project rules, ER quality control sensors should not be annotated with GO:0051082. EDEM2 recognizes misfolded glycoproteins via N-glycan mannose trimming patterns, targeting them for ubiquitin- dependent proteasomal degradation (PMID:25716426). This is a sensor/lectin function, not an unfolded protein binding/chaperone function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">While ER degradation-enhancing α-mannosidase-like proteins (EDEMs) were initially considered lectins (2,3), recent studies have revealed that EDEMs can function as mannosidases (4,5) and molecular chaperones (6)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                                        PMID:25716426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">EDEMs are involved in one of the early steps of ERAD substrate recognition</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19805114" target="_blank" class="term-link">
+                                        PMID:19805114
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">loss-of-function of these putative ERAD factors resulted in increased levels of Rh-1 in ninaE mutant flies</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19805114" target="_blank" class="term-link">
+                            PMID:19805114
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Suppression of retinal degeneration in Drosophila by stimulation of ER-associated degradation.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25716426" target="_blank" class="term-link">
+                            PMID:25716426
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Role of Drosophila EDEMs in the degradation of the alpha-1-antitrypsin Z variant.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9VK27
+gene_symbol: Edem2
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: &gt;-
+  Drosophila EDEM2 (CG5682) is an ER-resident alpha-mannosidase-like protein that functions in
+  ER-associated degradation (ERAD) of misfolded glycoproteins. Despite sequence similarity to
+  glycosyl hydrolase family 47 mannosidases, EDEM2 primarily functions as an ERAD substrate
+  recognition factor (lectin/sensor) that recognizes misfolded glycoproteins via their mannose-
+  trimmed N-glycans and targets them for ubiquitin-dependent proteasomal degradation.
+  Drosophila EDEM2 is most similar to mammalian EDEM3 (PMID:25716426). The protein is
+  transcriptionally upregulated by ER stress and plays a protective role by promoting degradation
+  of misfolded proteins such as mutant alpha-1-antitrypsin variants NHK and ATZ (PMID:25716426).
+  EDEM2 co-localizes with Hsc3 (Drosophila BiP ortholog) in the ER (PMID:25716426). The
+  GO:0051082 unfolded protein binding annotation reflects its recognition of misfolded
+  glycoprotein substrates for ERAD, but this is a quality control sensor function, not
+  chaperone activity. Per UPB project guidelines, ER quality control sensors should have
+  GO:0051082 removed or marked as over-annotated.
+existing_annotations:
+- term:
+    id: GO:0004571
+    label: mannosyl-oligosaccharide 1,2-alpha-mannosidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for mannosyl-oligosaccharide 1,2-alpha-mannosidase activity. Drosophila
+      EDEM2 belongs to glycosyl hydrolase family 47 and contains the catalytic domain and
+      active site residues characteristic of alpha-1,2-mannosidases (UniProt features show
+      four active site residues). While EDEMs were initially considered lectins, recent studies
+      have revealed that some EDEMs can function as mannosidases (PMID:25716426: &#34;recent studies
+      have revealed that EDEMs can function as mannosidases&#34;). The IBA annotation is
+      phylogenetically appropriate given the conserved catalytic residues. However, whether
+      Drosophila EDEM2 has actual catalytic mannosidase activity versus acting primarily as
+      a lectin/sensor has not been directly demonstrated.
+    action: ACCEPT
+    reason: &gt;-
+      EDEM2 belongs to GH47 family with conserved active site residues. The IBA annotation
+      is phylogenetically sound across EDEM family members. Recent literature supports that
+      EDEMs can have mannosidase activity (PMID:25716426). This is a core molecular function
+      annotation.
+    supported_by:
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          recent studies have revealed that EDEMs can function as mannosidases
+- term:
+    id: GO:0030968
+    label: endoplasmic reticulum unfolded protein response
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for ER unfolded protein response. This is well supported by experimental
+      data in Drosophila showing that EDEM2 expression is transcriptionally induced by ER
+      stress (PMID:25716426: &#34;Drosophila EDEM2 expression was transcriptionally induced&#34;
+      upon DTT treatment). Furthermore, EDEM2 knockdown in combination with EDEM1 leads to
+      increased Hsc3 levels under ER stress conditions (PMID:25716426: &#34;this increase was
+      even more pronounced when both EDEM1 and EDEM2 were knocked down&#34;). The IBA annotation
+      is consistent with the IMP and IGI annotations from the same gene.
+    action: ACCEPT
+    reason: &gt;-
+      EDEM2 is transcriptionally induced by ER stress and plays a protective role during
+      the UPR by promoting degradation of misfolded proteins. The IBA is consistent with
+      IMP (PMID:25716426) and IGI (PMID:19805114) evidence for this same term.
+    supported_by:
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          Drosophila EDEM2 expression was transcriptionally induced
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          this increase was even more pronounced when both EDEM1 and EDEM2 were knocked down
+- term:
+    id: GO:0097466
+    label: ubiquitin-dependent glycoprotein ERAD pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for ubiquitin-dependent glycoprotein ERAD pathway. This is strongly
+      supported by experimental evidence. PMID:25716426 demonstrated that Drosophila EDEMs
+      promote ubiquitination and degradation of misfolded A1AT glycoprotein variants, and
+      knockdown leads to accumulation of glycosylated ERAD substrates. The IBA annotation
+      is consistent with the IMP annotation from PMID:25716426.
+    action: ACCEPT
+    reason: &gt;-
+      ERAD is the core biological process function of EDEM2. The IBA annotation is well
+      supported by direct experimental evidence showing EDEM2 promotes ubiquitin-dependent
+      degradation of misfolded glycoproteins (PMID:25716426).
+    supported_by:
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          The co-expression of EDEM1 or EDEM2 with ATZ increased the level of ubiquitinated ATZ
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          Drosophila EDEM1 and EDEM2 target misfolded A1AT variants for proteasomal degradation
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for ER localization. Directly confirmed by IDA evidence from
+      PMID:25716426 showing co-localization with Hsc3 (Drosophila BiP ortholog) in the ER.
+      UniProt also lists ER as the subcellular location. The IBA annotation is consistent
+      with the IDA and IEA annotations for the same term.
+    action: ACCEPT
+    reason: &gt;-
+      ER localization is the primary constitutive location of EDEM2, directly demonstrated
+      by immunolocalization (PMID:25716426). The IBA is well supported.
+    supported_by:
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          Immunolabeling with anti-myc antibody revealed that the Drosophila EDEMs co-localized
+          with Hsc3, the Drosophila orthologue of mammalian BIP. This result is consistent with
+          the hypothesis that Drosophila EDEMs reside in the ER
+- term:
+    id: GO:0044322
+    label: endoplasmic reticulum quality control compartment
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      IEA annotation for ER quality control compartment, inferred from involvement in
+      ER mannose trimming (GO:1904380). EDEM2 functions in the ERAD quality control pathway,
+      recognizing misfolded glycoproteins for degradation. The ER quality control compartment
+      is functionally appropriate for an ERAD component.
+    action: ACCEPT
+    reason: &gt;-
+      EDEM2 is an ER quality control factor involved in ERAD substrate recognition. The
+      ER quality control compartment localization is consistent with its function in
+      glycoprotein quality control and degradation.
+- term:
+    id: GO:0004571
+    label: mannosyl-oligosaccharide 1,2-alpha-mannosidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation for mannosyl-oligosaccharide 1,2-alpha-mannosidase activity from InterPro
+      domain mapping (GH47 family). Consistent with the IBA annotation for the same term.
+      EDEM2 contains the GH47 catalytic domain.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with IBA annotation and GH47 family membership. The InterPro mapping is
+      appropriate for this domain-based molecular function.
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation for calcium ion binding from InterPro domain mapping. UniProt lists a
+      Ca2+ binding site at position 487, and GH47 mannosidases are known to require calcium
+      as a cofactor (UniProt COFACTOR section: &#34;Ca(2+)&#34;). This is consistent with the
+      enzyme&#39;s catalytic requirements.
+    action: ACCEPT
+    reason: &gt;-
+      Calcium binding is documented in the UniProt record as a cofactor for the GH47
+      mannosidase domain. The InterPro mapping is appropriate.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation for ER localization from UniProt subcellular location mapping. Consistent
+      with the IBA and IDA annotations for the same term. UniProt lists ER as the subcellular
+      location.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with IBA and IDA evidence for ER localization. Redundant but acceptable.
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation for carbohydrate metabolic process from InterPro domain mapping. This
+      is a very broad parent term. The more specific terms for ER mannose trimming
+      (GO:1904380) and ERAD pathway (GO:0097466, GO:0036503) are already annotated and are
+      much more informative. While technically correct as a parent, this adds little value.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Too broad to be informative. EDEM2 is involved in ER mannose trimming and ERAD,
+      not general carbohydrate metabolism. The more specific terms GO:1904380, GO:0097466,
+      and GO:0036503 are already annotated and are much more informative.
+- term:
+    id: GO:0006986
+    label: response to unfolded protein
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation for response to unfolded protein from UniProt keyword mapping (Unfolded
+      protein response keyword). EDEM2 is transcriptionally induced by ER stress
+      (PMID:25716426) and participates in the ERAD response to misfolded proteins. This is
+      a broader term than the more specific GO:0030968 &#34;ER unfolded protein response&#34; which
+      is already annotated. Acceptable as a parent term.
+    action: ACCEPT
+    reason: &gt;-
+      EDEM2 is part of the cellular response to unfolded proteins in the ER. While more
+      specific terms are annotated (GO:0030968), this broader IEA term is acceptable and
+      consistent with the gene&#39;s role.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation for membrane from InterPro domain mapping. EDEM2 is an ER-resident
+      protein. While the UniProt entry does not explicitly annotate a transmembrane domain
+      (it has a signal peptide), the ER localization and potential membrane association are
+      plausible. This is a very generic CC term.
+    action: ACCEPT
+    reason: &gt;-
+      Acceptable as a broad localization term. EDEM2 is associated with the ER membrane
+      system. The more specific ER annotation is more informative.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation for hydrolase activity from UniProt keyword mapping. EDEM2 belongs to
+      the GH47 glycosyl hydrolase family. This is a broad parent term; the more specific
+      GO:0004571 is already annotated. Acceptable as a parent term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct as a broad parent term for the GH47 mannosidase activity. The more specific
+      GO:0004571 is already annotated.
+- term:
+    id: GO:0016798
+    label: hydrolase activity, acting on glycosyl bonds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation for hydrolase activity acting on glycosyl bonds from UniProt keyword
+      mapping. EDEM2 belongs to GH47 family. This is an intermediate-specificity term between
+      GO:0016787 (hydrolase activity) and GO:0004571 (mannosyl-oligosaccharide
+      1,2-alpha-mannosidase activity). Acceptable.
+    action: ACCEPT
+    reason: &gt;-
+      Correct intermediate-level MF term for GH47 family membership. Consistent with the
+      more specific GO:0004571 annotation.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation for metal ion binding from UniProt keyword mapping. EDEM2 binds calcium
+      as a cofactor (UniProt COFACTOR section). This is a generic term; GO:0005509 &#34;calcium
+      ion binding&#34; is already annotated and is more specific.
+    action: ACCEPT
+    reason: &gt;-
+      Correct as a broad parent of GO:0005509 calcium ion binding. Redundant with the
+      more specific term but acceptable.
+- term:
+    id: GO:1904380
+    label: endoplasmic reticulum mannose trimming
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation for ER mannose trimming from InterPro domain mapping. EDEM2 is part of
+      the mannose trimming machinery that processes misfolded glycoproteins for ERAD. The
+      annotation is consistent with the mannosidase activity (GO:0004571) and ERAD pathway
+      (GO:0097466) annotations.
+    action: ACCEPT
+    reason: &gt;-
+      ER mannose trimming is a core biological process for EDEM2, directly related to its
+      role in ERAD substrate recognition via mannose trimming of N-glycans. The InterPro
+      mapping is appropriate.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: PMID:25716426
+  review:
+    summary: &gt;-
+      IDA annotation for ER localization from PMID:25716426. This study directly demonstrated
+      by immunofluorescence that epitope-tagged Drosophila EDEM2 co-localizes with Hsc3
+      (Drosophila BiP) in the ER when expressed in embryo amnioserosa cells (PMID:25716426:
+      &#34;Immunolabeling with anti-myc antibody revealed that the Drosophila EDEMs co-localized
+      with Hsc3&#34;).
+    action: ACCEPT
+    reason: &gt;-
+      Direct IDA evidence from immunofluorescence co-localization with the ER marker Hsc3
+      (PMID:25716426). This is the strongest evidence for EDEM2 ER localization.
+    supported_by:
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          Immunolabeling with anti-myc antibody revealed that the Drosophila EDEMs co-localized
+          with Hsc3, the Drosophila orthologue of mammalian BIP. This result is consistent with
+          the hypothesis that Drosophila EDEMs reside in the ER
+- term:
+    id: GO:0030968
+    label: endoplasmic reticulum unfolded protein response
+  evidence_type: IMP
+  original_reference_id: PMID:25716426
+  review:
+    summary: &gt;-
+      IMP annotation for ER unfolded protein response from PMID:25716426. The study showed
+      that knockdown of both EDEM1 and EDEM2 led to increased Hsc3 (BiP) levels under ER
+      stress conditions, and that EDEM2 expression is transcriptionally induced by ER stress
+      (DTT treatment). This demonstrates that EDEM2 plays a protective role in the UPR by
+      promoting degradation of misfolded proteins.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported IMP evidence showing that EDEM2 loss of function exacerbates ER stress
+      (increased Hsc3 levels) and that EDEM2 is transcriptionally induced by ER stress
+      (PMID:25716426). This is a core biological process annotation.
+    supported_by:
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          Drosophila EDEM2 expression was transcriptionally induced
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          The level of Hsc3 increased after 4 h, and this increase was even more pronounced when
+          both EDEM1 and EDEM2 were knocked down
+- term:
+    id: GO:0034976
+    label: response to endoplasmic reticulum stress
+  evidence_type: IEP
+  original_reference_id: PMID:25716426
+  review:
+    summary: &gt;-
+      IEP annotation for response to ER stress from PMID:25716426. Based on expression
+      pattern evidence: EDEM2 mRNA is transcriptionally induced by ER stress agents (DTT,
+      tunicamycin, thapsigargin). The IEP evidence is appropriate for the expression-based
+      observation.
+    action: ACCEPT
+    reason: &gt;-
+      Appropriate IEP annotation based on transcriptional induction of EDEM2 by multiple
+      ER stress agents (PMID:25716426). Consistent with the broader UPR role.
+    supported_by:
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          Drosophila EDEM2 expression was transcriptionally induced
+- term:
+    id: GO:0097466
+    label: ubiquitin-dependent glycoprotein ERAD pathway
+  evidence_type: IMP
+  original_reference_id: PMID:25716426
+  review:
+    summary: &gt;-
+      IMP annotation for ubiquitin-dependent glycoprotein ERAD pathway from PMID:25716426.
+      The study demonstrated that EDEM2 knockdown leads to accumulation of glycosylated A1AT
+      mutant variants, and EDEM2 overexpression promotes their ubiquitination and degradation.
+      This is the core biological process function of EDEM2.
+    action: ACCEPT
+    reason: &gt;-
+      Strong IMP evidence showing EDEM2 promotes ubiquitin-dependent degradation of misfolded
+      glycoproteins. Knockdown causes accumulation; overexpression accelerates degradation
+      and increases ubiquitination (PMID:25716426). Core function annotation.
+    supported_by:
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          The level of ATZ increased by approximately 2-fold after the knockdown of EDEM1 and
+          EDEM2 by dsRNA in Drosophila S2 cells
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          The co-expression of EDEM1 or EDEM2 with ATZ increased the level of ubiquitinated ATZ
+- term:
+    id: GO:0004571
+    label: mannosyl-oligosaccharide 1,2-alpha-mannosidase activity
+  evidence_type: ISM
+  original_reference_id: PMID:19805114
+  review:
+    summary: &gt;-
+      ISM annotation for mannosyl-oligosaccharide 1,2-alpha-mannosidase activity from
+      PMID:19805114 (sequence model-based inference). EDEM2 contains the GH47 catalytic
+      domain with conserved active site residues. The ISM evidence is based on sequence
+      analysis. Consistent with IBA and IEA annotations for the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the IBA and IEA annotations. The ISM evidence based on conserved
+      active site residues is appropriate for this enzyme family assignment.
+- term:
+    id: GO:0030968
+    label: endoplasmic reticulum unfolded protein response
+  evidence_type: IGI
+  original_reference_id: PMID:19805114
+  review:
+    summary: &gt;-
+      IGI annotation for ER unfolded protein response from PMID:19805114. This study showed
+      that loss-of-function of ERAD factors (including EDEM2) resulted in increased levels
+      of misfolded Rh-1 in ninaE mutant flies, while co-expression of ERAD factors reduced
+      Rh-1 levels and suppressed ER stress reporter activation (PMID:19805114: &#34;co-expression
+      of certain ERAD factors was sufficient to reduce Rh-1 protein levels and to completely
+      suppress ER stress reporter activation&#34;). The IGI evidence (genetic interaction with
+      ninaE mutants) supports EDEM2 role in UPR.
+    action: ACCEPT
+    reason: &gt;-
+      The IGI evidence from genetic interaction with ninaE (Rh-1) mutants supports EDEM2
+      involvement in the ER unfolded protein response. ERAD factor overexpression suppressed
+      ER stress in the Drosophila retinal degeneration model (PMID:19805114).
+    supported_by:
+      - reference_id: PMID:19805114
+        supporting_text: &gt;-
+          co-expression of certain ERAD factors was sufficient to reduce Rh-1 protein levels
+          and to completely suppress ER stress reporter activation
+- term:
+    id: GO:0036503
+    label: ERAD pathway
+  evidence_type: IGI
+  original_reference_id: PMID:19805114
+  review:
+    summary: &gt;-
+      IGI annotation for ERAD pathway from PMID:19805114. The study demonstrated that
+      loss-of-function of ERAD factors including EDEM2 increased levels of misfolded Rh-1,
+      and that ERAD factor overexpression reduced misfolded Rh-1 levels. The genetic
+      interaction evidence supports EDEM2 involvement in ERAD.
+    action: ACCEPT
+    reason: &gt;-
+      ERAD is the core biological process for EDEM2. The IGI evidence from the Drosophila
+      retinal degeneration model (PMID:19805114) supports this annotation. Consistent with
+      the more specific GO:0097466 annotation.
+    supported_by:
+      - reference_id: PMID:19805114
+        supporting_text: &gt;-
+          loss-of-function of these putative ERAD factors resulted in increased levels of Rh-1
+          in ninaE mutant flies
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19805114
+  review:
+    summary: &gt;-
+      IPI annotation for unfolded protein binding from PMID:19805114. The IPI evidence is
+      based on physical interaction between EDEM2 and the misfolded Rh-1 protein (the
+      WITH/FROM column lists FB:FBgn0002940, which is ninaE/Rh1). However, EDEM2 is an ERAD
+      substrate recognition factor (lectin/sensor) that recognizes misfolded glycoproteins
+      for degradation, not a chaperone that prevents aggregation. The interaction with
+      misfolded Rh-1 is in the context of ERAD substrate recognition and targeting for
+      degradation, not chaperone holdase or foldase activity. Per UPB project decision rules,
+      ER quality control sensors should have GO:0051082 removed or marked as over-annotated.
+      EDEM2 recognizes misfolded glycoprotein substrates via their N-glycan structures, which
+      is fundamentally different from chaperone-mediated binding to unfolded polypeptide
+      segments.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      EDEM2 is an ERAD substrate recognition factor (lectin/sensor), not a chaperone.
+      Its interaction with misfolded Rh-1 (PMID:19805114) reflects ERAD substrate recognition
+      for degradation, not chaperone activity. Per UPB project rules, ER quality control
+      sensors should not be annotated with GO:0051082. EDEM2 recognizes misfolded
+      glycoproteins via N-glycan mannose trimming patterns, targeting them for ubiquitin-
+      dependent proteasomal degradation (PMID:25716426). This is a sensor/lectin function,
+      not an unfolded protein binding/chaperone function.
+    supported_by:
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          While ER degradation-enhancing α-mannosidase-like proteins (EDEMs) were initially
+          considered lectins (2,3), recent studies have revealed that EDEMs can function as
+          mannosidases (4,5) and molecular chaperones (6)
+      - reference_id: PMID:25716426
+        supporting_text: &gt;-
+          EDEMs are involved in one of the early steps of ERAD substrate recognition
+      - reference_id: PMID:19805114
+        supporting_text: &gt;-
+          loss-of-function of these putative ERAD factors resulted in increased levels of Rh-1
+          in ninaE mutant flies
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: PMID:19805114
+  title: Suppression of retinal degeneration in Drosophila by stimulation of ER-associated
+    degradation.
+  findings: []
+- id: PMID:25716426
+  title: Role of Drosophila EDEMs in the degradation of the alpha-1-antitrypsin Z
+    variant.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

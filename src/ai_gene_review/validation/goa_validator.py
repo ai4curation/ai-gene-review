@@ -618,6 +618,11 @@ class GOAValidator:
                 "original_reference_id": reference,
             }
 
+            # Only record qualifier for contributes_to MF annotations;
+            # all other qualifiers are the default for their aspect
+            if self._is_contributes_to(qualifier, goa_ann.go_aspect):
+                new_annotation["qualifier"] = "contributes_to"
+
             # Add negated field if this is a NOT annotation
             if is_negated:
                 new_annotation["negated"] = True
@@ -783,6 +788,74 @@ class GOAValidator:
             return False
         return "NOT" in qualifier.upper()
 
+    # Valid GO annotation qualifiers from GAF/GPAD spec
+    VALID_QUALIFIERS = {
+        "enables",
+        "contributes_to",
+        "involved_in",
+        "acts_upstream_of",
+        "acts_upstream_of_positive_effect",
+        "acts_upstream_of_negative_effect",
+        "acts_upstream_of_or_within",
+        "acts_upstream_of_or_within_positive_effect",
+        "acts_upstream_of_or_within_negative_effect",
+        "located_in",
+        "is_active_in",
+        "part_of",
+        "colocalizes_with",
+    }
+
+    @classmethod
+    def _parse_qualifier(cls, qualifier: Optional[str]) -> Optional[str]:
+        """Extract the annotation qualifier from a GOA qualifier string.
+
+        Strips NOT| prefix and returns the base qualifier if it's a recognized
+        GO annotation qualifier, or None if not recognized.
+
+        >>> GOAValidator._parse_qualifier("enables")
+        'enables'
+        >>> GOAValidator._parse_qualifier("NOT|enables")
+        'enables'
+        >>> GOAValidator._parse_qualifier("contributes_to")
+        'contributes_to'
+        >>> GOAValidator._parse_qualifier("NOT|involved_in")
+        'involved_in'
+        >>> GOAValidator._parse_qualifier("") is None
+        True
+        >>> GOAValidator._parse_qualifier(None) is None
+        True
+        """
+        if not isinstance(qualifier, str) or not qualifier:
+            return None
+        # Strip NOT| prefix to get the base qualifier
+        base = qualifier.replace("NOT|", "").replace("NOT", "").strip("|").strip()
+        if base in cls.VALID_QUALIFIERS:
+            return base
+        return None
+
+    @staticmethod
+    def _is_contributes_to(qualifier: Optional[str], go_aspect: str = "") -> bool:
+        """Return True if this is a contributes_to MF annotation.
+
+        Only contributes_to is recorded as a qualifier -- all other qualifiers
+        are the default for their aspect and need not be stored.
+
+        >>> GOAValidator._is_contributes_to("contributes_to", "molecular_function")
+        True
+        >>> GOAValidator._is_contributes_to("contributes_to", "")
+        True
+        >>> GOAValidator._is_contributes_to("enables", "molecular_function")
+        False
+        >>> GOAValidator._is_contributes_to("involved_in", "biological_process")
+        False
+        >>> GOAValidator._is_contributes_to(None)
+        False
+        """
+        if not isinstance(qualifier, str):
+            return False
+        base = qualifier.replace("NOT|", "").replace("NOT", "").strip("|").strip()
+        return base == "contributes_to"
+
     def _get_reactome_title(self, reactome_id: str, cache: Dict[str, str]) -> str:
         """Fetch Reactome pathway title from Reactome API or cache.
 
@@ -924,6 +997,104 @@ class GOAValidator:
 
         if updated_count > 0:
             # Write the updated YAML
+            yaml_data["existing_annotations"] = existing_annotations
+            with open(yaml_file, "w") as f:
+                yaml.dump(
+                    yaml_data,
+                    f,
+                    default_flow_style=False,
+                    sort_keys=False,
+                    allow_unicode=True,
+                )
+
+        return updated_count, yaml_file
+
+    def backfill_qualifiers(
+        self,
+        yaml_file: Path,
+        goa_file: Optional[Path] = None,
+    ) -> Tuple[int, Path]:
+        """Backfill contributes_to qualifier on existing MF annotations from GOA data.
+
+        Only populates the qualifier field for contributes_to annotations.
+        No qualifier means enables (the default). Matching is done by
+        (GO ID, evidence_type, reference, negated) tuple.
+
+        Args:
+            yaml_file: Path to the gene review YAML file
+            goa_file: Path to GOA file (if None, derives from yaml_file path)
+
+        Returns:
+            Tuple of (number of annotations updated, output file path)
+
+        Example:
+            >>> validator = GOAValidator()
+            >>> updated, path = validator.backfill_qualifiers(
+            ...     Path("genes/yeast/SET1/SET1-ai-review.yaml")
+            ... )  # doctest: +SKIP
+        """
+        # Derive GOA file path if not provided
+        if goa_file is None:
+            yaml_stem = yaml_file.stem
+            if yaml_stem.endswith("-ai-review"):
+                gene_name = yaml_stem[:-10]
+                goa_file = yaml_file.parent / f"{gene_name}-goa.tsv"
+            else:
+                raise ValueError(f"Could not derive GOA file path from {yaml_file}")
+
+        if not goa_file.exists():
+            raise FileNotFoundError(f"GOA file not found: {goa_file}")
+
+        goa_annotations = self.parse_goa_file(goa_file)
+
+        # Build lookup for contributes_to MF annotations only
+        contributes_to_tuples: set[Tuple[str, str, str, bool]] = set()
+        for goa_ann in goa_annotations:
+            qualifier_str = getattr(goa_ann, "qualifier", "")
+            if self._is_contributes_to(qualifier_str, goa_ann.go_aspect):
+                is_negated = self._qualifier_is_negated(qualifier_str)
+                tuple_key = (goa_ann.go_id, goa_ann.evidence_code, goa_ann.reference, is_negated)
+                contributes_to_tuples.add(tuple_key)
+
+        if not contributes_to_tuples:
+            return 0, yaml_file
+
+        if not yaml_file.exists():
+            return 0, yaml_file
+
+        with open(yaml_file, "r") as f:
+            yaml_data = yaml.safe_load(f) or {}
+
+        existing_annotations = yaml_data.get("existing_annotations", [])
+
+        updated_count = 0
+        for ann in existing_annotations:
+            if not isinstance(ann, dict) or "term" not in ann:
+                continue
+
+            # Skip if already has qualifier field
+            if ann.get("qualifier"):
+                continue
+
+            term = ann.get("term", {})
+            if not isinstance(term, dict):
+                continue
+
+            go_id = term.get("id", "")
+            evidence = ann.get("evidence_type", "")
+            ref = ann.get("original_reference_id", "")
+            negated = ann.get("negated", False)
+
+            if not go_id:
+                continue
+
+            tuple_key = (go_id, evidence, ref, negated)
+
+            if tuple_key in contributes_to_tuples:
+                ann["qualifier"] = "contributes_to"
+                updated_count += 1
+
+        if updated_count > 0:
             yaml_data["existing_annotations"] = existing_annotations
             with open(yaml_file, "w") as f:
                 yaml.dump(

@@ -230,6 +230,15 @@ def main():
     if args.alias:
         gene_symbol = args.alias
         base_dir = Path(f"genes/{args.organism}/{args.alias}")
+        # Parse UniProt context from alias directory
+        uniprot_file = base_dir / f"{args.alias}-uniprot.txt"
+        if uniprot_file.exists():
+            uniprot_context = parse_uniprot_context(uniprot_file)
+            if uniprot_context:
+                print("Extracted UniProt context:")
+                print(f"  Accession: {uniprot_context.get('accession', 'N/A')}")
+                print(f"  Protein: {uniprot_context.get('protein_description', 'N/A')[:80]}...")
+                print(f"  Family: {uniprot_context.get('protein_family', 'N/A')[:80]}...")
     else:
         # Try to lookup from UniProt file
         # First try with gene_id as directory name
