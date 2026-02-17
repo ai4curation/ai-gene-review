@@ -42,6 +42,34 @@ We will still use GO context and evidence codes as inputs, but the emphasis here
 4. Compare GO-based similarity with orthogonal signals (RNA-seq expression similarity, phenotype concordance where available).
 5. Summarize divergence rates and create a “bias checklist” so metrics can be interpreted correctly.
 
+## Open-World Metrics Spec (Draft)
+Goal: avoid penalizing missing annotations (unknowns) while still capturing functional divergence signals.
+
+### Inputs
+- Ortholog pairs/groups (start with 1:1, expand to 1:many and many:many).
+- GO annotations per gene, with evidence codes and dates.
+- Optional: expression/phenotype similarity matrices for cross-checking.
+
+### Evidence Tiers (Configurable)
+- `experimental_only`: direct experimental evidence (e.g., EXP, IDA, IMP, IGI, IEP).
+- `curated_plus`: experimental + curated inferences (e.g., IBA/IBD/IC/ISS/ISO).
+- `all_including_iea`: include electronic annotations to quantify propagation effects.
+
+### Similarity Metrics (Open-World)
+- **Asymmetric containment**: |A ∩ B| / |A| (treat B as reference; do not penalize missing in B).
+- **Symmetric overlap**: |A ∩ B| / |A ∪ B| (Jaccard) for a conservative baseline.
+- **IC-weighted overlap** (optional): weight terms by information content to reduce bias from generic terms.
+
+### Bias Controls
+- Author/publication bias: downweight annotations from the same source across species pairs.
+- Term-frequency bias: weight by inverse frequency or depth in ontology.
+- Propagation bias: compare `experimental_only` vs `curated_plus` vs `all_including_iea`.
+
+### Reporting
+- Separate metrics for MF/BP/CC.
+- Stratify by orthology class (1:1 vs 1:many).
+- Include “delta” metrics showing how similarity changes when ISO/IEA are added.
+
 ## Functional Divergence: Curated Cases (Evidence-Backed)
 These are concrete ortholog divergence examples with gene-level evidence that can seed the "open world" curation set.
 

@@ -1,0 +1,2615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grpel2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Grpel2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O88396" target="_blank" class="term-link">
+                        O88396
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Mus musculus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "Grpel2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O88396" data-a="DESCRIPTION: GrpE protein homolog 2 (mt-GrpE#2) is a mitochondr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GrpE protein homolog 2 (mt-GrpE#2) is a mitochondrial nucleotide exchange factor (NEF) for mitochondrial Hsp70 (mortalin/HSPA9). It is a component of the PAM complex (presequence translocase-associated motor) required for ATP-dependent translocation of transit peptide-containing proteins into the mitochondrial matrix. Grpel2 stimulates ADP release from mt-Hsp70, thereby accelerating the Hsp70 ATPase cycle. It may also modulate the interconversion of oligomeric (inactive) and monomeric (active) forms of mt-Hsp70. A paralog of Grpel1 (mt-GrpE#1), both are ubiquitously expressed but may be subject to different post-transcriptional regulation (PMID:9694873).</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                                    GO:0000774
+                                </a>
+                            </span>
+                            <span class="term-label">adenyl-nucleotide exchange factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0000774" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grpel2 is a GrpE-family nucleotide exchange factor for mitochondrial Hsp70. Naylor et al. (PMID:9694873) demonstrated that mt-GrpE#2 specifically interacts with and stimulates the ATPase activity of mt-Hsp70. The IBA annotation from phylogenetic inference (PANTHER/SGD) is well-supported by the conserved GrpE domain and experimental evidence for the mammalian protein. Adenyl-nucleotide exchange factor activity is the core molecular function of GrpE proteins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the primary molecular function of Grpel2. GrpE proteins catalyze nucleotide exchange on Hsp70 chaperones, which is the rate-limiting step in the Hsp70 ATPase cycle. The IBA inference is phylogenetically sound and consistent with direct experimental evidence (PMID:9694873).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9694873" target="_blank" class="term-link">
+                                        PMID:9694873
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The functional integrity of mt-GrpE#1 and #2 was verified by their ability to specifically interact with and stimulate the ATPase activity of mammalian mitochondrial Hsp70 (mt-Hsp70).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001405" target="_blank" class="term-link">
+                                    GO:0001405
+                                </a>
+                            </span>
+                            <span class="term-label">PAM complex, Tim23 associated import motor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0001405" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grpel2 is annotated as a component of the PAM complex by phylogenetic inference. UniProt states (by similarity) that it is a probable component of the PAM complex composed of mt-HSP70, GRPEL1 or GRPEL2, TIMM44, PAM16, and DNAJC19. The yeast ortholog (MGE1/YOR232W) is a well-established PAM complex component. This annotation is consistent with the known biology.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GrpE proteins function as nucleotide exchange factors within the PAM import motor complex. The IBA annotation based on phylogenetic inference from the yeast ortholog is well-supported by structural and functional conservation of the PAM complex across eukaryotes. UniProt confirms this localization by similarity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0030150" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As a component of the PAM complex, Grpel2 participates in protein import into the mitochondrial matrix. The nucleotide exchange activity of GrpE is essential for the mt-Hsp70 ATPase cycle that drives translocation of preproteins through the TIM23 channel. This is a core biological process for this protein, well-supported by IBA from phylogenetic inference.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein import into the mitochondrial matrix is the primary biological process function of the PAM complex. Grpel2 as a NEF for mt-Hsp70 plays an essential role in this process. The IBA annotation is phylogenetically sound and consistent with UniProt functional description.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0051082" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0051082 is proposed for obsoletion. Grpel2 is a nucleotide exchange factor (NEF), not a chaperone that directly binds unfolded proteins. Its function is to accelerate nucleotide exchange on mt-Hsp70, thereby facilitating the Hsp70 chaperone cycle. While NEFs participate in the protein folding machinery, they are co-chaperones rather than direct unfolded protein binders.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0051082 (unfolded protein binding) is slated for obsoletion and is not the correct term for a nucleotide exchange factor. Grpel2 functions as a co-chaperone by stimulating nucleotide exchange on mt-Hsp70. The appropriate replacement is GO:0044183 (protein folding chaperone), which captures the co-chaperone role in the protein folding machinery without implying direct unfolded substrate binding.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    protein folding chaperone
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                                    GO:0000774
+                                </a>
+                            </span>
+                            <span class="term-label">adenyl-nucleotide exchange factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0000774" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR000740, GrpE domain) mapping to adenyl-nucleotide exchange factor activity. Consistent with the IBA annotation and experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation from InterPro domain mapping is correct and consistent with the IBA annotation for the same term. The GrpE domain (IPR000740) is the defining feature of nucleotide exchange factors for Hsp70 chaperones.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProt subcellular location mapping. UniProt states Grpel2 localizes to the mitochondrion matrix. The protein has a mitochondrial transit peptide (residues 1-31) and functions within the matrix as part of the PAM complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial matrix localization is well-supported by the presence of a mitochondrial transit peptide, the protein&#39;s function as a NEF for matrix-localized mt-Hsp70, and its role in the PAM complex. More specific than GO:0005739 (mitochondrion) and accurately reflects the sub-organellar localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0006457" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro mapping. Grpel2 participates in protein folding indirectly as a co-chaperone for mt-Hsp70. However, its more specific biological process role is in protein import into the mitochondrial matrix (GO:0030150). Protein folding is a broader acceptable annotation but not the most informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While protein import into the mitochondrial matrix is the more specific process, Grpel2 does participate in protein folding through its role in regulating mt-Hsp70. The IEA annotation is not incorrect and provides complementary biological context to GO:0030150. As an IEA it is acceptably general.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0042803" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro mapping. Bacterial GrpE forms homodimers, and this is a conserved feature of GrpE-family proteins. However, homodimerization is a structural property rather than a functional molecular activity of interest, and it has not been directly demonstrated for mouse Grpel2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While GrpE-family proteins are known to form homodimers, this annotation describes a structural feature rather than the functional molecular activity. Homodimerization is not experimentally verified for Grpel2 specifically, and this IEA may be an over-extension from bacterial GrpE structural data. The core molecular function is GO:0000774 (adenyl-nucleotide exchange factor activity).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051087" target="_blank" class="term-link">
+                                    GO:0051087
+                                </a>
+                            </span>
+                            <span class="term-label">protein-folding chaperone binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0051087" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro mapping. Grpel2 does bind mt-Hsp70 (a protein-folding chaperone) as part of its nucleotide exchange function. Naylor et al. (PMID:9694873) showed that the GrpE-like proteins bound to E. coli DnaK and to mammalian mt-Hsp70.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation correctly captures the binding interaction between Grpel2 and mt-Hsp70. As a nucleotide exchange factor, Grpel2 must physically bind to Hsp70 to catalyze ADP release. This is experimentally supported (PMID:9694873).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9694873" target="_blank" class="term-link">
+                                        PMID:9694873
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Investigation of the microsomal and two mitochondrial GrpE-like proteins revealed that they bound specifically to Escherichia coli DnaK, and the complexes formed were not disrupted in the presence of 0.5 M salt but were readily dissociated in the presence of 5 mM ATP.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000119
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0005739" data-r="GO_REF:0000119" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISO annotation transferred from the human ortholog (UniProtKB:Q8TAA5, GRPEL2). Mitochondrial localization is well-established for this protein family and supported by multiple lines of evidence including transit peptide, proteomics, and functional data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial localization is strongly supported by the mitochondrial transit peptide (residues 1-31), proteomic detection in mitochondrial preparations (PMID:18614015, PMID:14651853), and functional role in the mitochondrial PAM complex. The ISO transfer from human ortholog is well-justified.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0005739" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from Ensembl Compara ortholog transfer (from human GRPEL2, UniProtKB:Q8TAA5). Consistent with all other evidence for mitochondrial localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the ISO annotation for the same term but from a different evidence pipeline. Mitochondrial localization is well-established.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18614015" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18614015
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A mitochondrial protein compendium elucidates complex I dise...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0005739" data-r="PMID:18614015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation from the MitoCarta mitochondrial protein compendium (Pagliarini et al. 2008). This large-scale proteomics study used mass spectrometry, GFP tagging, and machine learning to create a compendium of 1098 mitochondrial genes across 14 mouse tissues.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The MitoCarta compendium is a high-quality proteomics dataset that provides strong experimental support for mitochondrial localization. Detection by mass spectrometry in purified mitochondrial preparations is direct evidence for this cellular component annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18614015" target="_blank" class="term-link">
+                                        PMID:18614015
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We performed mass spectrometry, GFP tagging, and machine learning to create a mitochondrial compendium of 1098 genes and their protein expression across 14 mouse tissues.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14651853" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14651853
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Integrated analysis of protein composition, tissue diversity...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0005739" data-r="PMID:14651853" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation from Mootha et al. (2003), an integrated proteomic survey of mitochondria from mouse brain, heart, kidney, and liver. This study produced a list of 591 mitochondrial proteins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Detection in a large-scale mitochondrial proteomics study provides direct evidence for mitochondrial localization. Consistent with all other localization evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14651853" target="_blank" class="term-link">
+                                        PMID:14651853
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">To explore its molecular composition, we performed a proteomic survey of mitochondria from mouse brain, heart, kidney, and liver and combined the results with existing gene annotations to produce a list of 591 mitochondrial proteins, including 163 proteins not previously associated with this organelle.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12865426" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12865426
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic analysis of the mouse liver mitochondrial inner me...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0005743" data-r="PMID:12865426" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation from Da Cruz et al. (2003), a proteomic analysis of purified mouse liver mitochondrial inner membrane. The study identified 182 proteins in the inner membrane fraction. However, Grpel2 is a soluble matrix protein that associates with the PAM complex at the inner membrane. Detection in the inner membrane fraction may reflect its association with the membrane-bound TIM23 complex rather than intrinsic membrane localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While Grpel2 is primarily a soluble matrix protein, it functions as part of the PAM complex which is associated with the inner membrane TIM23 translocase. Detection in the inner membrane proteome is consistent with this peripheral membrane association. The HDA evidence from a purified inner membrane proteomics study supports this annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12865426" target="_blank" class="term-link">
+                                        PMID:12865426
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We have focused our study on the identification of proteins of the mitochondrial inner membrane (MIM)... This procedure allowed us to identify 182 proteins that are involved in several biochemical processes, such as the electron transport machinery, the protein import machinery, protein synthesis, lipid metabolism, and ion or substrate transport.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9694873" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9694873
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evidence for the existence of distinct mammalian cytosolic, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O88396" data-a="GO:0051082" data-r="PMID:9694873" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Naylor et al. (1998). The paper demonstrated that GrpE-like proteins bind specifically to DnaK (an Hsp70 chaperone) in a salt-resistant, ATP-dissociable manner, and stimulate the ATPase activity of mt-Hsp70. However, the paper does not demonstrate direct binding to unfolded protein substrates. The interaction characterized is between the NEF and the Hsp70 chaperone, not between the NEF and unfolded substrates. GO:0051082 is proposed for obsoletion and is not the correct term for a nucleotide exchange factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The experimental evidence in PMID:9694873 demonstrates that Grpel2 interacts with Hsp70 chaperones and stimulates their ATPase activity, which is the function of a co-chaperone/NEF. The paper does not show direct binding of Grpel2 to unfolded protein substrates. The appropriate replacement term is GO:0044183 (protein folding chaperone), which captures the co-chaperone role without implying direct substrate binding. GO:0051082 is also proposed for obsoletion.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    protein folding chaperone
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9694873" target="_blank" class="term-link">
+                                        PMID:9694873
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The functional integrity of mt-GrpE#1 and #2 was verified by their ability to specifically interact with and stimulate the ATPase activity of mammalian mitochondrial Hsp70 (mt-Hsp70).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Grpel2 functions as a mitochondrial nucleotide exchange factor (NEF) within the PAM complex, stimulating ADP release from mt-Hsp70 to drive the ATP-dependent import of transit peptide-containing proteins into the mitochondrial matrix.</h3>
+                <span class="vote-buttons" data-g="O88396" data-a="FUNCTION: Grpel2 functions as a mitochondrial nucleotide exc..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                            adenyl-nucleotide exchange factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                protein import into mitochondrial matrix
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001405" target="_blank" class="term-link">
+                            PAM complex, Tim23 associated import motor
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000119.md" target="_blank" class="term-link">
+                            GO_REF:0000119
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automated transfer of experimentally-verified manual GO annotation data to mouse-human orthologs</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12865426" target="_blank" class="term-link">
+                            PMID:12865426
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteomic analysis of the mouse liver mitochondrial inner membrane.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14651853" target="_blank" class="term-link">
+                            PMID:14651853
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Integrated analysis of protein composition, tissue diversity, and gene regulation in mouse mitochondria.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18614015" target="_blank" class="term-link">
+                            PMID:18614015
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A mitochondrial protein compendium elucidates complex I disease biology.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9694873" target="_blank" class="term-link">
+                            PMID:9694873
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Evidence for the existence of distinct mammalian cytosolic, microsomal, and two mitochondrial GrpE-like proteins, the Co-chaperones of specific Hsp70 members.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O88396
+gene_symbol: Grpel2
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:10090
+  label: Mus musculus
+description: &gt;-
+  GrpE protein homolog 2 (mt-GrpE#2) is a mitochondrial nucleotide exchange
+  factor (NEF) for mitochondrial Hsp70 (mortalin/HSPA9). It is a component
+  of the PAM complex (presequence translocase-associated motor) required for
+  ATP-dependent translocation of transit peptide-containing proteins into the
+  mitochondrial matrix. Grpel2 stimulates ADP release from mt-Hsp70, thereby
+  accelerating the Hsp70 ATPase cycle. It may also modulate the interconversion
+  of oligomeric (inactive) and monomeric (active) forms of mt-Hsp70. A paralog
+  of Grpel1 (mt-GrpE#1), both are ubiquitously expressed but may be subject
+  to different post-transcriptional regulation (PMID:9694873).
+existing_annotations:
+- term:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Grpel2 is a GrpE-family nucleotide exchange factor for mitochondrial Hsp70.
+      Naylor et al. (PMID:9694873) demonstrated that mt-GrpE#2 specifically
+      interacts with and stimulates the ATPase activity of mt-Hsp70. The IBA
+      annotation from phylogenetic inference (PANTHER/SGD) is well-supported
+      by the conserved GrpE domain and experimental evidence for the mammalian
+      protein. Adenyl-nucleotide exchange factor activity is the core molecular
+      function of GrpE proteins.
+    action: ACCEPT
+    reason: &gt;-
+      This is the primary molecular function of Grpel2. GrpE proteins catalyze
+      nucleotide exchange on Hsp70 chaperones, which is the rate-limiting step
+      in the Hsp70 ATPase cycle. The IBA inference is phylogenetically sound
+      and consistent with direct experimental evidence (PMID:9694873).
+    supported_by:
+      - reference_id: PMID:9694873
+        supporting_text: &gt;-
+          The functional integrity of mt-GrpE#1 and #2 was verified by their
+          ability to specifically interact with and stimulate the ATPase activity
+          of mammalian mitochondrial Hsp70 (mt-Hsp70).
+- term:
+    id: GO:0001405
+    label: PAM complex, Tim23 associated import motor
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Grpel2 is annotated as a component of the PAM complex by phylogenetic
+      inference. UniProt states (by similarity) that it is a probable component
+      of the PAM complex composed of mt-HSP70, GRPEL1 or GRPEL2, TIMM44,
+      PAM16, and DNAJC19. The yeast ortholog (MGE1/YOR232W) is a well-established
+      PAM complex component. This annotation is consistent with the known biology.
+    action: ACCEPT
+    reason: &gt;-
+      GrpE proteins function as nucleotide exchange factors within the PAM
+      import motor complex. The IBA annotation based on phylogenetic inference
+      from the yeast ortholog is well-supported by structural and functional
+      conservation of the PAM complex across eukaryotes. UniProt confirms
+      this localization by similarity.
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      As a component of the PAM complex, Grpel2 participates in protein import
+      into the mitochondrial matrix. The nucleotide exchange activity of GrpE
+      is essential for the mt-Hsp70 ATPase cycle that drives translocation of
+      preproteins through the TIM23 channel. This is a core biological process
+      for this protein, well-supported by IBA from phylogenetic inference.
+    action: ACCEPT
+    reason: &gt;-
+      Protein import into the mitochondrial matrix is the primary biological
+      process function of the PAM complex. Grpel2 as a NEF for mt-Hsp70 plays
+      an essential role in this process. The IBA annotation is phylogenetically
+      sound and consistent with UniProt functional description.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      GO:0051082 is proposed for obsoletion. Grpel2 is a nucleotide exchange
+      factor (NEF), not a chaperone that directly binds unfolded proteins.
+      Its function is to accelerate nucleotide exchange on mt-Hsp70, thereby
+      facilitating the Hsp70 chaperone cycle. While NEFs participate in the
+      protein folding machinery, they are co-chaperones rather than direct
+      unfolded protein binders.
+    action: MODIFY
+    reason: &gt;-
+      GO:0051082 (unfolded protein binding) is slated for obsoletion and is
+      not the correct term for a nucleotide exchange factor. Grpel2 functions
+      as a co-chaperone by stimulating nucleotide exchange on mt-Hsp70. The
+      appropriate replacement is GO:0044183 (protein folding chaperone), which
+      captures the co-chaperone role in the protein folding machinery without
+      implying direct unfolded substrate binding.
+    proposed_replacement_terms:
+      - id: GO:0044183
+        label: protein folding chaperone
+- term:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation from InterPro (IPR000740, GrpE domain) mapping to
+      adenyl-nucleotide exchange factor activity. Consistent with the IBA
+      annotation and experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      This IEA annotation from InterPro domain mapping is correct and
+      consistent with the IBA annotation for the same term. The GrpE domain
+      (IPR000740) is the defining feature of nucleotide exchange factors
+      for Hsp70 chaperones.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation based on UniProt subcellular location mapping. UniProt
+      states Grpel2 localizes to the mitochondrion matrix. The protein has
+      a mitochondrial transit peptide (residues 1-31) and functions within
+      the matrix as part of the PAM complex.
+    action: ACCEPT
+    reason: &gt;-
+      Mitochondrial matrix localization is well-supported by the presence
+      of a mitochondrial transit peptide, the protein&#39;s function as a NEF
+      for matrix-localized mt-Hsp70, and its role in the PAM complex. More
+      specific than GO:0005739 (mitochondrion) and accurately reflects
+      the sub-organellar localization.
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation from InterPro mapping. Grpel2 participates in protein
+      folding indirectly as a co-chaperone for mt-Hsp70. However, its more
+      specific biological process role is in protein import into the
+      mitochondrial matrix (GO:0030150). Protein folding is a broader
+      acceptable annotation but not the most informative.
+    action: ACCEPT
+    reason: &gt;-
+      While protein import into the mitochondrial matrix is the more specific
+      process, Grpel2 does participate in protein folding through its role
+      in regulating mt-Hsp70. The IEA annotation is not incorrect and provides
+      complementary biological context to GO:0030150. As an IEA it is
+      acceptably general.
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation from InterPro mapping. Bacterial GrpE forms homodimers,
+      and this is a conserved feature of GrpE-family proteins. However,
+      homodimerization is a structural property rather than a functional
+      molecular activity of interest, and it has not been directly
+      demonstrated for mouse Grpel2.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While GrpE-family proteins are known to form homodimers, this
+      annotation describes a structural feature rather than the functional
+      molecular activity. Homodimerization is not experimentally verified
+      for Grpel2 specifically, and this IEA may be an over-extension from
+      bacterial GrpE structural data. The core molecular function is
+      GO:0000774 (adenyl-nucleotide exchange factor activity).
+- term:
+    id: GO:0051087
+    label: protein-folding chaperone binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation from InterPro mapping. Grpel2 does bind mt-Hsp70
+      (a protein-folding chaperone) as part of its nucleotide exchange
+      function. Naylor et al. (PMID:9694873) showed that the GrpE-like
+      proteins bound to E. coli DnaK and to mammalian mt-Hsp70.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation correctly captures the binding interaction between
+      Grpel2 and mt-Hsp70. As a nucleotide exchange factor, Grpel2 must
+      physically bind to Hsp70 to catalyze ADP release. This is
+      experimentally supported (PMID:9694873).
+    supported_by:
+      - reference_id: PMID:9694873
+        supporting_text: &gt;-
+          Investigation of the microsomal and two mitochondrial GrpE-like
+          proteins revealed that they bound specifically to Escherichia coli
+          DnaK, and the complexes formed were not disrupted in the presence
+          of 0.5 M salt but were readily dissociated in the presence of 5 mM ATP.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000119
+  review:
+    summary: &gt;-
+      ISO annotation transferred from the human ortholog (UniProtKB:Q8TAA5,
+      GRPEL2). Mitochondrial localization is well-established for this protein
+      family and supported by multiple lines of evidence including transit
+      peptide, proteomics, and functional data.
+    action: ACCEPT
+    reason: &gt;-
+      Mitochondrial localization is strongly supported by the mitochondrial
+      transit peptide (residues 1-31), proteomic detection in mitochondrial
+      preparations (PMID:18614015, PMID:14651853), and functional role in
+      the mitochondrial PAM complex. The ISO transfer from human ortholog
+      is well-justified.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IEA annotation from Ensembl Compara ortholog transfer (from human
+      GRPEL2, UniProtKB:Q8TAA5). Consistent with all other evidence for
+      mitochondrial localization.
+    action: ACCEPT
+    reason: &gt;-
+      Redundant with the ISO annotation for the same term but from a
+      different evidence pipeline. Mitochondrial localization is
+      well-established.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:18614015
+  review:
+    summary: &gt;-
+      HDA annotation from the MitoCarta mitochondrial protein compendium
+      (Pagliarini et al. 2008). This large-scale proteomics study used mass
+      spectrometry, GFP tagging, and machine learning to create a compendium
+      of 1098 mitochondrial genes across 14 mouse tissues.
+    action: ACCEPT
+    reason: &gt;-
+      The MitoCarta compendium is a high-quality proteomics dataset that
+      provides strong experimental support for mitochondrial localization.
+      Detection by mass spectrometry in purified mitochondrial preparations
+      is direct evidence for this cellular component annotation.
+    supported_by:
+      - reference_id: PMID:18614015
+        supporting_text: &gt;-
+          We performed mass spectrometry, GFP tagging, and machine learning
+          to create a mitochondrial compendium of 1098 genes and their protein
+          expression across 14 mouse tissues.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:14651853
+  review:
+    summary: &gt;-
+      HDA annotation from Mootha et al. (2003), an integrated proteomic
+      survey of mitochondria from mouse brain, heart, kidney, and liver.
+      This study produced a list of 591 mitochondrial proteins.
+    action: ACCEPT
+    reason: &gt;-
+      Detection in a large-scale mitochondrial proteomics study provides
+      direct evidence for mitochondrial localization. Consistent with all
+      other localization evidence.
+    supported_by:
+      - reference_id: PMID:14651853
+        supporting_text: &gt;-
+          To explore its molecular composition, we performed a proteomic survey
+          of mitochondria from mouse brain, heart, kidney, and liver and combined
+          the results with existing gene annotations to produce a list of 591
+          mitochondrial proteins, including 163 proteins not previously associated
+          with this organelle.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: HDA
+  original_reference_id: PMID:12865426
+  review:
+    summary: &gt;-
+      HDA annotation from Da Cruz et al. (2003), a proteomic analysis of
+      purified mouse liver mitochondrial inner membrane. The study identified
+      182 proteins in the inner membrane fraction. However, Grpel2 is a
+      soluble matrix protein that associates with the PAM complex at the
+      inner membrane. Detection in the inner membrane fraction may reflect
+      its association with the membrane-bound TIM23 complex rather than
+      intrinsic membrane localization.
+    action: ACCEPT
+    reason: &gt;-
+      While Grpel2 is primarily a soluble matrix protein, it functions as
+      part of the PAM complex which is associated with the inner membrane
+      TIM23 translocase. Detection in the inner membrane proteome is
+      consistent with this peripheral membrane association. The HDA
+      evidence from a purified inner membrane proteomics study supports
+      this annotation.
+    supported_by:
+      - reference_id: PMID:12865426
+        supporting_text: &gt;-
+          We have focused our study on the identification of proteins of the
+          mitochondrial inner membrane (MIM)... This procedure allowed us to
+          identify 182 proteins that are involved in several biochemical
+          processes, such as the electron transport machinery, the protein
+          import machinery, protein synthesis, lipid metabolism, and ion or
+          substrate transport.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:9694873
+  review:
+    summary: &gt;-
+      IDA annotation from Naylor et al. (1998). The paper demonstrated that
+      GrpE-like proteins bind specifically to DnaK (an Hsp70 chaperone) in
+      a salt-resistant, ATP-dissociable manner, and stimulate the ATPase
+      activity of mt-Hsp70. However, the paper does not demonstrate direct
+      binding to unfolded protein substrates. The interaction characterized
+      is between the NEF and the Hsp70 chaperone, not between the NEF and
+      unfolded substrates. GO:0051082 is proposed for obsoletion and is
+      not the correct term for a nucleotide exchange factor.
+    action: MODIFY
+    reason: &gt;-
+      The experimental evidence in PMID:9694873 demonstrates that Grpel2
+      interacts with Hsp70 chaperones and stimulates their ATPase activity,
+      which is the function of a co-chaperone/NEF. The paper does not show
+      direct binding of Grpel2 to unfolded protein substrates. The appropriate
+      replacement term is GO:0044183 (protein folding chaperone), which
+      captures the co-chaperone role without implying direct substrate binding.
+      GO:0051082 is also proposed for obsoletion.
+    proposed_replacement_terms:
+      - id: GO:0044183
+        label: protein folding chaperone
+    supported_by:
+      - reference_id: PMID:9694873
+        supporting_text: &gt;-
+          The functional integrity of mt-GrpE#1 and #2 was verified by their
+          ability to specifically interact with and stimulate the ATPase activity
+          of mammalian mitochondrial Hsp70 (mt-Hsp70).
+core_functions:
+- description: &gt;-
+    Grpel2 functions as a mitochondrial nucleotide exchange factor (NEF) within
+    the PAM complex, stimulating ADP release from mt-Hsp70 to drive the
+    ATP-dependent import of transit peptide-containing proteins into the
+    mitochondrial matrix.
+  molecular_function:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  directly_involved_in:
+    - id: GO:0030150
+      label: protein import into mitochondrial matrix
+  locations:
+    - id: GO:0005759
+      label: mitochondrial matrix
+  in_complex:
+    id: GO:0001405
+    label: PAM complex, Tim23 associated import motor
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000119
+  title: Automated transfer of experimentally-verified manual GO annotation data to
+    mouse-human orthologs
+  findings: []
+- id: PMID:12865426
+  title: Proteomic analysis of the mouse liver mitochondrial inner membrane.
+  findings: []
+- id: PMID:14651853
+  title: Integrated analysis of protein composition, tissue diversity, and gene regulation
+    in mouse mitochondria.
+  findings: []
+- id: PMID:18614015
+  title: A mitochondrial protein compendium elucidates complex I disease biology.
+  findings: []
+- id: PMID:9694873
+  title: Evidence for the existence of distinct mammalian cytosolic, microsomal, and
+    two mitochondrial GrpE-like proteins, the Co-chaperones of specific Hsp70 members.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

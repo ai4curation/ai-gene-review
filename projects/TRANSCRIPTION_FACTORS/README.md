@@ -279,9 +279,30 @@ From Lovering et al. (2021) "A GO catalogue of human DNA-binding transcription f
 
 ## Status
 
-- [ ] Set up DeepTFactor locally
-- [ ] Build pipeline to fetch GOA + UniProt for TF-annotated proteins
-- [ ] Implement comparison logic
-- [ ] Run on pilot set (10 human TFs)
-- [ ] Evaluate and refine workflow
-- [ ] Scale to full human TF set
+### Phase 0: Dataset Comparison ✅
+- [x] Compare GREEKC curated dbTF set with GOA annotations (95.6% agreement)
+- [x] Identify 62 GOA-only proteins (potential over-annotations)
+- [x] Identify 50 GREEKC-only proteins (potential missing annotations)
+
+### Phase 1: Manual Review (In Progress)
+- [x] Review 7 high-priority GOA-only proteins (all confirmed as over-annotations)
+  - NTN1, NTN3: REMOVE (secreted axon guidance, erroneous IBA)
+  - RFXAP, RFXANK, HDAC4, RPS3: MODIFY → GO:0003713 (coactivators, not dbTFs)
+  - NME2: REMOVE (G-quadruplex binding, not dsDNA TF)
+- [x] Create PTHR10574 (Netrin/Laminin) family review
+- [x] Document PANTHER IBA error root cause (PTN000180816)
+- [ ] Review remaining ~55 GOA-only proteins
+- [ ] Review 50 GREEKC-only proteins for potential annotation
+
+### Phase 2: ML Validation (Setup Complete)
+- [x] Extract 525 IEA-only proteins (dbTF annotation without experimental evidence)
+- [x] Fetch sequences from UniProt (`deeptfactor-validation/iea-only-sequences.fasta`)
+- [x] Clone DeepTFactor repository
+- [x] Create analysis pipeline scripts
+- [ ] Install conda/DeepTFactor environment (requires Python 3.6 + PyTorch 1.2)
+- [ ] Run DeepTFactor predictions
+- [ ] Analyze discrepancies
+
+### Phase 3-4: Structure & Transcriptomics (Not Started)
+- [ ] Foldseek validation for ambiguous cases
+- [ ] iModulon integration for bacterial TFs

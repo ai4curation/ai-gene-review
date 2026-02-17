@@ -1,0 +1,3442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRYAA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CRYAA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P02470" target="_blank" class="term-link">
+                        P02470
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bos taurus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CRYAA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P02470" data-a="DESCRIPTION: Bovine alpha-crystallin A chain (CRYAA/CRYA1) is a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Bovine alpha-crystallin A chain (CRYAA/CRYA1) is a member of the small heat shock protein (sHSP/HSP20) family that serves dual roles as a major structural component of the ocular lens and as a molecular chaperone with holdase activity. CRYAA forms large oligomeric complexes and prevents aggregation of denatured proteins under stress conditions. Critically, bovine alpha-crystallin was shown to have substrate specificity different from other chaperones: it recognizes non-native intermediates formed on the denaturation pathway only, with no affinity for intermediates formed on the refolding pathway (PMID:7487869). This establishes bovine CRYAA as a holdase that prevents aggregation but does NOT actively refold proteins. The protein hetero-oligomerizes with CRYAB (P02510) and contributes to lens transparency and refractive index (UniProt). Crystal structures of truncated bovine CRYAA (PDB: 3L1E, 3L1F) revealed zinc-mediated inter-subunit bridging that enhances oligomer stability (PMID:20440841). Per UPB project rules, holdase proteins should retain GO:0051082 until a dedicated holdase NTR is created.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    GO:0043066
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0043066" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for negative regulation of apoptotic process. This is propagated from the human CRYAA ortholog (P02489) which has well-documented anti-apoptotic activity: human alphaA-crystallin binds pro-apoptotic Bax and Bcl-X(S), preventing their translocation to mitochondria (PMID:14752512 in human CRYAA review). The IBA is phylogenetically appropriate for sHSP family members. For bovine CRYAA specifically, this is a secondary function compared to the core structural and chaperone holdase roles.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Anti-apoptotic activity is well documented for the human ortholog and the IBA propagation is phylogenetically sound. However, this is a secondary function for CRYAA compared to its core structural and chaperone holdase roles.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for cytoplasm localization. Bovine CRYAA is a soluble cytoplasmic protein in lens fiber cells. UniProt confirms cytoplasm as a subcellular location. The IDA annotation from PMID:7487869 also confirms cytoplasmic localization. The IBA annotation is well supported and phylogenetically appropriate across sHSP family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is the primary constitutive location of CRYAA, directly confirmed by IDA evidence from PMID:7487869 and consistent with UniProt annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for nucleus localization. UniProt states that CRYAA translocates to the nucleus during heat shock and resides in SC35 splicing speckles (by similarity with UniProtKB:P02489, human CRYAA). This is a stress-induced secondary localization rather than the primary constitutive location.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is stress-induced (heat shock) rather than constitutive. UniProt documents this by similarity with the human ortholog. Keeping as non-core reflects the secondary nature of this localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009408" target="_blank" class="term-link">
+                                    GO:0009408
+                                </a>
+                            </span>
+                            <span class="term-label">response to heat</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0009408" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for response to heat. CRYAA is a member of the sHSP family and bovine alpha-crystallin was directly shown to prevent thermal aggregation of proteins (PMID:7487869: &#34;alpha-Crystallin, the major protein of the ocular lens, acts as a molecular chaperone by preventing the thermal aggregation of proteins&#34;). The IBA is phylogenetically appropriate for sHSP family members.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Response to heat is a core function of sHSP family members. Bovine alpha-crystallin prevents thermal aggregation of proteins (PMID:7487869). The IBA is well justified.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link">
+                                        PMID:7487869
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">alpha-Crystallin, the major protein of the ocular lens, acts as a molecular chaperone by preventing the thermal aggregation of proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0051082" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for unfolded protein binding. GO:0051082 is proposed for obsoletion (go-ontology#30962). Bovine CRYAA is a classic holdase chaperone that prevents aggregation of denatured proteins but does not refold them (PMID:7487869). Per UPB project rules, holdase proteins should retain GO:0051082 until a dedicated holdase NTR is created. The IBA annotation is phylogenetically sound and consistent with the IDA annotation from PMID:7487869.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0051082 is being obsoleted. Bovine CRYAA is a holdase that prevents aggregation of denatured proteins (PMID:7487869) without refolding them (NOT annotation to GO:0042026). Per UPB project rules, the annotation should be retained until a holdase NTR is created. GO:0044183 is the best available interim replacement, though imperfect because CRYAA does not assist in protein folding per se.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    protein folding chaperone
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link">
+                                        PMID:7487869
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">alpha-Crystallin, the major protein of the ocular lens, acts as a molecular chaperone by preventing the thermal aggregation of proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002088" target="_blank" class="term-link">
+                                    GO:0002088
+                                </a>
+                            </span>
+                            <span class="term-label">lens development in camera-type eye</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0002088" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for lens development in camera-type eye. CRYAA is the most abundantly expressed protein in the ocular lens. UniProt describes it as contributing to transparency and refractive index of the lens (PMID:20440841). The IBA annotation is phylogenetically appropriate for crystallin family members involved in lens development.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CRYAA is a core lens protein essential for normal lens development. UniProt documents its role in lens transparency and refractive index. Mutations in mammalian CRYAA consistently cause cataracts. The IBA is well justified.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005212" target="_blank" class="term-link">
+                                    GO:0005212
+                                </a>
+                            </span>
+                            <span class="term-label">structural constituent of eye lens</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0005212" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for structural constituent of eye lens. This is one of the most appropriate terms for CRYAA. UniProt states it &#34;Contributes to the transparency and refractive index of the lens&#34; (PMID:20440841). The IEA mapping is accurate and captures a core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CRYAA is the defining structural constituent of the eye lens. This is a core function annotation. UniProt documents its contribution to lens transparency and refractive index.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0005634" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for nucleus based on ortholog mapping. Consistent with the IBA and ISS annotations for the same term. Nuclear localization is stress-induced (heat shock) rather than constitutive.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with IBA and ISS evidence. Nuclear localization is stress-dependent and secondary. Marked as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for cytoplasm from ortholog mapping. Consistent with IBA and IDA annotations for the same term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is the primary constitutive localization of CRYAA. Consistent with IBA and IDA (PMID:7487869) annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for metal ion binding from UniProt keyword mapping. UniProt documents that bovine CRYAA binds zinc ions via His-100, Glu-102, His-107, and His-154, with inter-subunit bridging via zinc enhancing oligomer stability (PMID:20440841). This is a generic term; GO:0008270 &#34;zinc ion binding&#34; would be more specific.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Metal ion binding is too generic. The specific metal is zinc, which is important for oligomer stability (PMID:20440841). GO:0008270 &#34;zinc ion binding&#34; would be more informative.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    zinc ion binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19651604" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19651604
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The eye lens chaperone alpha-crystallin forms defined globul...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0005515" data-r="PMID:19651604" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for protein binding from PMID:19651604. This study analyzed quaternary structures of alpha-crystallins and showed that alphaA-crystallin forms defined oligomers of 24 subunits as well as smaller oligomers and large clusters. The interaction partner listed is CRYAB (P02510), consistent with hetero-oligomerization. &#34;Protein binding&#34; is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#34;Protein binding&#34; is too vague. The interactions documented are homo- and hetero- oligomerization relevant to CRYAA structural and chaperone function. GO:0042802 &#34;identical protein binding&#34; captures the self-interaction, and the hetero-oligomerization with CRYAB is intrinsic to crystallin complex formation.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    identical protein binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19651604" target="_blank" class="term-link">
+                                        PMID:19651604
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">alphaA-Crystallin forms, in addition to complexes of 24 subunits, also smaller oligomers and large clusters consisting of individual oligomers</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0005198" data-r="GO_REF:0000107" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for structural molecule activity from Ensembl ortholog mapping. CRYAA is a major structural protein of the eye lens. While correct, the more specific child term GO:0005212 &#34;structural constituent of eye lens&#34; is already annotated and is more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Structural molecule activity is correct but too broad. The more specific child term GO:0005212 &#34;structural constituent of eye lens&#34; is already annotated and better captures the actual function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005212" target="_blank" class="term-link">
+                                    structural constituent of eye lens
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0005654" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for nucleoplasm from Ensembl ortholog mapping. Consistent with the stress-induced nuclear translocation documented for the human ortholog. CRYAA translocates to SC35 speckles during heat shock (by similarity). This is a secondary, stress-dependent localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasm localization is stress-dependent (heat shock). Consistent with the nuclear localization annotations. Non-core secondary localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0005829" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for cytosol from Ensembl ortholog mapping. CRYAA is a soluble cytoplasmic protein that exists free in the cytosol as oligomeric complexes. Consistent with the IDA evidence for cytoplasm (PMID:7487869).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytosol is the primary location of CRYAA where it exists as soluble oligomeric complexes. Consistent with IDA cytoplasm annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007601" target="_blank" class="term-link">
+                                    GO:0007601
+                                </a>
+                            </span>
+                            <span class="term-label">visual perception</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0007601" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for visual perception from Ensembl ortholog mapping. CRYAA is essential for lens transparency, and mutations in orthologous genes cause cataracts that impair vision. However, CRYAA does not directly participate in the visual perception signaling pathway (phototransduction). It maintains lens structural integrity through which light passes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CRYAA maintains lens transparency but does not participate in the visual perception signaling pathway. The connection to visual perception is indirect. GO:0002088 &#34;lens development in camera-type eye&#34; and GO:0005212 &#34;structural constituent of eye lens&#34; better capture the actual role. Consistent with the human CRYAA review assessment.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032387" target="_blank" class="term-link">
+                                    GO:0032387
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of intracellular transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0032387" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for negative regulation of intracellular transport from Ensembl ortholog mapping. This is propagated from human CRYAA where it was demonstrated that alpha- crystallins prevent translocation of Bax and Bcl-X(S) from cytosol to mitochondria during apoptosis (PMID:14752512 in human CRYAA review). This is a secondary, non-core function tied to anti-apoptotic activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation reflects anti-apoptotic activity (preventing mitochondrial translocation of Bax/Bcl-X(S)), which is a secondary function. Well supported by human ortholog data but not the core function of CRYAA.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                                    GO:0032991
+                                </a>
+                            </span>
+                            <span class="term-label">protein-containing complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0032991" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for protein-containing complex from Ensembl ortholog mapping. CRYAA forms large homo- and hetero-oligomeric complexes. UniProt documents heteromers of 3 CRYAA : 1 CRYAB subunits, homodimers, homotetramers, and larger homo-oligomers (PMID:20440841). Consistent with the crystal structure data and oligomerization studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CRYAA forms large oligomeric complexes as a core feature of its biology. The annotation is correct. Oligomeric complex formation is essential for both structural and chaperone functions (PMID:20440841, PMID:19651604).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0042802" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for identical protein binding from Ensembl ortholog mapping. CRYAA homo-oligomerization is well established: UniProt documents homodimers and homotetramers as building blocks of larger homo-oligomers (PMID:20440841). The crystal structure shows zinc-mediated inter-subunit contacts.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CRYAA homo-oligomerization is a core property essential for both structural and chaperone functions. Well supported by crystallographic data (PMID:20440841) and biophysical studies (PMID:19651604).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    GO:0043066
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0043066" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for negative regulation of apoptotic process from Ensembl ortholog mapping. Consistent with the IBA annotation for the same term. Anti-apoptotic activity is a secondary function of CRYAA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with IBA annotation. Anti-apoptotic activity is a well-documented but secondary function compared to core structural and chaperone holdase roles.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050821" target="_blank" class="term-link">
+                                    GO:0050821
+                                </a>
+                            </span>
+                            <span class="term-label">protein stabilization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0050821" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for protein stabilization from Ensembl ortholog mapping. GO:0050821 is defined as &#34;any process involved in maintaining the structure and integrity of a protein and preventing it from degradation or aggregation.&#34; This is an excellent fit for CRYAA holdase activity -- it prevents aggregation of denatured proteins. In the human CRYAA review, this was accepted as a core BP annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0050821 accurately describes the core holdase function of CRYAA: preventing aggregation and maintaining protein integrity. Bovine alpha-crystallin prevents thermal aggregation of proteins (PMID:7487869). This is one of the most appropriate BP terms for CRYAA holdase chaperone activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link">
+                                        PMID:7487869
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">alpha-Crystallin, the major protein of the ocular lens, acts as a molecular chaperone by preventing the thermal aggregation of proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0051082" data-r="GO_REF:0000107" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for unfolded protein binding from Ensembl ortholog mapping. GO:0051082 is proposed for obsoletion (go-ontology#30962). Consistent with the IBA and IDA annotations for the same term. Per UPB project rules, holdase proteins should retain GO:0051082 until a holdase NTR is created.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0051082 is being obsoleted. Consistent with the IBA and IDA annotations. Per UPB project rules, the annotation should be retained until a holdase NTR is created.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    protein folding chaperone
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0005634" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation for nucleus from GO_REF:0000024, transferred from human CRYAA (P02489). The human ortholog translocates to SC35 splicing speckles during heat shock. This is a stress-induced secondary localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with IBA and IEA annotations for nuclear localization. Stress-induced secondary localization transferred from human ortholog.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7487869
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    On the substrate specificity of alpha-crystallin as a molecu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0005737" data-r="PMID:7487869" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for cytoplasm from PMID:7487869. This study used purified bovine alpha-crystallin from lens extracts. Alpha-crystallin is a soluble cytoplasmic protein in lens fiber cells. The purification from cytoplasmic lens extracts confirms cytoplasmic localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct evidence from purification of alpha-crystallin from bovine lens cytoplasmic extracts (PMID:7487869). Cytoplasm is the primary constitutive location.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042026" target="_blank" class="term-link">
+                                    GO:0042026
+                                </a>
+                            </span>
+                            <span class="term-label">protein refolding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7487869
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    On the substrate specificity of alpha-crystallin as a molecu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0042026" data-r="PMID:7487869" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NOT annotation for protein refolding from PMID:7487869. This is a critical annotation that explicitly states bovine alpha-crystallin does NOT perform protein refolding. PMID:7487869 demonstrated that &#34;alpha-crystallin has substrate specificity different from other chaperones and recognizes specific non-native intermediates formed on the denaturation pathway only, with no affinity for intermediates formed on the refolding pathway.&#34; This establishes that alpha-crystallin is a holdase, not a foldase: it binds proteins during denaturation to prevent aggregation but does not assist in refolding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This NOT annotation is critical for understanding CRYAA as a holdase. PMID:7487869 directly demonstrated that alpha-crystallin has no affinity for refolding intermediates, only denaturation intermediates. This distinguishes holdase from foldase activity and is the key evidence for the holdase classification used in the UPB project.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link">
+                                        PMID:7487869
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">alpha-crystallin has substrate specificity different from other chaperones and recognizes specific non-native intermediates formed on the denaturation pathway only, with no affinity for intermediates formed on the refolding pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7487869
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    On the substrate specificity of alpha-crystallin as a molecu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P02470" data-a="GO:0051082" data-r="PMID:7487869" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for unfolded protein binding from PMID:7487869. GO:0051082 is proposed for obsoletion (go-ontology#30962). This study directly demonstrated that bovine alpha-crystallin binds to non-native intermediates formed during protein denaturation, preventing their aggregation. The key finding is that alpha-crystallin &#34;recognizes specific non-native intermediates formed on the denaturation pathway only&#34; -- this is holdase activity. Per UPB project rules, holdase proteins should retain GO:0051082 until a dedicated holdase NTR is created.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0051082 is being obsoleted. The IDA evidence from PMID:7487869 clearly demonstrates holdase chaperone activity: bovine alpha-crystallin binds denaturation intermediates to prevent aggregation but does not refold proteins. GO:0044183 &#34;protein folding chaperone&#34; is the best available interim replacement, though imperfect because CRYAA specifically does NOT assist in protein folding. A holdase-specific NTR is needed. Per UPB project rules, retain GO:0051082 until holdase NTR is created.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    protein folding chaperone
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link">
+                                        PMID:7487869
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">alpha-crystallin has substrate specificity different from other chaperones and recognizes specific non-native intermediates formed on the denaturation pathway only, with no affinity for intermediates formed on the refolding pathway</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link">
+                                        PMID:7487869
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">alpha-Crystallin, the major protein of the ocular lens, acts as a molecular chaperone by preventing the thermal aggregation of proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Bovine CRYAA is a small heat shock protein that functions as an ATP-independent holdase chaperone. It prevents thermal aggregation of proteins by binding to non-native intermediates formed on the denaturation pathway, but has no affinity for intermediates on the refolding pathway (PMID:7487869). This is holdase, not foldase, activity. A holdase-specific NTR is needed; GO:0044183 is an interim annotation.</h3>
+                <span class="vote-buttons" data-g="P02470" data-a="FUNCTION: Bovine CRYAA is a small heat shock protein that fu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                            protein folding chaperone
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050821" target="_blank" class="term-link">
+                                protein stabilization
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009408" target="_blank" class="term-link">
+                                response to heat
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link">
+                                PMID:7487869
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">alpha-Crystallin, the major protein of the ocular lens, acts as a molecular chaperone by preventing the thermal aggregation of proteins</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link">
+                                PMID:7487869
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">alpha-crystallin has substrate specificity different from other chaperones and recognizes specific non-native intermediates formed on the denaturation pathway only, with no affinity for intermediates formed on the refolding pathway</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Bovine CRYAA is the most abundant soluble protein in the eye lens, contributing to transparency and refractive index. It forms heteromeric complexes with CRYAB (3:1 ratio), with zinc-mediated inter-subunit bridging enhancing stability (PMID:20440841). The structural role is essential as there is no protein turnover in the lens.</h3>
+                <span class="vote-buttons" data-g="P02470" data-a="FUNCTION: Bovine CRYAA is the most abundant soluble protein ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005212" target="_blank" class="term-link">
+                            structural constituent of eye lens
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002088" target="_blank" class="term-link">
+                                lens development in camera-type eye
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19651604" target="_blank" class="term-link">
+                                PMID:19651604
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">alphaA-Crystallin forms, in addition to complexes of 24 subunits, also smaller oligomers and large clusters consisting of individual oligomers</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19651604" target="_blank" class="term-link">
+                            PMID:19651604
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The eye lens chaperone alpha-crystallin forms defined globular assemblies.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20440841" target="_blank" class="term-link">
+                            PMID:20440841
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structures of truncated alphaA and alphaB crystallins reveal structural mechanisms of polydispersity important for eye lens function.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7487869" target="_blank" class="term-link">
+                            PMID:7487869
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">On the substrate specificity of alpha-crystallin as a molecular chaperone.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P02470
+gene_symbol: CRYAA
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9913
+  label: Bos taurus
+description: &gt;-
+  Bovine alpha-crystallin A chain (CRYAA/CRYA1) is a member of the small heat shock protein
+  (sHSP/HSP20) family that serves dual roles as a major structural component of the ocular
+  lens and as a molecular chaperone with holdase activity. CRYAA forms large oligomeric
+  complexes and prevents aggregation of denatured proteins under stress conditions. Critically,
+  bovine alpha-crystallin was shown to have substrate specificity different from other
+  chaperones: it recognizes non-native intermediates formed on the denaturation pathway only,
+  with no affinity for intermediates formed on the refolding pathway (PMID:7487869). This
+  establishes bovine CRYAA as a holdase that prevents aggregation but does NOT actively refold
+  proteins. The protein hetero-oligomerizes with CRYAB (P02510) and contributes to lens
+  transparency and refractive index (UniProt). Crystal structures of truncated bovine CRYAA
+  (PDB: 3L1E, 3L1F) revealed zinc-mediated inter-subunit bridging that enhances oligomer
+  stability (PMID:20440841). Per UPB project rules, holdase proteins should retain GO:0051082
+  until a dedicated holdase NTR is created.
+existing_annotations:
+- term:
+    id: GO:0043066
+    label: negative regulation of apoptotic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for negative regulation of apoptotic process. This is propagated from
+      the human CRYAA ortholog (P02489) which has well-documented anti-apoptotic activity:
+      human alphaA-crystallin binds pro-apoptotic Bax and Bcl-X(S), preventing their
+      translocation to mitochondria (PMID:14752512 in human CRYAA review). The IBA is
+      phylogenetically appropriate for sHSP family members. For bovine CRYAA specifically,
+      this is a secondary function compared to the core structural and chaperone holdase
+      roles.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Anti-apoptotic activity is well documented for the human ortholog and the IBA
+      propagation is phylogenetically sound. However, this is a secondary function for
+      CRYAA compared to its core structural and chaperone holdase roles.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for cytoplasm localization. Bovine CRYAA is a soluble cytoplasmic
+      protein in lens fiber cells. UniProt confirms cytoplasm as a subcellular location.
+      The IDA annotation from PMID:7487869 also confirms cytoplasmic localization. The
+      IBA annotation is well supported and phylogenetically appropriate across sHSP family.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is the primary constitutive location of CRYAA, directly
+      confirmed by IDA evidence from PMID:7487869 and consistent with UniProt annotation.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for nucleus localization. UniProt states that CRYAA translocates to
+      the nucleus during heat shock and resides in SC35 splicing speckles (by similarity
+      with UniProtKB:P02489, human CRYAA). This is a stress-induced secondary localization
+      rather than the primary constitutive location.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Nuclear localization is stress-induced (heat shock) rather than constitutive. UniProt
+      documents this by similarity with the human ortholog. Keeping as non-core reflects
+      the secondary nature of this localization.
+- term:
+    id: GO:0009408
+    label: response to heat
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for response to heat. CRYAA is a member of the sHSP family and bovine
+      alpha-crystallin was directly shown to prevent thermal aggregation of proteins
+      (PMID:7487869: &#34;alpha-Crystallin, the major protein of the ocular lens, acts as a
+      molecular chaperone by preventing the thermal aggregation of proteins&#34;). The IBA is
+      phylogenetically appropriate for sHSP family members.
+    action: ACCEPT
+    reason: &gt;-
+      Response to heat is a core function of sHSP family members. Bovine alpha-crystallin
+      prevents thermal aggregation of proteins (PMID:7487869). The IBA is well justified.
+    supported_by:
+      - reference_id: PMID:7487869
+        supporting_text: &gt;-
+          alpha-Crystallin, the major protein of the ocular lens, acts as a molecular chaperone
+          by preventing the thermal aggregation of proteins
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for unfolded protein binding. GO:0051082 is proposed for obsoletion
+      (go-ontology#30962). Bovine CRYAA is a classic holdase chaperone that prevents
+      aggregation of denatured proteins but does not refold them (PMID:7487869). Per UPB
+      project rules, holdase proteins should retain GO:0051082 until a dedicated holdase
+      NTR is created. The IBA annotation is phylogenetically sound and consistent with the
+      IDA annotation from PMID:7487869.
+    action: MODIFY
+    reason: &gt;-
+      GO:0051082 is being obsoleted. Bovine CRYAA is a holdase that prevents aggregation
+      of denatured proteins (PMID:7487869) without refolding them (NOT annotation to
+      GO:0042026). Per UPB project rules, the annotation should be retained until a holdase
+      NTR is created. GO:0044183 is the best available interim replacement, though imperfect
+      because CRYAA does not assist in protein folding per se.
+    proposed_replacement_terms:
+      - id: GO:0044183
+        label: protein folding chaperone
+    supported_by:
+      - reference_id: PMID:7487869
+        supporting_text: &gt;-
+          alpha-Crystallin, the major protein of the ocular lens, acts as a molecular chaperone
+          by preventing the thermal aggregation of proteins
+- term:
+    id: GO:0002088
+    label: lens development in camera-type eye
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for lens development in camera-type eye. CRYAA is the most abundantly
+      expressed protein in the ocular lens. UniProt describes it as contributing to
+      transparency and refractive index of the lens (PMID:20440841). The IBA annotation is
+      phylogenetically appropriate for crystallin family members involved in lens development.
+    action: ACCEPT
+    reason: &gt;-
+      CRYAA is a core lens protein essential for normal lens development. UniProt documents
+      its role in lens transparency and refractive index. Mutations in mammalian CRYAA
+      consistently cause cataracts. The IBA is well justified.
+- term:
+    id: GO:0005212
+    label: structural constituent of eye lens
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for structural constituent of eye lens. This is one of the most
+      appropriate terms for CRYAA. UniProt states it &#34;Contributes to the transparency and
+      refractive index of the lens&#34; (PMID:20440841). The IEA mapping is accurate and
+      captures a core function.
+    action: ACCEPT
+    reason: &gt;-
+      CRYAA is the defining structural constituent of the eye lens. This is a core function
+      annotation. UniProt documents its contribution to lens transparency and refractive
+      index.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for nucleus based on ortholog mapping. Consistent with the IBA and ISS
+      annotations for the same term. Nuclear localization is stress-induced (heat shock)
+      rather than constitutive.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with IBA and ISS evidence. Nuclear localization is stress-dependent and
+      secondary. Marked as non-core.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for cytoplasm from ortholog mapping. Consistent with IBA and IDA
+      annotations for the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasm is the primary constitutive localization of CRYAA. Consistent with IBA
+      and IDA (PMID:7487869) annotations.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation for metal ion binding from UniProt keyword mapping. UniProt documents
+      that bovine CRYAA binds zinc ions via His-100, Glu-102, His-107, and His-154, with
+      inter-subunit bridging via zinc enhancing oligomer stability (PMID:20440841). This
+      is a generic term; GO:0008270 &#34;zinc ion binding&#34; would be more specific.
+    action: MODIFY
+    reason: &gt;-
+      Metal ion binding is too generic. The specific metal is zinc, which is important for
+      oligomer stability (PMID:20440841). GO:0008270 &#34;zinc ion binding&#34; would be more
+      informative.
+    proposed_replacement_terms:
+      - id: GO:0008270
+        label: zinc ion binding
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19651604
+  review:
+    summary: &gt;-
+      IPI annotation for protein binding from PMID:19651604. This study analyzed quaternary
+      structures of alpha-crystallins and showed that alphaA-crystallin forms defined
+      oligomers of 24 subunits as well as smaller oligomers and large clusters. The
+      interaction partner listed is CRYAB (P02510), consistent with hetero-oligomerization.
+      &#34;Protein binding&#34; is uninformative.
+    action: MODIFY
+    reason: &gt;-
+      &#34;Protein binding&#34; is too vague. The interactions documented are homo- and hetero-
+      oligomerization relevant to CRYAA structural and chaperone function. GO:0042802
+      &#34;identical protein binding&#34; captures the self-interaction, and the hetero-oligomerization
+      with CRYAB is intrinsic to crystallin complex formation.
+    proposed_replacement_terms:
+      - id: GO:0042802
+        label: identical protein binding
+    supported_by:
+      - reference_id: PMID:19651604
+        supporting_text: &gt;-
+          alphaA-Crystallin forms, in addition to complexes of 24 subunits, also smaller
+          oligomers and large clusters consisting of individual oligomers
+- term:
+    id: GO:0005198
+    label: structural molecule activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IEA annotation for structural molecule activity from Ensembl ortholog mapping. CRYAA
+      is a major structural protein of the eye lens. While correct, the more specific child
+      term GO:0005212 &#34;structural constituent of eye lens&#34; is already annotated and is more
+      informative.
+    action: MODIFY
+    reason: &gt;-
+      Structural molecule activity is correct but too broad. The more specific child term
+      GO:0005212 &#34;structural constituent of eye lens&#34; is already annotated and better
+      captures the actual function.
+    proposed_replacement_terms:
+      - id: GO:0005212
+        label: structural constituent of eye lens
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IEA annotation for nucleoplasm from Ensembl ortholog mapping. Consistent with the
+      stress-induced nuclear translocation documented for the human ortholog. CRYAA
+      translocates to SC35 speckles during heat shock (by similarity). This is a secondary,
+      stress-dependent localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Nucleoplasm localization is stress-dependent (heat shock). Consistent with the
+      nuclear localization annotations. Non-core secondary localization.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IEA annotation for cytosol from Ensembl ortholog mapping. CRYAA is a soluble
+      cytoplasmic protein that exists free in the cytosol as oligomeric complexes. Consistent
+      with the IDA evidence for cytoplasm (PMID:7487869).
+    action: ACCEPT
+    reason: &gt;-
+      Cytosol is the primary location of CRYAA where it exists as soluble oligomeric
+      complexes. Consistent with IDA cytoplasm annotation.
+- term:
+    id: GO:0007601
+    label: visual perception
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IEA annotation for visual perception from Ensembl ortholog mapping. CRYAA is essential
+      for lens transparency, and mutations in orthologous genes cause cataracts that impair
+      vision. However, CRYAA does not directly participate in the visual perception signaling
+      pathway (phototransduction). It maintains lens structural integrity through which
+      light passes.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      CRYAA maintains lens transparency but does not participate in the visual perception
+      signaling pathway. The connection to visual perception is indirect. GO:0002088 &#34;lens
+      development in camera-type eye&#34; and GO:0005212 &#34;structural constituent of eye lens&#34;
+      better capture the actual role. Consistent with the human CRYAA review assessment.
+- term:
+    id: GO:0032387
+    label: negative regulation of intracellular transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IEA annotation for negative regulation of intracellular transport from Ensembl ortholog
+      mapping. This is propagated from human CRYAA where it was demonstrated that alpha-
+      crystallins prevent translocation of Bax and Bcl-X(S) from cytosol to mitochondria
+      during apoptosis (PMID:14752512 in human CRYAA review). This is a secondary, non-core
+      function tied to anti-apoptotic activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation reflects anti-apoptotic activity (preventing mitochondrial translocation
+      of Bax/Bcl-X(S)), which is a secondary function. Well supported by human ortholog
+      data but not the core function of CRYAA.
+- term:
+    id: GO:0032991
+    label: protein-containing complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IEA annotation for protein-containing complex from Ensembl ortholog mapping. CRYAA
+      forms large homo- and hetero-oligomeric complexes. UniProt documents heteromers of
+      3 CRYAA : 1 CRYAB subunits, homodimers, homotetramers, and larger homo-oligomers
+      (PMID:20440841). Consistent with the crystal structure data and oligomerization studies.
+    action: ACCEPT
+    reason: &gt;-
+      CRYAA forms large oligomeric complexes as a core feature of its biology. The
+      annotation is correct. Oligomeric complex formation is essential for both structural
+      and chaperone functions (PMID:20440841, PMID:19651604).
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IEA annotation for identical protein binding from Ensembl ortholog mapping. CRYAA
+      homo-oligomerization is well established: UniProt documents homodimers and homotetramers
+      as building blocks of larger homo-oligomers (PMID:20440841). The crystal structure
+      shows zinc-mediated inter-subunit contacts.
+    action: ACCEPT
+    reason: &gt;-
+      CRYAA homo-oligomerization is a core property essential for both structural and
+      chaperone functions. Well supported by crystallographic data (PMID:20440841) and
+      biophysical studies (PMID:19651604).
+- term:
+    id: GO:0043066
+    label: negative regulation of apoptotic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IEA annotation for negative regulation of apoptotic process from Ensembl ortholog
+      mapping. Consistent with the IBA annotation for the same term. Anti-apoptotic activity
+      is a secondary function of CRYAA.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with IBA annotation. Anti-apoptotic activity is a well-documented but
+      secondary function compared to core structural and chaperone holdase roles.
+- term:
+    id: GO:0050821
+    label: protein stabilization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IEA annotation for protein stabilization from Ensembl ortholog mapping. GO:0050821
+      is defined as &#34;any process involved in maintaining the structure and integrity of a
+      protein and preventing it from degradation or aggregation.&#34; This is an excellent fit
+      for CRYAA holdase activity -- it prevents aggregation of denatured proteins. In the
+      human CRYAA review, this was accepted as a core BP annotation.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0050821 accurately describes the core holdase function of CRYAA: preventing
+      aggregation and maintaining protein integrity. Bovine alpha-crystallin prevents thermal
+      aggregation of proteins (PMID:7487869). This is one of the most appropriate BP terms
+      for CRYAA holdase chaperone activity.
+    supported_by:
+      - reference_id: PMID:7487869
+        supporting_text: &gt;-
+          alpha-Crystallin, the major protein of the ocular lens, acts as a molecular chaperone
+          by preventing the thermal aggregation of proteins
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IEA annotation for unfolded protein binding from Ensembl ortholog mapping. GO:0051082
+      is proposed for obsoletion (go-ontology#30962). Consistent with the IBA and IDA
+      annotations for the same term. Per UPB project rules, holdase proteins should retain
+      GO:0051082 until a holdase NTR is created.
+    action: MODIFY
+    reason: &gt;-
+      GO:0051082 is being obsoleted. Consistent with the IBA and IDA annotations. Per UPB
+      project rules, the annotation should be retained until a holdase NTR is created.
+    proposed_replacement_terms:
+      - id: GO:0044183
+        label: protein folding chaperone
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation for nucleus from GO_REF:0000024, transferred from human CRYAA
+      (P02489). The human ortholog translocates to SC35 splicing speckles during heat shock.
+      This is a stress-induced secondary localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with IBA and IEA annotations for nuclear localization. Stress-induced
+      secondary localization transferred from human ortholog.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:7487869
+  review:
+    summary: &gt;-
+      IDA annotation for cytoplasm from PMID:7487869. This study used purified bovine
+      alpha-crystallin from lens extracts. Alpha-crystallin is a soluble cytoplasmic protein
+      in lens fiber cells. The purification from cytoplasmic lens extracts confirms
+      cytoplasmic localization.
+    action: ACCEPT
+    reason: &gt;-
+      Direct evidence from purification of alpha-crystallin from bovine lens cytoplasmic
+      extracts (PMID:7487869). Cytoplasm is the primary constitutive location.
+- term:
+    id: GO:0042026
+    label: protein refolding
+  evidence_type: IDA
+  original_reference_id: PMID:7487869
+  negated: true
+  review:
+    summary: &gt;-
+      NOT annotation for protein refolding from PMID:7487869. This is a critical annotation
+      that explicitly states bovine alpha-crystallin does NOT perform protein refolding.
+      PMID:7487869 demonstrated that &#34;alpha-crystallin has substrate specificity different
+      from other chaperones and recognizes specific non-native intermediates formed on the
+      denaturation pathway only, with no affinity for intermediates formed on the refolding
+      pathway.&#34; This establishes that alpha-crystallin is a holdase, not a foldase: it binds
+      proteins during denaturation to prevent aggregation but does not assist in refolding.
+    action: ACCEPT
+    reason: &gt;-
+      This NOT annotation is critical for understanding CRYAA as a holdase. PMID:7487869
+      directly demonstrated that alpha-crystallin has no affinity for refolding intermediates,
+      only denaturation intermediates. This distinguishes holdase from foldase activity and
+      is the key evidence for the holdase classification used in the UPB project.
+    supported_by:
+      - reference_id: PMID:7487869
+        supporting_text: &gt;-
+          alpha-crystallin has substrate specificity different from other chaperones and
+          recognizes specific non-native intermediates formed on the denaturation pathway only,
+          with no affinity for intermediates formed on the refolding pathway
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:7487869
+  review:
+    summary: &gt;-
+      IDA annotation for unfolded protein binding from PMID:7487869. GO:0051082 is proposed
+      for obsoletion (go-ontology#30962). This study directly demonstrated that bovine
+      alpha-crystallin binds to non-native intermediates formed during protein denaturation,
+      preventing their aggregation. The key finding is that alpha-crystallin &#34;recognizes
+      specific non-native intermediates formed on the denaturation pathway only&#34; -- this is
+      holdase activity. Per UPB project rules, holdase proteins should retain GO:0051082
+      until a dedicated holdase NTR is created.
+    action: MODIFY
+    reason: &gt;-
+      GO:0051082 is being obsoleted. The IDA evidence from PMID:7487869 clearly demonstrates
+      holdase chaperone activity: bovine alpha-crystallin binds denaturation intermediates
+      to prevent aggregation but does not refold proteins. GO:0044183 &#34;protein folding
+      chaperone&#34; is the best available interim replacement, though imperfect because CRYAA
+      specifically does NOT assist in protein folding. A holdase-specific NTR is needed.
+      Per UPB project rules, retain GO:0051082 until holdase NTR is created.
+    proposed_replacement_terms:
+      - id: GO:0044183
+        label: protein folding chaperone
+    supported_by:
+      - reference_id: PMID:7487869
+        supporting_text: &gt;-
+          alpha-crystallin has substrate specificity different from other chaperones and
+          recognizes specific non-native intermediates formed on the denaturation pathway only,
+          with no affinity for intermediates formed on the refolding pathway
+      - reference_id: PMID:7487869
+        supporting_text: &gt;-
+          alpha-Crystallin, the major protein of the ocular lens, acts as a molecular chaperone
+          by preventing the thermal aggregation of proteins
+core_functions:
+- molecular_function:
+    id: GO:0044183
+    label: protein folding chaperone
+  description: &gt;-
+    Bovine CRYAA is a small heat shock protein that functions as an ATP-independent holdase
+    chaperone. It prevents thermal aggregation of proteins by binding to non-native
+    intermediates formed on the denaturation pathway, but has no affinity for intermediates
+    on the refolding pathway (PMID:7487869). This is holdase, not foldase, activity.
+    A holdase-specific NTR is needed; GO:0044183 is an interim annotation.
+  directly_involved_in:
+    - id: GO:0050821
+      label: protein stabilization
+    - id: GO:0009408
+      label: response to heat
+  locations:
+    - id: GO:0005829
+      label: cytosol
+  supported_by:
+    - reference_id: PMID:7487869
+      supporting_text: &gt;-
+        alpha-Crystallin, the major protein of the ocular lens, acts as a molecular chaperone
+        by preventing the thermal aggregation of proteins
+    - reference_id: PMID:7487869
+      supporting_text: &gt;-
+        alpha-crystallin has substrate specificity different from other chaperones and
+        recognizes specific non-native intermediates formed on the denaturation pathway only,
+        with no affinity for intermediates formed on the refolding pathway
+- molecular_function:
+    id: GO:0005212
+    label: structural constituent of eye lens
+  description: &gt;-
+    Bovine CRYAA is the most abundant soluble protein in the eye lens, contributing to
+    transparency and refractive index. It forms heteromeric complexes with CRYAB (3:1 ratio),
+    with zinc-mediated inter-subunit bridging enhancing stability (PMID:20440841). The
+    structural role is essential as there is no protein turnover in the lens.
+  directly_involved_in:
+    - id: GO:0002088
+      label: lens development in camera-type eye
+  locations:
+    - id: GO:0005829
+      label: cytosol
+  supported_by:
+    - reference_id: PMID:19651604
+      supporting_text: &gt;-
+        alphaA-Crystallin forms, in addition to complexes of 24 subunits, also smaller
+        oligomers and large clusters consisting of individual oligomers
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:19651604
+  title: The eye lens chaperone alpha-crystallin forms defined globular assemblies.
+  findings: []
+- id: PMID:20440841
+  title: Crystal structures of truncated alphaA and alphaB crystallins reveal structural
+    mechanisms of polydispersity important for eye lens function.
+  findings: []
+- id: PMID:7487869
+  title: On the substrate specificity of alpha-crystallin as a molecular chaperone.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -241,6 +241,58 @@ def replace_gene_symbols(
     return result, warnings
 
 
+def link_go_ids(
+    content: str,
+    base_url: str = "http://amigo.geneontology.org/amigo/term/",
+) -> str:
+    """Replace bare GO IDs in markdown with links to AmiGO.
+
+    Only links GO IDs that are not already inside markdown links ``[...](...)``
+    or inline code backticks.
+
+    Args:
+        content: Markdown content to process
+        base_url: URL prefix for GO term links
+
+    Returns:
+        Content with bare GO IDs converted to markdown links
+
+    >>> link_go_ids("GO:0051082 is important")
+    '[GO:0051082](http://amigo.geneontology.org/amigo/term/GO:0051082) is important'
+
+    >>> link_go_ids("[GO:0051082](http://example.com)")
+    '[GO:0051082](http://example.com)'
+
+    >>> link_go_ids("`GO:0051082`")
+    '`GO:0051082`'
+
+    >>> link_go_ids("uses GO:0044183 and GO:0051082")
+    'uses [GO:0044183](http://amigo.geneontology.org/amigo/term/GO:0044183) and [GO:0051082](http://amigo.geneontology.org/amigo/term/GO:0051082)'
+
+    >>> link_go_ids("[already linked GO:0051082](some-url) but GO:0044183 is bare")
+    '[already linked GO:0051082](some-url) but [GO:0044183](http://amigo.geneontology.org/amigo/term/GO:0044183) is bare'
+    """
+    # Match (in priority order):
+    # 1. Fenced code blocks ```...``` — preserve
+    # 2. Inline code `...` — preserve
+    # 3. Markdown links [...](...) — preserve
+    # 4. Bare GO:NNNNNNN — replace with link
+    pattern = (
+        r'(?P<fenced>```.*?```)'
+        r'|(?P<code>`[^`]*`)'
+        r'|(?P<link>\[[^\]]*\]\([^)]*\))'
+        r'|(?P<go_id>GO:\d{7})'
+    )
+
+    def _replace(match: re.Match) -> str:
+        if match.group('go_id'):
+            go_id = match.group('go_id')
+            return f"[{go_id}]({base_url}{go_id})"
+        return match.group(0)
+
+    return re.sub(pattern, _replace, content, flags=re.DOTALL)
+
+
 def process_markdown_content(content: str) -> str:
     """Convert markdown content to HTML with useful extensions.
 
@@ -293,6 +345,9 @@ def process_markdown_content(content: str) -> str:
         processed
     )
 
+    # Enable markdown processing inside HTML blocks like <details>
+    processed = processed.replace('<details>', '<details markdown="1">')
+
     # Convert markdown to HTML
     md = markdown.Markdown(extensions=[
         'tables',
@@ -302,6 +357,7 @@ def process_markdown_content(content: str) -> str:
         'attr_list',
         'def_list',
         'nl2br',
+        'md_in_html',
     ])
 
     return md.convert(processed)
@@ -349,6 +405,9 @@ def render_project(
         species_hints=species_hints,
         base_path="../../genes",
     )
+
+    # Auto-link bare GO IDs
+    linked_content = link_go_ids(linked_content)
 
     # Convert to HTML
     html_content = process_markdown_content(linked_content)

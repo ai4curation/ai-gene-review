@@ -1,0 +1,3638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSP26 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HSP26</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P15992" target="_blank" class="term-link">
+                        P15992
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HSP26";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P15992" data-a="DESCRIPTION: HSP26 is the sole small heat shock protein (sHSP) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HSP26 is the sole small heat shock protein (sHSP) of Saccharomyces cerevisiae, belonging to the conserved HSP20/alpha-crystallin superfamily. It functions as a temperature-regulated molecular chaperone with holdase activity: at heat shock temperatures, the 24-mer oligomeric storage complex dissociates, and the resulting smaller species bind non-native proteins to prevent their irreversible aggregation (PMID:10581247). This holdase activity is ATP-independent and mechanistically distinct from foldase chaperones (e.g., HSP70, GroEL). HSP26 does not actively refold substrates or escort them between compartments; rather, it maintains client proteins in a soluble, folding-competent state in situ until ATP-dependent chaperones (HSP70/HSP104) can mediate refolding. HSP26 forms large oligomeric complexes (&gt;500 kD) and is induced by heat shock and other stress conditions. Its intracellular localization (cytoplasm vs. nucleus) varies with the metabolic state of the cell (PMID:2645298). HSP26 also localizes to stress granules during severe heat stress (PMID:24291094). Unexpectedly, Hsp26 was identified as a novel RNA-binding protein that co-purifies with a small set of specific mRNAs (PMID:20844764), though this activity is likely moonlighting rather than a core function.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>holdase chaperone activity</h3>
+                <span class="vote-buttons" data-g="P15992" data-a="holdase chaperone activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Binding to an unfolded or misfolded protein to prevent its aggregation without actively catalyzing refolding. The holdase maintains the client protein in a soluble, folding-competent state. This is mechanistically distinct from foldase activity (GO:0044183) and from carrier- holdase activity (GO:0140309).</p>
+            
+
+            
+            <p><strong>Justification:</strong> HSP26 and other sHSPs (CRYAA, CRYAB, HSPB6 in human) are canonical in-situ holdases that cannot be properly annotated with existing GO terms. GO:0051082 is proposed for obsoletion, GO:0044183 implies active refolding, and GO:0140309 is carrier-specific. See UPB project and go-ontology#30552.</p>
+            
+
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link">
+                        PMID:10581247
+                    </a>
+                    
+                    
+                    : Several sHsps have been shown to exhibit chaperone activity and protect proteins from irreversible aggregation in vitro. Here we show that Hsp26, an sHsp from Saccharomyces cerevisiae, is a temperature-regulated molecular chaperone.
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0006457" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from ARBA machine learning models mapping HSP26 to protein folding. HSP26 is an sHSP holdase that prevents aggregation of unfolded proteins but does not actively assist protein folding (refolding requires the HSP70/HSP104 disaggregase system). The term &#34;protein folding&#34; (GO:0006457) implies active assistance in acquiring correct tertiary structure, which does not match HSP26 holdase mechanism. However, this IEA is broader than the IDA annotation for the same term (see below), and both share the same concern.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HSP26 is a holdase, not a foldase. It prevents aggregation of non-native proteins but does not actively catalyze protein folding. The GO:0006457 definition states &#34;assisting in the covalent and noncovalent assembly of single chain polypeptides or multisubunit complexes into the correct tertiary structure,&#34; which better describes ATP-dependent foldase chaperones like GroEL/ES or HSP70. HSP26 maintains substrates in a folding-competent state for later refolding by other chaperones. The IEA mapping is too generous here. A more appropriate BP annotation would be to a process term reflecting prevention of protein aggregation under stress.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link">
+                                        PMID:10581247
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hsp26, an sHsp from Saccharomyces cerevisiae, is a temperature-regulated molecular chaperone. Like other sHsps, Hsp26 forms large oligomeric complexes. At heat shock temperatures, however, the 24mer chaperone complex dissociates. ... Binding of non-native proteins to dissociated Hsp26 produces large globular assemblies</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16429126" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16429126
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteome survey reveals modularity of the yeast cell machine...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0005515" data-r="PMID:16429126" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding annotation from the Gavin et al. (2006) large-scale TAP-tag affinity purification/mass spectrometry study of yeast protein complexes. HSP26 was identified as co-purifying with SSA2 (P10592) and VMA2 (P16140) in this study. While HSP26 does physically interact with proteins (both substrates and other chaperones), GO:0005515 &#34;protein binding&#34; is uninformative and does not capture the mechanistic nature of these interactions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 &#34;protein binding&#34; is too vague. For a chaperone like HSP26, the relevant molecular function is its holdase activity -- binding unfolded/misfolded proteins to prevent aggregation. The interactions detected in large-scale co-purification studies may reflect chaperone-substrate relationships (e.g., with SSA2, an HSP70 family member) or other associations. A more informative annotation would capture the holdase mechanism. Per curation guidelines, &#34;protein binding&#34; should be avoided in favor of more specific terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16429126" target="_blank" class="term-link">
+                                        PMID:16429126
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Protein complexes are key molecular entities that integrate multiple gene products to perform cellular functions. Here we report the first genome-wide screen for complexes in an organism, budding yeast, using affinity purification and mass spectrometry.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16554755" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16554755
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global landscape of protein complexes in the yeast Saccharom...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0005515" data-r="PMID:16554755" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding annotation from Krogan et al. (2006) large-scale TAP-tag study of yeast protein complexes. Multiple interaction partners were detected (ADH3, EMW1, FUS3, NEW1, POL32, RNR1, RTT101, SGV1, SME1, TFB4, UPC2, VMA2). As a chaperone, HSP26 is expected to interact with many proteins, but GO:0005515 does not meaningfully describe the nature of these interactions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same rationale as above. GO:0005515 is uninformative for a chaperone. Many of these interaction partners may represent chaperone substrates or indirect associations from large-scale co-purification. HSP26 was classified as a &#34;specific chaperone&#34; with fewer than 200 non-chaperone interactors in the comprehensive chaperone atlas (PMID:19536198), consistent with its selective holdase function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19536198" target="_blank" class="term-link">
+                                        PMID:19536198
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the specific chaperones are (ordered from low to high number of interactors): Hsp32, Sno4, Hsp33, Tim14, Mdj2, Jac1, Cwc23, Jid1, Mcx1, Mdj1, Jjj2, Hlj1, Jjj3, Erj5, Ssc3, Kar2, Lhs1, Hsp26, Jem1, Jjj1, Xdj1, Hsp12, Hsp60</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19536198" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19536198
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An atlas of chaperone-protein interactions in Saccharomyces ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0005515" data-r="PMID:19536198" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding annotation from Gong et al. (2009), a comprehensive TAP-tag based chaperone interaction atlas covering all 63 yeast chaperones. HSP26 was classified as a &#34;specific chaperone&#34; with fewer than 200 interactors. Multiple interaction partners were detected. This study provides excellent systems-level context for HSP26 as a chaperone but GO:0005515 remains uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 does not capture the chaperone-substrate nature of these interactions. This study specifically characterizes HSP26 as a molecular chaperone with selective substrate binding. A more specific MF term reflecting holdase activity would be more appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19536198" target="_blank" class="term-link">
+                                        PMID:19536198
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Molecular chaperones are defined as a group of highly interactive proteins that modulate the folding and unfolding of other proteins ... We expect that most of the chaperone interactors represent putative substrates whose conformational stability is modulated by molecular chaperones</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16843901" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16843901
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multiple distinct assemblies reveal conformational flexibili...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0042802" data-r="PMID:16843901" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Identical protein binding annotation based on White et al. (2006), which used cryo-EM to characterize Hsp26 oligomeric assemblies. The study demonstrated that Hsp26 forms 24-subunit assemblies with tetrahedral symmetry, composed of asymmetric dimers, confirming self-association. This homo-oligomerization is integral to Hsp26 chaperone function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HSP26 homo-oligomerization is well-established and functionally critical. The 24-mer complex is the storage form that dissociates at heat shock temperatures to become the active holdase species. The cryo-EM structural data directly demonstrates identical protein binding through dimer and trimer contacts. While GO:0042802 is somewhat generic, it correctly captures the self-association that is a defining structural feature of sHSPs.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16843901" target="_blank" class="term-link">
+                                        PMID:16843901
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cryo-electron microscopy of yeast Hsp26 reveals two distinct forms, each comprising 24 subunits arranged in a porous shell with tetrahedral symmetry. The subunits form elongated, asymmetric dimers that assemble via trimeric contacts.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link">
+                                        PMID:10581247
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Like other sHsps, Hsp26 forms large oligomeric complexes. At heat shock temperatures, however, the 24mer chaperone complex dissociates.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18719252" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18719252
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High-quality binary protein interaction map of the yeast int...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0042802" data-r="PMID:18719252" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Identical protein binding annotation from Yu et al. (2008), a high-quality binary yeast interactome study. HSP26-HSP26 self-interaction was detected, consistent with the known oligomeric nature of Hsp26.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This binary interaction study independently confirms HSP26 homo-oligomerization, which is consistent with the well-characterized 24-mer structure from cryo-EM (PMID:16843901). Duplicate evidence for the same GO term is appropriate when from independent experimental sources.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16843901" target="_blank" class="term-link">
+                                        PMID:16843901
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cryo-electron microscopy of yeast Hsp26 reveals two distinct forms, each comprising 24 subunits arranged in a porous shell with tetrahedral symmetry.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010494" target="_blank" class="term-link">
+                                    GO:0010494
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic stress granule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26777405" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26777405
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ATPase-Modulated Stress Granules Contain a Diverse Proteome ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0010494" data-r="PMID:26777405" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation from Jain et al. (2016) large-scale proteomic analysis of stress granule cores. This study used super-resolution microscopy and mass spectrometry to characterize stress granule composition, identifying molecular chaperones as conserved stress granule components.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Stress granule localization is consistent with HSP26 function as a stress-responsive chaperone. The Jain et al. study is a rigorous proteomic analysis of stress granule composition, and the finding is independently supported by direct IDA evidence from Cherkasov et al. (PMID:24291094), which showed heat stress granules contain molecular chaperones that coassemble with aggregates of misfolded proteins.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26777405" target="_blank" class="term-link">
+                                        PMID:26777405
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Proteomic analysis of stress granule cores reveals a dense network of protein-protein interactions and links between stress granules and human diseases and identifies ATP-dependent helicases and protein remodelers as conserved stress granule components.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24769239" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24769239
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative variations of the mitochondrial proteome and ph...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0005739" data-r="PMID:24769239" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation from Renvoise et al. (2014) quantitative mitochondrial proteomics study. HSP26 was detected in isolated mitochondrial fractions by mass spectrometry. However, HSP26 is primarily a cytoplasmic protein, and mitochondrial detection in large-scale proteomics may reflect contamination or transient association rather than bona fide mitochondrial localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HSP26 is primarily cytoplasmic and nuclear (PMID:2645298), with stress granule localization under heat stress. Detection in mitochondrial fractions from a quantitative proteomics study could represent genuine low-level mitochondrial association (e.g., chaperoning mitochondrial surface proteins during stress) or co-purification artifact. UniProt does not list mitochondrial localization. This is not a core localization but may represent a minor or transient association, so it should be kept as non-core rather than removed.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24769239" target="_blank" class="term-link">
+                                        PMID:24769239
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Label free quantitative analysis of protein accumulation revealed significant variation of 176 mitochondrial proteins</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2645298" target="_blank" class="term-link">
+                                        PMID:2645298
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">When log-phase cells growing in glucose were heat shocked, hsp26 concentrated in nuclei ... in early stationary-phase cells hsp26 is induced at normal growth temperatures. This protein was generally distributed throughout the cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11914276" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11914276
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Subcellular localization of the yeast proteome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0005737" data-r="PMID:11914276" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation from Kumar et al. (2002) proteome-wide subcellular localization study using epitope-tagged proteins and immunolocalization. HSP26 was detected in the cytoplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is well-established for HSP26 and is its primary localization. This is confirmed by multiple independent studies including direct IDA evidence (PMID:2645298) and the UniProt record. The large-scale localization study provides additional support.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11914276" target="_blank" class="term-link">
+                                        PMID:11914276
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here, we report the first proteome-scale analysis of protein localization within any eukaryote. ... we have determined the subcellular localization of 2744 yeast proteins.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2645298" target="_blank" class="term-link">
+                                        PMID:2645298
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">in early stationary-phase cells hsp26 is induced at normal growth temperatures. This protein was generally distributed throughout the cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010494" target="_blank" class="term-link">
+                                    GO:0010494
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic stress granule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24291094" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24291094
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Coordination of translational control and protein homeostasi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0010494" data-r="PMID:24291094" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Cherkasov et al. (2013), which demonstrated that yeast heat stress granules contain molecular chaperones and coassemble with aggregates of misfolded proteins. The study showed that heat-SG disassembly requires Hsp104 and Hsp70 activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence for HSP26 localization to stress granules during severe heat stress. This is mechanistically coherent with HSP26 holdase function, as stress granules form under conditions where protein aggregation occurs and translation is inhibited. The colocalization with misfolded protein aggregates is especially relevant to HSP26 chaperone activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24291094" target="_blank" class="term-link">
+                                        PMID:24291094
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">both S. cerevisiae and D. melanogaster heat-SGs contain mRNA, translation machinery components (excluding ribosomes), and molecular chaperones and that heat-SGs coassemble with aggregates of misfolded, heat-labile proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034605" target="_blank" class="term-link">
+                                    GO:0034605
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to heat</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10581247
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hsp26: a temperature-regulated chaperone.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0034605" data-r="PMID:10581247" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Haslbeck et al. (1999), the seminal study demonstrating HSP26 is a temperature-regulated chaperone. The study showed that Hsp26 chaperone activity is temperature-dependent: the 24-mer dissociates at heat shock temperatures, and this dissociation is a prerequisite for efficient chaperone activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HSP26 is one of the major proteins produced on heat shock (UniProt) and its chaperone activity is directly activated by elevated temperature through oligomer dissociation. This is a core biological process for HSP26 -- it is a heat shock protein whose functional activation is temperature-regulated. The evidence directly demonstrates temperature-dependent functional changes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link">
+                                        PMID:10581247
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hsp26, an sHsp from Saccharomyces cerevisiae, is a temperature-regulated molecular chaperone. ... the dissociation of the Hsp26 complex at heat shock temperatures is a prerequisite for efficient chaperone activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003729" target="_blank" class="term-link">
+                                    GO:0003729
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20844764" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20844764
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteome-wide search reveals unexpected RNA-binding proteins...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0003729" data-r="PMID:20844764" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Tsvetanova et al. (2010), a proteome-wide search for RNA-binding proteins using protein microarrays and IP-microarray validation. HSP26 was identified as a novel RBP that co-purified with 279 specific mRNAs (FDR less than 0.01%). The study describes HSP26 as a &#34;chaperone; heat shock response&#34; protein and notes it &#34;co-purified with smaller sets of mRNAs, but these small sets of putative mRNA targets shared distinct functional and/or cytotopical themes.&#34; HSP26 lacks any known RNA-binding domain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the experimental evidence is sound (validated by IP-microarray with replicate experiments and stringent FDR cutoffs), mRNA binding is likely a moonlighting activity rather than a core function of HSP26. HSP26 lacks canonical RNA-binding domains, and the authors themselves describe it among &#34;unexpected&#34; RNA-binding proteins. The primary function of HSP26 is as a holdase chaperone for unfolded proteins. The mRNA binding may reflect the broad substrate-binding properties of chaperones, or a secondary regulatory role. Many chaperones have been found to associate with RNA in proteome-wide screens.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20844764" target="_blank" class="term-link">
+                                        PMID:20844764
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Other candidate RBPs (Vtc1, Arc15, Hsp26, Arp8, Gis2) co-purified with smaller sets of mRNAs, but these small sets of putative mRNA targets shared distinct functional and/or cytotopical themes, increasing our confidence that the RNA-protein interactions we observed were genuine.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2645298" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2645298
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The intracellular location of yeast heat-shock protein 26 va...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0005634" data-r="PMID:2645298" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Rossi and Lindquist (1989), which showed that HSP26 intracellular localization varies with the metabolic state of the cell. In log-phase cells growing in glucose after heat shock, HSP26 concentrated in nuclei. However, this nuclear concentration was condition-dependent and did not occur in cells grown in galactose or acetate, or in mitochondrial mutants.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization of HSP26 is condition-dependent rather than constitutive. HSP26 concentrates in nuclei only in log-phase glucose-grown cells after heat shock; under other metabolic conditions it remains generally distributed throughout the cell. This represents a conditional localization rather than a core cellular component, so it should be retained but marked as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2645298" target="_blank" class="term-link">
+                                        PMID:2645298
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">When log-phase cells growing in glucose were heat shocked, hsp26 concentrated in nuclei and continued to concentrate in nuclei when these cells were returned to normal temperatures for recovery. However, hsp26 did not concentrate in nuclei under a variety of other conditions.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2645298" target="_blank" class="term-link">
+                                        PMID:2645298
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We conclude that the intracellular location of hsp26 in yeast depends upon the physiological state of the cell and not simply upon the presence or absence of heat stress.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2645298" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2645298
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The intracellular location of yeast heat-shock protein 26 va...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0005737" data-r="PMID:2645298" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Rossi and Lindquist (1989) demonstrating cytoplasmic localization of HSP26. The protein was generally distributed throughout the cytoplasm, particularly in stationary-phase cells and under most metabolic conditions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is the primary and constitutive localization of HSP26. Under most physiological conditions, HSP26 is distributed throughout the cytoplasm. This is the core cellular component for HSP26 function as a cytoplasmic holdase chaperone.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2645298" target="_blank" class="term-link">
+                                        PMID:2645298
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">in early stationary-phase cells hsp26 is induced at normal growth temperatures. This protein was generally distributed throughout the cells, even after heat shock.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10581247
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hsp26: a temperature-regulated chaperone.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0006457" data-r="PMID:10581247" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Haslbeck et al. (1999) based on in vitro chaperone assays demonstrating that Hsp26 protects proteins from irreversible aggregation. The term &#34;protein folding&#34; is applied here, but the actual experimental evidence shows holdase activity (aggregation prevention), not active refolding. sHSPs maintain substrates in a folding-competent state but require HSP70/HSP104 for actual refolding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The experimental evidence in PMID:10581247 demonstrates that HSP26 prevents irreversible aggregation of non-native proteins. This is holdase activity, not protein folding per se. GO:0006457 &#34;protein folding&#34; implies active assistance in acquiring correct tertiary structure, which better describes ATP-dependent foldases. HSP26 functions upstream of refolding by maintaining substrates in a soluble, folding-competent state. A more accurate BP annotation would be &#34;chaperone-mediated protein complex assembly&#34; (GO:0051131) or ideally a BP term for &#34;prevention of protein aggregation,&#34; though no such specific term currently exists. As an interim measure, &#34;protein folding&#34; is overly generous but not entirely wrong since HSP26 participates in the broader proteostasis pathway that includes folding.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051131" target="_blank" class="term-link">
+                                    chaperone-mediated protein complex assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link">
+                                        PMID:10581247
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Several sHsps have been shown to exhibit chaperone activity and protect proteins from irreversible aggregation in vitro. ... Binding of non-native proteins to dissociated Hsp26 produces large globular assemblies ... In this complex one monomer of substrate is bound per Hsp26 dimer.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10581247
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hsp26: a temperature-regulated chaperone.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P15992" data-a="GO:0051082" data-r="PMID:10581247" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Haslbeck et al. (1999), the key study demonstrating HSP26 chaperone activity. The study showed that at heat shock temperatures, Hsp26 24-mer dissociates and the resulting active species binds non-native proteins, forming large chaperone-substrate complexes with a 1:2 substrate:Hsp26 stoichiometry. This is canonical holdase activity: binding unfolded/misfolded proteins to prevent their irreversible aggregation, without actively catalyzing refolding. HSP26 is ATP-independent and does not escort substrates between cellular compartments. Per the UPB project, GO:0051082 is proposed for obsoletion (go-ontology#30962). The appropriate replacement is a general &#34;holdase chaperone activity&#34; NTR. GO:0140309 &#34;unfolded protein carrier activity&#34; does NOT fit because it was created specifically for TIM carrier-holdases that escort proteins between compartments (go-ontology#30552), and HSP26 is an in-situ holdase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HSP26 is a canonical in-situ holdase chaperone. GO:0051082 &#34;unfolded protein binding&#34; is proposed for obsoletion and is too vague -- it is a binding term that does not distinguish holdase from foldase from sensor mechanisms. The best replacement would be the proposed &#34;holdase chaperone activity&#34; NTR (an activity term for ATP-independent prevention of protein aggregation in situ). GO:0140309 &#34;unfolded protein carrier activity&#34; does NOT fit because (1) its definition requires escort &#34;between two different cellular components,&#34; (2) it is a child of GO:0140597 &#34;protein carrier chaperone,&#34; and (3) HSP26 prevents aggregation in situ without transporting substrates between compartments. Until the holdase NTR is created, GO:0051082 should be retained as an interim annotation. GO:0044183 &#34;protein folding chaperone&#34; is also inappropriate because HSP26 does not actively fold proteins.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="#" target="_blank" class="term-link">
+                                    holdase chaperone activity (NTR needed; GO:0140309 does not fit -- carrier-specific)
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link">
+                                        PMID:10581247
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Several sHsps have been shown to exhibit chaperone activity and protect proteins from irreversible aggregation in vitro. Here we show that Hsp26, an sHsp from Saccharomyces cerevisiae, is a temperature-regulated molecular chaperone.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link">
+                                        PMID:10581247
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binding of non-native proteins to dissociated Hsp26 produces large globular assemblies with a structure that appears to be completely reorganized relative to the original Hsp26 oligomers. In this complex one monomer of substrate is bound per Hsp26 dimer.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16843901" target="_blank" class="term-link">
+                                        PMID:16843901
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hinge points between the domains allow a variety of assembly contacts, providing the flexibility required for formation of supercomplexes with non-native proteins.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>HSP26 is an ATP-independent holdase chaperone that binds unfolded/misfolded proteins to prevent their irreversible aggregation. At heat shock temperatures, the 24-mer storage complex dissociates into active species that bind non-native proteins with 1:2 substrate:Hsp26 stoichiometry. This is the core molecular function of HSP26. GO:0051082 is used as interim until a holdase NTR is created; GO:0140309 does not fit (carrier-specific). GO:0044183 does not fit (HSP26 does not actively refold).</h3>
+                <span class="vote-buttons" data-g="P15992" data-a="FUNCTION: HSP26 is an ATP-independent holdase chaperone that..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                            unfolded protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034605" target="_blank" class="term-link">
+                                cellular response to heat
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link">
+                                PMID:10581247
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Hsp26, an sHsp from Saccharomyces cerevisiae, is a temperature-regulated molecular chaperone. ... Binding of non-native proteins to dissociated Hsp26 produces large globular assemblies</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16843901" target="_blank" class="term-link">
+                                PMID:16843901
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Hinge points between the domains allow a variety of assembly contacts, providing the flexibility required for formation of supercomplexes with non-native proteins.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>HSP26 forms large homo-oligomeric 24-mer complexes with tetrahedral symmetry. Self-association is essential for its chaperone function: the 24-mer serves as a storage/inactive form, and temperature-dependent dissociation produces the active holdase species.</h3>
+                <span class="vote-buttons" data-g="P15992" data-a="FUNCTION: HSP26 forms large homo-oligomeric 24-mer complexes..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                            identical protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16843901" target="_blank" class="term-link">
+                                PMID:16843901
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Cryo-electron microscopy of yeast Hsp26 reveals two distinct forms, each comprising 24 subunits arranged in a porous shell with tetrahedral symmetry.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link">
+                                PMID:10581247
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the 24mer chaperone complex dissociates ... the dissociation of the Hsp26 complex at heat shock temperatures is a prerequisite for efficient chaperone activity</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10581247" target="_blank" class="term-link">
+                            PMID:10581247
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Hsp26: a temperature-regulated chaperone.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HSP26 is a temperature-regulated molecular chaperone. The 24-mer storage complex dissociates at heat shock temperatures, and this dissociation is a prerequisite for efficient chaperone activity. Binding of non-native proteins to dissociated Hsp26 produces large globular assemblies with 1:2 substrate:Hsp26 stoichiometry.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11914276" target="_blank" class="term-link">
+                            PMID:11914276
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Subcellular localization of the yeast proteome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale immunolocalization study of 2744 yeast proteins. HSP26 detected in cytoplasm.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16429126" target="_blank" class="term-link">
+                            PMID:16429126
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteome survey reveals modularity of the yeast cell machinery.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide TAP-tag affinity purification/MS screen for yeast protein complexes. HSP26 detected as co-purifying with SSA2 and VMA2.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16554755" target="_blank" class="term-link">
+                            PMID:16554755
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Global landscape of protein complexes in the yeast Saccharomyces cerevisiae.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale TAP-tag study of yeast protein complexes. Multiple HSP26 interaction partners detected including ADH3, EMW1, FUS3, NEW1, POL32, RNR1, RTT101, SGV1, SME1, TFB4, UPC2, VMA2.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16843901" target="_blank" class="term-link">
+                            PMID:16843901
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Multiple distinct assemblies reveal conformational flexibility in the small heat shock protein Hsp26.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cryo-EM structure of Hsp26 reveals two distinct 24-subunit forms with tetrahedral symmetry. Subunits form asymmetric dimers that assemble via trimeric contacts. C-terminal tails form 3-fold contacts. Hinge points between domains provide flexibility for supercomplex formation with non-native proteins.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18719252" target="_blank" class="term-link">
+                            PMID:18719252
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">High-quality binary protein interaction map of the yeast interactome network.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High-quality binary yeast interactome. HSP26-HSP26 self-interaction confirmed.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19536198" target="_blank" class="term-link">
+                            PMID:19536198
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An atlas of chaperone-protein interactions in Saccharomyces cerevisiae: implications to protein folding pathways in the cell.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive TAP-tag analysis of all 63 yeast chaperones. HSP26 classified as a &#34;specific&#34; chaperone with fewer than 200 non-chaperone interactors, consistent with selective holdase function rather than promiscuous chaperoning.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20844764" target="_blank" class="term-link">
+                            PMID:20844764
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteome-wide search reveals unexpected RNA-binding proteins in Saccharomyces cerevisiae.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HSP26 identified as novel RNA-binding protein by protein microarray screen and validated by IP-microarray. Co-purified with 279 specific mRNAs. Lacks known RNA-binding domain. Described among &#34;unexpected&#34; RBPs with &#34;day jobs&#34; as enzymes or chaperones.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24291094" target="_blank" class="term-link">
+                            PMID:24291094
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Coordination of translational control and protein homeostasis during severe heat stress.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Yeast heat stress granules contain mRNA, translation machinery, and molecular chaperones. Heat-SGs coassemble with aggregates of misfolded proteins. Disassembly requires Hsp104 and Hsp70 activity.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24769239" target="_blank" class="term-link">
+                            PMID:24769239
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative variations of the mitochondrial proteome and phosphoproteome during fermentative and respiratory growth in Saccharomyces cerevisiae.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Quantitative mitochondrial proteomics detected HSP26 in isolated mitochondrial fractions.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2645298" target="_blank" class="term-link">
+                            PMID:2645298
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The intracellular location of yeast heat-shock protein 26 varies with metabolism.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HSP26 found in complexes &gt;500 kD. Intracellular localization depends on metabolic state: in glucose-grown log-phase cells after heat shock, concentrates in nuclei; in stationary-phase cells or cells grown in galactose/acetate, distributed throughout cytoplasm.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26777405" target="_blank" class="term-link">
+                            PMID:26777405
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ATPase-Modulated Stress Granules Contain a Diverse Proteome and Substructure.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Proteomic analysis of stress granule cores reveals molecular chaperones as conserved components. ATP is required for stress granule assembly and dynamics.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the specific substrate proteins that HSP26 binds during heat shock in vivo?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P15992" data-a="Q: What are the specific substrate proteins that HSP2..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does HSP26 mRNA binding activity (PMID:20844764) have a physiological role, or is it an artifact of the broad substrate-binding properties of chaperones?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P15992" data-a="Q: Does HSP26 mRNA binding activity (PMID:20844764) h..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does HSP26 holdase activity coordinate with HSP104 disaggregase and HSP70 foldase during stress recovery?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P15992" data-a="Q: How does HSP26 holdase activity coordinate with HS..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the temperature-dependent oligomer dissociation mechanism conserved across yeast sHSPs (e.g., Hsp42)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P15992" data-a="Q: Is the temperature-dependent oligomer dissociation..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">UPB</span>
+            
+            <span class="badge">sHSP</span>
+            
+            <span class="badge">holdase</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P15992
+gene_symbol: HSP26
+product_type: PROTEIN
+status: COMPLETE
+tags:
+- UPB
+- sHSP
+- holdase
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  HSP26 is the sole small heat shock protein (sHSP) of Saccharomyces cerevisiae, belonging to the
+  conserved HSP20/alpha-crystallin superfamily. It functions as a temperature-regulated molecular
+  chaperone with holdase activity: at heat shock temperatures, the 24-mer oligomeric storage complex
+  dissociates, and the resulting smaller species bind non-native proteins to prevent their irreversible
+  aggregation (PMID:10581247). This holdase activity is ATP-independent and mechanistically distinct
+  from foldase chaperones (e.g., HSP70, GroEL). HSP26 does not actively refold substrates or escort
+  them between compartments; rather, it maintains client proteins in a soluble, folding-competent state
+  in situ until ATP-dependent chaperones (HSP70/HSP104) can mediate refolding. HSP26 forms large
+  oligomeric complexes (&gt;500 kD) and is induced by heat shock and other stress conditions. Its
+  intracellular localization (cytoplasm vs. nucleus) varies with the metabolic state of the cell
+  (PMID:2645298). HSP26 also localizes to stress granules during severe heat stress (PMID:24291094).
+  Unexpectedly, Hsp26 was identified as a novel RNA-binding protein that co-purifies with a small set
+  of specific mRNAs (PMID:20844764), though this activity is likely moonlighting rather than a core
+  function.
+existing_annotations:
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation from ARBA machine learning models mapping HSP26 to protein folding. HSP26 is an
+      sHSP holdase that prevents aggregation of unfolded proteins but does not actively assist protein
+      folding (refolding requires the HSP70/HSP104 disaggregase system). The term &#34;protein folding&#34;
+      (GO:0006457) implies active assistance in acquiring correct tertiary structure, which does not
+      match HSP26 holdase mechanism. However, this IEA is broader than the IDA annotation for the same
+      term (see below), and both share the same concern.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      HSP26 is a holdase, not a foldase. It prevents aggregation of non-native proteins but does not
+      actively catalyze protein folding. The GO:0006457 definition states &#34;assisting in the covalent
+      and noncovalent assembly of single chain polypeptides or multisubunit complexes into the correct
+      tertiary structure,&#34; which better describes ATP-dependent foldase chaperones like GroEL/ES or
+      HSP70. HSP26 maintains substrates in a folding-competent state for later refolding by other
+      chaperones. The IEA mapping is too generous here. A more appropriate BP annotation would be to a
+      process term reflecting prevention of protein aggregation under stress.
+    supported_by:
+    - reference_id: PMID:10581247
+      supporting_text: &gt;-
+        Hsp26, an sHsp from Saccharomyces cerevisiae, is a temperature-regulated molecular chaperone.
+        Like other sHsps, Hsp26 forms large oligomeric complexes. At heat shock temperatures, however,
+        the 24mer chaperone complex dissociates. ... Binding of non-native proteins to dissociated Hsp26
+        produces large globular assemblies
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16429126
+  review:
+    summary: &gt;-
+      Protein binding annotation from the Gavin et al. (2006) large-scale TAP-tag affinity
+      purification/mass spectrometry study of yeast protein complexes. HSP26 was identified as
+      co-purifying with SSA2 (P10592) and VMA2 (P16140) in this study. While HSP26 does physically
+      interact with proteins (both substrates and other chaperones), GO:0005515 &#34;protein binding&#34; is
+      uninformative and does not capture the mechanistic nature of these interactions.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0005515 &#34;protein binding&#34; is too vague. For a chaperone like HSP26, the relevant molecular
+      function is its holdase activity -- binding unfolded/misfolded proteins to prevent aggregation.
+      The interactions detected in large-scale co-purification studies may reflect chaperone-substrate
+      relationships (e.g., with SSA2, an HSP70 family member) or other associations. A more informative
+      annotation would capture the holdase mechanism. Per curation guidelines, &#34;protein binding&#34; should
+      be avoided in favor of more specific terms.
+    supported_by:
+    - reference_id: PMID:16429126
+      supporting_text: &gt;-
+        Protein complexes are key molecular entities that integrate multiple gene products to perform
+        cellular functions. Here we report the first genome-wide screen for complexes in an organism,
+        budding yeast, using affinity purification and mass spectrometry.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16554755
+  review:
+    summary: &gt;-
+      Protein binding annotation from Krogan et al. (2006) large-scale TAP-tag study of yeast protein
+      complexes. Multiple interaction partners were detected (ADH3, EMW1, FUS3, NEW1, POL32, RNR1,
+      RTT101, SGV1, SME1, TFB4, UPC2, VMA2). As a chaperone, HSP26 is expected to interact with many
+      proteins, but GO:0005515 does not meaningfully describe the nature of these interactions.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Same rationale as above. GO:0005515 is uninformative for a chaperone. Many of these interaction
+      partners may represent chaperone substrates or indirect associations from large-scale
+      co-purification. HSP26 was classified as a &#34;specific chaperone&#34; with fewer than 200 non-chaperone
+      interactors in the comprehensive chaperone atlas (PMID:19536198), consistent with its selective
+      holdase function.
+    supported_by:
+    - reference_id: PMID:19536198
+      supporting_text: &gt;-
+        the specific chaperones are (ordered from low to high number of interactors): Hsp32, Sno4,
+        Hsp33, Tim14, Mdj2, Jac1, Cwc23, Jid1, Mcx1, Mdj1, Jjj2, Hlj1, Jjj3, Erj5, Ssc3, Kar2,
+        Lhs1, Hsp26, Jem1, Jjj1, Xdj1, Hsp12, Hsp60
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19536198
+  review:
+    summary: &gt;-
+      Protein binding annotation from Gong et al. (2009), a comprehensive TAP-tag based chaperone
+      interaction atlas covering all 63 yeast chaperones. HSP26 was classified as a &#34;specific
+      chaperone&#34; with fewer than 200 interactors. Multiple interaction partners were detected. This
+      study provides excellent systems-level context for HSP26 as a chaperone but GO:0005515 remains
+      uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0005515 does not capture the chaperone-substrate nature of these interactions. This study
+      specifically characterizes HSP26 as a molecular chaperone with selective substrate binding. A more
+      specific MF term reflecting holdase activity would be more appropriate.
+    supported_by:
+    - reference_id: PMID:19536198
+      supporting_text: &gt;-
+        Molecular chaperones are defined as a group of highly interactive proteins that modulate the
+        folding and unfolding of other proteins ... We expect that most of the chaperone interactors
+        represent putative substrates whose conformational stability is modulated by molecular
+        chaperones
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16843901
+  review:
+    summary: &gt;-
+      Identical protein binding annotation based on White et al. (2006), which used cryo-EM to
+      characterize Hsp26 oligomeric assemblies. The study demonstrated that Hsp26 forms 24-subunit
+      assemblies with tetrahedral symmetry, composed of asymmetric dimers, confirming self-association.
+      This homo-oligomerization is integral to Hsp26 chaperone function.
+    action: ACCEPT
+    reason: &gt;-
+      HSP26 homo-oligomerization is well-established and functionally critical. The 24-mer complex
+      is the storage form that dissociates at heat shock temperatures to become the active holdase
+      species. The cryo-EM structural data directly demonstrates identical protein binding through
+      dimer and trimer contacts. While GO:0042802 is somewhat generic, it correctly captures the
+      self-association that is a defining structural feature of sHSPs.
+    supported_by:
+    - reference_id: PMID:16843901
+      supporting_text: &gt;-
+        Cryo-electron microscopy of yeast Hsp26 reveals two distinct forms, each comprising 24
+        subunits arranged in a porous shell with tetrahedral symmetry. The subunits form elongated,
+        asymmetric dimers that assemble via trimeric contacts.
+    - reference_id: PMID:10581247
+      supporting_text: &gt;-
+        Like other sHsps, Hsp26 forms large oligomeric complexes. At heat shock temperatures, however,
+        the 24mer chaperone complex dissociates.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18719252
+  review:
+    summary: &gt;-
+      Identical protein binding annotation from Yu et al. (2008), a high-quality binary yeast
+      interactome study. HSP26-HSP26 self-interaction was detected, consistent with the known
+      oligomeric nature of Hsp26.
+    action: ACCEPT
+    reason: &gt;-
+      This binary interaction study independently confirms HSP26 homo-oligomerization, which is
+      consistent with the well-characterized 24-mer structure from cryo-EM (PMID:16843901). Duplicate
+      evidence for the same GO term is appropriate when from independent experimental sources.
+    supported_by:
+    - reference_id: PMID:16843901
+      supporting_text: &gt;-
+        Cryo-electron microscopy of yeast Hsp26 reveals two distinct forms, each comprising 24
+        subunits arranged in a porous shell with tetrahedral symmetry.
+- term:
+    id: GO:0010494
+    label: cytoplasmic stress granule
+  evidence_type: HDA
+  original_reference_id: PMID:26777405
+  review:
+    summary: &gt;-
+      HDA annotation from Jain et al. (2016) large-scale proteomic analysis of stress granule cores.
+      This study used super-resolution microscopy and mass spectrometry to characterize stress granule
+      composition, identifying molecular chaperones as conserved stress granule components.
+    action: ACCEPT
+    reason: &gt;-
+      Stress granule localization is consistent with HSP26 function as a stress-responsive chaperone.
+      The Jain et al. study is a rigorous proteomic analysis of stress granule composition, and the
+      finding is independently supported by direct IDA evidence from Cherkasov et al. (PMID:24291094),
+      which showed heat stress granules contain molecular chaperones that coassemble with aggregates
+      of misfolded proteins.
+    supported_by:
+    - reference_id: PMID:26777405
+      supporting_text: &gt;-
+        Proteomic analysis of stress granule cores reveals a dense network of protein-protein
+        interactions and links between stress granules and human diseases and identifies ATP-dependent
+        helicases and protein remodelers as conserved stress granule components.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:24769239
+  review:
+    summary: &gt;-
+      HDA annotation from Renvoise et al. (2014) quantitative mitochondrial proteomics study. HSP26
+      was detected in isolated mitochondrial fractions by mass spectrometry. However, HSP26 is
+      primarily a cytoplasmic protein, and mitochondrial detection in large-scale proteomics may
+      reflect contamination or transient association rather than bona fide mitochondrial localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      HSP26 is primarily cytoplasmic and nuclear (PMID:2645298), with stress granule localization
+      under heat stress. Detection in mitochondrial fractions from a quantitative proteomics study
+      could represent genuine low-level mitochondrial association (e.g., chaperoning mitochondrial
+      surface proteins during stress) or co-purification artifact. UniProt does not list mitochondrial
+      localization. This is not a core localization but may represent a minor or transient association,
+      so it should be kept as non-core rather than removed.
+    supported_by:
+    - reference_id: PMID:24769239
+      supporting_text: &gt;-
+        Label free quantitative analysis of protein accumulation revealed significant variation of 176
+        mitochondrial proteins
+    - reference_id: PMID:2645298
+      supporting_text: &gt;-
+        When log-phase cells growing in glucose were heat shocked, hsp26 concentrated in nuclei ...
+        in early stationary-phase cells hsp26 is induced at normal growth temperatures. This protein
+        was generally distributed throughout the cells
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: HDA
+  original_reference_id: PMID:11914276
+  review:
+    summary: &gt;-
+      HDA annotation from Kumar et al. (2002) proteome-wide subcellular localization study using
+      epitope-tagged proteins and immunolocalization. HSP26 was detected in the cytoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is well-established for HSP26 and is its primary localization. This
+      is confirmed by multiple independent studies including direct IDA evidence (PMID:2645298) and
+      the UniProt record. The large-scale localization study provides additional support.
+    supported_by:
+    - reference_id: PMID:11914276
+      supporting_text: &gt;-
+        Here, we report the first proteome-scale analysis of protein localization within any eukaryote.
+        ... we have determined the subcellular localization of 2744 yeast proteins.
+    - reference_id: PMID:2645298
+      supporting_text: &gt;-
+        in early stationary-phase cells hsp26 is induced at normal growth temperatures. This protein
+        was generally distributed throughout the cells
+- term:
+    id: GO:0010494
+    label: cytoplasmic stress granule
+  evidence_type: IDA
+  original_reference_id: PMID:24291094
+  review:
+    summary: &gt;-
+      IDA annotation from Cherkasov et al. (2013), which demonstrated that yeast heat stress granules
+      contain molecular chaperones and coassemble with aggregates of misfolded proteins. The study
+      showed that heat-SG disassembly requires Hsp104 and Hsp70 activity.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence for HSP26 localization to stress granules during severe heat stress.
+      This is mechanistically coherent with HSP26 holdase function, as stress granules form under
+      conditions where protein aggregation occurs and translation is inhibited. The colocalization
+      with misfolded protein aggregates is especially relevant to HSP26 chaperone activity.
+    supported_by:
+    - reference_id: PMID:24291094
+      supporting_text: &gt;-
+        both S. cerevisiae and D. melanogaster heat-SGs contain mRNA, translation machinery components
+        (excluding ribosomes), and molecular chaperones and that heat-SGs coassemble with aggregates
+        of misfolded, heat-labile proteins
+- term:
+    id: GO:0034605
+    label: cellular response to heat
+  evidence_type: IDA
+  original_reference_id: PMID:10581247
+  review:
+    summary: &gt;-
+      IDA annotation from Haslbeck et al. (1999), the seminal study demonstrating HSP26 is a
+      temperature-regulated chaperone. The study showed that Hsp26 chaperone activity is
+      temperature-dependent: the 24-mer dissociates at heat shock temperatures, and this dissociation
+      is a prerequisite for efficient chaperone activity.
+    action: ACCEPT
+    reason: &gt;-
+      HSP26 is one of the major proteins produced on heat shock (UniProt) and its chaperone activity
+      is directly activated by elevated temperature through oligomer dissociation. This is a core
+      biological process for HSP26 -- it is a heat shock protein whose functional activation is
+      temperature-regulated. The evidence directly demonstrates temperature-dependent functional
+      changes.
+    supported_by:
+    - reference_id: PMID:10581247
+      supporting_text: &gt;-
+        Hsp26, an sHsp from Saccharomyces cerevisiae, is a temperature-regulated molecular chaperone.
+        ... the dissociation of the Hsp26 complex at heat shock temperatures is a prerequisite for
+        efficient chaperone activity
+- term:
+    id: GO:0003729
+    label: mRNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:20844764
+  review:
+    summary: &gt;-
+      IDA annotation from Tsvetanova et al. (2010), a proteome-wide search for RNA-binding proteins
+      using protein microarrays and IP-microarray validation. HSP26 was identified as a novel RBP that
+      co-purified with 279 specific mRNAs (FDR less than 0.01%). The study describes HSP26 as a
+      &#34;chaperone; heat shock response&#34; protein and notes it &#34;co-purified with smaller sets of mRNAs,
+      but these small sets of putative mRNA targets shared distinct functional and/or cytotopical
+      themes.&#34; HSP26 lacks any known RNA-binding domain.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While the experimental evidence is sound (validated by IP-microarray with replicate experiments
+      and stringent FDR cutoffs), mRNA binding is likely a moonlighting activity rather than a core
+      function of HSP26. HSP26 lacks canonical RNA-binding domains, and the authors themselves describe
+      it among &#34;unexpected&#34; RNA-binding proteins. The primary function of HSP26 is as a holdase
+      chaperone for unfolded proteins. The mRNA binding may reflect the broad substrate-binding
+      properties of chaperones, or a secondary regulatory role. Many chaperones have been found to
+      associate with RNA in proteome-wide screens.
+    supported_by:
+    - reference_id: PMID:20844764
+      supporting_text: &gt;-
+        Other candidate RBPs (Vtc1, Arc15, Hsp26, Arp8, Gis2) co-purified with smaller sets of
+        mRNAs, but these small sets of putative mRNA targets shared distinct functional and/or
+        cytotopical themes, increasing our confidence that the RNA-protein interactions we observed
+        were genuine.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:2645298
+  review:
+    summary: &gt;-
+      IDA annotation from Rossi and Lindquist (1989), which showed that HSP26 intracellular
+      localization varies with the metabolic state of the cell. In log-phase cells growing in glucose
+      after heat shock, HSP26 concentrated in nuclei. However, this nuclear concentration was
+      condition-dependent and did not occur in cells grown in galactose or acetate, or in
+      mitochondrial mutants.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Nuclear localization of HSP26 is condition-dependent rather than constitutive. HSP26 concentrates
+      in nuclei only in log-phase glucose-grown cells after heat shock; under other metabolic
+      conditions it remains generally distributed throughout the cell. This represents a conditional
+      localization rather than a core cellular component, so it should be retained but marked as
+      non-core.
+    supported_by:
+    - reference_id: PMID:2645298
+      supporting_text: &gt;-
+        When log-phase cells growing in glucose were heat shocked, hsp26 concentrated in nuclei and
+        continued to concentrate in nuclei when these cells were returned to normal temperatures for
+        recovery. However, hsp26 did not concentrate in nuclei under a variety of other conditions.
+    - reference_id: PMID:2645298
+      supporting_text: &gt;-
+        We conclude that the intracellular location of hsp26 in yeast depends upon the physiological
+        state of the cell and not simply upon the presence or absence of heat stress.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:2645298
+  review:
+    summary: &gt;-
+      IDA annotation from Rossi and Lindquist (1989) demonstrating cytoplasmic localization of HSP26.
+      The protein was generally distributed throughout the cytoplasm, particularly in stationary-phase
+      cells and under most metabolic conditions.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasm is the primary and constitutive localization of HSP26. Under most physiological
+      conditions, HSP26 is distributed throughout the cytoplasm. This is the core cellular component
+      for HSP26 function as a cytoplasmic holdase chaperone.
+    supported_by:
+    - reference_id: PMID:2645298
+      supporting_text: &gt;-
+        in early stationary-phase cells hsp26 is induced at normal growth temperatures. This protein
+        was generally distributed throughout the cells, even after heat shock.
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IDA
+  original_reference_id: PMID:10581247
+  review:
+    summary: &gt;-
+      IDA annotation from Haslbeck et al. (1999) based on in vitro chaperone assays demonstrating
+      that Hsp26 protects proteins from irreversible aggregation. The term &#34;protein folding&#34; is
+      applied here, but the actual experimental evidence shows holdase activity (aggregation
+      prevention), not active refolding. sHSPs maintain substrates in a folding-competent state
+      but require HSP70/HSP104 for actual refolding.
+    action: MODIFY
+    reason: &gt;-
+      The experimental evidence in PMID:10581247 demonstrates that HSP26 prevents irreversible
+      aggregation of non-native proteins. This is holdase activity, not protein folding per se.
+      GO:0006457 &#34;protein folding&#34; implies active assistance in acquiring correct tertiary structure,
+      which better describes ATP-dependent foldases. HSP26 functions upstream of refolding by
+      maintaining substrates in a soluble, folding-competent state. A more accurate BP annotation
+      would be &#34;chaperone-mediated protein complex assembly&#34; (GO:0051131) or ideally a BP term for
+      &#34;prevention of protein aggregation,&#34; though no such specific term currently exists. As an
+      interim measure, &#34;protein folding&#34; is overly generous but not entirely wrong since HSP26
+      participates in the broader proteostasis pathway that includes folding.
+    proposed_replacement_terms:
+    - id: GO:0051131
+      label: chaperone-mediated protein complex assembly
+    supported_by:
+    - reference_id: PMID:10581247
+      supporting_text: &gt;-
+        Several sHsps have been shown to exhibit chaperone activity and protect proteins from
+        irreversible aggregation in vitro. ... Binding of non-native proteins to dissociated Hsp26
+        produces large globular assemblies ... In this complex one monomer of substrate is bound per
+        Hsp26 dimer.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:10581247
+  review:
+    summary: &gt;-
+      IDA annotation from Haslbeck et al. (1999), the key study demonstrating HSP26 chaperone
+      activity. The study showed that at heat shock temperatures, Hsp26 24-mer dissociates and the
+      resulting active species binds non-native proteins, forming large chaperone-substrate complexes
+      with a 1:2 substrate:Hsp26 stoichiometry. This is canonical holdase activity: binding
+      unfolded/misfolded proteins to prevent their irreversible aggregation, without actively
+      catalyzing refolding. HSP26 is ATP-independent and does not escort substrates between cellular
+      compartments. Per the UPB project, GO:0051082 is proposed for obsoletion
+      (go-ontology#30962). The appropriate replacement is a general &#34;holdase chaperone activity&#34; NTR.
+      GO:0140309 &#34;unfolded protein carrier activity&#34; does NOT fit because it was created specifically
+      for TIM carrier-holdases that escort proteins between compartments (go-ontology#30552), and
+      HSP26 is an in-situ holdase.
+    action: MODIFY
+    reason: &gt;-
+      HSP26 is a canonical in-situ holdase chaperone. GO:0051082 &#34;unfolded protein binding&#34; is
+      proposed for obsoletion and is too vague -- it is a binding term that does not distinguish
+      holdase from foldase from sensor mechanisms. The best replacement would be the proposed &#34;holdase
+      chaperone activity&#34; NTR (an activity term for ATP-independent prevention of protein aggregation
+      in situ). GO:0140309 &#34;unfolded protein carrier activity&#34; does NOT fit because (1) its definition
+      requires escort &#34;between two different cellular components,&#34; (2) it is a child of GO:0140597
+      &#34;protein carrier chaperone,&#34; and (3) HSP26 prevents aggregation in situ without transporting
+      substrates between compartments. Until the holdase NTR is created, GO:0051082 should be retained
+      as an interim annotation. GO:0044183 &#34;protein folding chaperone&#34; is also inappropriate because
+      HSP26 does not actively fold proteins.
+    proposed_replacement_terms:
+    - id: NTR
+      label: holdase chaperone activity (NTR needed; GO:0140309 does not fit -- carrier-specific)
+    additional_reference_ids:
+    - go-ontology#30962
+    - go-ontology#30552
+    supported_by:
+    - reference_id: PMID:10581247
+      supporting_text: &gt;-
+        Several sHsps have been shown to exhibit chaperone activity and protect proteins from
+        irreversible aggregation in vitro. Here we show that Hsp26, an sHsp from Saccharomyces
+        cerevisiae, is a temperature-regulated molecular chaperone.
+    - reference_id: PMID:10581247
+      supporting_text: &gt;-
+        Binding of non-native proteins to dissociated Hsp26 produces large globular assemblies with a
+        structure that appears to be completely reorganized relative to the original Hsp26 oligomers.
+        In this complex one monomer of substrate is bound per Hsp26 dimer.
+    - reference_id: PMID:16843901
+      supporting_text: &gt;-
+        Hinge points between the domains allow a variety of assembly contacts, providing the
+        flexibility required for formation of supercomplexes with non-native proteins.
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:10581247
+  title: &#39;Hsp26: a temperature-regulated chaperone.&#39;
+  findings:
+  - statement: &gt;-
+      HSP26 is a temperature-regulated molecular chaperone. The 24-mer storage complex dissociates at
+      heat shock temperatures, and this dissociation is a prerequisite for efficient chaperone activity.
+      Binding of non-native proteins to dissociated Hsp26 produces large globular assemblies with 1:2
+      substrate:Hsp26 stoichiometry.
+- id: PMID:11914276
+  title: Subcellular localization of the yeast proteome.
+  findings:
+  - statement: &gt;-
+      Large-scale immunolocalization study of 2744 yeast proteins. HSP26 detected in cytoplasm.
+- id: PMID:16429126
+  title: Proteome survey reveals modularity of the yeast cell machinery.
+  findings:
+  - statement: &gt;-
+      Genome-wide TAP-tag affinity purification/MS screen for yeast protein complexes. HSP26 detected
+      as co-purifying with SSA2 and VMA2.
+- id: PMID:16554755
+  title: Global landscape of protein complexes in the yeast Saccharomyces cerevisiae.
+  findings:
+  - statement: &gt;-
+      Large-scale TAP-tag study of yeast protein complexes. Multiple HSP26 interaction partners
+      detected including ADH3, EMW1, FUS3, NEW1, POL32, RNR1, RTT101, SGV1, SME1, TFB4, UPC2, VMA2.
+- id: PMID:16843901
+  title: Multiple distinct assemblies reveal conformational flexibility in the small
+    heat shock protein Hsp26.
+  findings:
+  - statement: &gt;-
+      Cryo-EM structure of Hsp26 reveals two distinct 24-subunit forms with tetrahedral symmetry.
+      Subunits form asymmetric dimers that assemble via trimeric contacts. C-terminal tails form
+      3-fold contacts. Hinge points between domains provide flexibility for supercomplex formation
+      with non-native proteins.
+- id: PMID:18719252
+  title: High-quality binary protein interaction map of the yeast interactome network.
+  findings:
+  - statement: &gt;-
+      High-quality binary yeast interactome. HSP26-HSP26 self-interaction confirmed.
+- id: PMID:19536198
+  title: &#39;An atlas of chaperone-protein interactions in Saccharomyces cerevisiae:
+    implications to protein folding pathways in the cell.&#39;
+  findings:
+  - statement: &gt;-
+      Comprehensive TAP-tag analysis of all 63 yeast chaperones. HSP26 classified as a &#34;specific&#34;
+      chaperone with fewer than 200 non-chaperone interactors, consistent with selective holdase
+      function rather than promiscuous chaperoning.
+- id: PMID:20844764
+  title: Proteome-wide search reveals unexpected RNA-binding proteins in Saccharomyces
+    cerevisiae.
+  findings:
+  - statement: &gt;-
+      HSP26 identified as novel RNA-binding protein by protein microarray screen and validated by
+      IP-microarray. Co-purified with 279 specific mRNAs. Lacks known RNA-binding domain. Described
+      among &#34;unexpected&#34; RBPs with &#34;day jobs&#34; as enzymes or chaperones.
+- id: PMID:24291094
+  title: Coordination of translational control and protein homeostasis during severe
+    heat stress.
+  findings:
+  - statement: &gt;-
+      Yeast heat stress granules contain mRNA, translation machinery, and molecular chaperones.
+      Heat-SGs coassemble with aggregates of misfolded proteins. Disassembly requires Hsp104 and
+      Hsp70 activity.
+- id: PMID:24769239
+  title: Quantitative variations of the mitochondrial proteome and phosphoproteome
+    during fermentative and respiratory growth in Saccharomyces cerevisiae.
+  findings:
+  - statement: &gt;-
+      Quantitative mitochondrial proteomics detected HSP26 in isolated mitochondrial fractions.
+- id: PMID:2645298
+  title: The intracellular location of yeast heat-shock protein 26 varies with metabolism.
+  findings:
+  - statement: &gt;-
+      HSP26 found in complexes &gt;500 kD. Intracellular localization depends on metabolic state: in
+      glucose-grown log-phase cells after heat shock, concentrates in nuclei; in stationary-phase
+      cells or cells grown in galactose/acetate, distributed throughout cytoplasm.
+- id: PMID:26777405
+  title: ATPase-Modulated Stress Granules Contain a Diverse Proteome and Substructure.
+  findings:
+  - statement: &gt;-
+      Proteomic analysis of stress granule cores reveals molecular chaperones as conserved components.
+      ATP is required for stress granule assembly and dynamics.
+core_functions:
+- description: &gt;-
+    HSP26 is an ATP-independent holdase chaperone that binds unfolded/misfolded proteins to prevent
+    their irreversible aggregation. At heat shock temperatures, the 24-mer storage complex
+    dissociates into active species that bind non-native proteins with 1:2 substrate:Hsp26
+    stoichiometry. This is the core molecular function of HSP26. GO:0051082 is used as interim until
+    a holdase NTR is created; GO:0140309 does not fit (carrier-specific). GO:0044183 does not fit
+    (HSP26 does not actively refold).
+  molecular_function:
+    id: GO:0051082
+    label: unfolded protein binding
+  directly_involved_in:
+  - id: GO:0034605
+    label: cellular response to heat
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:10581247
+    supporting_text: &gt;-
+      Hsp26, an sHsp from Saccharomyces cerevisiae, is a temperature-regulated molecular chaperone.
+      ... Binding of non-native proteins to dissociated Hsp26 produces large globular assemblies
+  - reference_id: PMID:16843901
+    supporting_text: &gt;-
+      Hinge points between the domains allow a variety of assembly contacts, providing the
+      flexibility required for formation of supercomplexes with non-native proteins.
+- description: &gt;-
+    HSP26 forms large homo-oligomeric 24-mer complexes with tetrahedral symmetry. Self-association
+    is essential for its chaperone function: the 24-mer serves as a storage/inactive form, and
+    temperature-dependent dissociation produces the active holdase species.
+  molecular_function:
+    id: GO:0042802
+    label: identical protein binding
+  supported_by:
+  - reference_id: PMID:16843901
+    supporting_text: &gt;-
+      Cryo-electron microscopy of yeast Hsp26 reveals two distinct forms, each comprising 24
+      subunits arranged in a porous shell with tetrahedral symmetry.
+  - reference_id: PMID:10581247
+    supporting_text: &gt;-
+      the 24mer chaperone complex dissociates ... the dissociation of the Hsp26 complex at heat
+      shock temperatures is a prerequisite for efficient chaperone activity
+proposed_new_terms:
+- proposed_name: holdase chaperone activity
+  proposed_definition: &gt;-
+    Binding to an unfolded or misfolded protein to prevent its aggregation without actively
+    catalyzing refolding. The holdase maintains the client protein in a soluble, folding-competent
+    state. This is mechanistically distinct from foldase activity (GO:0044183) and from carrier-
+    holdase activity (GO:0140309).
+  justification: &gt;-
+    HSP26 and other sHSPs (CRYAA, CRYAB, HSPB6 in human) are canonical in-situ holdases that
+    cannot be properly annotated with existing GO terms. GO:0051082 is proposed for obsoletion,
+    GO:0044183 implies active refolding, and GO:0140309 is carrier-specific. See UPB project and
+    go-ontology#30552.
+  supported_by:
+  - reference_id: PMID:10581247
+    supporting_text: &gt;-
+      Several sHsps have been shown to exhibit chaperone activity and protect proteins from
+      irreversible aggregation in vitro. Here we show that Hsp26, an sHsp from Saccharomyces
+      cerevisiae, is a temperature-regulated molecular chaperone.
+suggested_questions:
+- question: What are the specific substrate proteins that HSP26 binds during heat shock in vivo?
+- question: Does HSP26 mRNA binding activity (PMID:20844764) have a physiological role, or is it an artifact of the broad substrate-binding properties of chaperones?
+- question: How does HSP26 holdase activity coordinate with HSP104 disaggregase and HSP70 foldase during stress recovery?
+- question: Is the temperature-dependent oligomer dissociation mechanism conserved across yeast sHSPs (e.g., Hsp42)?
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

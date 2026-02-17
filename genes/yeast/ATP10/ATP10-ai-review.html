@@ -1,0 +1,2976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATP10 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ATP10</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P18496" target="_blank" class="term-link">
+                        P18496
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ATP10";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P18496" data-a="DESCRIPTION: ATP10 (Atp10p) is a nuclear-encoded mitochondrial ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ATP10 (Atp10p) is a nuclear-encoded mitochondrial inner membrane protein required for assembly of the F0 sector of the mitochondrial F1-F0 ATP synthase complex. It functions as a specific assembly factor (chaperone) for Atp6p (subunit 6), binding newly synthesized Atp6p on mitochondrial ribosomes and facilitating its incorporation into a partially assembled ATPase subcomplex (PMID:14998992). Atp10p is not a subunit of the mature ATPase complex itself, nor is it a general-purpose chaperone; it acts specifically on Atp6p during the assembly process (PMID:2141026). Mutations in ATP10 cause loss of rutamycin sensitivity and defective F0 assembly (PMID:2141026).</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0005743" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for mitochondrial inner membrane localization. Atp10p is well-established as a mitochondrial inner membrane protein. Ackerman and Tzagoloff (PMID:2141026) showed the protein is associated with the mitochondrial membrane. Tzagoloff et al. (PMID:14998992) further demonstrated that Atp10p is an inner membrane component that interacts with newly synthesized Atp6p. UniProt also records subcellular location as mitochondrion inner membrane. The IBA annotation is phylogenetically consistent and well supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization for Atp10p, supported by direct experimental evidence (PMID:2141026, PMID:14998992) and phylogenetic inference (IBA). The mitochondrial inner membrane is where Atp10p performs its assembly factor function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2141026" target="_blank" class="term-link">
+                                        PMID:2141026
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The protein is associated with the mitochondrial membrane but does not co-fractionate either with F1 or with the rutamycin-sensitive F1-F0 complex.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link">
+                                        PMID:14998992
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Atp10p was identified as a mitochondrial inner membrane component necessary for the biogenesis of the hydrophobic F(0) sector of the ATPase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033615" target="_blank" class="term-link">
+                                    GO:0033615
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial proton-transporting ATP synthase complex assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0033615" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for mitochondrial ATP synthase complex assembly. This is the core biological process function of Atp10p. The original characterization (PMID:2141026) identified ATP10 as a nuclear gene required for assembly of the mitochondrial F1-F0 complex, and the follow-up study (PMID:14998992) demonstrated that Atp10p specifically assists assembly of Atp6p into the F0 unit. The IBA is phylogenetically sound and well-supported by experimental data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core function of Atp10p. Both original and subsequent studies confirm its essential role in ATP synthase assembly, specifically the F0 sector (PMID:2141026, PMID:14998992).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2141026" target="_blank" class="term-link">
+                                        PMID:2141026
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A yeast nuclear gene (ATP10) is reported whose product is essential for the assembly of a functional mitochondrial ATPase complex.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link">
+                                        PMID:14998992
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Based on these observations, we propose Atp10p to be an Atp6p-specific chaperone that facilitates the incorporation of Atp6p into an intermediate subcomplex of ATPase subunits.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0005743" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for mitochondrial inner membrane based on UniProt subcellular location mapping. This is consistent with the IBA annotation and the experimental evidence. UniProt records Atp10p as a mitochondrion inner membrane protein. Redundant with the IBA annotation but not incorrect.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the well-established inner membrane localization of Atp10p. The IEA is a broader qualifier (located_in) compared to the IBA (is_active_in), but both correctly place Atp10p at the mitochondrial inner membrane.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2141026" target="_blank" class="term-link">
+                                        PMID:2141026
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The protein is associated with the mitochondrial membrane but does not co-fractionate either with F1 or with the rutamycin-sensitive F1-F0 complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27107014" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27107014
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An inter-species protein-protein interaction network across ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0005515" data-r="PMID:27107014" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for generic protein binding, from the large-scale inter-species PPI study by Zhong et al. (PMID:27107014). The WITH/FROM column indicates interaction with UniProtKB:Q6RW13-2 (human AGTRAP isoform 2), a cross-species interaction from a yeast two-hybrid screen. This is a xenologous interaction with no physiological relevance; AGTRAP is a human angiotensin II receptor- associated protein with no known mitochondrial function. The term &#34;protein binding&#34; is uninformative per curation guidelines, and the underlying interaction is not biologically meaningful for Atp10p function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 (protein binding) is uninformative per curation guidelines. The underlying evidence is a cross-species yeast two-hybrid interaction with human AGTRAP (Q6RW13-2), which has no physiological relevance to Atp10p function. Atp10p&#39;s biologically meaningful interaction is with Atp6p (PMID:14998992), which is better captured by the process annotation for ATP synthase assembly.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27107014" target="_blank" class="term-link">
+                                        PMID:27107014
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">systematically probed the yeast and human proteomes for interactions between proteins from these two species and functionally characterized the resulting inter-interactome network</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2141026" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2141026
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ATP10, a yeast nuclear gene required for the assembly of the...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0031966" data-r="PMID:2141026" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for mitochondrial membrane localization from the original characterization by Ackerman and Tzagoloff (PMID:2141026). They showed that the Atp10p protein is associated with the mitochondrial membrane using antibody detection and fractionation experiments. This is a valid but less specific annotation than the mitochondrial inner membrane (GO:0005743), which is also annotated with stronger evidence. Since the original paper did not specifically demonstrate inner vs. outer membrane localization, the broader term is appropriate for the evidence from that particular paper.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Valid IDA annotation reflecting the experimental evidence from the original characterization. While less specific than the inner membrane annotation (GO:0005743), it accurately represents what was demonstrated in this particular paper (PMID:2141026). The more specific inner membrane localization is supported by later work.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2141026" target="_blank" class="term-link">
+                                        PMID:2141026
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The antibody recognizes a 30-kDa protein present in wild type mitochondria. The protein is associated with the mitochondrial membrane but does not co-fractionate either with F1 or with the rutamycin-sensitive F1-F0 complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22842922" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22842922
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissecting DNA damage response pathways by analysing protein...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0005737" data-r="PMID:22842922" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation for cytoplasm localization from a large-scale proteomics study examining protein localization during DNA replication stress (PMID:22842922). This is a high-throughput study. While Atp10p is a mitochondrial protein, the cytoplasm annotation may reflect detection in the broader cytoplasmic compartment (mitochondria are within the cytoplasm). However, this is a relatively uninformative localization for a protein whose primary function is at the mitochondrial inner membrane. The HDA evidence code indicates high-throughput direct assay.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The cytoplasm annotation is technically not wrong (mitochondria reside within the cytoplasm), but it is uninformative for Atp10p, whose well-established localization is the mitochondrial inner membrane. This is a high-throughput result that does not add specificity beyond what is already captured by the mitochondrion and inner membrane annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22842922" target="_blank" class="term-link">
+                                        PMID:22842922
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">high-throughput microscopic screening of the yeast GFP fusion collection to develop a systems-level view of protein reorganization following drug-induced DNA replication stress</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24769239" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24769239
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative variations of the mitochondrial proteome and ph...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0005739" data-r="PMID:24769239" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation for mitochondrion localization from a quantitative mitochondrial proteome study during fermentative and respiratory growth (PMID:24769239). Detection of Atp10p in the mitochondrial proteome is fully consistent with its known biology as a mitochondrial inner membrane assembly factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the well-established mitochondrial localization of Atp10p. Detection in the mitochondrial proteome confirms the known biology. This is a broader term than GO:0005743 (inner membrane) but correctly reflects the HDA evidence level.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24769239" target="_blank" class="term-link">
+                                        PMID:24769239
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we performed an overall quantitative proteomic and phosphoproteomic study of isolated mitochondria extracted from yeast grown on fermentative (glucose or galactose) and respiratory (lactate) media</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823961" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823961
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Toward the complete yeast mitochondrial proteome: multidimen...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0005739" data-r="PMID:16823961" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation for mitochondrion localization from a comprehensive mitochondrial proteomics study (PMID:16823961). Atp10p was detected in the yeast mitochondrial proteome, consistent with its known function as a mitochondrial assembly factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with known biology. Atp10p is an established mitochondrial protein and its detection in high-throughput mitochondrial proteomics is expected and correct.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16823961" target="_blank" class="term-link">
+                                        PMID:16823961
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A total of 851 different proteins (PROMITO dataset) were identified by use of multidimensional LC-MS/MS, 1D-SDS-PAGE combined with nano-LC-MS/MS and 2D-PAGE</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22842922" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22842922
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissecting DNA damage response pathways by analysing protein...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0005739" data-r="PMID:22842922" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation for mitochondrion localization from the same DNA replication stress proteomics study that also yielded the cytoplasm annotation (PMID:22842922). Detection of Atp10p in the mitochondrial fraction is expected and consistent with its known biology.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the well-established mitochondrial localization. Duplicate in terms of GO ID with the other HDA annotations from PMID:24769239 and PMID:16823961, but from a different study providing independent HDA evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22842922" target="_blank" class="term-link">
+                                        PMID:22842922
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">high-throughput microscopic screening of the yeast GFP fusion collection to develop a systems-level view of protein reorganization following drug-induced DNA replication stress</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14998992
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Atp10p assists assembly of Atp6p into the F0 unit of the yea...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0005743" data-r="PMID:14998992" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for mitochondrial inner membrane localization from Tzagoloff et al. (PMID:14998992). The WITH/FROM column indicates SGD:S000007268 (Atp6p), suggesting the inner membrane localization was inferred from the physical interaction between Atp10p and the inner membrane-integrated Atp6p. The cross-linking experiments demonstrated that Atp10p interacts with Atp6p at the mitochondrial inner membrane. This is strong evidence for inner membrane localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IPI evidence demonstrates that Atp10p physically interacts with Atp6p (an inner membrane protein) at the mitochondrial inner membrane. The cross-linking data from PMID:14998992 provides direct evidence for this localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link">
+                                        PMID:14998992
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Atp10p was identified as a mitochondrial inner membrane component necessary for the biogenesis of the hydrophobic F(0) sector of the ATPase.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link">
+                                        PMID:14998992
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">following its synthesis on mitochondrial ribosomes, subunit 6 of the ATPase (Atp6p) can be cross-linked to Atp10p</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033615" target="_blank" class="term-link">
+                                    GO:0033615
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial proton-transporting ATP synthase complex assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14998992
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Atp10p assists assembly of Atp6p into the F0 unit of the yea...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0033615" data-r="PMID:14998992" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for mitochondrial ATP synthase complex assembly from Tzagoloff et al. (PMID:14998992). The mutant phenotype evidence shows that in an atp10 null mutant, Atp6p is less stable and more rapidly degraded, leading to defective F0 assembly. The original paper (PMID:2141026) also showed that mutations in ATP10 cause loss of rutamycin sensitivity, indicating defective F0 sector. This is the core function of Atp10p.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong IMP evidence demonstrating that loss of Atp10p leads to impaired Atp6p stability and defective ATP synthase assembly. This is the central biological process function of Atp10p.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link">
+                                        PMID:14998992
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Pulse labeling and chase of mitochondrial translation products in vivo indicate that Atp6p is less stable and more rapidly degraded in an atp10 null mutant than in wild type.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2141026" target="_blank" class="term-link">
+                                        PMID:2141026
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mutations in ATP10 induce a loss of rutamycin sensitivity in the mitochondrial ATPase but do not affect respiratory enzymes. This phenotype has been correlated with a defect in the F0 sector of the ATPase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033615" target="_blank" class="term-link">
+                                    GO:0033615
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial proton-transporting ATP synthase complex assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14998992
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Atp10p assists assembly of Atp6p into the F0 unit of the yea...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0033615" data-r="PMID:14998992" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for mitochondrial ATP synthase complex assembly from Tzagoloff et al. (PMID:14998992), with Atp6p (SGD:S000007268) in the WITH/FROM column. The physical interaction between Atp10p and Atp6p (demonstrated by cross-linking) is directly relevant to the assembly process: Atp10p binds newly synthesized Atp6p and facilitates its incorporation into an intermediate ATPase subcomplex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IPI evidence from cross-linking experiments demonstrates a direct physical interaction between Atp10p and Atp6p during the assembly process. This interaction is the mechanistic basis for Atp10p&#39;s role in ATP synthase assembly.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link">
+                                        PMID:14998992
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">following its synthesis on mitochondrial ribosomes, subunit 6 of the ATPase (Atp6p) can be cross-linked to Atp10p. This interaction is required for the integration of Atp6p into a partially assembled subcomplex of the ATPase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14998992
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Atp10p assists assembly of Atp6p into the F0 unit of the yea...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0051082" data-r="PMID:14998992" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for unfolded protein binding from Tzagoloff et al. (PMID:14998992), with Atp6p (SGD:S000007268) in the WITH/FROM column. The authors proposed that Atp10p functions as an &#34;Atp6p-specific chaperone&#34; based on cross-linking experiments showing Atp10p interacts with newly synthesized Atp6p. However, Atp10p is not a general unfolded protein binder -- it is a highly specific assembly factor for a single client (Atp6p). It does not bind a range of unfolded proteins, nor does it possess a recognizable chaperone domain. The term GO:0051082 implies a broader substrate specificity than what is demonstrated. Atp10p&#39;s function is better described as stabilizing Atp6p during assembly and facilitating its incorporation into the F0 subcomplex, which is an assembly factor activity rather than a general chaperone/unfolded protein binding activity. This is consistent with how other mitochondrial assembly factors (PET100, COX20, SHY1) in this project have been handled, where GO:0051082 was marked as over-annotated. GO:0044183 (protein folding chaperone) is also inappropriate because Atp10p does not actively fold proteins. The most appropriate MF annotation would be GO:0140777 (protein-containing complex stabilizing activity), which captures the stabilization of unassembled subunits during complex assembly, analogous to what IBA already provides for the closely related ATP11 gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Atp10p is a specific assembly factor for Atp6p, not a general unfolded protein binder. The literature (PMID:14998992) explicitly describes it as an &#34;Atp6p-specific chaperone&#34; with a single known client. GO:0051082 implies broader substrate binding that is not supported by evidence. Atp10p does not possess a recognizable chaperone domain and does not actively fold proteins; it stabilizes Atp6p during F0 assembly. This is consistent with the handling of other mitochondrial assembly factors in the UPB project (PET100, COX20, SHY1), where GO:0051082 was marked as over-annotated. GO:0044183 (protein folding chaperone) is also not appropriate because Atp10p does not catalyze protein folding. A better MF annotation would be GO:0140777 (protein-containing complex stabilizing activity), which is already used for the related assembly factor ATP11.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140777" target="_blank" class="term-link">
+                                    protein-containing complex stabilizing activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link">
+                                        PMID:14998992
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Based on these observations, we propose Atp10p to be an Atp6p-specific chaperone that facilitates the incorporation of Atp6p into an intermediate subcomplex of ATPase subunits.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link">
+                                        PMID:14998992
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Atp10p was identified as a mitochondrial inner membrane component necessary for the biogenesis of the hydrophobic F(0) sector of the ATPase.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2141026" target="_blank" class="term-link">
+                                        PMID:2141026
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These data suggest that the ATP10 product is not a subunit of the ATPase complex but rather is required for the assembly of the F0 sector of the complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140777" target="_blank" class="term-link">
+                                    GO:0140777
+                                </a>
+                            </span>
+                            <span class="term-label">protein-containing complex stabilizing activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14998992
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Atp10p assists assembly of Atp6p into the F0 unit of the yea...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P18496" data-a="GO:0140777" data-r="PMID:14998992" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. Atp10p stabilizes newly synthesized Atp6p and facilitates its incorporation into an intermediate ATPase subcomplex (PMID:14998992). In the absence of Atp10p, Atp6p is less stable and more rapidly degraded. This stabilization of an unassembled subunit during complex assembly is precisely what GO:0140777 (protein-containing complex stabilizing activity) captures. The closely related assembly factor ATP11 already has an IBA annotation for this term. This is the most appropriate MF term for Atp10p&#39;s molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Atp10p stabilizes newly synthesized Atp6p, preventing its degradation and facilitating its incorporation into the ATP synthase F0 sector (PMID:14998992). This is a protein-containing complex stabilizing activity. The related assembly factor ATP11 already carries this annotation via IBA. This term better captures Atp10p&#39;s molecular function than GO:0051082 (unfolded protein binding), which overstates the generality of its binding activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link">
+                                        PMID:14998992
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Pulse labeling and chase of mitochondrial translation products in vivo indicate that Atp6p is less stable and more rapidly degraded in an atp10 null mutant than in wild type.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link">
+                                        PMID:14998992
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Based on these observations, we propose Atp10p to be an Atp6p-specific chaperone that facilitates the incorporation of Atp6p into an intermediate subcomplex of ATPase subunits.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Atp10p stabilizes newly synthesized Atp6p during assembly of the F0 sector of the mitochondrial ATP synthase. It binds Atp6p after translation on mitochondrial ribosomes and facilitates its incorporation into an intermediate ATPase subcomplex. In the absence of Atp10p, Atp6p is rapidly degraded. This is a protein-containing complex stabilizing activity, not a general chaperone or foldase function.</h3>
+                <span class="vote-buttons" data-g="P18496" data-a="FUNCTION: Atp10p stabilizes newly synthesized Atp6p during a..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140777" target="_blank" class="term-link">
+                            protein-containing complex stabilizing activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033615" target="_blank" class="term-link">
+                                mitochondrial proton-transporting ATP synthase complex assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14998992" target="_blank" class="term-link">
+                            PMID:14998992
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Atp10p assists assembly of Atp6p into the F0 unit of the yeast mitochondrial ATPase.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Atp10p cross-links to newly synthesized Atp6p on mitochondrial ribosomes</div>
+                        
+                        <div class="finding-text">"following its synthesis on mitochondrial ribosomes, subunit 6 of the ATPase (Atp6p) can be cross-linked to Atp10p"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Atp10p-Atp6p interaction is required for integration of Atp6p into a partially assembled ATPase subcomplex</div>
+                        
+                        <div class="finding-text">"This interaction is required for the integration of Atp6p into a partially assembled subcomplex of the ATPase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In an atp10 null mutant, Atp6p is less stable and more rapidly degraded</div>
+                        
+                        <div class="finding-text">"Pulse labeling and chase of mitochondrial translation products in vivo indicate that Atp6p is less stable and more rapidly degraded in an atp10 null mutant than in wild type"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Authors propose Atp10p is an Atp6p-specific chaperone facilitating Atp6p incorporation into the F0 sector</div>
+                        
+                        <div class="finding-text">"we propose Atp10p to be an Atp6p-specific chaperone that facilitates the incorporation of Atp6p into an intermediate subcomplex of ATPase subunits"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823961" target="_blank" class="term-link">
+                            PMID:16823961
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Toward the complete yeast mitochondrial proteome: multidimensional separation techniques for mitochondrial proteomics.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2141026" target="_blank" class="term-link">
+                            PMID:2141026
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ATP10, a yeast nuclear gene required for the assembly of the mitochondrial F1-F0 complex.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP10 encodes a 30 kDa protein essential for assembly of a functional mitochondrial ATPase complex</div>
+                        
+                        <div class="finding-text">"A yeast nuclear gene (ATP10) is reported whose product is essential for the assembly of a functional mitochondrial ATPase complex"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mutations in ATP10 cause loss of rutamycin sensitivity indicating defective F0 sector</div>
+                        
+                        <div class="finding-text">"Mutations in ATP10 induce a loss of rutamycin sensitivity in the mitochondrial ATPase but do not affect respiratory enzymes. This phenotype has been correlated with a defect in the F0 sector of the ATPase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP10 product is not a subunit of the ATPase but is required for F0 assembly</div>
+                        
+                        <div class="finding-text">"These data suggest that the ATP10 product is not a subunit of the ATPase complex but rather is required for the assembly of the F0 sector of the complex"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The protein is associated with the mitochondrial membrane but does not co-fractionate with F1 or F1-F0</div>
+                        
+                        <div class="finding-text">"The protein is associated with the mitochondrial membrane but does not co-fractionate either with F1 or with the rutamycin-sensitive F1-F0 complex"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22842922" target="_blank" class="term-link">
+                            PMID:22842922
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dissecting DNA damage response pathways by analysing protein localization and abundance changes during DNA replication stress.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24769239" target="_blank" class="term-link">
+                            PMID:24769239
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative variations of the mitochondrial proteome and phosphoproteome during fermentative and respiratory growth in Saccharomyces cerevisiae.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27107014" target="_blank" class="term-link">
+                            PMID:27107014
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An inter-species protein-protein interaction network across vast evolutionary distance.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cross-species Y2H interaction reported between yeast Atp10p and human AGTRAP isoform 2; not physiologically relevant</div>
+                        
+                        <div class="finding-text">"systematically probed the yeast and human proteomes for interactions between proteins from these two species and functionally characterized the resulting inter-interactome network"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P18496
+gene_symbol: ATP10
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  ATP10 (Atp10p) is a nuclear-encoded mitochondrial inner membrane protein required
+  for assembly of the F0 sector of the mitochondrial F1-F0 ATP synthase complex.
+  It functions as a specific assembly factor (chaperone) for Atp6p (subunit 6),
+  binding newly synthesized Atp6p on mitochondrial ribosomes and facilitating its
+  incorporation into a partially assembled ATPase subcomplex (PMID:14998992).
+  Atp10p is not a subunit of the mature ATPase complex itself, nor is it a
+  general-purpose chaperone; it acts specifically on Atp6p during the assembly
+  process (PMID:2141026). Mutations in ATP10 cause loss of rutamycin sensitivity
+  and defective F0 assembly (PMID:2141026).
+existing_annotations:
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for mitochondrial inner membrane localization. Atp10p is
+      well-established as a mitochondrial inner membrane protein. Ackerman and
+      Tzagoloff (PMID:2141026) showed the protein is associated with the
+      mitochondrial membrane. Tzagoloff et al. (PMID:14998992) further
+      demonstrated that Atp10p is an inner membrane component that interacts
+      with newly synthesized Atp6p. UniProt also records subcellular location
+      as mitochondrion inner membrane. The IBA annotation is phylogenetically
+      consistent and well supported.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization for Atp10p, supported by direct experimental evidence
+      (PMID:2141026, PMID:14998992) and phylogenetic inference (IBA). The
+      mitochondrial inner membrane is where Atp10p performs its assembly
+      factor function.
+    supported_by:
+      - reference_id: PMID:2141026
+        supporting_text: &#34;The protein is associated with the mitochondrial membrane but does not co-fractionate either with F1 or with the rutamycin-sensitive F1-F0 complex.&#34;
+      - reference_id: PMID:14998992
+        supporting_text: &#34;Atp10p was identified as a mitochondrial inner membrane component necessary for the biogenesis of the hydrophobic F(0) sector of the ATPase.&#34;
+
+- term:
+    id: GO:0033615
+    label: mitochondrial proton-transporting ATP synthase complex assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for mitochondrial ATP synthase complex assembly. This is
+      the core biological process function of Atp10p. The original
+      characterization (PMID:2141026) identified ATP10 as a nuclear gene
+      required for assembly of the mitochondrial F1-F0 complex, and the
+      follow-up study (PMID:14998992) demonstrated that Atp10p specifically
+      assists assembly of Atp6p into the F0 unit. The IBA is phylogenetically
+      sound and well-supported by experimental data.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core function of Atp10p. Both original and subsequent studies
+      confirm its essential role in ATP synthase assembly, specifically the F0
+      sector (PMID:2141026, PMID:14998992).
+    supported_by:
+      - reference_id: PMID:2141026
+        supporting_text: &#34;A yeast nuclear gene (ATP10) is reported whose product is essential for the assembly of a functional mitochondrial ATPase complex.&#34;
+      - reference_id: PMID:14998992
+        supporting_text: &#34;Based on these observations, we propose Atp10p to be an Atp6p-specific chaperone that facilitates the incorporation of Atp6p into an intermediate subcomplex of ATPase subunits.&#34;
+
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation for mitochondrial inner membrane based on UniProt subcellular
+      location mapping. This is consistent with the IBA annotation and the
+      experimental evidence. UniProt records Atp10p as a mitochondrion inner
+      membrane protein. Redundant with the IBA annotation but not incorrect.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the well-established inner membrane localization of Atp10p.
+      The IEA is a broader qualifier (located_in) compared to the IBA (is_active_in),
+      but both correctly place Atp10p at the mitochondrial inner membrane.
+    supported_by:
+      - reference_id: PMID:2141026
+        supporting_text: &#34;The protein is associated with the mitochondrial membrane but does not co-fractionate either with F1 or with the rutamycin-sensitive F1-F0 complex.&#34;
+
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27107014
+  review:
+    summary: &gt;-
+      IPI annotation for generic protein binding, from the large-scale inter-species
+      PPI study by Zhong et al. (PMID:27107014). The WITH/FROM column indicates
+      interaction with UniProtKB:Q6RW13-2 (human AGTRAP isoform 2), a cross-species
+      interaction from a yeast two-hybrid screen. This is a xenologous interaction
+      with no physiological relevance; AGTRAP is a human angiotensin II receptor-
+      associated protein with no known mitochondrial function. The term &#34;protein
+      binding&#34; is uninformative per curation guidelines, and the underlying
+      interaction is not biologically meaningful for Atp10p function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0005515 (protein binding) is uninformative per curation guidelines. The
+      underlying evidence is a cross-species yeast two-hybrid interaction with
+      human AGTRAP (Q6RW13-2), which has no physiological relevance to Atp10p
+      function. Atp10p&#39;s biologically meaningful interaction is with Atp6p
+      (PMID:14998992), which is better captured by the process annotation for
+      ATP synthase assembly.
+    supported_by:
+      - reference_id: PMID:27107014
+        supporting_text: &#34;systematically probed the yeast and human proteomes for interactions between proteins from these two species and functionally characterized the resulting inter-interactome network&#34;
+
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: IDA
+  original_reference_id: PMID:2141026
+  review:
+    summary: &gt;-
+      IDA annotation for mitochondrial membrane localization from the original
+      characterization by Ackerman and Tzagoloff (PMID:2141026). They showed
+      that the Atp10p protein is associated with the mitochondrial membrane
+      using antibody detection and fractionation experiments. This is a valid
+      but less specific annotation than the mitochondrial inner membrane
+      (GO:0005743), which is also annotated with stronger evidence. Since the
+      original paper did not specifically demonstrate inner vs. outer membrane
+      localization, the broader term is appropriate for the evidence from that
+      particular paper.
+    action: ACCEPT
+    reason: &gt;-
+      Valid IDA annotation reflecting the experimental evidence from the
+      original characterization. While less specific than the inner membrane
+      annotation (GO:0005743), it accurately represents what was demonstrated
+      in this particular paper (PMID:2141026). The more specific inner membrane
+      localization is supported by later work.
+    supported_by:
+      - reference_id: PMID:2141026
+        supporting_text: &#34;The antibody recognizes a 30-kDa protein present in wild type mitochondria. The protein is associated with the mitochondrial membrane but does not co-fractionate either with F1 or with the rutamycin-sensitive F1-F0 complex.&#34;
+
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: HDA
+  original_reference_id: PMID:22842922
+  review:
+    summary: &gt;-
+      HDA annotation for cytoplasm localization from a large-scale proteomics
+      study examining protein localization during DNA replication stress
+      (PMID:22842922). This is a high-throughput study. While Atp10p is a
+      mitochondrial protein, the cytoplasm annotation may reflect detection
+      in the broader cytoplasmic compartment (mitochondria are within the
+      cytoplasm). However, this is a relatively uninformative localization
+      for a protein whose primary function is at the mitochondrial inner
+      membrane. The HDA evidence code indicates high-throughput direct assay.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The cytoplasm annotation is technically not wrong (mitochondria reside
+      within the cytoplasm), but it is uninformative for Atp10p, whose
+      well-established localization is the mitochondrial inner membrane. This
+      is a high-throughput result that does not add specificity beyond what
+      is already captured by the mitochondrion and inner membrane annotations.
+    supported_by:
+      - reference_id: PMID:22842922
+        supporting_text: &#34;high-throughput microscopic screening of the yeast GFP fusion collection to develop a systems-level view of protein reorganization following drug-induced DNA replication stress&#34;
+
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:24769239
+  review:
+    summary: &gt;-
+      HDA annotation for mitochondrion localization from a quantitative
+      mitochondrial proteome study during fermentative and respiratory growth
+      (PMID:24769239). Detection of Atp10p in the mitochondrial proteome is
+      fully consistent with its known biology as a mitochondrial inner membrane
+      assembly factor.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the well-established mitochondrial localization of Atp10p.
+      Detection in the mitochondrial proteome confirms the known biology. This
+      is a broader term than GO:0005743 (inner membrane) but correctly reflects
+      the HDA evidence level.
+    supported_by:
+      - reference_id: PMID:24769239
+        supporting_text: &#34;we performed an overall quantitative proteomic and phosphoproteomic study of isolated mitochondria extracted from yeast grown on fermentative (glucose or galactose) and respiratory (lactate) media&#34;
+
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:16823961
+  review:
+    summary: &gt;-
+      HDA annotation for mitochondrion localization from a comprehensive
+      mitochondrial proteomics study (PMID:16823961). Atp10p was detected in
+      the yeast mitochondrial proteome, consistent with its known function
+      as a mitochondrial assembly factor.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with known biology. Atp10p is an established mitochondrial
+      protein and its detection in high-throughput mitochondrial proteomics
+      is expected and correct.
+    supported_by:
+      - reference_id: PMID:16823961
+        supporting_text: &#34;A total of 851 different proteins (PROMITO dataset) were identified by use of multidimensional LC-MS/MS, 1D-SDS-PAGE combined with nano-LC-MS/MS and 2D-PAGE&#34;
+
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:22842922
+  review:
+    summary: &gt;-
+      HDA annotation for mitochondrion localization from the same DNA replication
+      stress proteomics study that also yielded the cytoplasm annotation
+      (PMID:22842922). Detection of Atp10p in the mitochondrial fraction is
+      expected and consistent with its known biology.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the well-established mitochondrial localization. Duplicate
+      in terms of GO ID with the other HDA annotations from PMID:24769239 and
+      PMID:16823961, but from a different study providing independent HDA
+      evidence.
+    supported_by:
+      - reference_id: PMID:22842922
+        supporting_text: &#34;high-throughput microscopic screening of the yeast GFP fusion collection to develop a systems-level view of protein reorganization following drug-induced DNA replication stress&#34;
+
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IPI
+  original_reference_id: PMID:14998992
+  review:
+    summary: &gt;-
+      IPI annotation for mitochondrial inner membrane localization from Tzagoloff
+      et al. (PMID:14998992). The WITH/FROM column indicates SGD:S000007268
+      (Atp6p), suggesting the inner membrane localization was inferred from the
+      physical interaction between Atp10p and the inner membrane-integrated
+      Atp6p. The cross-linking experiments demonstrated that Atp10p interacts
+      with Atp6p at the mitochondrial inner membrane. This is strong evidence
+      for inner membrane localization.
+    action: ACCEPT
+    reason: &gt;-
+      The IPI evidence demonstrates that Atp10p physically interacts with
+      Atp6p (an inner membrane protein) at the mitochondrial inner membrane.
+      The cross-linking data from PMID:14998992 provides direct evidence for
+      this localization.
+    supported_by:
+      - reference_id: PMID:14998992
+        supporting_text: &#34;Atp10p was identified as a mitochondrial inner membrane component necessary for the biogenesis of the hydrophobic F(0) sector of the ATPase.&#34;
+      - reference_id: PMID:14998992
+        supporting_text: &#34;following its synthesis on mitochondrial ribosomes, subunit 6 of the ATPase (Atp6p) can be cross-linked to Atp10p&#34;
+
+- term:
+    id: GO:0033615
+    label: mitochondrial proton-transporting ATP synthase complex assembly
+  evidence_type: IMP
+  original_reference_id: PMID:14998992
+  review:
+    summary: &gt;-
+      IMP annotation for mitochondrial ATP synthase complex assembly from
+      Tzagoloff et al. (PMID:14998992). The mutant phenotype evidence shows
+      that in an atp10 null mutant, Atp6p is less stable and more rapidly
+      degraded, leading to defective F0 assembly. The original paper
+      (PMID:2141026) also showed that mutations in ATP10 cause loss of
+      rutamycin sensitivity, indicating defective F0 sector. This is the
+      core function of Atp10p.
+    action: ACCEPT
+    reason: &gt;-
+      Strong IMP evidence demonstrating that loss of Atp10p leads to
+      impaired Atp6p stability and defective ATP synthase assembly. This
+      is the central biological process function of Atp10p.
+    supported_by:
+      - reference_id: PMID:14998992
+        supporting_text: &#34;Pulse labeling and chase of mitochondrial translation products in vivo indicate that Atp6p is less stable and more rapidly degraded in an atp10 null mutant than in wild type.&#34;
+      - reference_id: PMID:2141026
+        supporting_text: &#34;Mutations in ATP10 induce a loss of rutamycin sensitivity in the mitochondrial ATPase but do not affect respiratory enzymes. This phenotype has been correlated with a defect in the F0 sector of the ATPase.&#34;
+
+- term:
+    id: GO:0033615
+    label: mitochondrial proton-transporting ATP synthase complex assembly
+  evidence_type: IPI
+  original_reference_id: PMID:14998992
+  review:
+    summary: &gt;-
+      IPI annotation for mitochondrial ATP synthase complex assembly from
+      Tzagoloff et al. (PMID:14998992), with Atp6p (SGD:S000007268) in the
+      WITH/FROM column. The physical interaction between Atp10p and Atp6p
+      (demonstrated by cross-linking) is directly relevant to the assembly
+      process: Atp10p binds newly synthesized Atp6p and facilitates its
+      incorporation into an intermediate ATPase subcomplex.
+    action: ACCEPT
+    reason: &gt;-
+      The IPI evidence from cross-linking experiments demonstrates a direct
+      physical interaction between Atp10p and Atp6p during the assembly
+      process. This interaction is the mechanistic basis for Atp10p&#39;s role
+      in ATP synthase assembly.
+    supported_by:
+      - reference_id: PMID:14998992
+        supporting_text: &#34;following its synthesis on mitochondrial ribosomes, subunit 6 of the ATPase (Atp6p) can be cross-linked to Atp10p. This interaction is required for the integration of Atp6p into a partially assembled subcomplex of the ATPase.&#34;
+
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:14998992
+  review:
+    summary: &gt;-
+      IPI annotation for unfolded protein binding from Tzagoloff et al.
+      (PMID:14998992), with Atp6p (SGD:S000007268) in the WITH/FROM column.
+      The authors proposed that Atp10p functions as an &#34;Atp6p-specific chaperone&#34;
+      based on cross-linking experiments showing Atp10p interacts with newly
+      synthesized Atp6p. However, Atp10p is not a general unfolded protein
+      binder -- it is a highly specific assembly factor for a single client
+      (Atp6p). It does not bind a range of unfolded proteins, nor does it
+      possess a recognizable chaperone domain. The term GO:0051082 implies
+      a broader substrate specificity than what is demonstrated. Atp10p&#39;s
+      function is better described as stabilizing Atp6p during assembly and
+      facilitating its incorporation into the F0 subcomplex, which is an
+      assembly factor activity rather than a general chaperone/unfolded protein
+      binding activity. This is consistent with how other mitochondrial
+      assembly factors (PET100, COX20, SHY1) in this project have been
+      handled, where GO:0051082 was marked as over-annotated. GO:0044183
+      (protein folding chaperone) is also inappropriate because Atp10p does
+      not actively fold proteins. The most appropriate MF annotation would
+      be GO:0140777 (protein-containing complex stabilizing activity), which
+      captures the stabilization of unassembled subunits during complex
+      assembly, analogous to what IBA already provides for the closely
+      related ATP11 gene.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Atp10p is a specific assembly factor for Atp6p, not a general unfolded
+      protein binder. The literature (PMID:14998992) explicitly describes it
+      as an &#34;Atp6p-specific chaperone&#34; with a single known client. GO:0051082
+      implies broader substrate binding that is not supported by evidence.
+      Atp10p does not possess a recognizable chaperone domain and does not
+      actively fold proteins; it stabilizes Atp6p during F0 assembly. This is
+      consistent with the handling of other mitochondrial assembly factors in
+      the UPB project (PET100, COX20, SHY1), where GO:0051082 was marked as
+      over-annotated. GO:0044183 (protein folding chaperone) is also not
+      appropriate because Atp10p does not catalyze protein folding. A better MF
+      annotation would be GO:0140777 (protein-containing complex stabilizing
+      activity), which is already used for the related assembly factor ATP11.
+    proposed_replacement_terms:
+      - id: GO:0140777
+        label: protein-containing complex stabilizing activity
+    supported_by:
+      - reference_id: PMID:14998992
+        supporting_text: &#34;Based on these observations, we propose Atp10p to be an Atp6p-specific chaperone that facilitates the incorporation of Atp6p into an intermediate subcomplex of ATPase subunits.&#34;
+      - reference_id: PMID:14998992
+        supporting_text: &#34;Atp10p was identified as a mitochondrial inner membrane component necessary for the biogenesis of the hydrophobic F(0) sector of the ATPase.&#34;
+      - reference_id: PMID:2141026
+        supporting_text: &#34;These data suggest that the ATP10 product is not a subunit of the ATPase complex but rather is required for the assembly of the F0 sector of the complex.&#34;
+
+- term:
+    id: GO:0140777
+    label: protein-containing complex stabilizing activity
+  evidence_type: IPI
+  original_reference_id: PMID:14998992
+  review:
+    summary: &gt;-
+      NEW annotation. Atp10p stabilizes newly synthesized Atp6p and facilitates
+      its incorporation into an intermediate ATPase subcomplex (PMID:14998992).
+      In the absence of Atp10p, Atp6p is less stable and more rapidly degraded.
+      This stabilization of an unassembled subunit during complex assembly is
+      precisely what GO:0140777 (protein-containing complex stabilizing activity)
+      captures. The closely related assembly factor ATP11 already has an IBA
+      annotation for this term. This is the most appropriate MF term for Atp10p&#39;s
+      molecular function.
+    action: NEW
+    reason: &gt;-
+      Atp10p stabilizes newly synthesized Atp6p, preventing its degradation and
+      facilitating its incorporation into the ATP synthase F0 sector
+      (PMID:14998992). This is a protein-containing complex stabilizing
+      activity. The related assembly factor ATP11 already carries this
+      annotation via IBA. This term better captures Atp10p&#39;s molecular
+      function than GO:0051082 (unfolded protein binding), which overstates
+      the generality of its binding activity.
+    supported_by:
+      - reference_id: PMID:14998992
+        supporting_text: &#34;Pulse labeling and chase of mitochondrial translation products in vivo indicate that Atp6p is less stable and more rapidly degraded in an atp10 null mutant than in wild type.&#34;
+      - reference_id: PMID:14998992
+        supporting_text: &#34;Based on these observations, we propose Atp10p to be an Atp6p-specific chaperone that facilitates the incorporation of Atp6p into an intermediate subcomplex of ATPase subunits.&#34;
+
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:14998992
+  title: Atp10p assists assembly of Atp6p into the F0 unit of the yeast mitochondrial
+    ATPase.
+  findings:
+    - statement: Atp10p cross-links to newly synthesized Atp6p on mitochondrial ribosomes
+      supporting_text: &#34;following its synthesis on mitochondrial ribosomes, subunit 6 of the ATPase (Atp6p) can be cross-linked to Atp10p&#34;
+    - statement: The Atp10p-Atp6p interaction is required for integration of Atp6p into a partially assembled ATPase subcomplex
+      supporting_text: &#34;This interaction is required for the integration of Atp6p into a partially assembled subcomplex of the ATPase&#34;
+    - statement: In an atp10 null mutant, Atp6p is less stable and more rapidly degraded
+      supporting_text: &#34;Pulse labeling and chase of mitochondrial translation products in vivo indicate that Atp6p is less stable and more rapidly degraded in an atp10 null mutant than in wild type&#34;
+    - statement: Authors propose Atp10p is an Atp6p-specific chaperone facilitating Atp6p incorporation into the F0 sector
+      supporting_text: &#34;we propose Atp10p to be an Atp6p-specific chaperone that facilitates the incorporation of Atp6p into an intermediate subcomplex of ATPase subunits&#34;
+- id: PMID:16823961
+  title: &#39;Toward the complete yeast mitochondrial proteome: multidimensional separation
+    techniques for mitochondrial proteomics.&#39;
+  findings: []
+- id: PMID:2141026
+  title: ATP10, a yeast nuclear gene required for the assembly of the mitochondrial
+    F1-F0 complex.
+  findings:
+    - statement: ATP10 encodes a 30 kDa protein essential for assembly of a functional mitochondrial ATPase complex
+      supporting_text: &#34;A yeast nuclear gene (ATP10) is reported whose product is essential for the assembly of a functional mitochondrial ATPase complex&#34;
+    - statement: Mutations in ATP10 cause loss of rutamycin sensitivity indicating defective F0 sector
+      supporting_text: &#34;Mutations in ATP10 induce a loss of rutamycin sensitivity in the mitochondrial ATPase but do not affect respiratory enzymes. This phenotype has been correlated with a defect in the F0 sector of the ATPase&#34;
+    - statement: ATP10 product is not a subunit of the ATPase but is required for F0 assembly
+      supporting_text: &#34;These data suggest that the ATP10 product is not a subunit of the ATPase complex but rather is required for the assembly of the F0 sector of the complex&#34;
+    - statement: The protein is associated with the mitochondrial membrane but does not co-fractionate with F1 or F1-F0
+      supporting_text: &#34;The protein is associated with the mitochondrial membrane but does not co-fractionate either with F1 or with the rutamycin-sensitive F1-F0 complex&#34;
+- id: PMID:22842922
+  title: Dissecting DNA damage response pathways by analysing protein localization
+    and abundance changes during DNA replication stress.
+  findings: []
+- id: PMID:24769239
+  title: Quantitative variations of the mitochondrial proteome and phosphoproteome
+    during fermentative and respiratory growth in Saccharomyces cerevisiae.
+  findings: []
+- id: PMID:27107014
+  title: An inter-species protein-protein interaction network across vast evolutionary
+    distance.
+  findings:
+    - statement: Cross-species Y2H interaction reported between yeast Atp10p and human AGTRAP isoform 2; not physiologically relevant
+      supporting_text: &#34;systematically probed the yeast and human proteomes for interactions between proteins from these two species and functionally characterized the resulting inter-interactome network&#34;
+
+core_functions:
+- description: &gt;-
+    Atp10p stabilizes newly synthesized Atp6p during assembly of the F0 sector
+    of the mitochondrial ATP synthase. It binds Atp6p after translation on
+    mitochondrial ribosomes and facilitates its incorporation into an intermediate
+    ATPase subcomplex. In the absence of Atp10p, Atp6p is rapidly degraded.
+    This is a protein-containing complex stabilizing activity, not a general
+    chaperone or foldase function.
+  molecular_function:
+    id: GO:0140777
+    label: protein-containing complex stabilizing activity
+  directly_involved_in:
+    - id: GO:0033615
+      label: mitochondrial proton-transporting ATP synthase complex assembly
+  locations:
+    - id: GO:0005743
+      label: mitochondrial inner membrane
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

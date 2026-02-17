@@ -1,0 +1,50 @@
+set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
+
+analysis_root := "results"
+
+default: all
+
+setup:
+    uv sync
+
+collect dataset outdir:
+    mkdir -p {{outdir}}
+    uv run scripts/collect_proteins.py \
+      --input-tsv {{dataset}} \
+      --output-json {{outdir}}/proteins.json \
+      --output-fasta {{outdir}}/proteins.fasta \
+      --output-summary-tsv {{outdir}}/protein_summary.tsv \
+      --cache-dir data/uniprot_txt
+
+sequence outdir:
+    uv run scripts/analyze_sequence_features.py \
+      --proteins-json {{outdir}}/proteins.json \
+      --output-dir {{outdir}}/sequence
+
+alphafold outdir:
+    uv run scripts/download_alphafold.py \
+      --proteins-json {{outdir}}/proteins.json \
+      --output-dir {{outdir}}/structures
+
+structure outdir:
+    uv run scripts/analyze_structure_cysteines.py \
+      --proteins-json {{outdir}}/proteins.json \
+      --manifest-json {{outdir}}/structures/alphafold_manifest.json \
+      --output-dir {{outdir}}/structure
+
+run dataset outdir:
+    just collect {{dataset}} {{outdir}}
+    just sequence {{outdir}}
+    just alphafold {{outdir}}
+    just structure {{outdir}}
+
+main:
+    just run inputs/proteins.tsv {{analysis_root}}/main
+
+test:
+    just run inputs/proteins-test-tpx1.tsv {{analysis_root}}/test_tpx1
+
+all: setup main test
+
+clean:
+    rm -rf {{analysis_root}}/main {{analysis_root}}/test_tpx1

@@ -1,0 +1,2635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spy - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Spy</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P77754" target="_blank" class="term-link">
+                        P77754
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Escherichia coli (strain K12)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "Spy";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P77754" data-a="DESCRIPTION: Spy (Spheroplast protein Y) is an ATP-independent ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Spy (Spheroplast protein Y) is an ATP-independent periplasmic chaperone in E. coli that functions primarily as a holdase, preventing protein aggregation under stress conditions (tannins, butanol, ethanol). It forms a thin, cradle-shaped homodimer with a novel alpha-helical fold. Spy is massively upregulated (up to 25-50% of periplasmic protein) under envelope stress via the Bae and Cpx two-component systems. Remarkably, Spy can also allow substrate proteins to fold while remaining bound to its surface, making it unusual among ATP-independent chaperones. It binds unfolded, intermediate, and native conformations of its substrates with comparable micromolar affinities.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P77754" data-a="GO:0030288" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for periplasmic localization of Spy, inferred from phylogenetic analysis. Spy is well established as a periplasmic protein based on extensive experimental evidence from multiple studies (PMID:9068658, PMID:21317898, PMID:9694902).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Spy was originally identified as a periplasmic protein (PMID:9068658) and its periplasmic localization has been confirmed repeatedly. The IBA annotation is consistent with all available experimental evidence and the UniProt record. The IDA annotation (below) provides direct experimental support.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9068658" target="_blank" class="term-link">
+                                        PMID:9068658
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">It encodes a precursor of a so far unknown 139-residue, rather basic periplasmic protein.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21317898" target="_blank" class="term-link">
+                                        PMID:21317898
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Spy overexpression leads to the accumulation of an otherwise highly unstable protein instead suggested that Spy might function as a chaperone that facilitates protein folding in the bacterial periplasm.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P77754" data-a="GO:0051082" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for unfolded protein binding, inferred by phylogeny. Spy is indeed one of the best-characterized unfolded protein binders, demonstrated by ITC, stopped-flow fluorescence, and crystallographic studies (PMID:26619265, PMID:27239796). However, GO:0051082 is proposed for obsoletion and Spy is primarily a holdase chaperone that prevents aggregation in the periplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Spy is primarily a holdase -- an ATP-independent chaperone that binds unfolded/misfolded proteins to prevent aggregation in situ. It does not escort proteins between compartments, so GO:0140309 (unfolded protein carrier activity) does not apply. The ideal replacement is a proposed &#34;holdase chaperone activity&#34; NTR. Until that NTR exists, GO:0051082 should be retained. Spy also has some foldase-like activity (PMID:26619265), but its primary mechanism is holdase. GO:0044183 (protein folding chaperone, already annotated separately) captures the foldase aspect.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    unfolded protein binding (retain until holdase NTR created)
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21317898" target="_blank" class="term-link">
+                                        PMID:21317898
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In vitro studies demonstrate that the Spy protein is an effective ATP-independent chaperone that suppresses protein aggregation and aids protein refolding.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26619265" target="_blank" class="term-link">
+                                        PMID:26619265
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">It has previously been thought that only ATP dependent &#34;foldase&#34; chaperones can actively facilitate protein folding. The ATP independent &#34;holdase&#34; chaperones were thought to play a more passive role, holding onto aggregation-sensitive folding intermediates</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    GO:0042597
+                                </a>
+                            </span>
+                            <span class="term-label">periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P77754" data-a="GO:0042597" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for periplasmic space based on InterPro and UniProt subcellular location mappings. This is a broader term than GO:0030288 (outer membrane-bounded periplasmic space), which is also annotated. Both are correct.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IEA mapping to periplasmic space is consistent with all experimental evidence. While GO:0030288 is more specific, the broader GO:0042597 is not incorrect for an IEA annotation. Spy is unambiguously a periplasmic protein (PMID:9068658, PMID:21317898, PMID:9694902).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9068658" target="_blank" class="term-link">
+                                        PMID:9068658
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">It encodes a precursor of a so far unknown 139-residue, rather basic periplasmic protein.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26619265" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26619265
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate protein folds while it is bound to the ATP-indepen...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P77754" data-a="GO:0005515" data-r="PMID:26619265" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for protein binding based on physical interaction evidence from IntAct (Spy interacts with immunity protein Imm). The PMID:26619265 study used ITC and stopped-flow fluorescence to demonstrate direct binding of Spy to Im7 in multiple conformational states (Kd values of 3.5-20.5 uM).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 (protein binding) is uninformative for a protein whose core function is binding unfolded proteins as a chaperone. The chaperone-substrate interaction is already captured by GO:0051082 (unfolded protein binding) and GO:0044183 (protein folding chaperone). Per curation guidelines, protein binding should be avoided in favor of more specific MF terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26619265" target="_blank" class="term-link">
+                                        PMID:26619265
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We found that Spy binds to all three variants of Im7, with affinities of 10.4 μM, 3.5 μM, and 20.5 μM for Im7-L18A L19A L37A (Im7U), Im7-L53A I54A (Im7I), and Im7-WT (Im7N), respectively</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21317898" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21317898
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic selection designed to stabilize proteins uncovers a ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P77754" data-a="GO:0006457" data-r="PMID:21317898" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for involvement in protein folding, based on the discovery paper showing that Spy suppresses protein aggregation and aids protein refolding in vitro. Spy increased refolding yield of chemically and thermally unfolded substrates in the absence of ATP or cofactors (PMID:21317898). Subsequent work showed that substrates can actually fold while bound to Spy&#39;s surface (PMID:26619265).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Spy is directly involved in protein folding in the periplasm. The original discovery paper demonstrated that Spy suppresses aggregation of multiple substrates (MDH, aldolase, GAPDH) and significantly increases refolding yield (PMID:21317898). The follow-up study (PMID:26619265) provided the remarkable finding that Im7 folds while bound to Spy. This BP annotation accurately captures Spy&#39;s role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21317898" target="_blank" class="term-link">
+                                        PMID:21317898
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">To test if Spy can support protein folding, even though it is localized to the ATP-devoid environment of the bacterial periplasm, we analyzed its influence on the refolding yield of chemically and thermally unfolded proteins. We found that Spy significantly increased the refolding yield of a number of substrates</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26619265" target="_blank" class="term-link">
+                                        PMID:26619265
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Spy then allows Im7 to fully fold into its native state while it remains bound to the surface of the chaperone.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    GO:0044183
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding chaperone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26619265" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26619265
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate protein folds while it is bound to the ATP-indepen...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P77754" data-a="GO:0044183" data-r="PMID:26619265" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for protein folding chaperone activity, based on the landmark study demonstrating that Im7 substrate folds while bound to Spy (PMID:26619265). Global kinetic fitting showed that the only model consistent with the data requires Im7 to fold completely (U -&gt; I -&gt; N) while remaining associated with Spy. This is unusual for an ATP-independent chaperone.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Spy is demonstrated to function as a protein folding chaperone, as the substrate Im7 folds through all intermediates while continuously bound to Spy&#39;s surface (PMID:26619265). Although Spy is primarily considered a holdase (preventing aggregation), it clearly also promotes folding without ATP. GO:0044183 is appropriate for this experimentally demonstrated activity. The structural basis for this was further elucidated by READ crystallography (PMID:27239796).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26619265" target="_blank" class="term-link">
+                                        PMID:26619265
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A good fit was only achieved when we globally fit the data to the kinetic mechanism that allows both folding steps 4 and 5, i.e., complete folding of Im7 while bound to Spy, making this the simplest kinetic mechanism that can explain all of the experimental data</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27239796" target="_blank" class="term-link">
+                                        PMID:27239796
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The ensemble shows that Spy-associated Im7 samples conformations ranging from unfolded to partially folded to native-like states and reveals how a substrate can explore its folding landscape while being bound to a chaperone.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26619265" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26619265
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate protein folds while it is bound to the ATP-indepen...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P77754" data-a="GO:0051082" data-r="PMID:26619265" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for unfolded protein binding based on ITC and stopped-flow kinetics showing Spy binds unfolded, intermediate, and native Im7 with micromolar affinities (PMID:26619265). Spy bound Im7U with Kd of 10.4 uM and association rate constant of 1.3 x 10^7 M-1 s-1, indicating rapid capture of unfolded substrate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The experimental evidence robustly supports Spy binding to unfolded proteins. However, GO:0051082 is proposed for obsoletion. Spy is primarily a holdase -- it prevents aggregation in situ in the periplasm, not a carrier that escorts proteins between compartments. GO:0140309 (unfolded protein carrier activity) does NOT fit because Spy acts in situ. The ideal replacement is a proposed &#34;holdase chaperone activity&#34; NTR. Until the NTR exists, retain GO:0051082.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    unfolded protein binding (retain until holdase NTR created)
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26619265" target="_blank" class="term-link">
+                                        PMID:26619265
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We found that Spy binds to all three variants of Im7, with affinities of 10.4 μM, 3.5 μM, and 20.5 μM for Im7-L18A L19A L37A (Im7U), Im7-L53A I54A (Im7I), and Im7-WT (Im7N), respectively</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26619265" target="_blank" class="term-link">
+                                        PMID:26619265
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">At this concentration, association between Spy and Im7U would be very rapid (occurring with a half-time of 26 μs)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27239796" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27239796
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Visualizing chaperone-assisted protein folding.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P77754" data-a="GO:0051082" data-r="PMID:27239796" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for unfolded protein binding based on crystallographic visualization of Spy-Im7 complex using the READ (Residual Electron and Anomalous Density) technique (PMID:27239796). The structural ensemble captured Im7 in multiple conformations (unfolded, partially folded, native-like) bound within Spy&#39;s cradle-shaped concave surface.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same rationale as the other GO:0051082 annotations. The READ structural study provides direct visualization of an unfolded substrate bound to Spy, confirming unfolded protein binding. However, GO:0051082 is proposed for obsoletion and Spy is an in-situ holdase, not a carrier. Retain GO:0051082 until the holdase NTR is created.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    unfolded protein binding (retain until holdase NTR created)
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27239796" target="_blank" class="term-link">
+                                        PMID:27239796
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The ensemble shows that Spy-associated Im7 samples conformations ranging from unfolded to partially folded to native-like states and reveals how a substrate can explore its folding landscape while being bound to a chaperone.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27239796" target="_blank" class="term-link">
+                                        PMID:27239796
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we observed that Im76-45 takes on several different conformations while bound. We found these conformations to be highly heterogeneous and to include unfolded, partially folded, and native-like states</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20799348" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20799348
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The crystal structure Escherichia coli Spy.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P77754" data-a="GO:0042803" data-r="PMID:20799348" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for protein homodimerization based on the crystal structure of Spy (PMID:20799348), which revealed an antiparallel homodimer with a curved oval shape. The dimer interface buries approximately 1850 A^2 per monomer, indicating a stable dimeric assembly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The crystal structure unambiguously shows Spy as a homodimer (PMID:20799348), confirmed independently by a second crystal structure (PMID:21317898), size exclusion chromatography, and analytical ultracentrifugation. Homodimerization is functionally essential for forming the cradle-shaped substrate binding surface. This is a core structural feature of Spy.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20799348" target="_blank" class="term-link">
+                                        PMID:20799348
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">which reveals a long kinked hairpin-like structure of four α-helices that form an antiparallel dimer</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21317898" target="_blank" class="term-link">
+                                        PMID:21317898
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The crystal structure shows that Spy molecules associate into tightly bound dimers</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9068658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9068658
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A new periplasmic protein of Escherichia coli which is synth...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P77754" data-a="GO:0030288" data-r="PMID:9068658" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for periplasmic localization based on the original discovery of Spy (PMID:9068658). Spy was identified as a new periplasmic protein produced abundantly in spheroplasts but not in intact cells. The protein contains a signal peptide (residues 1-23) directing it to the periplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The original identification of Spy as a periplasmic protein (PMID:9068658) is the foundational localization evidence. The signal peptide cleaves at position 23 to generate the mature periplasmic form. This has been confirmed by multiple subsequent studies (PMID:9694902, PMID:21317898). UniProt also annotates Spy to the periplasm with multiple experimental evidence codes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9068658" target="_blank" class="term-link">
+                                        PMID:9068658
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">It encodes a precursor of a so far unknown 139-residue, rather basic periplasmic protein. It was not detectable immunologically in intact cells but was produced abundantly in spheroplasts.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21317898" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21317898
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic selection designed to stabilize proteins uncovers a ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P77754" data-a="GO:0042803" data-r="PMID:21317898" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for protein homodimerization from the Spy chaperone discovery paper (PMID:21317898). The crystal structure, size exclusion chromatography, and analytical ultracentrifugation all confirmed that Spy is a homodimer with extensive monomer-monomer contacts burying ~1850 A^2 per monomer.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Independent confirmation of Spy homodimerization using multiple biophysical methods (crystallography, SEC, AUC) in the landmark chaperone discovery paper. This is a duplicate of the PMID:20799348 annotation (both correct) and reflects that two independent groups solved the Spy dimer structure. Homodimerization is essential for the cradle architecture that enables chaperone function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21317898" target="_blank" class="term-link">
+                                        PMID:21317898
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The crystal structure shows that Spy molecules associate into tightly bound dimers</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21317898" target="_blank" class="term-link">
+                                        PMID:21317898
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The contacts between the two monomers are extensive, burying a surface of ∼1850 Å2 per monomer upon dimerization and suggesting high dimeric stability</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Spy is an ATP-independent periplasmic chaperone that suppresses protein aggregation and aids protein refolding (PMID:21317898). Remarkably, substrate Im7 folds completely while remaining bound to Spy&#39;s cradle-shaped surface (PMID:26619265). Global kinetic fitting demonstrated that the only consistent model requires folding while bound. Structural ensembles captured substrates in unfolded, intermediate, and native-like conformations on Spy (PMID:27239796). Spy is primarily a holdase (preventing aggregation in situ without ATP), but also has foldase-like activity as substrates can fold while bound. The ideal MF annotation would be the proposed holdase chaperone activity NTR in addition to GO:0044183. GO:0140309 (carrier-holdase) does NOT fit because Spy acts in situ in the periplasm, not as an inter-compartment carrier.</h3>
+                <span class="vote-buttons" data-g="P77754" data-a="FUNCTION: Spy is an ATP-independent periplasmic chaperone th..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                            protein folding chaperone
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                protein folding
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21317898" target="_blank" class="term-link">
+                                PMID:21317898
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">In vitro studies demonstrate that the Spy protein is an effective ATP-independent chaperone that suppresses protein aggregation and aids protein refolding.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26619265" target="_blank" class="term-link">
+                                PMID:26619265
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Spy then allows Im7 to fully fold into its native state while it remains bound to the surface of the chaperone.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27239796" target="_blank" class="term-link">
+                                PMID:27239796
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The ensemble shows that Spy-associated Im7 samples conformations ranging from unfolded to partially folded to native-like states and reveals how a substrate can explore its folding landscape while being bound to a chaperone.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9068658" target="_blank" class="term-link">
+                            PMID:9068658
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A new periplasmic protein of Escherichia coli which is synthesized in spheroplasts but not in intact cells.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20799348" target="_blank" class="term-link">
+                            PMID:20799348
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The crystal structure Escherichia coli Spy.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21317898" target="_blank" class="term-link">
+                            PMID:21317898
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic selection designed to stabilize proteins uncovers a chaperone called Spy.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24497545" target="_blank" class="term-link">
+                            PMID:24497545
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Super Spy variants implicate flexibility in chaperone action.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26619265" target="_blank" class="term-link">
+                            PMID:26619265
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Substrate protein folds while it is bound to the ATP-independent chaperone Spy.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27239796" target="_blank" class="term-link">
+                            PMID:27239796
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Visualizing chaperone-assisted protein folding.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P77754
+gene_symbol: Spy
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:83333
+  label: Escherichia coli (strain K12)
+description: Spy (Spheroplast protein Y) is an ATP-independent periplasmic chaperone
+  in E. coli that functions primarily as a holdase, preventing protein aggregation
+  under stress conditions (tannins, butanol, ethanol). It forms a thin, cradle-shaped
+  homodimer with a novel alpha-helical fold. Spy is massively upregulated (up to 25-50%
+  of periplasmic protein) under envelope stress via the Bae and Cpx two-component
+  systems. Remarkably, Spy can also allow substrate proteins to fold while remaining
+  bound to its surface, making it unusual among ATP-independent chaperones. It binds
+  unfolded, intermediate, and native conformations of its substrates with comparable
+  micromolar affinities.
+existing_annotations:
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for periplasmic localization of Spy, inferred from phylogenetic
+      analysis. Spy is well established as a periplasmic protein based on extensive
+      experimental evidence from multiple studies (PMID:9068658, PMID:21317898, PMID:9694902).
+    action: ACCEPT
+    reason: Spy was originally identified as a periplasmic protein (PMID:9068658)
+      and its periplasmic localization has been confirmed repeatedly. The IBA annotation
+      is consistent with all available experimental evidence and the UniProt record.
+      The IDA annotation (below) provides direct experimental support.
+    supported_by:
+    - reference_id: PMID:9068658
+      supporting_text: It encodes a precursor of a so far unknown 139-residue, rather
+        basic periplasmic protein.
+    - reference_id: PMID:21317898
+      supporting_text: Spy overexpression leads to the accumulation of an otherwise
+        highly unstable protein instead suggested that Spy might function as a chaperone
+        that facilitates protein folding in the bacterial periplasm.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for unfolded protein binding, inferred by phylogeny. Spy
+      is indeed one of the best-characterized unfolded protein binders, demonstrated
+      by ITC, stopped-flow fluorescence, and crystallographic studies (PMID:26619265,
+      PMID:27239796). However, GO:0051082 is proposed for obsoletion and Spy is primarily
+      a holdase chaperone that prevents aggregation in the periplasm.
+    action: MODIFY
+    reason: Spy is primarily a holdase -- an ATP-independent chaperone that binds
+      unfolded/misfolded proteins to prevent aggregation in situ. It does not escort
+      proteins between compartments, so GO:0140309 (unfolded protein carrier activity)
+      does not apply. The ideal replacement is a proposed &#34;holdase chaperone activity&#34;
+      NTR. Until that NTR exists, GO:0051082 should be retained. Spy also has some
+      foldase-like activity (PMID:26619265), but its primary mechanism is holdase.
+      GO:0044183 (protein folding chaperone, already annotated separately) captures
+      the foldase aspect.
+    proposed_replacement_terms:
+    - id: GO:0051082
+      label: unfolded protein binding (retain until holdase NTR created)
+    supported_by:
+    - reference_id: PMID:21317898
+      supporting_text: In vitro studies demonstrate that the Spy protein is an effective
+        ATP-independent chaperone that suppresses protein aggregation and aids protein
+        refolding.
+    - reference_id: PMID:26619265
+      supporting_text: It has previously been thought that only ATP dependent &#34;foldase&#34;
+        chaperones can actively facilitate protein folding. The ATP independent &#34;holdase&#34;
+        chaperones were thought to play a more passive role, holding onto aggregation-sensitive
+        folding intermediates
+- term:
+    id: GO:0042597
+    label: periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation for periplasmic space based on InterPro and UniProt subcellular
+      location mappings. This is a broader term than GO:0030288 (outer membrane-bounded
+      periplasmic space), which is also annotated. Both are correct.
+    action: ACCEPT
+    reason: The IEA mapping to periplasmic space is consistent with all experimental
+      evidence. While GO:0030288 is more specific, the broader GO:0042597 is not incorrect
+      for an IEA annotation. Spy is unambiguously a periplasmic protein (PMID:9068658,
+      PMID:21317898, PMID:9694902).
+    supported_by:
+    - reference_id: PMID:9068658
+      supporting_text: It encodes a precursor of a so far unknown 139-residue, rather
+        basic periplasmic protein.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26619265
+  review:
+    summary: IPI annotation for protein binding based on physical interaction evidence
+      from IntAct (Spy interacts with immunity protein Imm). The PMID:26619265 study
+      used ITC and stopped-flow fluorescence to demonstrate direct binding of Spy
+      to Im7 in multiple conformational states (Kd values of 3.5-20.5 uM).
+    action: REMOVE
+    reason: GO:0005515 (protein binding) is uninformative for a protein whose core
+      function is binding unfolded proteins as a chaperone. The chaperone-substrate
+      interaction is already captured by GO:0051082 (unfolded protein binding) and
+      GO:0044183 (protein folding chaperone). Per curation guidelines, protein binding
+      should be avoided in favor of more specific MF terms.
+    supported_by:
+    - reference_id: PMID:26619265
+      supporting_text: We found that Spy binds to all three variants of Im7, with
+        affinities of 10.4 μM, 3.5 μM, and 20.5 μM for Im7-L18A L19A L37A (Im7U),
+        Im7-L53A I54A (Im7I), and Im7-WT (Im7N), respectively
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IDA
+  original_reference_id: PMID:21317898
+  review:
+    summary: IDA annotation for involvement in protein folding, based on the discovery
+      paper showing that Spy suppresses protein aggregation and aids protein refolding
+      in vitro. Spy increased refolding yield of chemically and thermally unfolded
+      substrates in the absence of ATP or cofactors (PMID:21317898). Subsequent work
+      showed that substrates can actually fold while bound to Spy&#39;s surface (PMID:26619265).
+    action: ACCEPT
+    reason: Spy is directly involved in protein folding in the periplasm. The original
+      discovery paper demonstrated that Spy suppresses aggregation of multiple substrates
+      (MDH, aldolase, GAPDH) and significantly increases refolding yield (PMID:21317898).
+      The follow-up study (PMID:26619265) provided the remarkable finding that Im7
+      folds while bound to Spy. This BP annotation accurately captures Spy&#39;s role.
+    supported_by:
+    - reference_id: PMID:21317898
+      supporting_text: To test if Spy can support protein folding, even though it
+        is localized to the ATP-devoid environment of the bacterial periplasm, we
+        analyzed its influence on the refolding yield of chemically and thermally
+        unfolded proteins. We found that Spy significantly increased the refolding
+        yield of a number of substrates
+    - reference_id: PMID:26619265
+      supporting_text: Spy then allows Im7 to fully fold into its native state while
+        it remains bound to the surface of the chaperone.
+- term:
+    id: GO:0044183
+    label: protein folding chaperone
+  evidence_type: IDA
+  original_reference_id: PMID:26619265
+  review:
+    summary: IDA annotation for protein folding chaperone activity, based on the landmark
+      study demonstrating that Im7 substrate folds while bound to Spy (PMID:26619265).
+      Global kinetic fitting showed that the only model consistent with the data requires
+      Im7 to fold completely (U -&gt; I -&gt; N) while remaining associated with Spy. This
+      is unusual for an ATP-independent chaperone.
+    action: ACCEPT
+    reason: Spy is demonstrated to function as a protein folding chaperone, as the
+      substrate Im7 folds through all intermediates while continuously bound to Spy&#39;s
+      surface (PMID:26619265). Although Spy is primarily considered a holdase (preventing
+      aggregation), it clearly also promotes folding without ATP. GO:0044183 is appropriate
+      for this experimentally demonstrated activity. The structural basis for this
+      was further elucidated by READ crystallography (PMID:27239796).
+    supported_by:
+    - reference_id: PMID:26619265
+      supporting_text: A good fit was only achieved when we globally fit the data
+        to the kinetic mechanism that allows both folding steps 4 and 5, i.e., complete
+        folding of Im7 while bound to Spy, making this the simplest kinetic mechanism
+        that can explain all of the experimental data
+    - reference_id: PMID:27239796
+      supporting_text: The ensemble shows that Spy-associated Im7 samples conformations
+        ranging from unfolded to partially folded to native-like states and reveals
+        how a substrate can explore its folding landscape while being bound to a chaperone.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:26619265
+  review:
+    summary: IDA annotation for unfolded protein binding based on ITC and stopped-flow
+      kinetics showing Spy binds unfolded, intermediate, and native Im7 with micromolar
+      affinities (PMID:26619265). Spy bound Im7U with Kd of 10.4 uM and association
+      rate constant of 1.3 x 10^7 M-1 s-1, indicating rapid capture of unfolded substrate.
+    action: MODIFY
+    reason: The experimental evidence robustly supports Spy binding to unfolded proteins.
+      However, GO:0051082 is proposed for obsoletion. Spy is primarily a holdase --
+      it prevents aggregation in situ in the periplasm, not a carrier that escorts
+      proteins between compartments. GO:0140309 (unfolded protein carrier activity)
+      does NOT fit because Spy acts in situ. The ideal replacement is a proposed &#34;holdase
+      chaperone activity&#34; NTR. Until the NTR exists, retain GO:0051082.
+    proposed_replacement_terms:
+    - id: GO:0051082
+      label: unfolded protein binding (retain until holdase NTR created)
+    supported_by:
+    - reference_id: PMID:26619265
+      supporting_text: We found that Spy binds to all three variants of Im7, with
+        affinities of 10.4 μM, 3.5 μM, and 20.5 μM for Im7-L18A L19A L37A (Im7U),
+        Im7-L53A I54A (Im7I), and Im7-WT (Im7N), respectively
+    - reference_id: PMID:26619265
+      supporting_text: At this concentration, association between Spy and Im7U would
+        be very rapid (occurring with a half-time of 26 μs)
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:27239796
+  review:
+    summary: IDA annotation for unfolded protein binding based on crystallographic
+      visualization of Spy-Im7 complex using the READ (Residual Electron and Anomalous
+      Density) technique (PMID:27239796). The structural ensemble captured Im7 in
+      multiple conformations (unfolded, partially folded, native-like) bound within
+      Spy&#39;s cradle-shaped concave surface.
+    action: MODIFY
+    reason: Same rationale as the other GO:0051082 annotations. The READ structural
+      study provides direct visualization of an unfolded substrate bound to Spy, confirming
+      unfolded protein binding. However, GO:0051082 is proposed for obsoletion and
+      Spy is an in-situ holdase, not a carrier. Retain GO:0051082 until the holdase
+      NTR is created.
+    proposed_replacement_terms:
+    - id: GO:0051082
+      label: unfolded protein binding (retain until holdase NTR created)
+    supported_by:
+    - reference_id: PMID:27239796
+      supporting_text: The ensemble shows that Spy-associated Im7 samples conformations
+        ranging from unfolded to partially folded to native-like states and reveals
+        how a substrate can explore its folding landscape while being bound to a chaperone.
+    - reference_id: PMID:27239796
+      supporting_text: we observed that Im76-45 takes on several different conformations
+        while bound. We found these conformations to be highly heterogeneous and to
+        include unfolded, partially folded, and native-like states
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:20799348
+  review:
+    summary: IDA annotation for protein homodimerization based on the crystal structure
+      of Spy (PMID:20799348), which revealed an antiparallel homodimer with a curved
+      oval shape. The dimer interface buries approximately 1850 A^2 per monomer, indicating
+      a stable dimeric assembly.
+    action: ACCEPT
+    reason: The crystal structure unambiguously shows Spy as a homodimer (PMID:20799348),
+      confirmed independently by a second crystal structure (PMID:21317898), size
+      exclusion chromatography, and analytical ultracentrifugation. Homodimerization
+      is functionally essential for forming the cradle-shaped substrate binding surface.
+      This is a core structural feature of Spy.
+    supported_by:
+    - reference_id: PMID:20799348
+      supporting_text: which reveals a long kinked hairpin-like structure of four
+        α-helices that form an antiparallel dimer
+    - reference_id: PMID:21317898
+      supporting_text: The crystal structure shows that Spy molecules associate into
+        tightly bound dimers
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: IDA
+  original_reference_id: PMID:9068658
+  review:
+    summary: IDA annotation for periplasmic localization based on the original discovery
+      of Spy (PMID:9068658). Spy was identified as a new periplasmic protein produced
+      abundantly in spheroplasts but not in intact cells. The protein contains a signal
+      peptide (residues 1-23) directing it to the periplasm.
+    action: ACCEPT
+    reason: The original identification of Spy as a periplasmic protein (PMID:9068658)
+      is the foundational localization evidence. The signal peptide cleaves at position
+      23 to generate the mature periplasmic form. This has been confirmed by multiple
+      subsequent studies (PMID:9694902, PMID:21317898). UniProt also annotates Spy
+      to the periplasm with multiple experimental evidence codes.
+    supported_by:
+    - reference_id: PMID:9068658
+      supporting_text: It encodes a precursor of a so far unknown 139-residue, rather
+        basic periplasmic protein. It was not detectable immunologically in intact
+        cells but was produced abundantly in spheroplasts.
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:21317898
+  review:
+    summary: IDA annotation for protein homodimerization from the Spy chaperone discovery
+      paper (PMID:21317898). The crystal structure, size exclusion chromatography,
+      and analytical ultracentrifugation all confirmed that Spy is a homodimer with
+      extensive monomer-monomer contacts burying ~1850 A^2 per monomer.
+    action: ACCEPT
+    reason: Independent confirmation of Spy homodimerization using multiple biophysical
+      methods (crystallography, SEC, AUC) in the landmark chaperone discovery paper.
+      This is a duplicate of the PMID:20799348 annotation (both correct) and reflects
+      that two independent groups solved the Spy dimer structure. Homodimerization
+      is essential for the cradle architecture that enables chaperone function.
+    supported_by:
+    - reference_id: PMID:21317898
+      supporting_text: The crystal structure shows that Spy molecules associate into
+        tightly bound dimers
+    - reference_id: PMID:21317898
+      supporting_text: The contacts between the two monomers are extensive, burying
+        a surface of ∼1850 Å2 per monomer upon dimerization and suggesting high dimeric
+        stability
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:9068658
+  title: A new periplasmic protein of Escherichia coli which is synthesized in spheroplasts
+    but not in intact cells.
+  findings: []
+- id: PMID:20799348
+  title: The crystal structure Escherichia coli Spy.
+  findings: []
+- id: PMID:21317898
+  title: Genetic selection designed to stabilize proteins uncovers a chaperone called
+    Spy.
+  findings: []
+- id: PMID:24497545
+  title: Super Spy variants implicate flexibility in chaperone action.
+  findings: []
+- id: PMID:26619265
+  title: Substrate protein folds while it is bound to the ATP-independent chaperone
+    Spy.
+  findings: []
+- id: PMID:27239796
+  title: Visualizing chaperone-assisted protein folding.
+  findings: []
+core_functions:
+- molecular_function:
+    id: GO:0044183
+    label: protein folding chaperone
+  description: Spy is an ATP-independent periplasmic chaperone that suppresses protein
+    aggregation and aids protein refolding (PMID:21317898). Remarkably, substrate
+    Im7 folds completely while remaining bound to Spy&#39;s cradle-shaped surface (PMID:26619265).
+    Global kinetic fitting demonstrated that the only consistent model requires folding
+    while bound. Structural ensembles captured substrates in unfolded, intermediate,
+    and native-like conformations on Spy (PMID:27239796). Spy is primarily a holdase
+    (preventing aggregation in situ without ATP), but also has foldase-like activity
+    as substrates can fold while bound. The ideal MF annotation would be the proposed
+    holdase chaperone activity NTR in addition to GO:0044183. GO:0140309 (carrier-holdase)
+    does NOT fit because Spy acts in situ in the periplasm, not as an inter-compartment
+    carrier.
+  directly_involved_in:
+  - id: GO:0006457
+    label: protein folding
+  locations:
+  - id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  supported_by:
+  - reference_id: PMID:21317898
+    supporting_text: In vitro studies demonstrate that the Spy protein is an effective
+      ATP-independent chaperone that suppresses protein aggregation and aids protein
+      refolding.
+  - reference_id: PMID:26619265
+    supporting_text: Spy then allows Im7 to fully fold into its native state while
+      it remains bound to the surface of the chaperone.
+  - reference_id: PMID:27239796
+    supporting_text: The ensemble shows that Spy-associated Im7 samples conformations
+      ranging from unfolded to partially folded to native-like states and reveals
+      how a substrate can explore its folding landscape while being bound to a chaperone.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -28,6 +28,53 @@ from typing import Dict, List, Any, Union, Optional
 
 from ai_gene_review.datamodel.gene_review_model import GeneReview, ExistingAnnotation
 
+# Mapping from NCBI Taxon IDs to the organism directory name under genes/.
+# Includes both species-level and common strain-level taxon IDs.
+TAXON_TO_ORGANISM_DIR = {
+    # Human
+    "NCBITaxon:9606": "human",
+    # Mouse
+    "NCBITaxon:10090": "mouse",
+    # Rat
+    "NCBITaxon:10116": "rat",
+    # S. cerevisiae (species + S288c strain)
+    "NCBITaxon:4932": "yeast",
+    "NCBITaxon:559292": "yeast",
+    # S. pombe (species + strain 972)
+    "NCBITaxon:4896": "SCHPO",
+    "NCBITaxon:284812": "SCHPO",
+    # D. melanogaster
+    "NCBITaxon:7227": "DROME",
+    # C. elegans (species + Bristol N2)
+    "NCBITaxon:6239": "worm",
+    "NCBITaxon:6239": "worm",
+    # D. rerio (zebrafish)
+    "NCBITaxon:7955": "DANRE",
+    # A. thaliana
+    "NCBITaxon:3702": "ARATH",
+    # X. tropicalis
+    "NCBITaxon:8364": "XENTR",
+    # Chicken
+    "NCBITaxon:9031": "CHICK",
+    # Bovine
+    "NCBITaxon:9913": "BOVIN",
+    # E. coli (species + K-12 strains)
+    "NCBITaxon:562": "ECOLI",
+    "NCBITaxon:83333": "ECOLI",
+    "NCBITaxon:511145": "ECOLI",
+    # C. albicans
+    "NCBITaxon:5476": "CANAL",
+    "NCBITaxon:237561": "CANAL",
+    # N. crassa
+    "NCBITaxon:5141": "NEUCR",
+    "NCBITaxon:367110": "NEUCR",
+    # A. niger
+    "NCBITaxon:5061": "ASPNG",
+    # M. tuberculosis
+    "NCBITaxon:1773": "MYCTU",
+    "NCBITaxon:83332": "MYCTU",
+}
+
 
 class AnnotationExporter:
     """Export gene review annotations to multiple formats.
@@ -58,7 +105,7 @@ class AnnotationExporter:
         # Parse into GeneReview model
         gene_review = GeneReview.model_validate(data)
 
-        return self._flatten_existing_annotations(gene_review)
+        return self._flatten_existing_annotations(gene_review, source_path=file_path)
 
     def export_from_files(
         self, file_paths: List[Union[str, Path]]
@@ -401,13 +448,14 @@ class AnnotationExporter:
     # ========== Internal Helper Methods ==========
 
     def _flatten_existing_annotations(
-        self, gene_review: GeneReview
+        self, gene_review: GeneReview, source_path: Optional[Path] = None
     ) -> List[Dict[str, Any]]:
         """
         Flatten existing_annotations from a GeneReview into list of dicts.
 
         Args:
             gene_review: The parsed GeneReview object
+            source_path: Path to the source YAML file (used to derive organism directory)
 
         Returns:
             List of flattened annotation dictionaries
@@ -418,13 +466,14 @@ class AnnotationExporter:
         annotations = []
 
         for annotation in gene_review.existing_annotations:
-            flat_annotation = self._flatten_annotation(annotation, gene_review)
+            flat_annotation = self._flatten_annotation(annotation, gene_review, source_path=source_path)
             annotations.append(flat_annotation)
 
         return annotations
 
     def _flatten_annotation(
-        self, annotation: ExistingAnnotation, gene_review: GeneReview
+        self, annotation: ExistingAnnotation, gene_review: GeneReview,
+        source_path: Optional[Path] = None,
     ) -> Dict[str, Any]:
         """
         Flatten a single existing annotation into a dictionary.
@@ -432,6 +481,7 @@ class AnnotationExporter:
         Args:
             annotation: The ExistingAnnotation object
             gene_review: The parent GeneReview object
+            source_path: Path to the source YAML file (used to derive organism directory)
 
         Returns:
             Flattened dictionary with all relevant fields
@@ -456,7 +506,7 @@ class AnnotationExporter:
         row["tags"] = gene_review.tags if gene_review.tags else []
 
         # Swiss-Prot status (read from uniprot.txt file)
-        row["is_swissprot"] = self._is_swissprot(gene_review)
+        row["is_swissprot"] = self._is_swissprot(gene_review, source_path=source_path)
 
         # Add link fields
         # For ncRNAs, link to RNAcentral; for proteins, link to UniProt
@@ -466,11 +516,11 @@ class AnnotationExporter:
         else:
             # Protein or pseudogene - use UniProt URL
             row["uniprot_link"] = f"https://www.uniprot.org/uniprotkb/{gene_review.id}" if gene_review.id else None
-        row["pathway_link"] = self._generate_pathway_link(gene_review)
-        row["review_html_link"] = self._generate_review_html_link(gene_review)
+        row["pathway_link"] = self._generate_pathway_link(gene_review, source_path=source_path)
+        row["review_html_link"] = self._generate_review_html_link(gene_review, source_path=source_path)
 
         # Deep research methods available for this gene
-        row["deep_research"] = self._find_deep_research_methods(gene_review)
+        row["deep_research"] = self._find_deep_research_methods(gene_review, source_path=source_path)
 
         # Term information
         if annotation.term:
@@ -570,7 +620,9 @@ class AnnotationExporter:
 
         return row
 
-    def _find_deep_research_methods(self, gene_review: GeneReview) -> List[str]:
+    def _find_deep_research_methods(
+        self, gene_review: GeneReview, source_path: Optional[Path] = None,
+    ) -> List[str]:
         """
         Find which deep research methods are available for a gene.
 
@@ -579,6 +631,7 @@ class AnnotationExporter:
 
         Args:
             gene_review: The GeneReview object
+            source_path: Path to the source YAML file
 
         Returns:
             List of method names (e.g., ['openai', 'perplexity', 'gemini'])
@@ -589,7 +642,7 @@ class AnnotationExporter:
         methods = []
 
         # Find the gene directory
-        gene_dir = self._find_gene_directory(gene_review)
+        gene_dir = self._find_gene_directory(gene_review, source_path=source_path)
         if not gene_dir or not gene_dir.exists():
             return []
 
@@ -612,7 +665,9 @@ class AnnotationExporter:
 
         return sorted(set(methods))
 
-    def _is_swissprot(self, gene_review: GeneReview) -> Optional[bool]:
+    def _is_swissprot(
+        self, gene_review: GeneReview, source_path: Optional[Path] = None,
+    ) -> Optional[bool]:
         """
         Determine if the protein is in Swiss-Prot (reviewed) or TrEMBL (unreviewed).
 
@@ -621,11 +676,12 @@ class AnnotationExporter:
 
         Args:
             gene_review: The GeneReview object
+            source_path: Path to the source YAML file
 
         Returns:
             True if Swiss-Prot, False if TrEMBL, None if unknown
         """
-        gene_dir = self._find_gene_directory(gene_review)
+        gene_dir = self._find_gene_directory(gene_review, source_path=source_path)
         if not gene_dir:
             return None
 
@@ -646,35 +702,55 @@ class AnnotationExporter:
 
         return None
 
-    def _find_gene_directory(self, gene_review: GeneReview) -> Optional[Path]:
+    @staticmethod
+    def _gene_dir_from_source_path(source_path: Optional[Path]) -> Optional[Path]:
+        """Derive the gene directory from a source YAML file path.
+
+        Expects paths like ``genes/SCHPO/Tim10/Tim10-ai-review.yaml``
+        and returns ``genes/SCHPO/Tim10``.
+
+        >>> AnnotationExporter._gene_dir_from_source_path(Path("genes/human/TP53/TP53-ai-review.yaml"))
+        PosixPath('genes/human/TP53')
         """
-        Find the directory for a gene based on its taxon.
+        if source_path is None:
+            return None
+        # The gene dir is the parent of the YAML file
+        gene_dir = source_path.parent
+        # Sanity check: should be under genes/<organism>/<gene>/
+        parts = gene_dir.parts
+        if len(parts) >= 3 and parts[-3] == "genes":
+            return gene_dir
+        # Also handle when run from a subdirectory or with relative paths
+        if gene_dir.exists():
+            return gene_dir
+        return None
+
+    def _find_gene_directory(
+        self, gene_review: GeneReview, source_path: Optional[Path] = None,
+    ) -> Optional[Path]:
+        """
+        Find the directory for a gene based on source path or taxon.
 
         Args:
             gene_review: The GeneReview object
+            source_path: Path to the source YAML file (most reliable)
 
         Returns:
             Path to the gene directory, or None if not found
         """
+        # Best: derive from source path (no guessing needed)
+        gene_dir = self._gene_dir_from_source_path(source_path)
+        if gene_dir is not None and gene_dir.exists():
+            return gene_dir
+
         if not gene_review.gene_symbol:
             return None
 
-        organism_mapping = {
-            "NCBITaxon:9606": "human",
-            "NCBITaxon:10090": "mouse",
-            "NCBITaxon:559292": "yeast",
-            "NCBITaxon:4896": "pombe",
-            "NCBITaxon:7227": "fly",
-            "NCBITaxon:6239": "worm",
-            "NCBITaxon:10116": "rat",
-            "NCBITaxon:3702": "ARATH",
-        }
-
         gene_symbol = gene_review.gene_symbol
 
-        # Try mapped organism directory first
+        # Try mapped organism directory
         if gene_review.taxon and gene_review.taxon.id:
-            organism_dir = organism_mapping.get(gene_review.taxon.id)
+            organism_dir = TAXON_TO_ORGANISM_DIR.get(gene_review.taxon.id)
             if organism_dir:
                 gene_path = Path("genes") / organism_dir / gene_symbol
                 if gene_path.exists():
@@ -713,12 +789,15 @@ class AnnotationExporter:
 
         return None
 
-    def _generate_pathway_link(self, gene_review: GeneReview) -> Optional[str]:
+    def _generate_pathway_link(
+        self, gene_review: GeneReview, source_path: Optional[Path] = None,
+    ) -> Optional[str]:
         """
         Generate a relative pathway link for the gene review.
 
         Args:
             gene_review: The GeneReview object
+            source_path: Path to the source YAML file
 
         Returns:
             Relative pathway link if pathway file exists, None otherwise
@@ -726,69 +805,25 @@ class AnnotationExporter:
         if not gene_review.gene_symbol:
             return None
 
-        # We need to determine the organism/species directory from the taxon
-        # This is a heuristic mapping - we'll use common patterns
-        organism_mapping = {
-            "NCBITaxon:9606": "human",
-            "NCBITaxon:10090": "mouse",
-            "NCBITaxon:559292": "yeast",
-            "NCBITaxon:4896": "pombe",
-            "NCBITaxon:7227": "fly",
-            "NCBITaxon:6239": "worm",
-            "NCBITaxon:8355": "rat",  # Xenopus tropicalis -> rat directory used
-        }
-
-        # Try to map taxon to organism directory
-        organism_dir = None
-        if gene_review.taxon and gene_review.taxon.id:
-            organism_dir = organism_mapping.get(gene_review.taxon.id)
-
-        # If no mapping found, try to infer from common patterns
-        if not organism_dir:
-            # Look for pathway file in multiple possible locations
-            possible_paths = [
-                f"../genes/human/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
-                f"../genes/mouse/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
-                f"../genes/yeast/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
-                f"../genes/pombe/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
-                f"../genes/fly/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
-                f"../genes/worm/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html",
-            ]
-
-            # Check if any of these files exist
-            for path in possible_paths:
-                # Convert relative path to absolute to check existence
-                abs_path = Path("genes") / path.replace("../genes/", "")
-                if abs_path.exists():
-                    return path
-
-            # If none found, try organism codes (BPZF4, ARATH, etc.)
-            # This is for bacterial/other organism codes
-            gene_symbol = gene_review.gene_symbol
-            for org_path in Path("genes").iterdir():
-                if org_path.is_dir() and org_path.name not in ["human", "mouse", "yeast", "pombe", "fly", "worm", "rat"]:
-                    possible_file = org_path / gene_symbol / f"{gene_symbol}-pathway.html"
-                    if possible_file.exists():
-                        return f"../genes/{org_path.name}/{gene_symbol}/{gene_symbol}-pathway.html"
-
-            return None
-
-        # Use mapped organism directory
-        pathway_path = f"../genes/{organism_dir}/{gene_review.gene_symbol}/{gene_review.gene_symbol}-pathway.html"
-
-        # Check if the file exists
-        abs_path = Path("genes") / organism_dir / gene_review.gene_symbol / f"{gene_review.gene_symbol}-pathway.html"
-        if abs_path.exists():
-            return pathway_path
+        gene_dir = self._find_gene_directory(gene_review, source_path=source_path)
+        if gene_dir and gene_dir.exists():
+            pathway_file = gene_dir / f"{gene_review.gene_symbol}-pathway.html"
+            if pathway_file.exists():
+                # Derive relative path: ../genes/<organism>/<gene>/<gene>-pathway.html
+                # gene_dir is e.g. genes/DROME/sws
+                return f"../{gene_dir}/{gene_review.gene_symbol}-pathway.html"
 
         return None
 
-    def _generate_review_html_link(self, gene_review: GeneReview) -> Optional[str]:
+    def _generate_review_html_link(
+        self, gene_review: GeneReview, source_path: Optional[Path] = None,
+    ) -> Optional[str]:
         """
         Generate a relative link to the gene review HTML page.
 
         Args:
             gene_review: The GeneReview object
+            source_path: Path to the source YAML file
 
         Returns:
             Relative link to the review HTML if it exists, None otherwise
@@ -796,62 +831,12 @@ class AnnotationExporter:
         if not gene_review.gene_symbol:
             return None
 
-        # We need to determine the organism/species directory from the taxon
-        # This is a heuristic mapping - we'll use common patterns
-        organism_mapping = {
-            "NCBITaxon:9606": "human",
-            "NCBITaxon:10090": "mouse",
-            "NCBITaxon:559292": "yeast",
-            "NCBITaxon:4896": "pombe",
-            "NCBITaxon:7227": "fly",
-            "NCBITaxon:6239": "worm",
-            "NCBITaxon:8355": "XENTR",  # Xenopus tropicalis
-            "NCBITaxon:3702": "ARATH",  # Arabidopsis thaliana
-        }
-
-        # Try to map taxon to organism directory
-        organism_dir = None
-        if gene_review.taxon and gene_review.taxon.id:
-            organism_dir = organism_mapping.get(gene_review.taxon.id)
-
-        # If no mapping found, try to find the review file in all directories
-        if not organism_dir:
-            # Look for review file in multiple possible locations
-            possible_paths = [
-                f"../genes/human/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
-                f"../genes/mouse/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
-                f"../genes/yeast/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
-                f"../genes/pombe/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
-                f"../genes/fly/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
-                f"../genes/worm/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
-                f"../genes/XENTR/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html",
-            ]
-
-            # Check if any of these files exist
-            for path in possible_paths:
-                # Convert relative path to absolute to check existence
-                abs_path = Path("genes") / path.replace("../genes/", "")
-                if abs_path.exists():
-                    return path
-
-            # If none found, try organism codes (BPZF4, ARATH, etc.)
-            # This is for bacterial/other organism codes
-            gene_symbol = gene_review.gene_symbol
-            for org_path in Path("genes").iterdir():
-                if org_path.is_dir():
-                    possible_file = org_path / gene_symbol / f"{gene_symbol}-ai-review.html"
-                    if possible_file.exists():
-                        return f"../genes/{org_path.name}/{gene_symbol}/{gene_symbol}-ai-review.html"
-
-            return None
-
-        # Use mapped organism directory
-        review_path = f"../genes/{organism_dir}/{gene_review.gene_symbol}/{gene_review.gene_symbol}-ai-review.html"
-
-        # Check if the file exists
-        abs_path = Path("genes") / organism_dir / gene_review.gene_symbol / f"{gene_review.gene_symbol}-ai-review.html"
-        if abs_path.exists():
-            return review_path
+        gene_dir = self._find_gene_directory(gene_review, source_path=source_path)
+        if gene_dir and gene_dir.exists():
+            review_file = gene_dir / f"{gene_review.gene_symbol}-ai-review.html"
+            if review_file.exists():
+                # Derive relative path: ../genes/<organism>/<gene>/<gene>-ai-review.html
+                return f"../{gene_dir}/{gene_review.gene_symbol}-ai-review.html"
 
         return None
 

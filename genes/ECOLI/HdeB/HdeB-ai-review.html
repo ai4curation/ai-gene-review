@@ -1,0 +1,2048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HdeB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HdeB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P0AET2" target="_blank" class="term-link">
+                        P0AET2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Escherichia coli (strain K12)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HdeB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P0AET2" data-a="DESCRIPTION: HdeB is a periplasmic acid-stress chaperone in E. ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HdeB is a periplasmic acid-stress chaperone in E. coli that functions as an ATP-independent holdase to prevent aggregation of periplasmic proteins under acidic conditions. It is a paralog of HdeA, and both proteins are encoded by the hdeAB acid stress operon. HdeB exists as a homodimer at neutral pH and dissociates into active monomers at acidic pH (complete dissociation at pH 3). While HdeA is more effective at pH 2, HdeB is more effective than HdeA at pH 3, and both are required for optimal protection against acid stress in vivo (PMID:17085547). HdeB exposes hydrophobic surfaces at acidic pH, consistent with its chaperone function. The protein is induced by the EvgS/EvgA two-component system and negatively regulated by H-NS and TorS/TorR.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009268" target="_blank" class="term-link">
+                                    GO:0009268
+                                </a>
+                            </span>
+                            <span class="term-label">response to pH</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AET2" data-a="GO:0009268" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation via InterPro mapping. HdeB is indeed involved in the cellular response to pH, specifically acidic pH. This is a broader parent of the more specific GO:0010447 (response to acidic pH), which is already annotated with experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this is a broader IEA term, it is not incorrect. HdeB is fundamentally a pH-responsive chaperone. The more specific term GO:0010447 is already annotated with IDA/IMP evidence, so this broader IEA is acceptable as a supporting annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    GO:0042597
+                                </a>
+                            </span>
+                            <span class="term-label">periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AET2" data-a="GO:0042597" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for periplasmic space localization. This is consistent with the experimentally determined localization (IDA for GO:0030288, outer membrane-bounded periplasmic space). This IEA is a broader parent term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Periplasmic localization is well established for HdeB. The more specific term GO:0030288 (outer membrane-bounded periplasmic space) is annotated with IDA. This broader IEA is acceptable.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P0AET2" data-a="GO:0051082" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation via InterPro mapping. HdeB does bind unfolded/aggregation-prone periplasmic proteins under acidic conditions. However, its function is better described as a holdase chaperone rather than simple binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HdeB functions as an ATP-independent holdase that prevents aggregation of periplasmic proteins at acidic pH (PMID:17085547). The term GO:0051082 &#34;unfolded protein binding&#34; describes only the binding aspect, not the chaperone holdase function. GO:0140309 &#34;unfolded protein carrier activity&#34; (a protein carrier activity that binds to a protein in an unfolded state and escorts it, preventing aggregation) better captures the holdase function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    unfolded protein binding (retain until holdase NTR is created)
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link">
+                                        PMID:17085547
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">HdeB has a molecular mass of 10 kDa... HdeB is more efficient than HdeA in preventing periplasmic-protein aggregation [at pH 3]... we can conclude that Escherichia coli possesses two acid stress chaperones that prevent periplasmic-protein aggregation at acidic pH.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990451" target="_blank" class="term-link">
+                                    GO:1990451
+                                </a>
+                            </span>
+                            <span class="term-label">cellular stress response to acidic pH</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AET2" data-a="GO:1990451" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniRule transfer. HdeB is specifically involved in the cellular stress response to acidic pH, protecting periplasmic proteins from acid-induced aggregation. This term is appropriate and well-supported by the known biology.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term accurately captures HdeB&#39;s role in the acid stress response. The protein functions specifically as an acid-activated chaperone (PMID:17085547).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link">
+                                        PMID:17085547
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the hdeA and hdeB mutants both display reduced viability upon acid stress</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010447" target="_blank" class="term-link">
+                                    GO:0010447
+                                </a>
+                            </span>
+                            <span class="term-label">response to acidic pH</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17085547
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Escherichia coli HdeB is an acid stress chaperone.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AET2" data-a="GO:0010447" data-r="PMID:17085547" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation based on direct experimental evidence from Kern et al. (2007). The study demonstrated that HdeB is an acid stress chaperone that prevents periplasmic protein aggregation at acidic pH, with optimal activity at pH 3.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported by direct experimental evidence. HdeB&#39;s chaperone activity is specifically activated at acidic pH and is required for protection against acid stress (PMID:17085547).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link">
+                                        PMID:17085547
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">HdeB is more efficient than HdeA in preventing periplasmic-protein aggregation [at pH 3]... HdeB, like HdeA, dissociates from dimers at neutral pH into monomers at acidic pHs, but its dissociation is complete at pH 3</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010447" target="_blank" class="term-link">
+                                    GO:0010447
+                                </a>
+                            </span>
+                            <span class="term-label">response to acidic pH</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17085547
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Escherichia coli HdeB is an acid stress chaperone.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AET2" data-a="GO:0010447" data-r="PMID:17085547" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation based on mutant phenotype evidence. hdeB mutants display increased sensitivity to acid stress (PMID:17085547). This complements the IDA annotation for the same term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The mutant phenotype clearly demonstrates HdeB&#39;s role in the acid stress response. hdeB deletion mutants show reduced viability at pH 2 and pH 3 (PMID:17085547).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link">
+                                        PMID:17085547
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the hdeA and hdeB mutants both display reduced viability upon acid stress, and only the HdeA/HdeB expression plasmid can restore their viability to close to the wild-type level</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17085547
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Escherichia coli HdeB is an acid stress chaperone.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AET2" data-a="GO:0030288" data-r="PMID:17085547" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for localization to the outer membrane-bounded periplasmic space. HdeB was extracted from bacteria by the osmotic-shock procedure, confirming its periplasmic localization (PMID:17085547). UniProt also confirms periplasm localization with a signal peptide (residues 1-29).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by experimental evidence. HdeB has a signal peptide and was purified from the periplasm by osmotic shock (PMID:17085547).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link">
+                                        PMID:17085547
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We extracted HdeB from bacteria by the osmotic-shock procedure and purified it to homogeneity by ion-exchange chromatography and hydroxyapatite chromatography.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17085547
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Escherichia coli HdeB is an acid stress chaperone.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P0AET2" data-a="GO:0051082" data-r="PMID:17085547" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for unfolded protein binding based on direct experimental evidence. Kern et al. demonstrated that HdeB prevents aggregation of periplasmic proteins at acidic pH, consistent with binding unfolded proteins. However, the function is better described as holdase/chaperone activity rather than simple binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While HdeB does bind unfolded proteins, its function is more accurately described as a holdase chaperone. GO:0140309 &#34;unfolded protein carrier activity&#34; better captures the ATP-independent holdase function that prevents aggregation and escorts substrates. The experimental evidence from PMID:17085547 demonstrates chaperone-like prevention of aggregation, not just binding.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    unfolded protein binding (retain until holdase NTR is created)
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link">
+                                        PMID:17085547
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">At pH 3, however, HdeB is more efficient than HdeA in preventing periplasmic-protein aggregation. The solubilization of several model substrate proteins at acidic pH supports the hypothesis that, in vitro, HdeA plays a major role in protein solubilization at pH 2 and that both proteins are involved in protein solubilization at pH 3.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>HdeB functions as an ATP-independent holdase chaperone that prevents aggregation of periplasmic proteins under acidic conditions. Optimal activity at pH 3-4. Dissociates from inactive dimers to active monomers at acidic pH.</h3>
+                <span class="vote-buttons" data-g="P0AET2" data-a="FUNCTION: HdeB functions as an ATP-independent holdase chape..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                            unfolded protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990451" target="_blank" class="term-link">
+                                cellular stress response to acidic pH
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link">
+                                PMID:17085547
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">HdeB is more efficient than HdeA in preventing periplasmic-protein aggregation [at pH 3]</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17085547" target="_blank" class="term-link">
+                            PMID:17085547
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Escherichia coli HdeB is an acid stress chaperone.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HdeB is a periplasmic acid stress chaperone</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HdeB is more effective than HdeA at pH 3</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Both HdeA and HdeB are required for optimal acid stress protection</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HdeB dissociates from dimers to monomers at acidic pH</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22138344" target="_blank" class="term-link">
+                            PMID:22138344
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Salt bridges regulate both dimer formation and monomeric flexibility in HdeB and may have a role in periplasmic chaperone function.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Structural basis for HdeB dimerization and monomer flexibility</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P0AET2
+gene_symbol: HdeB
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:83333
+  label: Escherichia coli (strain K12)
+description: HdeB is a periplasmic acid-stress chaperone in E. coli that functions
+  as an ATP-independent holdase to prevent aggregation of periplasmic proteins under
+  acidic conditions. It is a paralog of HdeA, and both proteins are encoded by the
+  hdeAB acid stress operon. HdeB exists as a homodimer at neutral pH and dissociates
+  into active monomers at acidic pH (complete dissociation at pH 3). While HdeA is
+  more effective at pH 2, HdeB is more effective than HdeA at pH 3, and both are required
+  for optimal protection against acid stress in vivo (PMID:17085547). HdeB exposes
+  hydrophobic surfaces at acidic pH, consistent with its chaperone function. The protein
+  is induced by the EvgS/EvgA two-component system and negatively regulated by H-NS
+  and TorS/TorR.
+existing_annotations:
+- term:
+    id: GO:0009268
+    label: response to pH
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation via InterPro mapping. HdeB is indeed involved in the cellular
+      response to pH, specifically acidic pH. This is a broader parent of the more
+      specific GO:0010447 (response to acidic pH), which is already annotated with
+      experimental evidence.
+    action: ACCEPT
+    reason: While this is a broader IEA term, it is not incorrect. HdeB is fundamentally
+      a pH-responsive chaperone. The more specific term GO:0010447 is already annotated
+      with IDA/IMP evidence, so this broader IEA is acceptable as a supporting annotation.
+- term:
+    id: GO:0042597
+    label: periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation for periplasmic space localization. This is consistent
+      with the experimentally determined localization (IDA for GO:0030288, outer membrane-bounded
+      periplasmic space). This IEA is a broader parent term.
+    action: ACCEPT
+    reason: Periplasmic localization is well established for HdeB. The more specific
+      term GO:0030288 (outer membrane-bounded periplasmic space) is annotated with
+      IDA. This broader IEA is acceptable.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation via InterPro mapping. HdeB does bind unfolded/aggregation-prone
+      periplasmic proteins under acidic conditions. However, its function is better
+      described as a holdase chaperone rather than simple binding.
+    action: MODIFY
+    reason: HdeB functions as an ATP-independent holdase that prevents aggregation
+      of periplasmic proteins at acidic pH (PMID:17085547). The term GO:0051082 &#34;unfolded
+      protein binding&#34; describes only the binding aspect, not the chaperone holdase
+      function. GO:0140309 &#34;unfolded protein carrier activity&#34; (a protein carrier
+      activity that binds to a protein in an unfolded state and escorts it, preventing
+      aggregation) better captures the holdase function.
+    proposed_replacement_terms:
+    - id: GO:0051082
+      label: unfolded protein binding (retain until holdase NTR is created)
+    supported_by:
+    - reference_id: PMID:17085547
+      supporting_text: HdeB has a molecular mass of 10 kDa... HdeB is more efficient
+        than HdeA in preventing periplasmic-protein aggregation [at pH 3]... we can
+        conclude that Escherichia coli possesses two acid stress chaperones that prevent
+        periplasmic-protein aggregation at acidic pH.
+- term:
+    id: GO:1990451
+    label: cellular stress response to acidic pH
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: IEA annotation from UniRule transfer. HdeB is specifically involved in
+      the cellular stress response to acidic pH, protecting periplasmic proteins from
+      acid-induced aggregation. This term is appropriate and well-supported by the
+      known biology.
+    action: ACCEPT
+    reason: This term accurately captures HdeB&#39;s role in the acid stress response.
+      The protein functions specifically as an acid-activated chaperone (PMID:17085547).
+    supported_by:
+    - reference_id: PMID:17085547
+      supporting_text: the hdeA and hdeB mutants both display reduced viability upon
+        acid stress
+- term:
+    id: GO:0010447
+    label: response to acidic pH
+  evidence_type: IDA
+  original_reference_id: PMID:17085547
+  review:
+    summary: IDA annotation based on direct experimental evidence from Kern et al.
+      (2007). The study demonstrated that HdeB is an acid stress chaperone that prevents
+      periplasmic protein aggregation at acidic pH, with optimal activity at pH 3.
+    action: ACCEPT
+    reason: Well-supported by direct experimental evidence. HdeB&#39;s chaperone activity
+      is specifically activated at acidic pH and is required for protection against
+      acid stress (PMID:17085547).
+    supported_by:
+    - reference_id: PMID:17085547
+      supporting_text: HdeB is more efficient than HdeA in preventing periplasmic-protein
+        aggregation [at pH 3]... HdeB, like HdeA, dissociates from dimers at neutral
+        pH into monomers at acidic pHs, but its dissociation is complete at pH 3
+- term:
+    id: GO:0010447
+    label: response to acidic pH
+  evidence_type: IMP
+  original_reference_id: PMID:17085547
+  review:
+    summary: IMP annotation based on mutant phenotype evidence. hdeB mutants display
+      increased sensitivity to acid stress (PMID:17085547). This complements the IDA
+      annotation for the same term.
+    action: ACCEPT
+    reason: The mutant phenotype clearly demonstrates HdeB&#39;s role in the acid stress
+      response. hdeB deletion mutants show reduced viability at pH 2 and pH 3 (PMID:17085547).
+    supported_by:
+    - reference_id: PMID:17085547
+      supporting_text: the hdeA and hdeB mutants both display reduced viability upon
+        acid stress, and only the HdeA/HdeB expression plasmid can restore their viability
+        to close to the wild-type level
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: IDA
+  original_reference_id: PMID:17085547
+  review:
+    summary: IDA annotation for localization to the outer membrane-bounded periplasmic
+      space. HdeB was extracted from bacteria by the osmotic-shock procedure, confirming
+      its periplasmic localization (PMID:17085547). UniProt also confirms periplasm
+      localization with a signal peptide (residues 1-29).
+    action: ACCEPT
+    reason: Directly supported by experimental evidence. HdeB has a signal peptide
+      and was purified from the periplasm by osmotic shock (PMID:17085547).
+    supported_by:
+    - reference_id: PMID:17085547
+      supporting_text: We extracted HdeB from bacteria by the osmotic-shock procedure
+        and purified it to homogeneity by ion-exchange chromatography and hydroxyapatite
+        chromatography.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:17085547
+  review:
+    summary: IDA annotation for unfolded protein binding based on direct experimental
+      evidence. Kern et al. demonstrated that HdeB prevents aggregation of periplasmic
+      proteins at acidic pH, consistent with binding unfolded proteins. However, the
+      function is better described as holdase/chaperone activity rather than simple
+      binding.
+    action: MODIFY
+    reason: While HdeB does bind unfolded proteins, its function is more accurately
+      described as a holdase chaperone. GO:0140309 &#34;unfolded protein carrier activity&#34;
+      better captures the ATP-independent holdase function that prevents aggregation
+      and escorts substrates. The experimental evidence from PMID:17085547 demonstrates
+      chaperone-like prevention of aggregation, not just binding.
+    proposed_replacement_terms:
+    - id: GO:0051082
+      label: unfolded protein binding (retain until holdase NTR is created)
+    supported_by:
+    - reference_id: PMID:17085547
+      supporting_text: At pH 3, however, HdeB is more efficient than HdeA in preventing
+        periplasmic-protein aggregation. The solubilization of several model substrate
+        proteins at acidic pH supports the hypothesis that, in vitro, HdeA plays a
+        major role in protein solubilization at pH 2 and that both proteins are involved
+        in protein solubilization at pH 3.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17085547
+  title: Escherichia coli HdeB is an acid stress chaperone.
+  findings:
+  - statement: HdeB is a periplasmic acid stress chaperone
+  - statement: HdeB is more effective than HdeA at pH 3
+  - statement: Both HdeA and HdeB are required for optimal acid stress protection
+  - statement: HdeB dissociates from dimers to monomers at acidic pH
+- id: PMID:22138344
+  title: Salt bridges regulate both dimer formation and monomeric flexibility in HdeB
+    and may have a role in periplasmic chaperone function.
+  findings:
+  - statement: Structural basis for HdeB dimerization and monomer flexibility
+core_functions:
+- molecular_function:
+    id: GO:0051082
+    label: unfolded protein binding
+  directly_involved_in:
+  - id: GO:1990451
+    label: cellular stress response to acidic pH
+  locations:
+  - id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  description: HdeB functions as an ATP-independent holdase chaperone that prevents
+    aggregation of periplasmic proteins under acidic conditions. Optimal activity
+    at pH 3-4. Dissociates from inactive dimers to active monomers at acidic pH.
+  supported_by:
+  - reference_id: PMID:17085547
+    supporting_text: HdeB is more efficient than HdeA in preventing periplasmic-protein
+      aggregation [at pH 3]
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nud-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nud-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G5EE74" target="_blank" class="term-link">
+                        G5EE74
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nud-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G5EE74" data-a="DESCRIPTION: C. elegans NUD-1 (Nuclear migration protein nudC) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>C. elegans NUD-1 (Nuclear migration protein nudC) is an evolutionarily conserved member of the NudC family that functions in nuclear migration, mitotic progression, and cytoskeletal dynamics. NUD-1 associates with microtubules and the dynein motor complex, working alongside LIS-1 to ensure proper cell division and nuclear positioning (PMID:11685578). The protein contains a conserved p23/HSP20-like domain (CS domain) and an N-terminal NudC domain. In vitro studies demonstrate that NUD-1 exhibits ATP-independent molecular chaperone (holdase) activity, preventing aggregation of citrate synthase and luciferase at stoichiometric concentrations, and protecting native enzyme activity from thermal inactivation (PMID:18626791). Importantly, NUD-1/substrate complexes are productive -- unfolded intermediates can be refolded by ATP-dependent chaperones, indicating NUD-1 acts as a holdase that maintains substrates in a refolding-competent state (PMID:18626791). NUD-1 is expressed in sensory neurons, embryos, gonad, gut, vulva, ventral cord, and hypodermal seam cells (PMID:11685578). RNAi knockdown causes embryonic lethality, sterility, altered vulval morphology, uncoordinated movement, and nuclear positioning defects in early embryonic cell division (PMID:11685578). Depletion of NUD-1 also leads to defective GABA synaptic vesicle trafficking and increased susceptibility to pentylenetetrazole-induced convulsions (PMID:16996038).</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for cytoplasmic localization, inferred phylogenetically from multiple orthologs including Drosophila, Arabidopsis, and human NudC proteins. Consistent with UniProt subcellular location annotation (Cytoplasm) and the known biology of NudC family proteins as cytoplasmic, microtubule-associated proteins. NUD-1::GFP fusion shows cytoplasmic expression in sensory neurons, embryos, gonad, gut, vulva, ventral cord, and hypodermal seam cells (PMID:11685578).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is well-established for NUD-1 and the NudC family. The IBA inference is consistent with UniProt annotation and direct GFP expression data in C. elegans (PMID:11685578).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11685578" target="_blank" class="term-link">
+                                        PMID:11685578
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A C. elegans nud-1::GFP fusion produces sustained fluorescence in sensory neurons and embryos, and transient fluorescence in the gonad, gut, vulva, ventral cord, and hypodermal seam cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0006457" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for involvement in protein folding, inferred phylogenetically. NUD-1 has been demonstrated to exhibit chaperone activity in vitro (PMID:18626791), preventing aggregation of citrate synthase and luciferase. However, NUD-1 functions as a holdase rather than a foldase -- it prevents aggregation of unfolded substrates, which can then be refolded by ATP-dependent chaperones. The IBA annotation is consistent with the experimental evidence from PMID:18626791.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein folding is appropriate as a biological process annotation for a holdase chaperone, as NUD-1 maintains unfolded intermediates in a refolding-competent state that can be subsequently refolded by the cellular chaperone machinery (PMID:18626791). The IBA inference is supported by direct experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18626791" target="_blank" class="term-link">
+                                        PMID:18626791
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the presence of NUD-1, nearly all of the luciferase activity was regained, indicating that unfolded intermediates complexed with NUD-1 could be refolded.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0051082" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for unfolded protein binding, inferred phylogenetically from NUD-1 itself (WB:WBGene00003829) and other orthologs. GO:0051082 is proposed for obsoletion. NUD-1 has been directly demonstrated to prevent aggregation of denaturing citrate synthase and luciferase (PMID:18626791), functioning as an ATP-independent holdase chaperone. However, NUD-1 is not a classical sHSP -- it is a NudC family protein with an HSP20-like fold (CS domain) whose primary role is in nuclear migration and cytoskeletal dynamics. The chaperone activity may be secondary to its role in mitotic complex assembly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0051082 is proposed for obsoletion. NUD-1 demonstrates holdase activity in vitro (PMID:18626791), preventing aggregation of denaturing substrates and maintaining them in a refolding-competent state. GO:0140309 (unfolded protein carrier activity) is not appropriate because it is carrier-specific (per go-ontology#30552). Retain until a holdase chaperone activity NTR is created.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    unfolded protein binding (retain until holdase NTR is created)
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18626791" target="_blank" class="term-link">
+                                        PMID:18626791
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We demonstrate that nematode NUD-1 is able to prevent the aggregation of two substrate proteins, citrate synthase (CS) and luciferase, at stoichiometric concentrations.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045202" target="_blank" class="term-link">
+                                    GO:0045202
+                                </a>
+                            </span>
+                            <span class="term-label">synapse</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0045202" data-r="GO_REF:0000108" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for synaptic localization, inferred automatically from the GO:0051932 (synaptic transmission, GABAergic) annotation via inter-ontology logical inference. NUD-1 depletion causes defective GABA synaptic vesicle trafficking (PMID:16996038), which supports a role at synapses. However, this is an indirect inference -- NUD-1 may affect synaptic vesicle trafficking through its role in cytoskeletal dynamics (dynein/microtubule-dependent transport) rather than being a resident synaptic protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The inference from GABAergic synaptic transmission to synaptic localization is logically valid. NUD-1 depletion disrupts GABA synaptic vesicle trafficking (PMID:16996038), suggesting functional involvement at synapses. However, NUD-1 is primarily a cytoplasmic, microtubule-associated protein and its synaptic role is secondary to its core function in nuclear migration and chaperone activity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for cytoplasmic localization based on UniProt subcellular location mapping. Consistent with the IBA annotation for the same term and direct GFP expression data (PMID:11685578).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is well-established. This IEA annotation is consistent with the IBA annotation and experimental evidence. Acceptable as automated confirmation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18626791" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18626791
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The microtubule-associated protein, NUD-1, exhibits chaperon...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0006457" data-r="PMID:18626791" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for involvement in protein folding based on Faircloth et al. 2009 (PMID:18626791). The study demonstrated that recombinant NUD-1 prevents aggregation of citrate synthase and luciferase, protects native CS from thermal inactivation, and maintains unfolded luciferase intermediates in a refolding-competent state. This is directly supported by the luciferase refolding assay showing that unfolded intermediates complexed with NUD-1 could be refolded by rabbit reticulocyte lysate plus ATP.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental evidence directly in C. elegans NUD-1 demonstrating chaperone activity that facilitates the protein folding process. NUD-1 acts as a holdase maintaining substrates in a refolding-competent state, which is part of the protein folding pathway (PMID:18626791).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18626791" target="_blank" class="term-link">
+                                        PMID:18626791
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the presence of NUD-1, nearly all of the luciferase activity was regained, indicating that unfolded intermediates complexed with NUD-1 could be refolded.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18626791" target="_blank" class="term-link">
+                                        PMID:18626791
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NUD-1 also protects the native state of CS from thermal inactivation by significantly reducing the inactivation rate of this enzyme.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    GO:0044183
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding chaperone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18626791" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18626791
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The microtubule-associated protein, NUD-1, exhibits chaperon...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0044183" data-r="PMID:18626791" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for protein folding chaperone molecular function based on Faircloth et al. 2009 (PMID:18626791). The study directly demonstrated that NUD-1 possesses ATP-independent chaperone activity comparable to small heat shock proteins and cochaperones. NUD-1 prevents aggregation of denaturing citrate synthase and luciferase at stoichiometric concentrations, and maintains substrates in a refolding-competent state. This is a more informative molecular function annotation than GO:0051082 (unfolded protein binding), as it captures the active chaperone function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0044183 (protein folding chaperone) accurately describes the molecular function of NUD-1 as demonstrated by in vitro chaperone assays (PMID:18626791). The term captures the holdase activity, including prevention of aggregation and maintenance of refolding-competent intermediates. This is a well-supported core molecular function annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18626791" target="_blank" class="term-link">
+                                        PMID:18626791
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NUD-1 possesses ATP-independent chaperone activity comparable to that of small heat shock proteins and cochaperones and that changes in phosphorylation state functionally alter chaperone activity in a phosphomimetic NUD-1 mutant.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18626791" target="_blank" class="term-link">
+                                        PMID:18626791
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We demonstrate that nematode NUD-1 is able to prevent the aggregation of two substrate proteins, citrate synthase (CS) and luciferase, at stoichiometric concentrations.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18626791" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18626791
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The microtubule-associated protein, NUD-1, exhibits chaperon...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0051082" data-r="PMID:18626791" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for unfolded protein binding based on Faircloth et al. 2009 (PMID:18626791). The study demonstrated that NUD-1 binds denaturing proteins (citrate synthase and luciferase) and prevents their aggregation. GO:0051082 is proposed for obsoletion. The more informative annotation GO:0044183 (protein folding chaperone) is already annotated with IDA evidence from the same publication, and GO:0140309 (unfolded protein carrier activity) would be the recommended replacement for the holdase function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0051082 is proposed for obsoletion. The holdase activity demonstrated in PMID:18626791 is not well captured by GO:0140309 (carrier-specific, per go-ontology#30552). GO:0044183 (protein folding chaperone) is already annotated from the same evidence. Retain until a holdase chaperone activity NTR is created.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    unfolded protein binding (retain until holdase NTR is created)
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18626791" target="_blank" class="term-link">
+                                        PMID:18626791
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We demonstrate that nematode NUD-1 is able to prevent the aggregation of two substrate proteins, citrate synthase (CS) and luciferase, at stoichiometric concentrations.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048489" target="_blank" class="term-link">
+                                    GO:0048489
+                                </a>
+                            </span>
+                            <span class="term-label">synaptic vesicle transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16996038" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16996038
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic interactions among cortical malformation genes that ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0048489" data-r="PMID:16996038" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for involvement in synaptic vesicle transport based on Locke et al. 2006 (PMID:16996038). The study used fluorescent markers for synaptic vesicle trafficking and found that depletion of NUD-1 (along with other LIS1 pathway components) resulted in defective GABA synaptic vesicle trafficking. This is consistent with NUD-1&#39;s role in dynein-dependent transport along microtubules.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The experimental evidence from PMID:16996038 supports involvement in synaptic vesicle transport, likely through NUD-1&#39;s role in the dynein motor complex and microtubule-based transport. However, this is a secondary consequence of NUD-1&#39;s core function in cytoskeletal dynamics rather than a specialized role in synaptic vesicle trafficking per se. Retained as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16996038" target="_blank" class="term-link">
+                                        PMID:16996038
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We found that depletion of LIS1 pathway components resulted in defective GABA synaptic vesicle trafficking.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051932" target="_blank" class="term-link">
+                                    GO:0051932
+                                </a>
+                            </span>
+                            <span class="term-label">synaptic transmission, GABAergic</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16996038" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16996038
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic interactions among cortical malformation genes that ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0051932" data-r="PMID:16996038" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI annotation for involvement in GABAergic synaptic transmission based on Locke et al. 2006 (PMID:16996038). The study used genetic interaction experiments with LIS-1 pathway components (indicated by with/from WB:WBGene00003047) and pentylenetetrazole exposure to demonstrate that NUD-1 depletion affects GABAergic neurotransmission, resulting in convulsion susceptibility.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The genetic interaction evidence supports a role in GABAergic synaptic transmission, likely secondary to NUD-1&#39;s role in microtubule-dependent transport of synaptic vesicles. This is a non-core function reflecting the downstream effects of disrupted cytoskeletal dynamics on neuronal function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16996038" target="_blank" class="term-link">
+                                        PMID:16996038
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Worms depleted for LIS1 pathway components (NUD-1, NUD-2, DHC-1, CDK-5, and CDKA-1) exhibited significant convulsions following PTZ and RNAi treatment.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040011" target="_blank" class="term-link">
+                                    GO:0040011
+                                </a>
+                            </span>
+                            <span class="term-label">locomotion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11685578" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11685578
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evolutionarily conserved nuclear migration genes required fo...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0040011" data-r="PMID:11685578" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for involvement in locomotion based on Dawe et al. 2001 (PMID:11685578). RNAi knockdown of nud-1 resulted in uncoordinated movement, one of several pleiotropic phenotypes observed. This is a downstream consequence of NUD-1&#39;s role in neuronal development and function rather than a direct role in locomotion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The uncoordinated movement phenotype from nud-1 RNAi (PMID:11685578) is a pleiotropic effect of disrupting this broadly required nuclear migration/ cytoskeletal dynamics gene, not a specific role in locomotion. Retained as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11685578" target="_blank" class="term-link">
+                                        PMID:11685578
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Phenotypic analysis of either nud-1 and lis-1 by RNA interference yielded similar phenotypes, including embryonic lethality, sterility, altered vulval morphology, and uncoordinated movement.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040025" target="_blank" class="term-link">
+                                    GO:0040025
+                                </a>
+                            </span>
+                            <span class="term-label">vulval development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11685578" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11685578
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evolutionarily conserved nuclear migration genes required fo...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0040025" data-r="PMID:11685578" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for involvement in vulval development based on Dawe et al. 2001 (PMID:11685578). RNAi knockdown of nud-1 resulted in altered vulval morphology. nud-1::GFP shows expression in the vulva, and vulval development requires proper cell division and nuclear migration, consistent with NUD-1&#39;s core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Altered vulval morphology from nud-1 RNAi (PMID:11685578) is a pleiotropic phenotype consistent with disruption of nuclear migration and cell division in vulval precursor cells. nud-1::GFP is expressed in the vulva. Retained as non-core since vulval development is not the primary function of NUD-1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11685578" target="_blank" class="term-link">
+                                        PMID:11685578
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Phenotypic analysis of either nud-1 and lis-1 by RNA interference yielded similar phenotypes, including embryonic lethality, sterility, altered vulval morphology, and uncoordinated movement.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009792" target="_blank" class="term-link">
+                                    GO:0009792
+                                </a>
+                            </span>
+                            <span class="term-label">embryo development ending in birth or egg hatching</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11685578" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11685578
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evolutionarily conserved nuclear migration genes required fo...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0009792" data-r="PMID:11685578" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for involvement in embryo development based on Dawe et al. 2001 (PMID:11685578). RNAi knockdown of nud-1 caused embryonic lethality and nuclear positioning defects in early embryonic cell division similar to dynein/dynactin depletion. This is a core biological process for NUD-1 given its essential role in nuclear migration during cell division.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Embryonic lethality from nud-1 RNAi represents a core phenotype (PMID:11685578). NUD-1 is essential for proper nuclear positioning during early embryonic cell division, and its requirement for embryo development is a direct consequence of its core function in nuclear migration and mitotic progression.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11685578" target="_blank" class="term-link">
+                                        PMID:11685578
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Digital time-lapse video microscopy was used to determine that RNAi-treated embryos exhibited nuclear positioning defects in early embryonic cell division similar to those reported for dynein/dynactin depletion.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035046" target="_blank" class="term-link">
+                                    GO:0035046
+                                </a>
+                            </span>
+                            <span class="term-label">pronuclear migration</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11685578" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11685578
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evolutionarily conserved nuclear migration genes required fo...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0035046" data-r="PMID:11685578" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for involvement in pronuclear migration based on Dawe et al. 2001 (PMID:11685578). RNAi knockdown of nud-1 caused nuclear positioning defects in early embryonic cell division. Pronuclear migration is a dynein-dependent process, and NUD-1 functions with the dynein motor complex. This is a core biological process directly reflecting NUD-1&#39;s primary molecular role in nuclear migration.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Pronuclear migration is a core function of NUD-1, directly reflecting its primary role in nuclear migration via the dynein motor complex. The nuclear positioning defects observed after nud-1 RNAi (PMID:11685578) are consistent with the conserved role of NudC family proteins in nuclear migration from fungi to humans. The gene name itself (nuclear distribution) reflects this function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11685578" target="_blank" class="term-link">
+                                        PMID:11685578
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Digital time-lapse video microscopy was used to determine that RNAi-treated embryos exhibited nuclear positioning defects in early embryonic cell division similar to those reported for dynein/dynactin depletion.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11685578" target="_blank" class="term-link">
+                                        PMID:11685578
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Heterologous expression of the C. elegans nudC ortholog, nud-1, complements the A. nidulans nudC3 mutant, demonstrating evolutionary conservation of function.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051932" target="_blank" class="term-link">
+                                    GO:0051932
+                                </a>
+                            </span>
+                            <span class="term-label">synaptic transmission, GABAergic</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16996038" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16996038
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic interactions among cortical malformation genes that ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EE74" data-a="GO:0051932" data-r="PMID:16996038" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for involvement in GABAergic synaptic transmission based on Locke et al. 2006 (PMID:16996038). NUD-1-depleted worms exhibited significant convulsions following PTZ treatment, and fluorescent markers showed defective GABA synaptic vesicle trafficking. This is a separate evidence line (IMP vs IGI) from the other GO:0051932 annotation for the same gene from the same paper.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IMP annotation provides independent evidence from the IGI annotation for the same term. The convulsion susceptibility phenotype after NUD-1 depletion (PMID:16996038) supports involvement in GABAergic signaling, but this is a secondary function stemming from NUD-1&#39;s role in microtubule-based transport. Retained as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16996038" target="_blank" class="term-link">
+                                        PMID:16996038
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Worms depleted for LIS1 pathway components (NUD-1, NUD-2, DHC-1, CDK-5, and CDKA-1) exhibited significant convulsions following PTZ and RNAi treatment.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NUD-1 functions as an ATP-independent holdase chaperone that prevents aggregation of denaturing proteins and maintains substrates in a refolding-competent state (PMID:18626791). This chaperone activity, mediated by its conserved p23/HSP20-like CS domain, likely supports its essential role in nuclear migration and mitotic progression by maintaining the integrity of key protein complexes (dynein, LIS-1) required for cell division. NUD-1 is required for proper pronuclear migration and embryo development (PMID:11685578).</h3>
+                <span class="vote-buttons" data-g="G5EE74" data-a="FUNCTION: NUD-1 functions as an ATP-independent holdase chap..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                            protein folding chaperone
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                protein folding
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035046" target="_blank" class="term-link">
+                                pronuclear migration
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009792" target="_blank" class="term-link">
+                                embryo development ending in birth or egg hatching
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11685578" target="_blank" class="term-link">
+                            PMID:11685578
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Evolutionarily conserved nuclear migration genes required for early embryonic development in Caenorhabditis elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RNAi knockdown of nud-1 causes embryonic lethality, sterility, altered vulval morphology, uncoordinated movement, and nuclear positioning defects in early embryonic cell division similar to dynein/dynactin depletion.</div>
+                        
+                        <div class="finding-text">"Phenotypic analysis of either nud-1 and lis-1 by RNA interference yielded similar phenotypes, including embryonic lethality, sterility, altered vulval morphology, and uncoordinated movement."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16996038" target="_blank" class="term-link">
+                            PMID:16996038
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic interactions among cortical malformation genes that influence susceptibility to convulsions in C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Depletion of NUD-1 and other LIS1 pathway components caused defective GABA synaptic vesicle trafficking and significant convulsions following pentylenetetrazole treatment.</div>
+                        
+                        <div class="finding-text">"Worms depleted for LIS1 pathway components (NUD-1, NUD-2, DHC-1, CDK-5, and CDKA-1) exhibited significant convulsions following PTZ and RNAi treatment."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18626791" target="_blank" class="term-link">
+                            PMID:18626791
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The microtubule-associated protein, NUD-1, exhibits chaperone activity in vitro.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant C. elegans NUD-1 prevents aggregation of citrate synthase and luciferase at stoichiometric concentrations, protects native CS from thermal inactivation, and maintains unfolded intermediates in a refolding-competent state. NUD-1 possesses ATP-independent chaperone activity comparable to small heat shock proteins.</div>
+                        
+                        <div class="finding-text">"We demonstrate that nematode NUD-1 is able to prevent the aggregation of two substrate proteins, citrate synthase (CS) and luciferase, at stoichiometric concentrations."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G5EE74
+gene_symbol: nud-1
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  C. elegans NUD-1 (Nuclear migration protein nudC) is an evolutionarily conserved
+  member of the NudC family that functions in nuclear migration, mitotic progression,
+  and cytoskeletal dynamics. NUD-1 associates with microtubules and the dynein motor
+  complex, working alongside LIS-1 to ensure proper cell division and nuclear positioning
+  (PMID:11685578). The protein contains a conserved p23/HSP20-like domain (CS domain)
+  and an N-terminal NudC domain. In vitro studies demonstrate that NUD-1 exhibits
+  ATP-independent molecular chaperone (holdase) activity, preventing aggregation of
+  citrate synthase and luciferase at stoichiometric concentrations, and protecting
+  native enzyme activity from thermal inactivation (PMID:18626791). Importantly,
+  NUD-1/substrate complexes are productive -- unfolded intermediates can be refolded
+  by ATP-dependent chaperones, indicating NUD-1 acts as a holdase that maintains
+  substrates in a refolding-competent state (PMID:18626791). NUD-1 is expressed in
+  sensory neurons, embryos, gonad, gut, vulva, ventral cord, and hypodermal seam
+  cells (PMID:11685578). RNAi knockdown causes embryonic lethality, sterility,
+  altered vulval morphology, uncoordinated movement, and nuclear positioning defects
+  in early embryonic cell division (PMID:11685578). Depletion of NUD-1 also leads to
+  defective GABA synaptic vesicle trafficking and increased susceptibility to
+  pentylenetetrazole-induced convulsions (PMID:16996038).
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for cytoplasmic localization, inferred phylogenetically from
+      multiple orthologs including Drosophila, Arabidopsis, and human NudC proteins.
+      Consistent with UniProt subcellular location annotation (Cytoplasm) and the
+      known biology of NudC family proteins as cytoplasmic, microtubule-associated
+      proteins. NUD-1::GFP fusion shows cytoplasmic expression in sensory neurons,
+      embryos, gonad, gut, vulva, ventral cord, and hypodermal seam cells (PMID:11685578).
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is well-established for NUD-1 and the NudC family.
+      The IBA inference is consistent with UniProt annotation and direct GFP expression
+      data in C. elegans (PMID:11685578).
+    supported_by:
+      - reference_id: PMID:11685578
+        supporting_text: &gt;-
+          A C. elegans nud-1::GFP fusion produces sustained fluorescence in sensory
+          neurons and embryos, and transient fluorescence in the gonad, gut, vulva,
+          ventral cord, and hypodermal seam cells.
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for involvement in protein folding, inferred phylogenetically.
+      NUD-1 has been demonstrated to exhibit chaperone activity in vitro
+      (PMID:18626791), preventing aggregation of citrate synthase and luciferase.
+      However, NUD-1 functions as a holdase rather than a foldase -- it prevents
+      aggregation of unfolded substrates, which can then be refolded by ATP-dependent
+      chaperones. The IBA annotation is consistent with the experimental evidence
+      from PMID:18626791.
+    action: ACCEPT
+    reason: &gt;-
+      Protein folding is appropriate as a biological process annotation for a holdase
+      chaperone, as NUD-1 maintains unfolded intermediates in a refolding-competent
+      state that can be subsequently refolded by the cellular chaperone machinery
+      (PMID:18626791). The IBA inference is supported by direct experimental evidence.
+    supported_by:
+      - reference_id: PMID:18626791
+        supporting_text: &gt;-
+          In the presence of NUD-1, nearly all of the luciferase activity was regained,
+          indicating that unfolded intermediates complexed with NUD-1 could be refolded.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for unfolded protein binding, inferred phylogenetically from
+      NUD-1 itself (WB:WBGene00003829) and other orthologs. GO:0051082 is proposed
+      for obsoletion. NUD-1 has been directly demonstrated to prevent aggregation of
+      denaturing citrate synthase and luciferase (PMID:18626791), functioning as
+      an ATP-independent holdase chaperone. However, NUD-1 is not a classical sHSP --
+      it is a NudC family protein with an HSP20-like fold (CS domain) whose primary
+      role is in nuclear migration and cytoskeletal dynamics. The chaperone activity
+      may be secondary to its role in mitotic complex assembly.
+    action: MODIFY
+    reason: &gt;-
+      GO:0051082 is proposed for obsoletion. NUD-1 demonstrates holdase activity in
+      vitro (PMID:18626791), preventing aggregation of denaturing substrates and
+      maintaining them in a refolding-competent state. GO:0140309 (unfolded protein
+      carrier activity) is not appropriate because it is carrier-specific (per
+      go-ontology#30552). Retain until a holdase chaperone activity NTR is created.
+    proposed_replacement_terms:
+      - id: GO:0051082
+        label: unfolded protein binding (retain until holdase NTR is created)
+    supported_by:
+      - reference_id: PMID:18626791
+        supporting_text: &gt;-
+          We demonstrate that nematode NUD-1 is able to prevent the aggregation of two
+          substrate proteins, citrate synthase (CS) and luciferase, at stoichiometric
+          concentrations.
+- term:
+    id: GO:0045202
+    label: synapse
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      IEA annotation for synaptic localization, inferred automatically from
+      the GO:0051932 (synaptic transmission, GABAergic) annotation via
+      inter-ontology logical inference. NUD-1 depletion causes defective GABA
+      synaptic vesicle trafficking (PMID:16996038), which supports a role at
+      synapses. However, this is an indirect inference -- NUD-1 may affect
+      synaptic vesicle trafficking through its role in cytoskeletal dynamics
+      (dynein/microtubule-dependent transport) rather than being a resident
+      synaptic protein.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The inference from GABAergic synaptic transmission to synaptic localization
+      is logically valid. NUD-1 depletion disrupts GABA synaptic vesicle
+      trafficking (PMID:16996038), suggesting functional involvement at synapses.
+      However, NUD-1 is primarily a cytoplasmic, microtubule-associated protein
+      and its synaptic role is secondary to its core function in nuclear migration
+      and chaperone activity.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation for cytoplasmic localization based on UniProt subcellular
+      location mapping. Consistent with the IBA annotation for the same term and
+      direct GFP expression data (PMID:11685578).
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is well-established. This IEA annotation is consistent
+      with the IBA annotation and experimental evidence. Acceptable as automated
+      confirmation.
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IDA
+  original_reference_id: PMID:18626791
+  review:
+    summary: &gt;-
+      IDA annotation for involvement in protein folding based on Faircloth et al. 2009
+      (PMID:18626791). The study demonstrated that recombinant NUD-1 prevents
+      aggregation of citrate synthase and luciferase, protects native CS from thermal
+      inactivation, and maintains unfolded luciferase intermediates in a
+      refolding-competent state. This is directly supported by the luciferase refolding
+      assay showing that unfolded intermediates complexed with NUD-1 could be refolded
+      by rabbit reticulocyte lysate plus ATP.
+    action: ACCEPT
+    reason: &gt;-
+      Strong experimental evidence directly in C. elegans NUD-1 demonstrating
+      chaperone activity that facilitates the protein folding process. NUD-1 acts as a
+      holdase maintaining substrates in a refolding-competent state, which is part of
+      the protein folding pathway (PMID:18626791).
+    supported_by:
+      - reference_id: PMID:18626791
+        supporting_text: &gt;-
+          In the presence of NUD-1, nearly all of the luciferase activity was regained,
+          indicating that unfolded intermediates complexed with NUD-1 could be refolded.
+      - reference_id: PMID:18626791
+        supporting_text: &gt;-
+          NUD-1 also protects the native state of CS from thermal inactivation by
+          significantly reducing the inactivation rate of this enzyme.
+- term:
+    id: GO:0044183
+    label: protein folding chaperone
+  evidence_type: IDA
+  original_reference_id: PMID:18626791
+  review:
+    summary: &gt;-
+      IDA annotation for protein folding chaperone molecular function based on
+      Faircloth et al. 2009 (PMID:18626791). The study directly demonstrated that
+      NUD-1 possesses ATP-independent chaperone activity comparable to small heat
+      shock proteins and cochaperones. NUD-1 prevents aggregation of denaturing
+      citrate synthase and luciferase at stoichiometric concentrations, and maintains
+      substrates in a refolding-competent state. This is a more informative molecular
+      function annotation than GO:0051082 (unfolded protein binding), as it captures
+      the active chaperone function.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0044183 (protein folding chaperone) accurately describes the molecular
+      function of NUD-1 as demonstrated by in vitro chaperone assays (PMID:18626791).
+      The term captures the holdase activity, including prevention of aggregation and
+      maintenance of refolding-competent intermediates. This is a well-supported
+      core molecular function annotation.
+    supported_by:
+      - reference_id: PMID:18626791
+        supporting_text: &gt;-
+          NUD-1 possesses ATP-independent chaperone activity comparable to that of small
+          heat shock proteins and cochaperones and that changes in phosphorylation state
+          functionally alter chaperone activity in a phosphomimetic NUD-1 mutant.
+      - reference_id: PMID:18626791
+        supporting_text: &gt;-
+          We demonstrate that nematode NUD-1 is able to prevent the aggregation of two
+          substrate proteins, citrate synthase (CS) and luciferase, at stoichiometric
+          concentrations.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:18626791
+  review:
+    summary: &gt;-
+      IDA annotation for unfolded protein binding based on Faircloth et al. 2009
+      (PMID:18626791). The study demonstrated that NUD-1 binds denaturing proteins
+      (citrate synthase and luciferase) and prevents their aggregation. GO:0051082
+      is proposed for obsoletion. The more informative annotation GO:0044183
+      (protein folding chaperone) is already annotated with IDA evidence from the
+      same publication, and GO:0140309 (unfolded protein carrier activity) would
+      be the recommended replacement for the holdase function.
+    action: MODIFY
+    reason: &gt;-
+      GO:0051082 is proposed for obsoletion. The holdase activity demonstrated in
+      PMID:18626791 is not well captured by GO:0140309 (carrier-specific, per
+      go-ontology#30552). GO:0044183 (protein folding chaperone) is already
+      annotated from the same evidence. Retain until a holdase chaperone activity
+      NTR is created.
+    proposed_replacement_terms:
+      - id: GO:0051082
+        label: unfolded protein binding (retain until holdase NTR is created)
+    supported_by:
+      - reference_id: PMID:18626791
+        supporting_text: &gt;-
+          We demonstrate that nematode NUD-1 is able to prevent the aggregation of two
+          substrate proteins, citrate synthase (CS) and luciferase, at stoichiometric
+          concentrations.
+- term:
+    id: GO:0048489
+    label: synaptic vesicle transport
+  evidence_type: IMP
+  original_reference_id: PMID:16996038
+  review:
+    summary: &gt;-
+      IMP annotation for involvement in synaptic vesicle transport based on Locke
+      et al. 2006 (PMID:16996038). The study used fluorescent markers for synaptic
+      vesicle trafficking and found that depletion of NUD-1 (along with other LIS1
+      pathway components) resulted in defective GABA synaptic vesicle trafficking.
+      This is consistent with NUD-1&#39;s role in dynein-dependent transport along
+      microtubules.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The experimental evidence from PMID:16996038 supports involvement in synaptic
+      vesicle transport, likely through NUD-1&#39;s role in the dynein motor complex and
+      microtubule-based transport. However, this is a secondary consequence of NUD-1&#39;s
+      core function in cytoskeletal dynamics rather than a specialized role in synaptic
+      vesicle trafficking per se. Retained as non-core.
+    supported_by:
+      - reference_id: PMID:16996038
+        supporting_text: &gt;-
+          We found that depletion of LIS1 pathway components resulted in defective GABA
+          synaptic vesicle trafficking.
+- term:
+    id: GO:0051932
+    label: synaptic transmission, GABAergic
+  evidence_type: IGI
+  original_reference_id: PMID:16996038
+  review:
+    summary: &gt;-
+      IGI annotation for involvement in GABAergic synaptic transmission based on
+      Locke et al. 2006 (PMID:16996038). The study used genetic interaction
+      experiments with LIS-1 pathway components (indicated by with/from
+      WB:WBGene00003047) and pentylenetetrazole exposure to demonstrate that NUD-1
+      depletion affects GABAergic neurotransmission, resulting in convulsion
+      susceptibility.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The genetic interaction evidence supports a role in GABAergic synaptic
+      transmission, likely secondary to NUD-1&#39;s role in microtubule-dependent
+      transport of synaptic vesicles. This is a non-core function reflecting the
+      downstream effects of disrupted cytoskeletal dynamics on neuronal function.
+    supported_by:
+      - reference_id: PMID:16996038
+        supporting_text: &gt;-
+          Worms depleted for LIS1 pathway components (NUD-1, NUD-2, DHC-1, CDK-5,
+          and CDKA-1) exhibited significant convulsions following PTZ and RNAi
+          treatment.
+- term:
+    id: GO:0040011
+    label: locomotion
+  evidence_type: IMP
+  original_reference_id: PMID:11685578
+  review:
+    summary: &gt;-
+      IMP annotation for involvement in locomotion based on Dawe et al. 2001
+      (PMID:11685578). RNAi knockdown of nud-1 resulted in uncoordinated movement,
+      one of several pleiotropic phenotypes observed. This is a downstream consequence
+      of NUD-1&#39;s role in neuronal development and function rather than a direct role
+      in locomotion.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The uncoordinated movement phenotype from nud-1 RNAi (PMID:11685578) is a
+      pleiotropic effect of disrupting this broadly required nuclear migration/
+      cytoskeletal dynamics gene, not a specific role in locomotion. Retained as
+      non-core.
+    supported_by:
+      - reference_id: PMID:11685578
+        supporting_text: &gt;-
+          Phenotypic analysis of either nud-1 and lis-1 by RNA interference yielded
+          similar phenotypes, including embryonic lethality, sterility, altered vulval
+          morphology, and uncoordinated movement.
+- term:
+    id: GO:0040025
+    label: vulval development
+  evidence_type: IMP
+  original_reference_id: PMID:11685578
+  review:
+    summary: &gt;-
+      IMP annotation for involvement in vulval development based on Dawe et al. 2001
+      (PMID:11685578). RNAi knockdown of nud-1 resulted in altered vulval morphology.
+      nud-1::GFP shows expression in the vulva, and vulval development requires
+      proper cell division and nuclear migration, consistent with NUD-1&#39;s core
+      function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Altered vulval morphology from nud-1 RNAi (PMID:11685578) is a pleiotropic
+      phenotype consistent with disruption of nuclear migration and cell division
+      in vulval precursor cells. nud-1::GFP is expressed in the vulva. Retained as
+      non-core since vulval development is not the primary function of NUD-1.
+    supported_by:
+      - reference_id: PMID:11685578
+        supporting_text: &gt;-
+          Phenotypic analysis of either nud-1 and lis-1 by RNA interference yielded
+          similar phenotypes, including embryonic lethality, sterility, altered vulval
+          morphology, and uncoordinated movement.
+- term:
+    id: GO:0009792
+    label: embryo development ending in birth or egg hatching
+  evidence_type: IMP
+  original_reference_id: PMID:11685578
+  review:
+    summary: &gt;-
+      IMP annotation for involvement in embryo development based on Dawe et al. 2001
+      (PMID:11685578). RNAi knockdown of nud-1 caused embryonic lethality and nuclear
+      positioning defects in early embryonic cell division similar to dynein/dynactin
+      depletion. This is a core biological process for NUD-1 given its essential role
+      in nuclear migration during cell division.
+    action: ACCEPT
+    reason: &gt;-
+      Embryonic lethality from nud-1 RNAi represents a core phenotype (PMID:11685578).
+      NUD-1 is essential for proper nuclear positioning during early embryonic cell
+      division, and its requirement for embryo development is a direct consequence of
+      its core function in nuclear migration and mitotic progression.
+    supported_by:
+      - reference_id: PMID:11685578
+        supporting_text: &gt;-
+          Digital time-lapse video microscopy was used to determine that RNAi-treated
+          embryos exhibited nuclear positioning defects in early embryonic cell division
+          similar to those reported for dynein/dynactin depletion.
+- term:
+    id: GO:0035046
+    label: pronuclear migration
+  evidence_type: IMP
+  original_reference_id: PMID:11685578
+  review:
+    summary: &gt;-
+      IMP annotation for involvement in pronuclear migration based on Dawe et al.
+      2001 (PMID:11685578). RNAi knockdown of nud-1 caused nuclear positioning
+      defects in early embryonic cell division. Pronuclear migration is a
+      dynein-dependent process, and NUD-1 functions with the dynein motor complex.
+      This is a core biological process directly reflecting NUD-1&#39;s primary
+      molecular role in nuclear migration.
+    action: ACCEPT
+    reason: &gt;-
+      Pronuclear migration is a core function of NUD-1, directly reflecting its
+      primary role in nuclear migration via the dynein motor complex. The nuclear
+      positioning defects observed after nud-1 RNAi (PMID:11685578) are consistent
+      with the conserved role of NudC family proteins in nuclear migration from
+      fungi to humans. The gene name itself (nuclear distribution) reflects this
+      function.
+    supported_by:
+      - reference_id: PMID:11685578
+        supporting_text: &gt;-
+          Digital time-lapse video microscopy was used to determine that RNAi-treated
+          embryos exhibited nuclear positioning defects in early embryonic cell division
+          similar to those reported for dynein/dynactin depletion.
+      - reference_id: PMID:11685578
+        supporting_text: &gt;-
+          Heterologous expression of the C. elegans nudC ortholog, nud-1, complements
+          the A. nidulans nudC3 mutant, demonstrating evolutionary conservation of
+          function.
+- term:
+    id: GO:0051932
+    label: synaptic transmission, GABAergic
+  evidence_type: IMP
+  original_reference_id: PMID:16996038
+  review:
+    summary: &gt;-
+      IMP annotation for involvement in GABAergic synaptic transmission based on
+      Locke et al. 2006 (PMID:16996038). NUD-1-depleted worms exhibited significant
+      convulsions following PTZ treatment, and fluorescent markers showed defective
+      GABA synaptic vesicle trafficking. This is a separate evidence line (IMP vs IGI)
+      from the other GO:0051932 annotation for the same gene from the same paper.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This IMP annotation provides independent evidence from the IGI annotation for
+      the same term. The convulsion susceptibility phenotype after NUD-1 depletion
+      (PMID:16996038) supports involvement in GABAergic signaling, but this is a
+      secondary function stemming from NUD-1&#39;s role in microtubule-based transport.
+      Retained as non-core.
+    supported_by:
+      - reference_id: PMID:16996038
+        supporting_text: &gt;-
+          Worms depleted for LIS1 pathway components (NUD-1, NUD-2, DHC-1, CDK-5,
+          and CDKA-1) exhibited significant convulsions following PTZ and RNAi
+          treatment.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: PMID:11685578
+  title: Evolutionarily conserved nuclear migration genes required for early embryonic
+    development in Caenorhabditis elegans.
+  findings:
+    - statement: &gt;-
+        RNAi knockdown of nud-1 causes embryonic lethality, sterility, altered vulval
+        morphology, uncoordinated movement, and nuclear positioning defects in early
+        embryonic cell division similar to dynein/dynactin depletion.
+      supporting_text: &gt;-
+        Phenotypic analysis of either nud-1 and lis-1 by RNA interference yielded
+        similar phenotypes, including embryonic lethality, sterility, altered vulval
+        morphology, and uncoordinated movement.
+- id: PMID:16996038
+  title: Genetic interactions among cortical malformation genes that influence susceptibility
+    to convulsions in C. elegans.
+  findings:
+    - statement: &gt;-
+        Depletion of NUD-1 and other LIS1 pathway components caused defective GABA
+        synaptic vesicle trafficking and significant convulsions following
+        pentylenetetrazole treatment.
+      supporting_text: &gt;-
+        Worms depleted for LIS1 pathway components (NUD-1, NUD-2, DHC-1, CDK-5,
+        and CDKA-1) exhibited significant convulsions following PTZ and RNAi
+        treatment.
+- id: PMID:18626791
+  title: The microtubule-associated protein, NUD-1, exhibits chaperone activity in
+    vitro.
+  findings:
+    - statement: &gt;-
+        Recombinant C. elegans NUD-1 prevents aggregation of citrate synthase and
+        luciferase at stoichiometric concentrations, protects native CS from thermal
+        inactivation, and maintains unfolded intermediates in a refolding-competent
+        state. NUD-1 possesses ATP-independent chaperone activity comparable to
+        small heat shock proteins.
+      supporting_text: &gt;-
+        We demonstrate that nematode NUD-1 is able to prevent the aggregation of two
+        substrate proteins, citrate synthase (CS) and luciferase, at stoichiometric
+        concentrations.
+core_functions:
+  - molecular_function:
+      id: GO:0044183
+      label: protein folding chaperone
+    directly_involved_in:
+      - id: GO:0006457
+        label: protein folding
+      - id: GO:0035046
+        label: pronuclear migration
+      - id: GO:0009792
+        label: embryo development ending in birth or egg hatching
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    description: &gt;-
+      NUD-1 functions as an ATP-independent holdase chaperone that prevents
+      aggregation of denaturing proteins and maintains substrates in a
+      refolding-competent state (PMID:18626791). This chaperone activity,
+      mediated by its conserved p23/HSP20-like CS domain, likely supports
+      its essential role in nuclear migration and mitotic progression by
+      maintaining the integrity of key protein complexes (dynein, LIS-1)
+      required for cell division. NUD-1 is required for proper pronuclear
+      migration and embryo development (PMID:11685578).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
