@@ -9,6 +9,8 @@ This workflow implements three analysis layers:
 1. Build a calibrated protein set (target + active controls).
 2. Sequence-level catalytic-site and cysteine topology comparison.
 3. AlphaFold structure cysteine geometry checks.
+4. Prx5 homolog panel phylogeny + catalytic-state mapping.
+5. Template-based Prx5 dimer interface mapping to pmp20.
 
 No script contains hardcoded gene-specific outputs. All scripts take input files/paths as arguments.
 
@@ -36,6 +38,7 @@ Or step-by-step:
 just setup
 just main
 just test
+just main-extra
 ```
 
 ## Outputs
@@ -48,6 +51,12 @@ Main run outputs under `results/main/`:
 - `structures/alphafold_manifest.tsv`
 - `structure/structure_cys_summary.tsv`
 - `structure/structure_cys_pair_distances.tsv`
+- `phylogeny/prx5_panel.tsv`
+- `phylogeny/prx5_catalytic_state.tsv`
+- `phylogeny/prx5_upgma_tree.newick`
+- `phylogeny/pmp20_neighbor_context.tsv`
+- `dimer/dimer_template_mapping_summary.tsv`
+- `dimer/dimer_template_sg_distances.tsv`
 
 Test run outputs under `results/test_tpx1/` with the same structure.
 

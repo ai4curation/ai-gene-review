@@ -281,6 +281,32 @@ validate-organism organism:
     @mkdir -p reports
     uv run ai-gene-review validate --verbose --tsv-output reports/validation-{{organism}}.tsv "genes/{{organism}}/*/*-ai-review.yaml"
 
+# Validate all genes that contain a specific top-level tag in their review YAML
+# Example: just validate-tag UPB
+validate-tag tag:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p reports
+
+    tmp_file="$(mktemp)"
+    trap 'rm -f "${tmp_file}"' EXIT
+
+    uv run python scripts/find_genes_by_tag.py "{{tag}}" > "${tmp_file}"
+
+    match_count="$(wc -l < "${tmp_file}" | tr -d ' ')"
+    if [ "${match_count}" -eq 0 ]; then
+        echo "No gene review files found with tag: {{tag}}"
+        exit 1
+    fi
+
+    tag_slug="$(echo "{{tag}}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/_/g')"
+    report_path="reports/validation-tag-${tag_slug}.tsv"
+
+    echo "Validating ${match_count} gene review file(s) with tag '{{tag}}'..."
+    # shellcheck disable=SC2046
+    uv run ai-gene-review validate --verbose --tsv-output "${report_path}" $(cat "${tmp_file}")
+    echo "Wrote validation report to ${report_path}"
+
 # Validate all gene review files (shows detailed errors by default)
 validate-all:
     @echo "Validating all gene review YAML files..."

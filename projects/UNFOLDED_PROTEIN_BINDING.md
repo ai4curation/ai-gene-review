@@ -24,6 +24,10 @@ species: [human, mouse, yeast, SCHPO, DROME, DANRE, ARATH, "..."]
 > until the holdase NTR exists. Detailed review YAMLs are in `genes/<SPECIES>/<GENE>/`.
 > Validate with: `just validate-all` (writes `reports/validation-all.tsv`).
 
+## Slides
+
+- [Slides](../../projects/UNFOLDED_PROTEIN_BINDING/slides/UPB-slides.html) (AI generated)
+
 ## Terminology
 
 These mechanism classes are used throughout this document:
