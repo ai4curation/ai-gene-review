@@ -18,7 +18,10 @@ The AI Gene Review tool helps researchers and curators:
 ### Installation
 
 1. Install [uv](https://docs.astral.sh/uv/) for dependency management
-2. Clone the repository and install dependencies:
+2. Install [just](https://github.com/casey/just) command runner (version 1.23.0 or later required):
+   - See installation instructions at https://github.com/casey/just#installation
+   - Verify version: `just --version`
+3. Clone the repository and install dependencies:
    ```bash
    git clone https://github.com/cmungall/ai-gene-review.git
    cd ai-gene-review
@@ -43,10 +46,18 @@ uv run ai-gene-review fetch-gene-pmids genes/human/TP53/TP53-ai-review.yaml
 ```
 
 **Generate statistics report:**
+
+The stats command analyzes all gene review files in the `genes/` directory and generates an interactive HTML report with visualizations and metrics.
+
 ```bash
-just stats                # Generate HTML report
+just stats                # Generate HTML report at docs/stats_report.html
 just stats-open           # Generate and open in browser
 ```
+
+*Prerequisites:* You need at least one completed gene review file (`*-ai-review.yaml`) in the `genes/` directory. The command will:
+1. Export annotations from all review files to `exports/exported_annotations.tsv`
+2. Execute the `docs/stats.ipynb` Jupyter notebook to generate visualizations
+3. Create `docs/stats_report.html` with the statistics dashboard
 
 ## Workflow Overview
 
@@ -362,7 +373,7 @@ rules/
 
 ## Developer Tools
 
-This project uses [just](https://github.com/casey/just/) command runner for development tasks.
+This project uses [just](https://github.com/casey/just/) - a command runner similar to `make` but simpler and more user-friendly. Version 1.23.0 or later is required.
 
 **Available commands:**
 ```bash
@@ -386,6 +397,16 @@ just render human BRCA1        # Render single gene to HTML
 just render-all                # Render all gene reviews to HTML
 python -m ai_gene_review.render --all genes/    # Alternative rendering command
 ```
+
+**Export Commands:**
+```bash
+just export-annotations-tsv    # Export to TSV format (used by stats)
+just export-annotations-json   # Export to JSON format
+just export-annotations-jsonl  # Export to JSONL format (one object per line)
+just export-annotations-duckdb # Export to DuckDB database with redundancy analysis
+```
+
+*Note:* Export commands process all `*-ai-review.yaml` files in the `genes/` directory and create outputs in the `exports/` folder.
 
 ## Contributing
 
