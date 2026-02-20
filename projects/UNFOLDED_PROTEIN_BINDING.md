@@ -1,5 +1,7 @@
 ---
-species: [human, mouse, yeast, SCHPO, DROME, DANRE, ARATH, "..."]
+species: [human, mouse, yeast, SCHPO, DROME, DANRE, ARATH, BOVIN, CANAL, CRIGR, ECOLI, NEUCR, ASPNG, SALTY, HYPJE, ARATH, worm]
+sidecars:
+  genes: UNFOLDED_PROTEIN_BINDING/genes.csv
 ---
 # Unfolded Protein Binding Annotation Review
 
@@ -546,6 +548,23 @@ established:
 
 <details>
 <summary>Curation session notes (click to expand)</summary>
+
+## 2026-02-20 (session 10 - CARRIER SEMANTICS DISCUSSION)
+
+- **Core issue raised**: The "protein carrier activity" terms (GO:0140597, GO:0140309) have problematic definitions centered on "moving along with the target protein"
+  - Suzi (SGD) responded to Tim44/Tim22 reannotation request: *"I don't see evidence that TIM22 carries and moves along with the target protein, it looks to be called a pore/channel, and I read that as being fairly stationary"*
+  - This is a correct reading — the "moving along with" language in GO:0140597 is causing real confusion for curators
+- **Two proposals discussed for resolving the chaperone grouping problem**:
+  - **Option A**: Rename "molecular carrier activity" branch to "molecular chaperone" focused on *protection* — "Protecting the cell or a protein from aggregation, misfolding, degradation, or mistargeting during folding or delivery"
+    - Problem: this is more of a **role** than a molecular **activity** — same issue that led to obsoletion of GO:0003767 "co-chaperone activity"
+  - **Option B**: No grouping term — mechanism-specific terms only (foldase, holdase, carrier-holdase, disaggregase each as direct children of molecular_function)
+    - Cleaner ontologically; different chaperones use genuinely different mechanisms
+    - Loses ability to query "all chaperones" via a single GO MF term, but that's what protein families (InterPro/Pfam) are for
+- **Consensus leaning toward Option B** with additional suggestion to revise/obsolete GO:0140597 "protein carrier chaperone" whose definition is the root of the curator confusion
+- **This must be resolved before proceeding** with holdase NTR or other ontology changes — the parentage and grouping structure affects everything downstream
+- Current GO hierarchy causing the problem:
+  - GO:0140104 "molecular carrier activity" → GO:0140597 "protein carrier chaperone" → GO:0140309 "unfolded protein carrier activity"
+  - The "carrier" semantics don't apply to in-situ holdases (sHSPs, crystallins, CLU) OR to many other chaperones
 
 ## 2026-02-14 (session 9 - CROSS-SPECIES COMPLETENESS AUDIT)
 
