@@ -117,10 +117,10 @@ Priority is based on: (1) disease prevalence in ZSD, (2) functional centrality,
 - [x] PEX26 (Q7Z412)
 
 ## Phase 2 Genes
-- [ ] PEX2 (P28328)
-- [ ] PEX10 (O60683)
-- [ ] PEX12 (O00623)
-- [ ] PEX13 (Q92968)
+- [x] PEX2 (P28328)
+- [x] PEX10 (O60683)
+- [x] PEX12 (O00623)
+- [x] PEX13 (Q92968)
 
 ## Phase 3 Genes
 - [ ] PEX3 (P56589)
@@ -133,6 +133,19 @@ Priority is based on: (1) disease prevalence in ZSD, (2) functional centrality,
 # NOTES
 
 ## 2026-03-05
+
+- Phase 2 annotation reviews complete (all 4 genes: PEX2, PEX10, PEX12, PEX13)
+- Key findings across Phase 2:
+  - RING complex (PEX2/PEX10/PEX12) shows cleaner annotations than Phase 1 receptors — fewer over-annotations
+  - PEX2: 5 annotations removed, including generic protein binding; 9 non-core (downstream metabolic processes)
+  - PEX10: cleanest review — only 1 over-annotation, 1 modify; strong ISS evidence from cryo-EM channel paper (PMID:35768507)
+  - PEX12: 4 modify actions, mostly refining E3 ligase specificity; bridges RING complex to docking via PEX5/PEX10 interactions
+  - PEX13: 8 over-annotations flagged (mostly downstream metabolic); 1 NEW annotation proposed; SH3 domain scaffold function confirmed
+- Review statistics:
+  - PEX2: 59 annotations (40 ACCEPT, 9 NON_CORE, 5 REMOVE, 4 OVER, 1 UNDECIDED)
+  - PEX10: 39 annotations (34 ACCEPT, 3 NON_CORE, 1 MODIFY, 1 OVER)
+  - PEX12: 55 annotations (44 ACCEPT, 6 NON_CORE, 4 MODIFY, 1 OVER)
+  - PEX13: 52 annotations (35 ACCEPT, 8 OVER, 8 NON_CORE, 1 NEW)
 
 - Phase 1 annotation reviews complete (all 6 genes)
 - Key findings across Phase 1:

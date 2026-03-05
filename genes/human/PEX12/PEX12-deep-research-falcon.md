@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-03-05T03:36:34.647798'
-end_time: '2026-03-05T03:44:25.436720'
-duration_seconds: 470.79
+start_time: '2026-03-05T03:41:46.304273'
+end_time: '2026-03-05T03:53:42.522066'
+duration_seconds: 716.22
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -26,7 +26,7 @@ provider_config:
   parameters:
     allowed_domains: []
     temperature: 0.1
-citation_count: 26
+citation_count: 39
 ---
 
 ## Question
@@ -137,168 +137,217 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Research Report: Human **PEX12** (UniProt **O00623**) — Functional Annotation and Current Understanding
+# Research Report: Human **PEX12** (UniProt **O00623**) — Functional Annotation, Mechanisms, and Clinical Relevance
 
-## 1) Target verification: gene/protein identity and definitions
+## Executive summary
+Human **PEX12** encodes a multi-pass peroxisomal membrane **peroxin** that is a core subunit of the **PEX2–PEX10–PEX12 RING E3 ubiquitin ligase complex** required for **peroxisomal matrix protein import**. Its primary functional role is in the **ubiquitination-dependent recycling (retrotranslocation) of the import receptor PEX5**, a step essential for sustained import cycles. A major recent advance (2022–2024) is the demonstration that the PEX2–PEX10–PEX12 complex forms a **membrane-spanning pore/channel** that serves as the **retrotranslocation conduit** for PEX5, linking ubiquitination to extraction by the **PEX1–PEX6 AAA ATPase**. Defects in this machinery cause **peroxisome biogenesis disorders (PBD)** in the **Zellweger spectrum**, and modern clinical workflows detect PEX-gene ZSD using newborn screening biomarkers (e.g., **C26:0-LPC**) and confirmatory biochemical and genetic testing. (feng2022structureandfunction pages 1-3, skowyra2024towardssolvingthe pages 21-27, feng2022aperoxisomalubiquitin pages 1-2, beltran2024newbornscreeningfor pages 2-4)
 
-**Verified target:** human **PEX12** (Peroxisome assembly protein 12; Peroxin-12; synonym **PAF3**) is a **peroxisomal biogenesis factor (peroxin)** that localizes to the **peroxisomal membrane** and functions in **peroxisomal matrix protein import** as part of the **RING E3 ubiquitin ligase complex PEX2–PEX10–PEX12**. This role is consistently described in authoritative 2023–2024 reviews and primary literature focused on the peroxisomal import/receptor-recycling machinery, matching the UniProt identity and domain expectations (RING family peroxin). (skowyra2024towardssolvingthe pages 1-3, kumar2024theperoxisomean pages 7-9)
-
-**Key concepts/definitions (current consensus):**
-- **Peroxisomal matrix protein import** is a post-translational pathway in which folded, cargo-loaded receptors (primarily **PEX5**) dock at the peroxisomal membrane, deliver cargo into the matrix, and then are **recycled** back to the cytosol. (skowyra2024towardssolvingthe pages 1-3, skowyra2024towardssolvingthe media 1c8616fe)
-- **PEX2/PEX10/PEX12 RING complex**: a membrane-embedded, RING-finger-containing E3 ubiquitin ligase complex that catalyzes **PEX5 ubiquitination**, enabling receptor extraction and recycling; recent models also place it as (or as part of) a **retrotranslocation channel** for the receptor. (skowyra2024towardssolvingthe pages 1-3, kumar2024theperoxisomean pages 10-11, skowyra2024towardssolvingthe media 1c8616fe)
-
-## 2) Protein features: localization, topology, and molecular role of PEX12
-
-### Subcellular localization
-PEX12 is characterized as a **peroxisomal membrane** peroxin participating in the import machinery; peroxins in this module are generally membrane-associated, consistent with PEX12’s role in a membrane E3 ligase complex. (kumar2024theperoxisomean pages 7-9)
-
-### Topology and domains (best-supported description from recent sources)
-PEX12 is consistently described as a **RING-finger peroxin** within the PEX2/PEX10/PEX12 complex. (kumar2024theperoxisomean pages 7-9)
-
-A 2024 review discussing a recent cryo-EM structure of the **fungal** PEX2/PEX10/PEX12 ligase complex reports that **each subunit contributes five transmembrane segments** that co-assemble into an open **retrotranslocation channel**, with the three RING domains forming a cytosolic “tower.” This structure is used to propose a mechanism for how receptor N-termini enter a pore for ubiquitination and extraction. While this is not human-specific topology mapping, it is currently one of the most detailed structural frameworks informing mechanistic thinking about the homologous mammalian complex. (kumar2024theperoxisomean pages 10-11)
-
-**Interpretation/limitation:** direct, explicit transmembrane count/topology for **human** PEX12 is not provided in the retrieved 2023–2024 sources; however, its conserved assignment as a **membrane RING E3 ligase subunit** is robust, and the channel model is increasingly influential. (kumar2024theperoxisomean pages 10-11, kumar2024theperoxisomean pages 7-9)
-
-## 3) Mechanism: how PEX12 functions in peroxisomal matrix protein import
-
-### Stepwise import cycle (with PEX12’s specific step)
-A current mechanistic framework (reviewed in 2024) is:
-1. Cytosolic receptor **PEX5** binds peroxisomal targeting signal cargo (e.g., PTS1 cargo). (skowyra2024towardssolvingthe pages 1-3, skowyra2024towardssolvingthe media 1c8616fe)
-2. Cargo-bound PEX5 is recruited to the peroxisomal membrane docking machinery (PEX13/PEX14). (skowyra2024towardssolvingthe pages 1-3, skowyra2024towardssolvingthe media 1c8616fe)
-3. PEX5 (with cargo) enters the organelle through a membrane conduit; cargo is released into the matrix. (skowyra2024towardssolvingthe pages 1-3, skowyra2024towardssolvingthe media 1c8616fe)
-4. **PEX5 recycling** requires ubiquitination: the **PEX2–PEX10–PEX12 RING E3 ligase complex** catalyzes **monoubiquitination** of PEX5 on a conserved **N-terminal cysteine** (Cys11 in mammals). PEX12 is a core subunit of this E3 complex. (skowyra2024towardssolvingthe pages 1-3, francisco2024noncanonicalandreversible pages 1-2, skowyra2024towardssolvingthe media 1c8616fe)
-5. Monoubiquitinated PEX5 is extracted back into the cytosol by the **PEX1–PEX6 AAA ATPase** (receptor export module), after which deubiquitination resets the receptor for further rounds. (skowyra2024towardssolvingthe pages 1-3, francisco2024noncanonicalandreversible pages 20-21, skowyra2024towardssolvingthe media 1c8616fe)
-
-A schematic of this cycle, explicitly placing the PEX2/PEX10/PEX12 complex at the PEX5 monoubiquitination step and depicting it as the retrotranslocation channel, is shown in the retrieved figure. (skowyra2024towardssolvingthe media 1c8616fe)
-
-### What reaction does PEX12 “catalyze”?
-PEX12 is **not an enzyme with a small-molecule substrate**; rather, it is a subunit of an **E3 ubiquitin ligase complex**. Functionally, this complex catalyzes transfer of ubiquitin (via E2 enzymes) to substrate proteins—most critically **PEX5** during receptor recycling.
-
-A 2024 primary study emphasizes that monoubiquitination of PEX5 at **Cys11** is a **mandatory** modification for ATP-dependent extraction, and that cysteine ubiquitination is **reversible**—a property that prevents accumulation of polyubiquitinated receptor at the membrane. This supports a model where the receptor-recycling system is optimized to avoid clogging the translocation machinery. (francisco2024noncanonicalandreversible pages 1-2)
-
-## 4) Recent developments (prioritizing 2023–2024)
-
-### 4.1 Reversible cysteine ubiquitination as an anti-clogging design principle (2024)
-Francisco et al. (PLOS Biology; **published March 2024**; https://doi.org/10.1371/journal.pbio.3002567) provide mechanistic evidence that cysteine-linked ubiquitination of PEX5 (Cys11) is **reversible** and kinetically disfavors stable polyubiquitin chain accumulation. They show that substituting Cys11 with lysine promotes polyubiquitination at the peroxisomal membrane and interferes with receptor extraction, supporting the concept that cysteine ubiquitination protects the receptor recycling pathway from “overubiquitination” side reactions. (francisco2024noncanonicalandreversible pages 1-2)
-
-### 4.2 RING complex as a channel: structural model influencing the field (2024 review)
-Kumar et al. (Histochemistry and Cell Biology; **published January 2024**; https://doi.org/10.1007/s00418-023-02259-5) summarize a cryo-EM-derived model (in fungal homologs) in which PEX2/PEX10/PEX12 forms an open retrotranslocation pore, and propose insertion of the PEX5 N-terminus into the channel to enable ubiquitination and extraction. This is an important conceptual development reshaping hypotheses about how the import machinery couples to receptor recycling. (kumar2024theperoxisomean pages 10-11)
-
-### 4.3 Expanded integration with peroxisome quality control and pexophagy (2023–2024)
-Evidence reviewed and/or provided in 2023–2024 links the import/recycling ubiquitination machinery to selective autophagy of peroxisomes (**pexophagy**):
-- Demers et al. (Autophagy; **published January 2023**; https://doi.org/10.1080/15548627.2022.2160566) show that loss of **PEX13** causes accumulation of ubiquitinated PEX5 at peroxisomes and induces pexophagy, illustrating that perturbation of receptor ubiquitination/removal can trigger peroxisome turnover. (demers2023pex13preventspexophagy pages 1-2)
-- The same study notes that **PEX2** (as part of the ligase complex with PEX10/PEX12) is upregulated during amino-acid starvation and promotes pexophagy, whereas the deubiquitinase **USP30** counteracts this under basal conditions (reviewed in the excerpt). (demers2023pex13preventspexophagy pages 2-3)
-- Bajdzienko & Bremm (Journal of Cell Science; **published May 2024**; https://doi.org/10.1242/jcs.259775) review that monoubiquitinated PEX5 (C11) and failures in receptor removal can be tied to pexophagy induction, and they highlight the broader role of ubiquitination and DUBs (e.g., USP30) in regulating pexophagy signals. (bajdzienko2024mammalianpexophagyat pages 3-4)
-
-## 5) Current applications and real-world implementations
-
-### 5.1 Clinical genetics and diagnostics: PEX12 in Zellweger spectrum disorders (ZSD)
-PEX12 is a well-established disease gene for **Zellweger syndrome / Zellweger spectrum disorders** and broader **peroxisome biogenesis disorders (PBDs)**, as reflected both in literature and disease–target association resources. (alayoubi2025zellwegersyndrome;identification pages 1-2)
-
-Open Targets lists PEX12 associations with Zellweger syndrome / ZSD / PBD (e.g., Orphanet:912; MONDO:0019609), supported by multiple lines of evidence including literature curation. (alayoubi2025zellwegersyndrome;identification pages 1-2)
-
-### 5.2 Newborn screening workflows identify ZSD cases via peroxisomal biomarkers (2024)
-Beltran et al. (Genes; **published June 2024**; https://doi.org/10.3390/genes15070838) describe a California newborn screening workflow originally designed for X-linked adrenoleukodystrophy that measures **C26:0-lysophosphatidylcholine (C26:0-LPC)**. Among nine infants with elevated C26:0-LPC who were not ultimately diagnosed with X-ALD, **seven** were diagnosed with **ZSD due to biallelic PEX gene variants**, illustrating real-world screening “secondary findings” that accelerate recognition of peroxisomal disorders. (beltran2024newbornscreeningfor pages 1-2)
-
-## 6) Expert synthesis and analysis (authoritative perspectives)
-
-**Unifying mechanistic view:** Recent high-authority reviews converge on a model in which peroxisomal matrix protein import is inseparable from ubiquitin-dependent receptor recycling. In this view, PEX12’s primary functional identity is as a core subunit of a membrane E3 ligase (PEX2/PEX10/PEX12) that both (i) catalyzes the ubiquitination event required for receptor extraction and (ii) may physically form (or contribute to) a channel/pore facilitating receptor retrotranslocation. (skowyra2024towardssolvingthe pages 1-3, kumar2024theperoxisomean pages 10-11, skowyra2024towardssolvingthe media 1c8616fe)
-
-**Key open questions emphasized in 2024 pexophagy and import reviews:**
-- How ubiquitin signals are tuned (E3s and DUBs, chain types) to discriminate between “recycle” vs “degrade” outcomes for receptors and membrane proteins, and how these pathways intersect with pexophagy under stress. (bajdzienko2024mammalianpexophagyat pages 5-6)
-
-## 7) Relevant statistics and quantitative data (recent sources)
-
-### ZSD gene contribution (clinical genetics context)
-A recent clinical genetics paper (Annals of Medicine; **published January 2025**; https://doi.org/10.1080/07853890.2024.2447400) reports that **>90%** of Zellweger spectrum disorder cases are caused by variants in five genes: **PEX1, PEX6, PEX10, PEX12, and PEX26** (with the excerpt citing ~70% for PEX1 and ~10% for PEX26). This contextualizes PEX12 as a major gene within the principal ZSD genetic burden group. (alayoubi2025zellwegersyndrome;identification pages 1-2)
-
-### Newborn screening cohort measurements (2024)
-In the California NBS follow-up cohort, first-tier C26:0-LPC mean was **1.68 μmol/L** (cutoff ≤0.42; range 0.44–3.01) and second-tier mean was **1.00 μmol/L** (cutoff ≤0.22; range 0.224–1.475) among nine non-ABCD1 diagnosed infants; the study reports that ZSD patients had significantly higher C26:0-LPC than non-ZSD cases in this cohort. (beltran2024newbornscreeningfor pages 2-4)
-
-## Summary of functional annotation (concise)
-PEX12 (human, UniProt O00623) is a **peroxisomal membrane RING-finger peroxin** whose primary role is in **peroxisomal matrix protein import**, functioning as a subunit of the **PEX2–PEX10–PEX12 E3 ubiquitin ligase complex**. This complex catalyzes **PEX5 monoubiquitination (Cys11)** required for **PEX1/PEX6-driven receptor extraction and recycling**, and is increasingly viewed as an integrated ubiquitination-and-retrotranslocation machine. Perturbations of this ubiquitin cycle are now directly linked to **peroxisome quality control and pexophagy**, and human PEX12 variants contribute to **Zellweger spectrum disorders**, which are increasingly recognized through **newborn screening** biomarkers such as C26:0-LPC. (skowyra2024towardssolvingthe pages 1-3, francisco2024noncanonicalandreversible pages 1-2, kumar2024theperoxisomean pages 10-11, bajdzienko2024mammalianpexophagyat pages 3-4, beltran2024newbornscreeningfor pages 1-2)
-
----
-
-## Embedded summary table
-
-| Category | Key Findings & Details | Sources |
-| :--- | :--- | :--- |
-| **Identity** | Human **PEX12** (Peroxin-12); UniProt O00623. Member of the RING-finger peroxin family. | (kumar2024theperoxisomean pages 7-9) |
-| **Localization & Topology** | Integral **peroxisomal membrane protein (PMP)**. Contains a cytosolic C-terminal **RING finger domain**. Fungal models suggest 5 transmembrane segments forming part of a pore. | (kumar2024theperoxisomean pages 7-9, kumar2024theperoxisomean pages 10-11, lipinski2025earlystagesofa pages 13-16) |
-| **Molecular Function** | Functions as an **E3 ubiquitin ligase** component. Specifically catalyzes the **monoubiquitination of PEX5** (PTS1 receptor) at a conserved cysteine residue (Cys11 in mammals) to prime it for extraction/recycling. | (skowyra2024towardssolvingthe pages 1-3, francisco2024noncanonicalandreversible pages 20-21, francisco2024noncanonicalandreversible pages 1-2, skowyra2024towardssolvingthe media 1c8616fe) |
-| **Complex & Partners** | Forms the **PEX2-PEX10-PEX12 RING complex** within the larger Docking/Translocation Module (DTM) (with PEX13/14). Binds **PEX19** for membrane insertion. | (lipinski2025earlystagesofa pages 22-25, skowyra2024towardssolvingthe pages 1-3, kumar2024theperoxisomean pages 10-11, skowyra2024towardssolvingthe media 1c8616fe) |
-| **Mechanism in Import** | Acts late in the import cycle. After cargo release, PEX12 (with PEX2/10) ubiquitinates PEX5, enabling the **PEX1-PEX6 AAA+ ATPase** to extract PEX5 from the membrane for cytosolic reuse. | (skowyra2024towardssolvingthe pages 1-3, francisco2024noncanonicalandreversible pages 1-2, skowyra2024towardssolvingthe media 1c8616fe) |
-| **Quality Control Link** | The RING complex (PEX2/10/12) also polyubiquitinates PEX5 for proteasomal degradation if recycling fails (RADAR pathway) and ubiquitinates membrane proteins to trigger **pexophagy** (autophagic peroxisome degradation) during stress. | (demers2023pex13preventspexophagy pages 1-2, demers2023pex13preventspexophagy pages 2-3, han2024peroxisomalhomeostasisin pages 2-4, bajdzienko2024mammalianpexophagyat pages 3-4) |
-| **Disease Relevance** | Mutations cause **Zellweger Spectrum Disorders (ZSD)** / Peroxisome Biogenesis Disorders (PBD). Characterized by defects in matrix protein import. Detectable via elevated C26:0-LPC in **newborn screening**. | (beltran2024newbornscreeningfor pages 1-2, beltran2024newbornscreeningfor pages 2-4, alayoubi2025zellwegersyndrome;identification pages 1-2) |
-| **Recent Updates (2023-24)** | **Reversible cysteine ubiquitination** of PEX5 identified as a mechanism to prevent pore clogging. PEX13 shown to regulate the PEX2/10/12 complex to prevent excessive pexophagy. Cryo-EM suggests the RING complex forms a **retrotranslocation channel**. | (francisco2024noncanonicalandreversible pages 20-21, francisco2024noncanonicalandreversible pages 1-2, kumar2024theperoxisomean pages 10-11, demers2023pex13preventspexophagy pages 1-2) |
-| **Quantitative Data** | >90% of ZSD cases are caused by mutations in 5 genes: PEX1, PEX6, PEX10, **PEX12**, or PEX26. | (alayoubi2025zellwegersyndrome;identification pages 1-2) |
+| Aspect | Key Points | Best Supporting Sources | Source Details |
+| :--- | :--- | :--- | :--- |
+| **Identity & Domains** | Human PEX12 is an integral peroxisomal membrane protein containing a conserved C-terminal RING-finger domain. It forms an obligate heterotrimeric complex with PEX2 and PEX10 in the peroxisomal membrane. | (feng2022structureandfunction pages 1-3, feng2022structureandfunction pages 3-5) | *Biochem. Soc. Trans.* (Nov 2022) https://doi.org/10.1042/bst20221393; *Nature* (Jun 2022) https://doi.org/10.1038/s41586-022-04903-x |
+| **Molecular Function** | Functions as a subunit of the peroxisomal E3 ubiquitin ligase complex. The complex catalyzes monoubiquitination of the PEX5 import receptor at a conserved cysteine (C11), a mandatory step for PEX5 recycling to the cytosol. It also polyubiquitinates receptors for degradation when recycling fails (RADAR pathway). | (platta2009pex2andpex12 pages 1-2, liu2012recentadvancesin pages 9-10, feng2022structureandfunction pages 1-3, li2021mechanismsandfunctions pages 2-4) | *Mol. Cell. Biol.* (Oct 2009) https://doi.org/10.1128/mcb.00388-09; *Cells* (May 2021) https://doi.org/10.3390/cells10051094 |
+| **Mechanism & Structure** | **2022-2024 Breakthrough:** Cryo-EM structures reveal the PEX2–PEX10–PEX12 complex forms a conductive membrane pore (retrotranslocation channel). PEX5 inserts its N-terminus into this pore to be ubiquitinated and is subsequently pulled out by the PEX1–PEX6 AAA+ ATPase. | (skowyra2024towardssolvingthe pages 21-27, feng2022aperoxisomalubiquitin pages 1-2, feng2022structureandfunction pages 5-6, skowyra2024towardssolvingthe pages 6-8) | *Trends Cell Biol.* (May 2024) https://doi.org/10.1016/j.tcb.2023.08.005; *Nature* (Jun 2022) https://doi.org/10.1038/s41586-022-04903-x |
+| **Quality Control & Pexophagy** | PEX12 and the RING complex regulate peroxisome homeostasis. Accumulation of ubiquitinated PEX5 or other PMPs on the membrane (often due to recycling failure) recruits autophagy adaptors like NBR1/p62, triggering pexophagy (selective peroxisome degradation). | (li2021mechanismsandfunctions pages 2-4, zientararytter2016autophagicdegradationof pages 4-5, li2021mechanismsandfunctions pages 4-5) | *Cells* (May 2021) https://doi.org/10.3390/cells10051094; *Biochem. Soc. Trans.* (Apr 2016) https://doi.org/10.1042/bst20150268 |
+| **Disease & Diagnostics** | Defects in PEX12 cause Peroxisome Biogenesis Disorders (Zellweger Spectrum). Recent studies (2024) highlight detection via newborn screening for elevated C26:0-LPC and confirmation with novel serum bile acid (C27) mass spectrometry assays and sequencing. | (beltran2024newbornscreeningfor pages 2-4, beltran2024newbornscreeningfor pages 1-2, zhang2024tandemmassspectrometry pages 1-2, zhang2024tandemmassspectrometry pages 7-8) | *Genes* (Jun 2024) https://doi.org/10.3390/genes15070838; *J. Mass Spectrom. Adv. Clin. Lab* (Nov 2024) https://doi.org/10.1016/j.jmsacl.2024.10.005 |
 
 
-*Table: Overview of PEX12 protein identity, molecular function within the peroxisomal import machinery, recent mechanistic insights (2023–2024), and clinical relevance to Zellweger Spectrum Disorders.*
+*Table: Overview of PEX12 identity, molecular mechanism as a retrotranslocation channel, and clinical relevance in 2023-2024 literature.*
 
-## Key mechanistic figure
-A schematic figure of the import cycle showing PEX2/PEX10/PEX12-mediated PEX5 monoubiquitination and extraction is available as supporting visual evidence. (skowyra2024towardssolvingthe media 1c8616fe)
+## 1) Key concepts and definitions (current understanding)
+
+### 1.1 Peroxins, peroxisomal matrix protein import, and the receptor cycle
+Peroxisome biogenesis and matrix protein import require **peroxins (PEX proteins)**. Matrix proteins synthesized in the cytosol are targeted to peroxisomes primarily by **PEX5**, which binds cargos and delivers them to the peroxisomal membrane; after cargo delivery, **PEX5 must be recycled** to enable repeated rounds of import. Ubiquitination of membrane-associated PEX5 is a key signal controlling whether PEX5 is recycled (mono-ubiquitination) or routed to degradation (poly-ubiquitination) in quality control pathways. (thoms2006peroxisomalmatrixprotein pages 1-2, liu2012recentadvancesin pages 9-10)
+
+### 1.2 The RING peroxins and PEX12’s molecular identity
+PEX12 is part of a conserved triad of **RING-finger peroxins** (PEX2, PEX10, PEX12) that form a membrane-embedded E3 ubiquitin ligase complex at the peroxisomal membrane. Reviews and mechanistic studies describe PEX12 as an integral membrane peroxin required for receptor ubiquitination and recycling, and as physically/functional integrated with PEX2 and PEX10 in the “RING subcomplex” of the import machinery. (liu2012recentadvancesin pages 9-10, thoms2006peroxisomalmatrixprotein pages 9-9)
+
+### 1.3 What PEX12 does *not* do
+PEX12 is **not an enzyme that catalyzes a metabolic reaction** (peroxisomal metabolism is carried out by matrix enzymes). Instead, its primary “biochemical activity” is as a **membrane E3 ligase subunit** in a multi-protein complex that coordinates **ubiquitin transfer** to receptors and provides a **protein-conducting pathway** for receptor retrotranslocation. (feng2022structureandfunction pages 1-3, feng2022aperoxisomalubiquitin pages 1-2)
+
+## 2) Primary function and mechanism of action of PEX12
+
+### 2.1 PEX12 in the ubiquitination machinery controlling PEX5 recycling
+Foundational work established that the RING peroxins function as E3s in the matrix import pathway, with PEX12 implicated in **PEX5 monoubiquitination** (a recycling signal) and PEX2 implicated in **PEX5 polyubiquitination** (a degradation/quality-control signal) in yeast models, with conservation to mammals suggested by E2 usage differences in humans. (platta2009pex2andpex12 pages 1-2, liu2012recentadvancesin pages 9-10)
+
+Mechanistically, mono-ubiquitination occurs on a **conserved N-terminal cysteine** of PEX5 (reviewed as C6 in yeast and as C11 in mammals in later summaries). This modification is essential for recognition/extraction by the **PEX1–PEX6 AAA ATPase** complex that dislocates PEX5 from the membrane back to the cytosol, after which deubiquitination resets PEX5. (liu2012recentadvancesin pages 9-10, li2021mechanismsandfunctions pages 2-4)
+
+### 2.2 PEX12 as part of a membrane channel for receptor retrotranslocation (conceptual shift)
+A central recent advance is that the PEX2–PEX10–PEX12 ligase complex is not merely a peripheral E3 ligase but forms the **retrotranslocation channel** for receptor recycling.
+
+**Structure/function insight (cryo-EM):** Each subunit (PEX2/PEX10/PEX12) contributes **five transmembrane segments** that assemble into an **open pore (~10 Å)**, while the RING fingers form a **cytosolic tower** positioned above the pore. This provides a physical basis for how a luminal/matrix-exposed segment of PEX5 can be moved back across the membrane to the cytosol. (feng2022structureandfunction pages 3-5)
+
+**Proposed sequence:** The N-terminus of PEX5 inserts into the pore from the lumenal side and is monoubiquitinated by a RING finger positioned above the pore; extraction is then driven by the PEX1–PEX6 AAA ATPase. If recycling is compromised, receptors are polyubiquitinated by the other RING fingers and degraded (RADAR-like quality control). (feng2022structureandfunction pages 1-3, feng2022aperoxisomalubiquitin pages 1-2)
+
+### 2.3 Experimental signatures used to study this step
+A 2024 synthesis highlights a **retrotranslocation intermediate** in which PEX5 adopts a transmembrane orientation with **~20–30 N-terminal residues exposed to the cytosol**, and this intermediate is enriched when the conserved cysteine required for recycling is mutated; immunoprecipitation identifies the **PEX2–PEX10–PEX12** complex as major interactors, supporting its assignment as the retrotranslocon. (skowyra2024towardssolvingthe pages 6-8)
+
+## 3) Recent developments and latest research (prioritizing 2023–2024)
+
+### 3.1 2024 expert synthesis: “towards solving the mystery” of import
+A 2024 *Trends in Cell Biology* review integrates structural and biochemical work into a model in which PEX5 can fully enter the peroxisomal lumen/matrix and then be returned to the cytosol through the **PEX2–PEX10–PEX12 pore**, with ubiquitination at a conserved cysteine licensing extraction by PEX1–PEX6. This consolidates PEX12’s role as essential for sustained matrix import through receptor recycling. (skowyra2024towardssolvingthe pages 21-27)
+
+**Publication details:** Skowyra ML, Feng P, Rapoport TA. *Trends in Cell Biology* (May 2024). URL: https://doi.org/10.1016/j.tcb.2023.08.005 (skowyra2024towardssolvingthe pages 21-27)
+
+### 3.2 2024 updates in peroxisome quality control (pexophagy) context
+PEX5 ubiquitination is increasingly viewed as part of a broader “organelle quality control” logic where persistent ubiquitin signals on peroxisomal membranes can recruit ubiquitin-binding autophagy adaptors (e.g., NBR1/p62) to trigger **pexophagy**. While some pathways emphasize PEX2 as a key E3 in starvation-induced pexophagy, the core import-associated RING complex (including PEX12) is mechanistically linked to the ubiquitination states that can generate pexophagy signals when recycling is blocked. (li2021mechanismsandfunctions pages 4-5, wang2017roleofpex5 pages 5-6)
+
+### 3.3 Visual/structural evidence (high-impact primary literature)
+The cryo-EM structure and pore model of the Pex2–Pex10–Pex12 complex—foundational to the “channel” concept—are shown in figure panels depicting the transmembrane pore and cytosolic RING tower. These visuals directly support mechanistic claims about pore formation and RING-domain positioning. (feng2022aperoxisomalubiquitin media d4311c14, feng2022aperoxisomalubiquitin media 27c6b8ba)
+
+**Publication details:** Feng P et al. *Nature* (June 2022). URL: https://doi.org/10.1038/s41586-022-04903-x (feng2022aperoxisomalubiquitin pages 1-2)
+
+## 4) Current applications and real-world implementations
+
+### 4.1 Clinical genetics and newborn screening workflows relevant to PEX12/ZSD
+Although newborn screening programs are typically designed for X-linked adrenoleukodystrophy (X-ALD), they can incidentally detect **Zellweger spectrum disorder (ZSD)** caused by biallelic **PEX gene** variants (potentially including PEX12) because both can elevate **C26:0-lysophosphatidylcholine (C26:0-LPC)**.
+
+A 2024 California case series (2016–2022) describes a two-tier approach (tier 1 FIA-MS/MS; tier 2 LC-MS/MS) for C26:0-LPC, followed by ABCD1 sequencing; among nine infants ultimately diagnosed with non–X-ALD conditions, **7/9 had ZSD due to biallelic PEX variants**, confirmed by targeted ZSD gene panels or whole-exome sequencing and confirmatory biochemical markers. (beltran2024newbornscreeningfor pages 1-2)
+
+**Publication details:** Beltran CFM et al. *Genes* (June 2024). URL: https://doi.org/10.3390/genes15070838 (beltran2024newbornscreeningfor pages 1-2)
+
+### 4.2 Quantitative biomarkers used in diagnostic confirmation
+A 2024 clinical-lab mass spectrometry study reports a serum assay for **C27 cholestanoic bile acids** (DHCA/THCA and conjugates) with clear separation between controls and peroxisomal-disorder patients.
+
+- Adult controls (n=20): mean total C27 ≈ **0.007 ± 0.004 μmol/L**
+- Peroxisomal disorder cohort (reported as genetically confirmed; n≈49): mean total C27 ≈ **14.06 ± 2.59 μmol/L**, with wide range **0.05–86.76 μmol/L** (zhang2024tandemmassspectrometry pages 1-2, zhang2024tandemmassspectrometry pages 7-8)
+
+**Publication details:** Zhang W et al. *Journal of Mass Spectrometry and Advances in the Clinical Lab* (Nov 2024). URL: https://doi.org/10.1016/j.jmsacl.2024.10.005 (zhang2024tandemmassspectrometry pages 1-2)
+
+### 4.3 Translational/therapeutic example (supportive management)
+In the California NBS ZSD series, **4 infants received cholic acid therapy** initiated between 2–8 months, illustrating that earlier molecular diagnosis via screening can accelerate initiation of supportive/interventional management (though responses were mixed and genotype-specific conclusions were limited). (beltran2024newbornscreeningfor pages 2-4)
+
+## 5) Expert opinions and analysis (authoritative perspectives)
+
+### 5.1 “Channel + ligase” model as a unifying framework
+Recent expert reviews interpret the PEX2–PEX10–PEX12 complex as a **peroxisome analog of retrotranslocation/ubiquitin systems** (conceptually similar to ERAD, but adapted for peroxisomal receptor cycling). In this view, ubiquitination is not merely a tag but is physically and temporally coupled to receptor movement through a dedicated pore formed by the ligase complex. (feng2022structureandfunction pages 5-6, skowyra2024towardssolvingthe pages 21-27)
+
+### 5.2 E3 division of labor remains nuanced
+Earlier mechanistic assignments implicated PEX12 in monoubiquitination (recycling) and PEX2 in polyubiquitination (degradation) in yeast, whereas structural/review syntheses emphasize that **RF2 (PEX2) is positioned above the pore** and may catalyze monoubiquitination in the channel model; the conceptual consensus is that the **complex is required as a whole**, while catalytic contributions may be organism- and context-dependent and remain an active area of refinement. (platta2009pex2andpex12 pages 1-2, feng2022structureandfunction pages 3-5)
+
+## 6) Data and statistics from recent studies
+
+### 6.1 Newborn screening quantitative values (ZSD detection via X-ALD screening)
+In the 2024 California study of nine infants with elevated C26:0-LPC who were not X-ALD:
+
+- **First-tier C26:0-LPC**: mean **1.68 μmol/L** (cutoff ≤0.42), median 2.20, range **0.44–3.01**
+- **Second-tier C26:0-LPC**: mean **1.00 μmol/L** (cutoff ≤0.22), median 1.18, range **0.224–1.475**
+- **Clinical outcomes**: **6 survivors**, **3 deaths** before age 1 year (2, 4, 7 months)
+
+These values quantify the screening signal strength and outcomes for infants in whom downstream workup identified ZSD due to biallelic PEX variants. (beltran2024newbornscreeningfor pages 2-4)
+
+### 6.2 Diagnostic assay performance (C27 bile acids)
+The 2024 serum C27 assay reports linear quantification range **20–2,500 ng/mL** and intra-/inter-assay imprecision **<20% CV**, supporting feasibility for clinical lab workflows, and provides disease vs control distributions (above). (zhang2024tandemmassspectrometry pages 1-2)
+
+## 7) Subcellular localization and pathway placement
+
+### 7.1 Localization
+PEX12 is a **peroxisomal membrane** component of the import machinery, functioning as part of the membrane-embedded ubiquitin ligase/retrotranslocon that acts at the cytosolic face (RING tower) and across the membrane (pore). (feng2022structureandfunction pages 3-5, feng2022aperoxisomalubiquitin pages 1-2)
+
+### 7.2 Pathway placement: importomer/export module coupling
+PEX12 is positioned at the critical interface between:
+
+- **Import/docking** (PEX13/PEX14; receptor engagement) and cargo delivery (contextual)
+- **Receptor recycling/export** requiring ubiquitination by the PEX2–PEX10–PEX12 complex and extraction by **PEX1–PEX6 AAA ATPase**
+
+This coupling provides a mechanistic explanation for why loss-of-function in PEX12 disrupts peroxisomal matrix protein import globally. (liu2012recentadvancesin pages 9-10, skowyra2024towardssolvingthe pages 21-27)
+
+## 8) Disease relevance: PEX12 and Zellweger spectrum disorders (ZSD)
+Mutations in components of the PEX2–PEX10–PEX12 ligase/channel cause peroxisome biogenesis disorders; structural reviews explicitly connect disease-causing point mutations to transmembrane segments and RING domains, linking protein architecture to pathology. (feng2022structureandfunction pages 3-5, feng2022aperoxisomalubiquitin pages 1-2)
+
+Recent clinical implementation papers (newborn screening and biomarker assays) support a modern diagnostic pipeline for PEX-gene ZSD that would include PEX12 as a candidate gene in sequencing panels/WES follow-up and biochemical confirmation. (beltran2024newbornscreeningfor pages 1-2, zhang2024tandemmassspectrometry pages 1-2)
+
+## Limitations of the current evidence base for PEX12 specifically
+The most detailed mechanistic and structural sources focus on the **PEX2–PEX10–PEX12 complex** rather than isolating PEX12-only functions, and recent (2023–2024) human-PEX12-specific patient variant series were not directly retrieved in the available full texts. Thus, ZSD statistics are presented for PEX-gene ZSD broadly, with PEX12 placed mechanistically in the causal pathway. (beltran2024newbornscreeningfor pages 2-4, feng2022structureandfunction pages 3-5)
+
+## Key cited sources (with dates and URLs)
+- Feng P, Skowyra ML, Rapoport TA. **Structure and function of the peroxisomal ubiquitin ligase complex**. *Biochemical Society Transactions*. **Nov 2022**. https://doi.org/10.1042/bst20221393 (feng2022structureandfunction pages 1-3)
+- Feng P et al. **A peroxisomal ubiquitin ligase complex forms a retrotranslocation channel**. *Nature*. **Jun 2022**. https://doi.org/10.1038/s41586-022-04903-x (feng2022aperoxisomalubiquitin pages 1-2)
+- Skowyra ML, Feng P, Rapoport TA. **Towards solving the mystery of peroxisomal matrix protein import**. *Trends in Cell Biology*. **May 2024**. https://doi.org/10.1016/j.tcb.2023.08.005 (skowyra2024towardssolvingthe pages 21-27)
+- Beltran CFM et al. **Newborn screening for X-ALD… other genetic conditions**. *Genes*. **Jun 2024**. https://doi.org/10.3390/genes15070838 (beltran2024newbornscreeningfor pages 1-2)
+- Zhang W, Rivas MN, Setchell KDR. **Tandem MS of serum cholestanoic (C27) acids…**. *JMS Adv Clin Lab*. **Nov 2024**. https://doi.org/10.1016/j.jmsacl.2024.10.005 (zhang2024tandemmassspectrometry pages 1-2)
+
+
 
 References
 
-1. (skowyra2024towardssolvingthe pages 1-3): Michael L. Skowyra, Peiqiang Feng, and Tom A. Rapoport. Towards solving the mystery of peroxisomal matrix protein import. Trends in Cell Biology, 34:388-405, May 2024. URL: https://doi.org/10.1016/j.tcb.2023.08.005, doi:10.1016/j.tcb.2023.08.005. This article has 27 citations and is from a domain leading peer-reviewed journal.
+1. (feng2022structureandfunction pages 1-3): Peiqiang Feng, Michael L. Skowyra, and Tom A. Rapoport. Structure and function of the peroxisomal ubiquitin ligase complex. Biochemical Society Transactions, 50:1921-1930, Nov 2022. URL: https://doi.org/10.1042/bst20221393, doi:10.1042/bst20221393. This article has 14 citations and is from a peer-reviewed journal.
 
-2. (kumar2024theperoxisomean pages 7-9): Rechal Kumar, Markus Islinger, Harley Worthy, Ruth Carmichael, and Michael Schrader. The peroxisome: an update on mysteries 3.0. Histochemistry and Cell Biology, 161:99-132, Jan 2024. URL: https://doi.org/10.1007/s00418-023-02259-5, doi:10.1007/s00418-023-02259-5. This article has 73 citations and is from a peer-reviewed journal.
+2. (skowyra2024towardssolvingthe pages 21-27): Michael L. Skowyra, Peiqiang Feng, and Tom A. Rapoport. Towards solving the mystery of peroxisomal matrix protein import. Trends in Cell Biology, 34:388-405, May 2024. URL: https://doi.org/10.1016/j.tcb.2023.08.005, doi:10.1016/j.tcb.2023.08.005. This article has 27 citations and is from a domain leading peer-reviewed journal.
 
-3. (skowyra2024towardssolvingthe media 1c8616fe): Michael L. Skowyra, Peiqiang Feng, and Tom A. Rapoport. Towards solving the mystery of peroxisomal matrix protein import. Trends in Cell Biology, 34:388-405, May 2024. URL: https://doi.org/10.1016/j.tcb.2023.08.005, doi:10.1016/j.tcb.2023.08.005. This article has 27 citations and is from a domain leading peer-reviewed journal.
+3. (feng2022aperoxisomalubiquitin pages 1-2): Peiqiang Feng, Xudong Wu, Satchal K. Erramilli, Joao A. Paulo, Pawel Knejski, Steven P. Gygi, Anthony A. Kossiakoff, and Tom A. Rapoport. A peroxisomal ubiquitin ligase complex forms a retrotranslocation channel. Nature, 607:374-380, Jun 2022. URL: https://doi.org/10.1038/s41586-022-04903-x, doi:10.1038/s41586-022-04903-x. This article has 65 citations and is from a highest quality peer-reviewed journal.
 
-4. (kumar2024theperoxisomean pages 10-11): Rechal Kumar, Markus Islinger, Harley Worthy, Ruth Carmichael, and Michael Schrader. The peroxisome: an update on mysteries 3.0. Histochemistry and Cell Biology, 161:99-132, Jan 2024. URL: https://doi.org/10.1007/s00418-023-02259-5, doi:10.1007/s00418-023-02259-5. This article has 73 citations and is from a peer-reviewed journal.
+4. (beltran2024newbornscreeningfor pages 2-4): Carlos F. Mares Beltran, Christina G. Tise, Rebekah Barrick, Annie D. Niehaus, Rebecca Sponberg, Richard Chang, Gregory M. Enns, and Jose E. Abdenur. Newborn screening for x-linked adrenoleukodystrophy (x-ald): biochemical, molecular, and clinical characteristics of other genetic conditions. Genes, 15:838, Jun 2024. URL: https://doi.org/10.3390/genes15070838, doi:10.3390/genes15070838. This article has 6 citations.
 
-5. (francisco2024noncanonicalandreversible pages 1-2): Tânia Francisco, Ana G. Pedrosa, Tony A. Rodrigues, Tarad Abalkhail, Hongli Li, Maria J. Ferreira, Gerbrand J. van der Heden van Noort, Marc Fransen, Ewald H. Hettema, and Jorge E. Azevedo. Noncanonical and reversible cysteine ubiquitination prevents the overubiquitination of pex5 at the peroxisomal membrane. PLOS Biology, 22:e3002567, Mar 2024. URL: https://doi.org/10.1371/journal.pbio.3002567, doi:10.1371/journal.pbio.3002567. This article has 4 citations and is from a highest quality peer-reviewed journal.
+5. (feng2022structureandfunction pages 3-5): Peiqiang Feng, Michael L. Skowyra, and Tom A. Rapoport. Structure and function of the peroxisomal ubiquitin ligase complex. Biochemical Society Transactions, 50:1921-1930, Nov 2022. URL: https://doi.org/10.1042/bst20221393, doi:10.1042/bst20221393. This article has 14 citations and is from a peer-reviewed journal.
 
-6. (francisco2024noncanonicalandreversible pages 20-21): Tânia Francisco, Ana G. Pedrosa, Tony A. Rodrigues, Tarad Abalkhail, Hongli Li, Maria J. Ferreira, Gerbrand J. van der Heden van Noort, Marc Fransen, Ewald H. Hettema, and Jorge E. Azevedo. Noncanonical and reversible cysteine ubiquitination prevents the overubiquitination of pex5 at the peroxisomal membrane. PLOS Biology, 22:e3002567, Mar 2024. URL: https://doi.org/10.1371/journal.pbio.3002567, doi:10.1371/journal.pbio.3002567. This article has 4 citations and is from a highest quality peer-reviewed journal.
+6. (platta2009pex2andpex12 pages 1-2): Harald W. Platta, Fouzi El Magraoui, Bastian E. Bäumer, Daniel Schlee, Wolfgang Girzalsky, and Ralf Erdmann. Pex2 and pex12 function as protein-ubiquitin ligases in peroxisomal protein import. Oct 2009. URL: https://doi.org/10.1128/mcb.00388-09, doi:10.1128/mcb.00388-09. This article has 263 citations and is from a domain leading peer-reviewed journal.
 
-7. (demers2023pex13preventspexophagy pages 1-2): Nicholas D. Demers, Victoria Riccio, Doo Sin Jo, Sushil Bhandari, Kelsey B. Law, Weifang Liao, Choy Kim, G. Angus McQuibban, Seong-Kyu Choe, Dong-Hyung Cho, and Peter K. Kim. Pex13 prevents pexophagy by regulating ubiquitinated pex5 and peroxisomal ros. Autophagy, 19:1781-1802, Jan 2023. URL: https://doi.org/10.1080/15548627.2022.2160566, doi:10.1080/15548627.2022.2160566. This article has 56 citations and is from a domain leading peer-reviewed journal.
+7. (liu2012recentadvancesin pages 9-10): Xueqian Liu, Changle Ma, and Suresh Subramani. Recent advances in peroxisomal matrix protein import. Current opinion in cell biology, 24 4:484-9, Aug 2012. URL: https://doi.org/10.1016/j.ceb.2012.05.003, doi:10.1016/j.ceb.2012.05.003. This article has 80 citations and is from a peer-reviewed journal.
 
-8. (demers2023pex13preventspexophagy pages 2-3): Nicholas D. Demers, Victoria Riccio, Doo Sin Jo, Sushil Bhandari, Kelsey B. Law, Weifang Liao, Choy Kim, G. Angus McQuibban, Seong-Kyu Choe, Dong-Hyung Cho, and Peter K. Kim. Pex13 prevents pexophagy by regulating ubiquitinated pex5 and peroxisomal ros. Autophagy, 19:1781-1802, Jan 2023. URL: https://doi.org/10.1080/15548627.2022.2160566, doi:10.1080/15548627.2022.2160566. This article has 56 citations and is from a domain leading peer-reviewed journal.
+8. (li2021mechanismsandfunctions pages 2-4): Jing Li and Wei Wang. Mechanisms and functions of pexophagy in mammalian cells. Cells, 10:1094, May 2021. URL: https://doi.org/10.3390/cells10051094, doi:10.3390/cells10051094. This article has 36 citations.
 
-9. (bajdzienko2024mammalianpexophagyat pages 3-4): Justyna Bajdzienko and Anja Bremm. Mammalian pexophagy at a glance. Journal of Cell Science, May 2024. URL: https://doi.org/10.1242/jcs.259775, doi:10.1242/jcs.259775. This article has 14 citations and is from a domain leading peer-reviewed journal.
+9. (feng2022structureandfunction pages 5-6): Peiqiang Feng, Michael L. Skowyra, and Tom A. Rapoport. Structure and function of the peroxisomal ubiquitin ligase complex. Biochemical Society Transactions, 50:1921-1930, Nov 2022. URL: https://doi.org/10.1042/bst20221393, doi:10.1042/bst20221393. This article has 14 citations and is from a peer-reviewed journal.
 
-10. (alayoubi2025zellwegersyndrome;identification pages 1-2): Abdulfatah M. Alayoubi, Ambreen Ijaz, Abdul Wali, Jamil A. Hashmi, Azizah Alharbi, and Sulman Basit. Zellweger syndrome; identification of mutations in pex19 and pex26 gene in saudi families. Annals of Medicine, Jan 2025. URL: https://doi.org/10.1080/07853890.2024.2447400, doi:10.1080/07853890.2024.2447400. This article has 2 citations and is from a domain leading peer-reviewed journal.
+10. (skowyra2024towardssolvingthe pages 6-8): Michael L. Skowyra, Peiqiang Feng, and Tom A. Rapoport. Towards solving the mystery of peroxisomal matrix protein import. Trends in Cell Biology, 34:388-405, May 2024. URL: https://doi.org/10.1016/j.tcb.2023.08.005, doi:10.1016/j.tcb.2023.08.005. This article has 27 citations and is from a domain leading peer-reviewed journal.
 
-11. (beltran2024newbornscreeningfor pages 1-2): Carlos F. Mares Beltran, Christina G. Tise, Rebekah Barrick, Annie D. Niehaus, Rebecca Sponberg, Richard Chang, Gregory M. Enns, and Jose E. Abdenur. Newborn screening for x-linked adrenoleukodystrophy (x-ald): biochemical, molecular, and clinical characteristics of other genetic conditions. Genes, 15:838, Jun 2024. URL: https://doi.org/10.3390/genes15070838, doi:10.3390/genes15070838. This article has 6 citations.
+11. (zientararytter2016autophagicdegradationof pages 4-5): Katarzyna Zientara-Rytter and Suresh Subramani. Autophagic degradation of peroxisomes in mammals. Biochemical Society transactions, 44 2:431-40, Apr 2016. URL: https://doi.org/10.1042/bst20150268, doi:10.1042/bst20150268. This article has 78 citations and is from a peer-reviewed journal.
 
-12. (bajdzienko2024mammalianpexophagyat pages 5-6): Justyna Bajdzienko and Anja Bremm. Mammalian pexophagy at a glance. Journal of Cell Science, May 2024. URL: https://doi.org/10.1242/jcs.259775, doi:10.1242/jcs.259775. This article has 14 citations and is from a domain leading peer-reviewed journal.
+12. (li2021mechanismsandfunctions pages 4-5): Jing Li and Wei Wang. Mechanisms and functions of pexophagy in mammalian cells. Cells, 10:1094, May 2021. URL: https://doi.org/10.3390/cells10051094, doi:10.3390/cells10051094. This article has 36 citations.
 
-13. (beltran2024newbornscreeningfor pages 2-4): Carlos F. Mares Beltran, Christina G. Tise, Rebekah Barrick, Annie D. Niehaus, Rebecca Sponberg, Richard Chang, Gregory M. Enns, and Jose E. Abdenur. Newborn screening for x-linked adrenoleukodystrophy (x-ald): biochemical, molecular, and clinical characteristics of other genetic conditions. Genes, 15:838, Jun 2024. URL: https://doi.org/10.3390/genes15070838, doi:10.3390/genes15070838. This article has 6 citations.
+13. (beltran2024newbornscreeningfor pages 1-2): Carlos F. Mares Beltran, Christina G. Tise, Rebekah Barrick, Annie D. Niehaus, Rebecca Sponberg, Richard Chang, Gregory M. Enns, and Jose E. Abdenur. Newborn screening for x-linked adrenoleukodystrophy (x-ald): biochemical, molecular, and clinical characteristics of other genetic conditions. Genes, 15:838, Jun 2024. URL: https://doi.org/10.3390/genes15070838, doi:10.3390/genes15070838. This article has 6 citations.
 
-14. (lipinski2025earlystagesofa pages 13-16): O Lipiński. Early stages of peroxisomal protein import. Unknown journal, 2025.
+14. (zhang2024tandemmassspectrometry pages 1-2): Wujuan Zhang, Monica Narvaez Rivas, and Kenneth D.R. Setchell. Tandem mass spectrometry of serum cholestanoic (c27) acids – typical concentration ranges and application to the study of peroxisomal biogenesis disorders. Journal of Mass Spectrometry and Advances in the Clinical Lab, 34:34-43, Nov 2024. URL: https://doi.org/10.1016/j.jmsacl.2024.10.005, doi:10.1016/j.jmsacl.2024.10.005. This article has 3 citations.
 
-15. (lipinski2025earlystagesofa pages 22-25): O Lipiński. Early stages of peroxisomal protein import. Unknown journal, 2025.
+15. (zhang2024tandemmassspectrometry pages 7-8): Wujuan Zhang, Monica Narvaez Rivas, and Kenneth D.R. Setchell. Tandem mass spectrometry of serum cholestanoic (c27) acids – typical concentration ranges and application to the study of peroxisomal biogenesis disorders. Journal of Mass Spectrometry and Advances in the Clinical Lab, 34:34-43, Nov 2024. URL: https://doi.org/10.1016/j.jmsacl.2024.10.005, doi:10.1016/j.jmsacl.2024.10.005. This article has 3 citations.
 
-16. (han2024peroxisomalhomeostasisin pages 2-4): Jiwei Han, Daheng Zheng, Pu-Ste Liu, Shanshan Wang, and Xin Xie. Peroxisomal homeostasis in metabolic diseases and its implication in ferroptosis. Cell Communication and Signaling : CCS, Oct 2024. URL: https://doi.org/10.1186/s12964-024-01862-w, doi:10.1186/s12964-024-01862-w. This article has 20 citations.
+16. (thoms2006peroxisomalmatrixprotein pages 1-2): Sven Thoms and Ralf Erdmann. Peroxisomal matrix protein receptor ubiquitination and recycling. Biochimica et biophysica acta, 1763 12:1620-8, Dec 2006. URL: https://doi.org/10.1016/j.bbamcr.2006.08.046, doi:10.1016/j.bbamcr.2006.08.046. This article has 66 citations.
+
+17. (thoms2006peroxisomalmatrixprotein pages 9-9): Sven Thoms and Ralf Erdmann. Peroxisomal matrix protein receptor ubiquitination and recycling. Biochimica et biophysica acta, 1763 12:1620-8, Dec 2006. URL: https://doi.org/10.1016/j.bbamcr.2006.08.046, doi:10.1016/j.bbamcr.2006.08.046. This article has 66 citations.
+
+18. (wang2017roleofpex5 pages 5-6): Wei Wang and Suresh Subramani. Role of pex5 ubiquitination in maintaining peroxisome dynamics and homeostasis. Cell Cycle, 16:2037-2045, Sep 2017. URL: https://doi.org/10.1080/15384101.2017.1376149, doi:10.1080/15384101.2017.1376149. This article has 69 citations and is from a peer-reviewed journal.
+
+19. (feng2022aperoxisomalubiquitin media d4311c14): Peiqiang Feng, Xudong Wu, Satchal K. Erramilli, Joao A. Paulo, Pawel Knejski, Steven P. Gygi, Anthony A. Kossiakoff, and Tom A. Rapoport. A peroxisomal ubiquitin ligase complex forms a retrotranslocation channel. Nature, 607:374-380, Jun 2022. URL: https://doi.org/10.1038/s41586-022-04903-x, doi:10.1038/s41586-022-04903-x. This article has 65 citations and is from a highest quality peer-reviewed journal.
+
+20. (feng2022aperoxisomalubiquitin media 27c6b8ba): Peiqiang Feng, Xudong Wu, Satchal K. Erramilli, Joao A. Paulo, Pawel Knejski, Steven P. Gygi, Anthony A. Kossiakoff, and Tom A. Rapoport. A peroxisomal ubiquitin ligase complex forms a retrotranslocation channel. Nature, 607:374-380, Jun 2022. URL: https://doi.org/10.1038/s41586-022-04903-x, doi:10.1038/s41586-022-04903-x. This article has 65 citations and is from a highest quality peer-reviewed journal.
 
 ## Citations
 
-1. kumar2024theperoxisomean pages 7-9
-2. kumar2024theperoxisomean pages 10-11
-3. francisco2024noncanonicalandreversible pages 1-2
-4. bajdzienko2024mammalianpexophagyat pages 3-4
+1. feng2022structureandfunction pages 3-5
+2. skowyra2024towardssolvingthe pages 6-8
+3. skowyra2024towardssolvingthe pages 21-27
+4. feng2022aperoxisomalubiquitin pages 1-2
 5. beltran2024newbornscreeningfor pages 1-2
-6. bajdzienko2024mammalianpexophagyat pages 5-6
+6. zhang2024tandemmassspectrometry pages 1-2
 7. beltran2024newbornscreeningfor pages 2-4
-8. skowyra2024towardssolvingthe pages 1-3
-9. francisco2024noncanonicalandreversible pages 20-21
-10. lipinski2025earlystagesofa pages 13-16
-11. lipinski2025earlystagesofa pages 22-25
-12. han2024peroxisomalhomeostasisin pages 2-4
-13. https://doi.org/10.1371/journal.pbio.3002567
-14. https://doi.org/10.1007/s00418-023-02259-5
-15. https://doi.org/10.1080/15548627.2022.2160566
-16. https://doi.org/10.1242/jcs.259775
-17. https://doi.org/10.3390/genes15070838
-18. https://doi.org/10.1080/07853890.2024.2447400
-19. https://doi.org/10.1016/j.tcb.2023.08.005,
-20. https://doi.org/10.1007/s00418-023-02259-5,
-21. https://doi.org/10.1371/journal.pbio.3002567,
-22. https://doi.org/10.1080/15548627.2022.2160566,
-23. https://doi.org/10.1242/jcs.259775,
-24. https://doi.org/10.1080/07853890.2024.2447400,
-25. https://doi.org/10.3390/genes15070838,
-26. https://doi.org/10.1186/s12964-024-01862-w,
+8. feng2022structureandfunction pages 1-3
+9. liu2012recentadvancesin pages 9-10
+10. li2021mechanismsandfunctions pages 2-4
+11. feng2022structureandfunction pages 5-6
+12. zientararytter2016autophagicdegradationof pages 4-5
+13. li2021mechanismsandfunctions pages 4-5
+14. zhang2024tandemmassspectrometry pages 7-8
+15. thoms2006peroxisomalmatrixprotein pages 1-2
+16. thoms2006peroxisomalmatrixprotein pages 9-9
+17. https://doi.org/10.1042/bst20221393;
+18. https://doi.org/10.1038/s41586-022-04903-x
+19. https://doi.org/10.1128/mcb.00388-09;
+20. https://doi.org/10.3390/cells10051094
+21. https://doi.org/10.1016/j.tcb.2023.08.005;
+22. https://doi.org/10.3390/cells10051094;
+23. https://doi.org/10.1042/bst20150268
+24. https://doi.org/10.3390/genes15070838;
+25. https://doi.org/10.1016/j.jmsacl.2024.10.005
+26. https://doi.org/10.1016/j.tcb.2023.08.005
+27. https://doi.org/10.3390/genes15070838
+28. https://doi.org/10.1042/bst20221393
+29. https://doi.org/10.1042/bst20221393,
+30. https://doi.org/10.1016/j.tcb.2023.08.005,
+31. https://doi.org/10.1038/s41586-022-04903-x,
+32. https://doi.org/10.3390/genes15070838,
+33. https://doi.org/10.1128/mcb.00388-09,
+34. https://doi.org/10.1016/j.ceb.2012.05.003,
+35. https://doi.org/10.3390/cells10051094,
+36. https://doi.org/10.1042/bst20150268,
+37. https://doi.org/10.1016/j.jmsacl.2024.10.005,
+38. https://doi.org/10.1016/j.bbamcr.2006.08.046,
+39. https://doi.org/10.1080/15384101.2017.1376149,
