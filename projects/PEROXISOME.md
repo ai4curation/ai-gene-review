@@ -123,16 +123,32 @@ Priority is based on: (1) disease prevalence in ZSD, (2) functional centrality,
 - [x] PEX13 (Q92968)
 
 ## Phase 3 Genes
-- [ ] PEX3 (P56589)
-- [ ] PEX16 (Q9Y5Y5)
-- [ ] PEX19 (P40855)
-- [ ] PEX11A (O75192)
-- [ ] PEX11B (O96011)
-- [ ] PEX11G (Q96HA9)
+- [x] PEX3 (P56589)
+- [x] PEX16 (Q9Y5Y5)
+- [x] PEX19 (P40855)
+- [x] PEX11A (O75192)
+- [x] PEX11B (O96011)
+- [x] PEX11G (Q96HA9)
 
 # NOTES
 
 ## 2026-03-05
+
+- Phase 3 annotation reviews complete (all 6 genes: PEX3, PEX16, PEX19, PEX11A, PEX11B, PEX11G)
+- Key findings across Phase 3:
+  - PEX19: 37 REMOVE actions (45% of annotations!) — likely many protein binding annotations from HTP interactome studies
+  - PEX3: 17 over-annotations flagged — highest proportion of any gene; many downstream metabolic processes
+  - PEX11B: 12 over-annotations — many guilt-by-phenotype annotations from KO studies
+  - PEX11G: smallest gene (11 annotations) reviewed cleanly; tissue-specific role confirmed
+  - PEX16: 3 annotations removed; well-characterized ER-to-peroxisome pathway annotations retained
+  - Several NEW annotations proposed across Phase 3 genes (PEX16, PEX19, PEX11A, PEX11G)
+- Review statistics:
+  - PEX3: 47 annotations (20 ACCEPT, 17 OVER, 6 MODIFY, 3 NON_CORE, 1 UNDECIDED)
+  - PEX16: 34 annotations (26 ACCEPT, 3 REMOVE, 3 MODIFY, 1 OVER, 1 NEW)
+  - PEX19: 82 annotations (38 ACCEPT, 37 REMOVE, 4 NEW, 1 MODIFY, 1 OVER, 1 NON_CORE)
+  - PEX11A: 21 annotations (17 ACCEPT, 2 REMOVE, 1 OVER, 1 NEW)
+  - PEX11B: 40 annotations (23 ACCEPT, 12 OVER, 3 NON_CORE, 2 REMOVE)
+  - PEX11G: 12 annotations (8 ACCEPT, 1 REMOVE, 1 MODIFY, 1 OVER, 1 NEW)
 
 - Phase 2 annotation reviews complete (all 4 genes: PEX2, PEX10, PEX12, PEX13)
 - Key findings across Phase 2:
