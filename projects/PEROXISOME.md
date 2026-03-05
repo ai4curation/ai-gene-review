@@ -109,12 +109,12 @@ Priority is based on: (1) disease prevalence in ZSD, (2) functional centrality,
 # STATUS
 
 ## Phase 1 Genes
-- [ ] PEX1 (O43933)
-- [ ] PEX5 (P50542)
-- [ ] PEX6 (Q13608)
-- [ ] PEX7 (O00628)
-- [ ] PEX14 (O75381)
-- [ ] PEX26 (Q7Z412)
+- [x] PEX1 (O43933)
+- [x] PEX5 (P50542)
+- [x] PEX6 (Q13608)
+- [x] PEX7 (O00628)
+- [x] PEX14 (O75381)
+- [x] PEX26 (Q7Z412)
 
 ## Phase 2 Genes
 - [ ] PEX2 (P28328)
@@ -133,6 +133,25 @@ Priority is based on: (1) disease prevalence in ZSD, (2) functional centrality,
 # NOTES
 
 ## 2026-03-05
+
+- Phase 1 annotation reviews complete (all 6 genes)
+- Key findings across Phase 1:
+  - Pervasive over-annotation of generic "protein binding" (GO:0005515) across all genes (25+ instances)
+  - PEX7: homodimerization annotation (GO:0042803) contradicted by cited paper PMID:10978175 which shows WD40 repeat mediates PTS2 binding, not dimerization
+  - PEX14: phase separation behavior emerging as new paradigm for import pore (PMID:34551879)
+  - PEX14: beta-tubulin binding (GO:0048487) is a validated core function, connecting peroxisomes to cytoskeleton
+  - PEX5: 118 annotations reviewed, highest annotation count; 19 over-annotations flagged
+  - PEX26: convergent evolution with yeast PEX15 visible in annotation evidence patterns
+  - Guilt-by-cargo pattern: several genes annotated with cargo metabolic processes (e.g. ether lipid biosynthesis for PEX7)
+- Review statistics:
+  - PEX1: 52 annotations (46 ACCEPT, 4 REMOVE, 1 OVER, 1 NON_CORE)
+  - PEX5: 118 annotations (89 ACCEPT, 19 OVER, 4 NON_CORE, 3 MODIFY, 2 REMOVE, 1 UNDECIDED)
+  - PEX6: 50 annotations (43 ACCEPT, 4 MODIFY, 3 NON_CORE)
+  - PEX7: 47 annotations (35 ACCEPT, 6 REMOVE, 2 MODIFY, 2 OVER, 2 NON_CORE)
+  - PEX14: 81 annotations (56 ACCEPT, 17 OVER, 4 NON_CORE, 3 MODIFY, 1 REMOVE)
+  - PEX26: 36 annotations (24 ACCEPT, 8 OVER, 3 NON_CORE, 1 REMOVE)
+
+## 2026-03-05 (initial)
 
 - Project created, focusing on human peroxisome biogenesis (PEX) genes
 - Prioritized Phase 1 as core import/recycling machinery (PEX1, PEX5, PEX6, PEX7, PEX14, PEX26)
