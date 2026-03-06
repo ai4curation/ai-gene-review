@@ -181,10 +181,67 @@ class GeneDescriptions:
     organism: str
     uniprot_id: Optional[str] = None
     taxon_id: Optional[str] = None
+    status: Optional[str] = None  # computed: STUB, IN_PROGRESS, REVIEWED, COMPLETE
     descriptions: List[SourceDescription] = field(default_factory=list)
     findings: List[Finding] = field(default_factory=list)
     review: Optional[DescriptionReview] = None  # overall review across all sources
     fetch_date: Optional[str] = None
+
+
+# -------------------------------------------------------------------
+# Status computation
+# -------------------------------------------------------------------
+
+
+def compute_description_status(gd: GeneDescriptions) -> str:
+    """Compute the review status of a GeneDescriptions object.
+
+    Status levels (analogous to gene review status):
+    - STUB: No descriptions have reviews
+    - IN_PROGRESS: Some but not all descriptions have reviews
+    - REVIEWED: All descriptions have reviews, but no top-level review
+    - COMPLETE: All descriptions reviewed AND top-level review present
+
+    Args:
+        gd: The gene descriptions object.
+
+    Returns:
+        Status string.
+
+    Examples:
+        >>> gd = GeneDescriptions(gene_symbol="X", organism="yeast")
+        >>> compute_description_status(gd)
+        'STUB'
+        >>> gd.descriptions = [SourceDescription(source="UniProt", text="A function")]
+        >>> compute_description_status(gd)
+        'STUB'
+        >>> gd.descriptions[0].review = DescriptionReview(reviewer="AI")
+        >>> compute_description_status(gd)
+        'REVIEWED'
+        >>> gd.descriptions.append(SourceDescription(source="RefSeq", text="Another"))
+        >>> compute_description_status(gd)
+        'IN_PROGRESS'
+        >>> gd.descriptions[1].review = DescriptionReview(reviewer="AI")
+        >>> compute_description_status(gd)
+        'REVIEWED'
+        >>> gd.review = DescriptionReview(reviewer="AI", overall_notes="Good")
+        >>> compute_description_status(gd)
+        'COMPLETE'
+    """
+    if not gd.descriptions:
+        return "STUB"
+
+    reviewed_count = sum(1 for d in gd.descriptions if d.review is not None)
+    total = len(gd.descriptions)
+
+    if reviewed_count == 0:
+        return "STUB"
+    elif reviewed_count < total:
+        return "IN_PROGRESS"
+    elif gd.review is not None:
+        return "COMPLETE"
+    else:
+        return "REVIEWED"
 
 
 # -------------------------------------------------------------------
@@ -285,6 +342,7 @@ def load_gene_descriptions(path: Path) -> GeneDescriptions:
         organism=data["organism"],
         uniprot_id=data.get("uniprot_id"),
         taxon_id=data.get("taxon_id"),
+        status=data.get("status"),
         descriptions=descriptions,
         findings=findings,
         review=overall_review,
@@ -658,3 +716,72 @@ def fetch_organism_descriptions(
     logger.info("Fetched descriptions for %d %s genes", count, organism)
 
     return count
+
+
+# -------------------------------------------------------------------
+# Status reporting
+# -------------------------------------------------------------------
+
+
+@dataclass
+class DescriptionStatusReport:
+    """Status summary for description files in an organism directory.
+
+    Examples:
+        >>> r = DescriptionStatusReport(organism="yeast", total=10, by_status={"STUB": 8, "COMPLETE": 2}, genes=[])
+        >>> r.total
+        10
+    """
+
+    organism: str
+    total: int
+    by_status: Dict[str, int]
+    genes: List[Dict[str, str]]  # [{gene_symbol, status, path}, ...]
+
+
+def compute_organism_description_status(
+    organism: str,
+    base_path: Optional[Path] = None,
+    update: bool = False,
+) -> DescriptionStatusReport:
+    """Compute description review status for all genes in an organism directory.
+
+    Args:
+        organism: Organism short name (e.g. "yeast").
+        base_path: Base directory (default: cwd).
+        update: If True, write the computed status back into each YAML file.
+
+    Returns:
+        DescriptionStatusReport with per-gene statuses and summary counts.
+    """
+    base = base_path or Path.cwd()
+    organism_dir = base / "genes" / organism
+
+    if not organism_dir.exists():
+        raise FileNotFoundError(f"Organism directory not found: {organism_dir}")
+
+    desc_files = sorted(organism_dir.glob("*/*-descriptions.yaml"))
+    by_status: Dict[str, int] = {}
+    genes: List[Dict[str, str]] = []
+
+    for path in desc_files:
+        gd = load_gene_descriptions(path)
+        status = compute_description_status(gd)
+
+        if update and gd.status != status:
+            gd.status = status
+            save_gene_descriptions(gd, path)
+
+        by_status[status] = by_status.get(status, 0) + 1
+        genes.append({
+            "gene_symbol": gd.gene_symbol,
+            "status": status,
+            "path": str(path),
+        })
+
+    return DescriptionStatusReport(
+        organism=organism,
+        total=len(desc_files),
+        by_status=by_status,
+        genes=genes,
+    )

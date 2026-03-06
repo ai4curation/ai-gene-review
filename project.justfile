@@ -126,6 +126,13 @@ fetch-descriptions organism gene:
 fetch-descriptions-bulk organism *args="":
     uv run ai-gene-review fetch-descriptions-bulk {{organism}} --output-dir . {{args}}
 
+# Report review status of gene description files
+# Example: just descriptions-status yeast
+# Example: just descriptions-status yeast --all
+# Example: just descriptions-status yeast --update
+descriptions-status organism *args="":
+    uv run ai-gene-review descriptions-status {{organism}} --output-dir . {{args}}
+
 
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided

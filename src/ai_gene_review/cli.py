@@ -2473,6 +2473,52 @@ def fetch_descriptions_bulk(
         raise typer.Exit(code=1)
 
 
+@app.command()
+def descriptions_status(
+    organism: Annotated[
+        str, typer.Argument(help="Organism name (e.g., yeast, human)")
+    ],
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", "-o", help="Output directory (default: current directory)"),
+    ] = None,
+    update: Annotated[
+        bool,
+        typer.Option("--update", help="Write computed status back into each YAML file"),
+    ] = False,
+    show_all: Annotated[
+        bool,
+        typer.Option("--all", help="Show all genes, not just summary"),
+    ] = False,
+):
+    """Report review status of gene description files.
+
+    Shows how many description files are STUB, IN_PROGRESS, REVIEWED, or COMPLETE.
+
+    Examples:
+        ai-gene-review descriptions-status yeast
+        ai-gene-review descriptions-status yeast --update
+        ai-gene-review descriptions-status yeast --all
+    """
+    from ai_gene_review.etl.descriptions import compute_organism_description_status
+
+    report = compute_organism_description_status(organism, base_path=output_dir, update=update)
+
+    typer.echo(f"\nDescription review status for {organism} ({report.total} genes):")
+    for status in ["STUB", "IN_PROGRESS", "REVIEWED", "COMPLETE"]:
+        count = report.by_status.get(status, 0)
+        if count > 0:
+            typer.echo(f"  {status}: {count}")
+
+    if show_all:
+        typer.echo("")
+        for gene in report.genes:
+            typer.echo(f"  {gene['gene_symbol']}: {gene['status']}")
+
+    if update:
+        typer.echo("\nStatus fields updated in YAML files.")
+
+
 def main():
     """Main entry point for the CLI."""
     app()
