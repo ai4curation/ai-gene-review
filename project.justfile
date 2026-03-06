@@ -115,12 +115,12 @@ fetch-ncrna organism gene *args="":
 fetch-rna-gene organism gene *args="":
     uv run ai-gene-review fetch-ncrna {{organism}} {{gene}} --output-dir . {{args}}
 
-# Fetch gene descriptions from external sources (Alliance, UniProt, RefSeq)
+# Fetch gene descriptions from external sources (Alliance_Imported, Alliance_Automated, UniProt, RefSeq)
 # Example: just fetch-descriptions yeast CAT2
 fetch-descriptions organism gene:
     uv run ai-gene-review fetch-descriptions {{organism}} {{gene}} --output-dir .
 
-# Fetch gene descriptions for all genes in an organism
+# Fetch gene descriptions for all genes in an organism (per-gene sidecar files only)
 # Example: just fetch-descriptions-bulk yeast
 # Example: just fetch-descriptions-bulk yeast -g CAT2 -g SSA1
 fetch-descriptions-bulk organism *args="":

@@ -2415,7 +2415,7 @@ def fetch_descriptions(
         typer.Option("--output-dir", "-o", help="Output directory (default: current directory)"),
     ] = None,
 ):
-    """Fetch gene descriptions from external sources (Alliance, UniProt, RefSeq).
+    """Fetch gene descriptions from external sources (Alliance_Imported, Alliance_Automated, UniProt, RefSeq).
 
     Creates a sidecar file: genes/<organism>/<gene>/<gene>-descriptions.yaml
 
@@ -2454,7 +2454,7 @@ def fetch_descriptions_bulk(
 ):
     """Fetch gene descriptions for all genes in an organism directory.
 
-    Creates per-gene sidecar files AND a bulk file at descriptions/<organism>/<organism>-descriptions.yaml
+    Creates per-gene sidecar files at genes/<organism>/<gene>/<gene>-descriptions.yaml
 
     Examples:
         ai-gene-review fetch-descriptions-bulk yeast
@@ -2464,11 +2464,10 @@ def fetch_descriptions_bulk(
 
     typer.echo(f"Fetching descriptions for all {organism} genes...")
     try:
-        bulk_path, count = fetch_organism_descriptions(
+        count = fetch_organism_descriptions(
             organism, base_path=output_dir, delay=delay, gene_symbols=genes,
         )
         typer.echo(f"Fetched descriptions for {count} genes")
-        typer.echo(f"Bulk file: {bulk_path}")
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(code=1)

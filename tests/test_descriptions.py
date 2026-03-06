@@ -109,7 +109,7 @@ class TestSerialization:
                 ),
             ],
             findings=[
-                Finding(category="consensus", text="All sources agree", sources=["UniProt", "Alliance"]),
+                Finding(category="consensus", text="All sources agree", sources=["UniProt", "Alliance_Imported"]),
             ],
             review=DescriptionReview(
                 reviewer="AI",
@@ -130,7 +130,7 @@ class TestSerialization:
         assert loaded.descriptions[0].review is not None
         assert loaded.descriptions[0].review.rubrics[0].score == 4
         assert len(loaded.findings) == 1
-        assert loaded.findings[0].sources == ["UniProt", "Alliance"]
+        assert loaded.findings[0].sources == ["UniProt", "Alliance_Imported"]
         assert loaded.review is not None
         assert loaded.review.rubrics[0].notes == "Good coverage"
 
@@ -152,4 +152,4 @@ class TestFetchIntegration:
         assert len(gd.descriptions) >= 2  # at least UniProt + Alliance curated
         sources = [d.source for d in gd.descriptions]
         assert "UniProt" in sources
-        assert "Alliance" in sources
+        assert "Alliance_Imported" in sources

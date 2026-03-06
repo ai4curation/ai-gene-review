@@ -1,11 +1,10 @@
 """Gene descriptions ETL module.
 
-Fetches gene descriptions from external sources (Alliance, UniProt, NCBI/RefSeq)
+Fetches gene descriptions from external sources (Alliance_Imported, Alliance_Automated, UniProt, NCBI/RefSeq)
 and stores them as sidecar YAML files.
 
-Supports two storage modes:
+Storage mode:
 - Per-gene: genes/<organism>/<gene>/<gene>-descriptions.yaml
-- Bulk per-species: descriptions/<SPECIES_CODE>/<SPECIES_CODE>-descriptions.yaml
 
 Example:
     >>> from ai_gene_review.etl.descriptions import fetch_gene_descriptions
@@ -14,7 +13,7 @@ Example:
 
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, List, Dict, Any
 import re
 import logging
 import time
@@ -130,16 +129,16 @@ class SourceDescription:
 
     Examples:
         >>> sd = SourceDescription(
-        ...     source="Alliance",
+        ...     source="Alliance_Imported",
         ...     source_type="curated",
         ...     text="Carnitine acetyl-CoA transferase",
         ...     url="https://www.alliancegenome.org/gene/SGD:S000004506",
         ... )
         >>> sd.source
-        'Alliance'
+        'Alliance_Imported'
     """
 
-    source: str  # e.g. "Alliance", "UniProt", "RefSeq", "SGD"
+    source: str  # e.g. "Alliance_Imported", "Alliance_Automated", "UniProt", "RefSeq"
     text: str
     source_type: Optional[str] = None  # "curated", "automated", "computational"
     url: Optional[str] = None
@@ -406,7 +405,7 @@ def fetch_alliance_description(mod_id: str) -> Dict[str, Any]:
 
     Examples:
         >>> result = fetch_alliance_description("SGD:S000004506")  # doctest: +SKIP
-        >>> "curated_synopsis" in result
+        >>> "curated_synopsis" in result  # doctest: +SKIP
         True
     """
     url = f"{ALLIANCE_API_BASE}/gene/{mod_id}"
@@ -434,7 +433,7 @@ def fetch_ncbi_gene_summary(gene_id: str) -> Dict[str, Any]:
 
     Examples:
         >>> result = fetch_ncbi_gene_summary("854965")  # doctest: +SKIP
-        >>> "summary" in result
+        >>> "summary" in result  # doctest: +SKIP
         True
     """
     resp = requests.get(
@@ -536,7 +535,7 @@ def fetch_gene_descriptions(
             if alliance_data.get("curated_synopsis"):
                 gd.descriptions.append(
                     SourceDescription(
-                        source="Alliance",
+                        source="Alliance_Imported",
                         source_type="curated",
                         text=alliance_data["curated_synopsis"],
                         url=alliance_data.get("url"),
@@ -546,7 +545,7 @@ def fetch_gene_descriptions(
             if alliance_data.get("automated_synopsis"):
                 gd.descriptions.append(
                     SourceDescription(
-                        source="Alliance",
+                        source="Alliance_Automated",
                         source_type="automated",
                         text=alliance_data["automated_synopsis"],
                         url=alliance_data.get("url"),
@@ -607,11 +606,11 @@ def fetch_organism_descriptions(
     base_path: Optional[Path] = None,
     delay: float = 0.5,
     gene_symbols: Optional[List[str]] = None,
-) -> Tuple[Path, int]:
-    """Fetch descriptions for all genes in an organism directory, saving a bulk file.
+) -> int:
+    """Fetch descriptions for all genes in an organism directory.
 
     Iterates over genes/<organism>/*/ and fetches descriptions for each gene,
-    saving individual per-gene files AND a combined bulk file.
+    saving individual per-gene sidecar files.
 
     Args:
         organism: Organism short name (e.g. "yeast").
@@ -620,7 +619,7 @@ def fetch_organism_descriptions(
         gene_symbols: If provided, only fetch for these genes. Otherwise fetch all.
 
     Returns:
-        Tuple of (path to bulk file, number of genes processed).
+        Number of genes processed.
     """
     base = base_path or Path.cwd()
     organism_dir = base / "genes" / organism
@@ -634,7 +633,6 @@ def fetch_organism_descriptions(
     else:
         gene_dirs = sorted([d for d in organism_dir.iterdir() if d.is_dir()])
 
-    all_descriptions: List[Dict[str, Any]] = []
     count = 0
 
     for gene_dir in gene_dirs:
@@ -648,8 +646,6 @@ def fetch_organism_descriptions(
             per_gene_path = gene_dir / f"{gene_symbol}-descriptions.yaml"
             save_gene_descriptions(gd, per_gene_path)
 
-            # Collect for bulk file
-            all_descriptions.append(_clean_dict(asdict(gd)))
             count += 1
 
             if delay > 0:
@@ -659,20 +655,6 @@ def fetch_organism_descriptions(
             logger.error("Failed to fetch descriptions for %s: %s", gene_symbol, e)
             continue
 
-    # Save bulk file
-    bulk_dir = base / "descriptions" / organism
-    bulk_dir.mkdir(parents=True, exist_ok=True)
-    bulk_path = bulk_dir / f"{organism}-descriptions.yaml"
-    bulk_data = {
-        "organism": organism,
-        "taxon_id": ORGANISM_CONFIG.get(organism, {}).get("taxon_id"),
-        "gene_count": count,
-        "genes": all_descriptions,
-    }
-    bulk_path.write_text(
-        yaml.dump(bulk_data, default_flow_style=False, sort_keys=False, allow_unicode=True),
-        encoding="utf-8",
-    )
-    logger.info("Saved bulk descriptions to %s (%d genes)", bulk_path, count)
+    logger.info("Fetched descriptions for %d %s genes", count, organism)
 
-    return bulk_path, count
+    return count
