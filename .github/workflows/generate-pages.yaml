@@ -1,0 +1,143 @@
+---
+name: Generate Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'genes/**/*.yaml'
+      - 'src/ai_gene_review/schema/**'
+      - 'src/ai_gene_review/templates/**'
+      - 'src/ai_gene_review/render.py'
+      - 'src/ai_gene_review/export.py'
+      - 'src/ai_gene_review/browser/**'
+      - 'projects/*.md'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force run even if already ran today'
+        type: boolean
+        default: false
+
+concurrency:
+  group: generate-pages
+  cancel-in-progress: true
+
+jobs:
+  generate-pages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install just
+        run: uv tool install rust-just
+
+      - name: Install project
+        run: uv sync --dev
+
+      - name: Validate all gene reviews
+        run: just validate-all
+
+      - name: Render all gene review HTML pages
+        run: just render-all
+
+      - name: Render project pages
+        run: just render-projects
+
+      - name: Deploy browser app (data.js + index.html)
+        run: just deploy-browser
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if git diff --quiet genes/ app/ pages/ reports/; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changed files:"
+            git diff --stat genes/ app/ pages/ reports/
+          fi
+
+      - name: Create Pull Request
+        if: steps.check-changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH_NAME="generate-pages-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH_NAME"
+
+          git add genes/**/*.html app/ pages/ reports/
+
+          GENE_COUNT=$(find genes -name '*-ai-review.yaml' | wc -l | tr -d ' ')
+          HTML_COUNT=$(find genes -name '*-ai-review.html' | wc -l | tr -d ' ')
+          PROJECT_COUNT=$(find pages/projects -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
+
+          git commit -m "$(cat <<EOF
+          Regenerate pages, browser app, and reports
+
+          - $HTML_COUNT gene review HTML pages (from $GENE_COUNT YAML reviews)
+          - $PROJECT_COUNT project pages
+          - Browser app data.js
+          - Validation report
+
+          Triggered by changes to gene reviews or templates.
+          EOF
+          )"
+
+          git push origin "$BRANCH_NAME"
+
+          gh pr create \
+            --title "Regenerate pages and browser app ($(date +%Y-%m-%d))" \
+            --body "$(cat <<EOF
+          ## Summary
+
+          Automated regeneration of static assets after gene review or template changes.
+
+          ## Generated Assets
+
+          | Asset | Count/Status |
+          |-------|--------------|
+          | Gene review YAML files | $GENE_COUNT |
+          | Gene review HTML pages | $HTML_COUNT |
+          | Project pages | $PROJECT_COUNT |
+          | Browser app (data.js) | Updated |
+          | Validation report | Updated |
+
+          ## Trigger
+
+          This PR was triggered by changes to:
+          - \`genes/**/*.yaml\` - gene review data files
+          - \`src/ai_gene_review/schema/**\` - LinkML schema files
+          - \`src/ai_gene_review/templates/**\` - Jinja2 templates
+          - \`src/ai_gene_review/render.py\` - rendering code
+          - \`src/ai_gene_review/export.py\` - export code
+          - \`src/ai_gene_review/browser/**\` - browser app assets
+          - \`projects/*.md\` - project definitions
+
+          ## Review
+
+          - [ ] Spot-check a few gene review HTML pages render correctly
+          - [ ] Verify browser app loads and filters work
+          - [ ] Check validation report for new issues
+          EOF
+          )"
