@@ -1,7 +1,6 @@
 import { App } from "@modelcontextprotocol/ext-apps";
 
 const contentEl = document.getElementById("content")!;
-const refreshBtn = document.getElementById("refresh-btn")!;
 
 const ACTION_COLORS: Record<string, string> = {
   ACCEPT: "#22c55e",
@@ -43,7 +42,6 @@ function renderDashboard(stats: Stats) {
   const actions = stats.action_counts;
   const maxCount = Math.max(...Object.values(actions), 1);
 
-  // Bar chart rows
   const barRows = ACTION_ORDER.filter((a) => (actions[a] ?? 0) > 0)
     .map((action) => {
       const count = actions[action] ?? 0;
@@ -61,7 +59,6 @@ function renderDashboard(stats: Stats) {
     })
     .join("");
 
-  // Species table
   const speciesRows = Object.entries(stats.species_gene_counts)
     .map(([sp, count]) => `<tr><td>${sp}</td><td>${count}</td></tr>`)
     .join("");
@@ -101,7 +98,7 @@ function parseStats(result: { content?: Array<{ type: string; text?: string }> }
 const app = new App({ name: "Gene Review Dashboard", version: "1.0.0" });
 app.connect();
 
-// Handle initial tool result from host
+// The host pushes the tool result (stats computed by the agent) to the UI
 app.ontoolresult = (result) => {
   const stats = parseStats(result);
   if (stats) {
@@ -110,18 +107,3 @@ app.ontoolresult = (result) => {
     contentEl.innerHTML = '<div class="loading">Could not parse stats.</div>';
   }
 };
-
-// Refresh button calls the tool again
-refreshBtn.addEventListener("click", async () => {
-  contentEl.innerHTML = '<div class="loading">Refreshing...</div>';
-  try {
-    const result = await app.callServerTool({
-      name: "gene-review-dashboard",
-      arguments: {},
-    });
-    const stats = parseStats(result as { content?: Array<{ type: string; text?: string }> });
-    if (stats) renderDashboard(stats);
-  } catch (err) {
-    contentEl.innerHTML = `<div class="loading">Error: ${String(err)}</div>`;
-  }
-});

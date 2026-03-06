@@ -1,79 +1,19 @@
 /**
- * MCP App server for gene review dashboard.
- * Reads all *-ai-review.yaml files and serves an interactive summary.
+ * Stateless MCP App rendering gateway.
+ *
+ * This server has NO filesystem access and NO knowledge of genes/YAML.
+ * The agent computes stats locally and passes them as tool input.
+ * The server just renders the data as an interactive HTML dashboard.
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { z } from "zod";
 import cors from "cors";
 import express from "express";
 import fs from "node:fs/promises";
 import path from "node:path";
-import yaml from "js-yaml";
-import { glob } from "glob";
 
 const RESOURCE_MIME_TYPE = "text/html;profile=mcp-app";
-
-// Resolve the gene review repo root (two levels up from app/mcp-dashboard/)
-const REPO_ROOT = path.resolve(import.meta.dirname, "..", "..");
-const GENES_DIR = path.join(REPO_ROOT, "genes");
-
-interface ReviewStats {
-  total_genes: number;
-  total_annotations: number;
-  total_species: number;
-  action_counts: Record<string, number>;
-  species_gene_counts: Record<string, number>;
-}
-
-async function collectStats(): Promise<ReviewStats> {
-  const actionCounts: Record<string, number> = {};
-  const speciesGeneCounts: Record<string, number> = {};
-  let totalAnnotations = 0;
-
-  const files = await glob("**/*-ai-review.yaml", { cwd: GENES_DIR });
-
-  for (const file of files) {
-    const parts = file.split(path.sep);
-    const species = parts[0] ?? "unknown";
-    speciesGeneCounts[species] = (speciesGeneCounts[species] ?? 0) + 1;
-
-    try {
-      const content = await fs.readFile(path.join(GENES_DIR, file), "utf-8");
-      const data = yaml.load(content) as Record<string, unknown> | null;
-
-      if (data?.existing_annotations && Array.isArray(data.existing_annotations)) {
-        for (const ann of data.existing_annotations) {
-          totalAnnotations++;
-          const review = (ann as Record<string, unknown>)?.review as
-            | Record<string, unknown>
-            | undefined;
-          const action = review?.action
-            ? String(review.action)
-            : review
-              ? "PENDING"
-              : "NO_REVIEW";
-          actionCounts[action] = (actionCounts[action] ?? 0) + 1;
-        }
-      }
-    } catch {
-      // skip unparseable files
-    }
-  }
-
-  // Sort species by count descending, take top 20
-  const sorted = Object.entries(speciesGeneCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 20);
-  const topSpecies = Object.fromEntries(sorted);
-
-  return {
-    total_genes: Object.values(speciesGeneCounts).reduce((a, b) => a + b, 0),
-    total_annotations: totalAnnotations,
-    total_species: Object.keys(speciesGeneCounts).length,
-    action_counts: actionCounts,
-    species_gene_counts: topSpecies,
-  };
-}
 
 // ── MCP Server ──────────────────────────────────────────────────────────
 
@@ -84,25 +24,37 @@ const server = new McpServer({
 
 const DASHBOARD_URI = "ui://gene-review-dashboard/mcp-app.html";
 
-// Register the dashboard tool with UI metadata
+// The agent passes stats as input; the server just renders them
 server.registerTool(
   "gene-review-dashboard",
   {
     title: "Gene Review Dashboard",
     description:
-      "Shows an interactive dashboard summarizing annotation review status across all genes. " +
-      "Displays total counts, breakdown by review action, and top species.",
+      "Renders an interactive dashboard showing gene annotation review status. " +
+      "The caller provides pre-computed stats (action counts, species counts, totals). " +
+      "Returns an interactive UI with bar charts and summary cards.",
+    inputSchema: {
+      total_genes: z.number().describe("Total number of genes reviewed"),
+      total_annotations: z.number().describe("Total number of annotations"),
+      total_species: z.number().describe("Total number of species"),
+      action_counts: z
+        .record(z.string(), z.number())
+        .describe("Map of action type (ACCEPT, MODIFY, REMOVE, etc.) to count"),
+      species_gene_counts: z
+        .record(z.string(), z.number())
+        .describe("Map of species code to gene count (top N)"),
+    },
     _meta: { ui: { resourceUri: DASHBOARD_URI } },
   },
-  async () => {
-    const stats = await collectStats();
+  async (args) => {
+    // Pass the stats straight through as the tool result for the UI to render
     return {
-      content: [{ type: "text", text: JSON.stringify(stats) }],
+      content: [{ type: "text", text: JSON.stringify(args) }],
     };
   },
 );
 
-// Register the UI resource that serves the bundled HTML
+// Serve the bundled HTML
 server.resource(
   "dashboard-ui",
   DASHBOARD_URI,
