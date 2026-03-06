@@ -1,0 +1,188 @@
+# Peroxisome Biogenesis Project
+
+## Overview
+
+Peroxisomes are single-membrane-bound organelles found in virtually all eukaryotic cells.
+They perform essential metabolic functions including fatty acid beta-oxidation (especially
+very long-chain fatty acids), ether lipid (plasmalogen) synthesis, bile acid synthesis,
+and reactive oxygen species metabolism. The peroxisome biogenesis machinery is encoded by
+PEX (peroxin) genes, mutations in which cause Zellweger spectrum disorders (ZSD) and
+other peroxisomal biogenesis disorders (PBDs).
+
+## Model Species
+
+**Primary: Homo sapiens (human)**
+- Zellweger spectrum disorders provide clinical relevance
+- Comprehensive proteomics data available
+- Well-characterized import pathways
+
+## Functional Architecture of the PEX Machinery
+
+### 1. Membrane Protein Insertion (Class I)
+- **PEX3** - Membrane anchor for PEX19-cargo complexes
+- **PEX19** - Cytosolic chaperone/receptor for peroxisomal membrane proteins (PMPs)
+- **PEX16** - Membrane receptor, recruits PEX3 to peroxisomes
+
+### 2. Matrix Protein Import - Receptors (Class II)
+- **PEX5** - PTS1 (C-terminal -SKL) receptor, cycling receptor
+- **PEX7** - PTS2 (N-terminal nonapeptide) receptor
+
+### 3. Docking Complex (Class III)
+- **PEX13** - Docking complex component, SH3 domain
+- **PEX14** - Central docking component, forms transient pore
+
+### 4. RING Complex / Ubiquitination (Class IV)
+- **PEX2** - E3 ubiquitin ligase (RING domain)
+- **PEX10** - E3 ubiquitin ligase (RING domain)
+- **PEX12** - E3 ubiquitin ligase (RING domain)
+
+### 5. Receptor Recycling / AAA ATPase Complex (Class V)
+- **PEX1** - AAA+ ATPase, receptor export
+- **PEX6** - AAA+ ATPase, receptor export
+- **PEX26** - Membrane anchor for PEX1-PEX6 complex
+
+### 6. Peroxisome Proliferation / Division (Class VI)
+- **PEX11A** - Peroxisome elongation/proliferation (inducible)
+- **PEX11B** - Peroxisome elongation/proliferation (constitutive)
+- **PEX11G** - Peroxisome elongation/proliferation (tissue-specific)
+
+## Evolutionary Conservation
+
+The PEX machinery shows tiered conservation:
+- **Deeply conserved (yeast to human)**: PEX1, 2, 3, 5, 6, 7, 10, 12, 13, 14, 19
+- **Metazoan innovations**: PEX11 family expansion (1 in yeast -> 3 in human)
+- **Vertebrate-specific**: PEX26 (replaces yeast PEX15, convergent evolution)
+- **Recently characterized**: PEX5L (PEX5-related), PEX39
+
+Key reference: Jansen et al. (2021) "Comparative Genomics of Peroxisome Biogenesis Proteins:
+Making Sense of the PEX Proteins" Front Cell Dev Biol 9:654163.
+
+## Disease Relevance
+
+| Disease | OMIM | Key Genes |
+|---------|------|-----------|
+| Zellweger syndrome (most severe) | 214100 | PEX1, PEX2, PEX3, PEX5, PEX6, PEX10, PEX12, PEX13, PEX14, PEX16, PEX19, PEX26 |
+| Neonatal adrenoleukodystrophy | 202370 | PEX1, PEX5, PEX10, PEX13, PEX26 |
+| Infantile Refsum disease | 266510 | PEX1, PEX2, PEX26 |
+| Rhizomelic chondrodysplasia punctata type 1 | 215100 | PEX7 |
+| Heimler syndrome | 234580 | PEX1, PEX6 |
+
+PEX1 is the most commonly mutated gene (~65% of ZSD cases), followed by PEX6 (~16%) and PEX26 (~5%).
+
+## Candidate Genes - Priority Order
+
+Priority is based on: (1) disease prevalence in ZSD, (2) functional centrality,
+(3) evolutionary conservation depth.
+
+### Phase 1: Core Import/Recycling (highest priority)
+
+| Gene | UniProt | Function | ZSD Frequency |
+|------|---------|----------|---------------|
+| PEX1 | O43933 | AAA+ ATPase, receptor recycling | ~65% |
+| PEX5 | P50542 | PTS1 receptor | ~4% |
+| PEX6 | Q13608 | AAA+ ATPase, receptor recycling | ~16% |
+| PEX7 | O00628 | PTS2 receptor | RCDP1 |
+| PEX14 | O75381 | Docking complex | Rare |
+| PEX26 | Q7Z412 | PEX1/PEX6 anchor | ~5% |
+
+### Phase 2: RING Complex & Docking
+
+| Gene | UniProt | Function | ZSD Frequency |
+|------|---------|----------|---------------|
+| PEX2 | P28328 | RING E3 ligase | ~3% |
+| PEX10 | O60683 | RING E3 ligase | ~3% |
+| PEX12 | O00623 | RING E3 ligase | ~4% |
+| PEX13 | Q92968 | Docking complex, SH3 | Rare |
+
+### Phase 3: Membrane Biogenesis & Proliferation
+
+| Gene | UniProt | Function |
+|------|---------|----------|
+| PEX3 | P56589 | PMP membrane anchor |
+| PEX16 | Q9Y5Y5 | PMP membrane receptor |
+| PEX19 | P40855 | PMP chaperone/receptor |
+| PEX11A | O75192 | Proliferation (inducible) |
+| PEX11B | O96011 | Proliferation (constitutive) |
+| PEX11G | Q96HA9 | Proliferation (tissue-specific) |
+
+---
+# STATUS
+
+## Phase 1 Genes
+- [x] PEX1 (O43933)
+- [x] PEX5 (P50542)
+- [x] PEX6 (Q13608)
+- [x] PEX7 (O00628)
+- [x] PEX14 (O75381)
+- [x] PEX26 (Q7Z412)
+
+## Phase 2 Genes
+- [x] PEX2 (P28328)
+- [x] PEX10 (O60683)
+- [x] PEX12 (O00623)
+- [x] PEX13 (Q92968)
+
+## Phase 3 Genes
+- [x] PEX3 (P56589)
+- [x] PEX16 (Q9Y5Y5)
+- [x] PEX19 (P40855)
+- [x] PEX11A (O75192)
+- [x] PEX11B (O96011)
+- [x] PEX11G (Q96HA9)
+
+# NOTES
+
+## 2026-03-05
+
+- Phase 3 annotation reviews complete (all 6 genes: PEX3, PEX16, PEX19, PEX11A, PEX11B, PEX11G)
+- Key findings across Phase 3:
+  - PEX19: 37 REMOVE actions (45% of annotations!) — likely many protein binding annotations from HTP interactome studies
+  - PEX3: 17 over-annotations flagged — highest proportion of any gene; many downstream metabolic processes
+  - PEX11B: 12 over-annotations — many guilt-by-phenotype annotations from KO studies
+  - PEX11G: smallest gene (11 annotations) reviewed cleanly; tissue-specific role confirmed
+  - PEX16: 3 annotations removed; well-characterized ER-to-peroxisome pathway annotations retained
+  - Several NEW annotations proposed across Phase 3 genes (PEX16, PEX19, PEX11A, PEX11G)
+- Review statistics:
+  - PEX3: 47 annotations (20 ACCEPT, 17 OVER, 6 MODIFY, 3 NON_CORE, 1 UNDECIDED)
+  - PEX16: 34 annotations (26 ACCEPT, 3 REMOVE, 3 MODIFY, 1 OVER, 1 NEW)
+  - PEX19: 82 annotations (38 ACCEPT, 37 REMOVE, 4 NEW, 1 MODIFY, 1 OVER, 1 NON_CORE)
+  - PEX11A: 21 annotations (17 ACCEPT, 2 REMOVE, 1 OVER, 1 NEW)
+  - PEX11B: 40 annotations (23 ACCEPT, 12 OVER, 3 NON_CORE, 2 REMOVE)
+  - PEX11G: 12 annotations (8 ACCEPT, 1 REMOVE, 1 MODIFY, 1 OVER, 1 NEW)
+
+- Phase 2 annotation reviews complete (all 4 genes: PEX2, PEX10, PEX12, PEX13)
+- Key findings across Phase 2:
+  - RING complex (PEX2/PEX10/PEX12) shows cleaner annotations than Phase 1 receptors — fewer over-annotations
+  - PEX2: 5 annotations removed, including generic protein binding; 9 non-core (downstream metabolic processes)
+  - PEX10: cleanest review — only 1 over-annotation, 1 modify; strong ISS evidence from cryo-EM channel paper (PMID:35768507)
+  - PEX12: 4 modify actions, mostly refining E3 ligase specificity; bridges RING complex to docking via PEX5/PEX10 interactions
+  - PEX13: 8 over-annotations flagged (mostly downstream metabolic); 1 NEW annotation proposed; SH3 domain scaffold function confirmed
+- Review statistics:
+  - PEX2: 59 annotations (40 ACCEPT, 9 NON_CORE, 5 REMOVE, 4 OVER, 1 UNDECIDED)
+  - PEX10: 39 annotations (34 ACCEPT, 3 NON_CORE, 1 MODIFY, 1 OVER)
+  - PEX12: 55 annotations (44 ACCEPT, 6 NON_CORE, 4 MODIFY, 1 OVER)
+  - PEX13: 52 annotations (35 ACCEPT, 8 OVER, 8 NON_CORE, 1 NEW)
+
+- Phase 1 annotation reviews complete (all 6 genes)
+- Key findings across Phase 1:
+  - Pervasive over-annotation of generic "protein binding" (GO:0005515) across all genes (25+ instances)
+  - PEX7: homodimerization annotation (GO:0042803) contradicted by cited paper PMID:10978175 which shows WD40 repeat mediates PTS2 binding, not dimerization
+  - PEX14: phase separation behavior emerging as new paradigm for import pore (PMID:34551879)
+  - PEX14: beta-tubulin binding (GO:0048487) is a validated core function, connecting peroxisomes to cytoskeleton
+  - PEX5: 118 annotations reviewed, highest annotation count; 19 over-annotations flagged
+  - PEX26: convergent evolution with yeast PEX15 visible in annotation evidence patterns
+  - Guilt-by-cargo pattern: several genes annotated with cargo metabolic processes (e.g. ether lipid biosynthesis for PEX7)
+- Review statistics:
+  - PEX1: 52 annotations (46 ACCEPT, 4 REMOVE, 1 OVER, 1 NON_CORE)
+  - PEX5: 118 annotations (89 ACCEPT, 19 OVER, 4 NON_CORE, 3 MODIFY, 2 REMOVE, 1 UNDECIDED)
+  - PEX6: 50 annotations (43 ACCEPT, 4 MODIFY, 3 NON_CORE)
+  - PEX7: 47 annotations (35 ACCEPT, 6 REMOVE, 2 MODIFY, 2 OVER, 2 NON_CORE)
+  - PEX14: 81 annotations (56 ACCEPT, 17 OVER, 4 NON_CORE, 3 MODIFY, 1 REMOVE)
+  - PEX26: 36 annotations (24 ACCEPT, 8 OVER, 3 NON_CORE, 1 REMOVE)
+
+## 2026-03-05 (initial)
+
+- Project created, focusing on human peroxisome biogenesis (PEX) genes
+- Prioritized Phase 1 as core import/recycling machinery (PEX1, PEX5, PEX6, PEX7, PEX14, PEX26)
+- PEX1 is highest priority: most commonly mutated in Zellweger spectrum disorders
+- Will start with Phase 1 genes, fetching data and performing annotation review
