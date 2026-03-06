@@ -19,7 +19,7 @@ Ral2 is a Ras1-Scd pathway protein essential for mating/conjugation and cell mor
 - Activated ras1 (ras1Val-17) rescues ral2 mutants, placing ral2 upstream of ras1 [PMID:2586528 "Either multiple copies or even a single copy of the ras1Val-17 allele...restored rodlike cell morphology and ability to respond to the mating factor to ral2 mutants"]
 - Genetic epistasis: ral1, ral2, ras1 function in a common pathway in that order [PMID:3071741 "the ral1, ral2 and ras1 genes may function in a common pathway in that order"]
 - Multiple copies of ral2 or ral3 partially rescue ral1- strains [PMID:3071741]
-- ral2 deletion increases cell width, along with other Cdc42-pathway deletions (scd1, scd2, rga4, ras1, efc25) [web search: PMID:21551073 Das et al. 2011]
+- ral2 deletion increases cell width, along with other Cdc42-pathway deletions (scd1, scd2, rga4, ras1, efc25) [PMID:21551073]
 
 ### Pathway Context
 
