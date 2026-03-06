@@ -83,10 +83,39 @@ The GIY-YIG nuclease domain is the most conserved region. The DUF4041 domain sho
 - "defence response to bacteriophage via direct DNA cleavage" (BP) — to distinguish from abortive infection
 - "tape measure protein binding" (MF) — specific interaction that enables SNIPE targeting
 
-## Related Projects
+## GIY-YIG InterPro-to-GO Misannotation Risk
 
-- ANTI_CRISPR — other phage defence systems
-- Bacterial immunity annotation more broadly
+The InterPro-to-GO mapping (`rules/arba/_interpro2go.txt`) contains:
+
+```
+InterPro:IPR047296 UvrC/Cho-like, GIY-YIG domain → GO:0006289 (nucleotide-excision repair)
+```
+
+This mapping assumes GIY-YIG = DNA repair (as in UvrC), but SNIPE demonstrates this domain has been repurposed for antiphage defence. Automated annotation of SNIPE homologues through this InterPro entry would produce **incorrect GO annotations** for 500+ proteins. This should be flagged when proposing InterPro2GO mappings for PF13250/IPR025280.
+
+## Cross-References to Related Genes in Repo
+
+### DivIVA membrane anchoring (BACSU)
+
+`genes/BACSU/divIVA/divIVA-ai-review.yaml` (P71021) — ~34% of SNIPE homologues lacking transmembrane domains use DivIVA-like domains for membrane anchoring. The DivIVA review covers the same membrane curvature-sensing mechanism these SNIPE variants use.
+
+### Phage-bacteria arms race genes
+
+| Gene | Organism | File | Relevance to SNIPE |
+|------|----------|------|-------------------|
+| darB | Phage P1 (9CAUD) | `genes/9CAUD/darB/darB-ai-review.yaml` | Antirestriction protein ejected into host to protect phage DNA from Type I R-M. SNIPE is the host-side counterpart |
+| DAM | Phage T4 (BPT4) | `genes/BPT4/DAM/DAM-ai-review.yaml` | DNA adenine methyltransferase protecting phage DNA from host restriction |
+| AcrF8 | Phage ZF40 (BPZF4) | `genes/BPZF4/AcrF8/AcrF8-ai-review.yaml` | Anti-CRISPR protein — another phage counter-defence strategy |
+| AimP | Phage phi3T (BPPHT) | `genes/BPPHT/AimP/AimP-falcon-research.md` | Phage quorum sensing peptide governing lysis-lysogeny decisions |
+
+### Related projects
+
+| Project | File | Connection |
+|---------|------|------------|
+| Anti-CRISPR | `projects/ANTI_CRISPR.md` | Parallel bacterial defence systems and phage counter-strategies |
+| SPKW-BPT4 | `projects/SPKW-BPT4.md` | Annotation challenges for phage-bacteria interactions |
+| cGAS-STING | `projects/CGAS_STING_PATHWAY.md` | Eukaryotic cytosolic DNA sensing; conceptual parallel (cGAS senses foreign DNA in cytoplasm; SNIPE intercepts it at the membrane) |
+| Surveillance Immunity | `projects/CAEEL_SURVEILLANCE_IMMUNITY.md` | Innate immunity via spatial/contextual detection rather than sequence recognition |
 
 ## Genes for Review
 
@@ -118,6 +147,7 @@ The GIY-YIG nuclease domain is the most conserved region. The DUF4041 domain sho
 - [ ] Cross-reference with DefenseFinder database entries
 - [ ] Propose InterPro2GO mappings for PF13250/IPR025280 (currently none exist)
 - [ ] Add literature references to IPR025280 (currently none linked)
+- [ ] Flag GIY-YIG InterPro-to-GO misannotation concern (IPR047296 → GO:0006289)
 
 Last updated: 2026-03-01
 
