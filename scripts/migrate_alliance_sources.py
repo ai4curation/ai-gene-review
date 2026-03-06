@@ -9,7 +9,6 @@ Usage:
     python scripts/migrate_alliance_sources.py [--dry-run]
 """
 
-import re
 import sys
 from pathlib import Path
 
