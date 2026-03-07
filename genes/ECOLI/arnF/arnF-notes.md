@@ -166,6 +166,14 @@ This means the IBA could in principle be refined at the subfamily level — SF9/
 should get intramembrane lipid transporter annotations, while SF2/SF6 and family-level
 members keep transmembrane transporter annotations.
 
+**Note on SF9 subfamily mapping inconsistency**: One entry in PTHR30561-entries.csv
+(A8FRQ9, *Shewanella sediminis* ArnE) is named as ArnE but assigned to SF9
+(ARNF-RELATED) rather than SF23 (ARNE-RELATED). This is likely a genuine PANTHER
+classification based on sequence similarity — the Shewanella ArnE ortholog may be
+more similar to ArnF sequences. This does not affect the E. coli annotations or the
+IBA analysis, since E. coli ArnE (Q47377) and ArnF (P76474) are correctly assigned
+to SF23 and SF9 respectively.
+
 ## EcoCyc Annotation Quality Assessment
 
 EcoCyc contributed 5 of the 18 total GO annotations for arnF:
