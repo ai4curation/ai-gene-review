@@ -150,7 +150,7 @@ These are the strongest cases where a domain predicts an activity that is demons
 
 ## Tier 3: Moderate Candidates (score 3, selected highlights)
 
-These need manual review but include notable patterns.
+These need manual review but include notable patterns. Many of these are better treated as **simple removals** rather than formal NOT annotations — a NOT annotation requires positive evidence that the function is absent, not merely insufficient evidence that it is present.
 
 | Species | Gene | UniProt | Incorrect Term | Evidence | Pattern |
 |---------|------|---------|----------------|----------|---------|
@@ -196,7 +196,7 @@ Domains that serve structural/binding roles but are annotated with the catalytic
 - DnaJ domains annotated as ATP-binding (YDJ1, DNAJA2, DNAJA4, Dnaja3, DnaJ)
 - PGRP domains annotated as amidases (PGRPS1, PGRPLD)
 
-### 3. "Is Phosphorylated" =/= "Does Phosphorylation" Pattern (Over-annotation, NOT true NOT candidates)
+### 3. "Is Phosphorylated" =/= "Does Phosphorylation" Pattern (Over-annotation — removals, not NOTs)
 
 A systematic class of over-annotation where proteins annotated to `GO:0006468` (protein phosphorylation) are actually kinase SUBSTRATES, and the cited paper only demonstrates their phosphorylation BY kinases, not that they are kinases. This is especially common with TAS and IDA evidence codes.
 
@@ -209,7 +209,7 @@ However, none of these 19 genes have a kinase domain in InterPro, which strength
 
 **Examples**: CREB1, MEX3B, ATF2, RARA, RUNX3, ILF3, GMFB, ADM2, BIRC6, PICK1, PRRT1, CTBP1, LIPE, HCST, CDC25B, PPP3CB, GMFG, MORC3, PDGFA
 
-This is the single largest category by count. Most should be simple removals, but a subset (proteins with no kinase domain AND no regulatory role in phosphorylation) could warrant NOT annotations on the MF term `GO:0004672`.
+This is the single largest category by count. **Most should be simple removals, not formal NOTs.** The exception: proteins with no kinase domain AND no plausible regulatory role in phosphorylation could warrant NOT annotations specifically on the MF term `GO:0004672` (protein kinase activity), where structural absence of the kinase domain is positive evidence.
 
 ### 4. Assembly Factor =/= Complex Activity Pattern
 
