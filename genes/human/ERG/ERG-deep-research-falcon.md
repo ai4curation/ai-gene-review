@@ -259,15 +259,8 @@ References
 6. pirri2025lossoferg pages 4-6
 7. rupp2024immunohistochemicalergpositivity pages 1-2
 8. roshanmoniri2021developmentoferg pages 41-47
-9. 68Ga
-10. 68ga
-11. https://doi.org/10.14288/1.0395829
-12. https://doi.org/10.4049/jimmunol.2300043
-13. https://doi.org/10.1101/2025.03.10.25323421
-14. https://doi.org/10.1161/atvbaha.123.318926
-15. https://doi.org/10.1007/s00259-024-06856-x
-16. https://doi.org/10.14288/1.0395829,
-17. https://doi.org/10.4049/jimmunol.2300043,
-18. https://doi.org/10.1161/atvbaha.123.318926,
-19. https://doi.org/10.1101/2025.03.10.25323421,
-20. https://doi.org/10.1007/s00259-024-06856-x,
+9. https://doi.org/10.14288/1.0395829
+10. https://doi.org/10.4049/jimmunol.2300043
+11. https://doi.org/10.1101/2025.03.10.25323421
+12. https://doi.org/10.1161/atvbaha.123.318926
+13. https://doi.org/10.1007/s00259-024-06856-x

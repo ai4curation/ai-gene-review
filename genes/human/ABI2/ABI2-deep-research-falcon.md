@@ -18,7 +18,7 @@ template_variables:
   gene_info: Name=ABI2 {ECO:0000303|PubMed:28397838, ECO:0000312|HGNC:HGNC:24011};
     Synonyms=ARGBPIA;
   organism_full: Homo sapiens (Human).
-  protein_family: Belongs to the ABI family. .
+  protein_family: Belongs to the ABI family.
   protein_domains: ABI. (IPR028457); Abi2_SH3. (IPR035726); Abl-interactor_HHR_dom.
     (IPR012849); SH3-like_dom_sf. (IPR036028); SH3_domain. (IPR001452)
 provider_config:
@@ -43,7 +43,7 @@ citation_count: 12
 - **Protein Description:** RecName: Full=Abl interactor 2 {ECO:0000303|Ref.16}; AltName: Full=Abelson interactor 2 {ECO:0000303|Ref.16}; Short=Abi-2 {ECO:0000303|PubMed:7590236}; AltName: Full=Abl-binding protein 3; Short=AblBP3; AltName: Full=Arg-binding protein 1 {ECO:0000303|PubMed:8649853}; Short=ArgBP1 {ECO:0000303|PubMed:8649853};
 - **Gene Information:** Name=ABI2 {ECO:0000303|PubMed:28397838, ECO:0000312|HGNC:HGNC:24011}; Synonyms=ARGBPIA;
 - **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the ABI family. .
+- **Protein Family:** Belongs to the ABI family.
 - **Key Domains:** ABI. (IPR028457); Abi2_SH3. (IPR035726); Abl-interactor_HHR_dom. (IPR012849); SH3-like_dom_sf. (IPR036028); SH3_domain. (IPR001452)
 
 ### MANDATORY VERIFICATION STEPS:
@@ -103,7 +103,7 @@ Always prioritize recent, authoritative sources and provide specific citations f
 - **Protein Description:** RecName: Full=Abl interactor 2 {ECO:0000303|Ref.16}; AltName: Full=Abelson interactor 2 {ECO:0000303|Ref.16}; Short=Abi-2 {ECO:0000303|PubMed:7590236}; AltName: Full=Abl-binding protein 3; Short=AblBP3; AltName: Full=Arg-binding protein 1 {ECO:0000303|PubMed:8649853}; Short=ArgBP1 {ECO:0000303|PubMed:8649853};
 - **Gene Information:** Name=ABI2 {ECO:0000303|PubMed:28397838, ECO:0000312|HGNC:HGNC:24011}; Synonyms=ARGBPIA;
 - **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the ABI family. .
+- **Protein Family:** Belongs to the ABI family.
 - **Key Domains:** ABI. (IPR028457); Abi2_SH3. (IPR035726); Abl-interactor_HHR_dom. (IPR012849); SH3-like_dom_sf. (IPR036028); SH3_domain. (IPR001452)
 
 ### MANDATORY VERIFICATION STEPS:

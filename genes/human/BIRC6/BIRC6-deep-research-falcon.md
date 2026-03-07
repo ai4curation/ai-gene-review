@@ -20,7 +20,7 @@ template_variables:
     Short=APOLLON {ECO:0000303|PubMed:10544019};'
   gene_info: Name=BIRC6; Synonyms=KIAA1289;
   organism_full: Homo sapiens (Human).
-  protein_family: Belongs to the BIRC6 family. .
+  protein_family: Belongs to the BIRC6 family.
   protein_domains: BIR_rpt. (IPR001370); BIRC6. (IPR022103); UBQ-conjugat_E2_core.
     (IPR000608); UBQ-conjugating_enzyme/RWD. (IPR016135); BIR (PF00653)
 provider_config:
@@ -45,7 +45,7 @@ citation_count: 17
 - **Protein Description:** RecName: Full=Dual E2 ubiquitin-conjugating enzyme/E3 ubiquitin-protein ligase BIRC6 {ECO:0000303|PubMed:36758104, ECO:0000303|PubMed:36758105, ECO:0000303|PubMed:36758106}; EC=2.3.2.24 {ECO:0000269|PubMed:36758104, ECO:0000269|PubMed:36758105, ECO:0000269|PubMed:36758106}; AltName: Full=BIR repeat-containing ubiquitin-conjugating enzyme {ECO:0000303|PubMed:14765125}; Short=BRUCE {ECO:0000303|PubMed:14765125}; AltName: Full=Baculoviral IAP repeat-containing protein 6; AltName: Full=Ubiquitin-conjugating BIR domain enzyme apollon {ECO:0000303|PubMed:10544019}; Short=APOLLON {ECO:0000303|PubMed:10544019};
 - **Gene Information:** Name=BIRC6; Synonyms=KIAA1289;
 - **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the BIRC6 family. .
+- **Protein Family:** Belongs to the BIRC6 family.
 - **Key Domains:** BIR_rpt. (IPR001370); BIRC6. (IPR022103); UBQ-conjugat_E2_core. (IPR000608); UBQ-conjugating_enzyme/RWD. (IPR016135); BIR (PF00653)
 
 ### MANDATORY VERIFICATION STEPS:
@@ -81,64 +81,6 @@ We are also interested in the signaling or biochemical pathways in which the gen
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
 ## Output
-
-Question: You are an expert researcher providing comprehensive, well-cited information.
-
-Provide detailed information focusing on:
-1. Key concepts and definitions with current understanding
-2. Recent developments and latest research (prioritize 2023-2024 sources)
-3. Current applications and real-world implementations
-4. Expert opinions and analysis from authoritative sources
-5. Relevant statistics and data from recent studies
-
-Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.
-Always prioritize recent, authoritative sources and provide specific citations for all major claims.
-
-# Gene Research for Functional Annotation
-
-## ⚠️ CRITICAL: Gene/Protein Identification Context
-
-**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
-
-### Target Gene/Protein Identity (from UniProt):
-- **UniProt Accession:** Q9NR09
-- **Protein Description:** RecName: Full=Dual E2 ubiquitin-conjugating enzyme/E3 ubiquitin-protein ligase BIRC6 {ECO:0000303|PubMed:36758104, ECO:0000303|PubMed:36758105, ECO:0000303|PubMed:36758106}; EC=2.3.2.24 {ECO:0000269|PubMed:36758104, ECO:0000269|PubMed:36758105, ECO:0000269|PubMed:36758106}; AltName: Full=BIR repeat-containing ubiquitin-conjugating enzyme {ECO:0000303|PubMed:14765125}; Short=BRUCE {ECO:0000303|PubMed:14765125}; AltName: Full=Baculoviral IAP repeat-containing protein 6; AltName: Full=Ubiquitin-conjugating BIR domain enzyme apollon {ECO:0000303|PubMed:10544019}; Short=APOLLON {ECO:0000303|PubMed:10544019};
-- **Gene Information:** Name=BIRC6; Synonyms=KIAA1289;
-- **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the BIRC6 family. .
-- **Key Domains:** BIR_rpt. (IPR001370); BIRC6. (IPR022103); UBQ-conjugat_E2_core. (IPR000608); UBQ-conjugating_enzyme/RWD. (IPR016135); BIR (PF00653)
-
-### MANDATORY VERIFICATION STEPS:
-
-1. **Check if the gene symbol "BIRC6" matches the protein description above**
-2. **Verify the organism is correct:** Homo sapiens (Human).
-3. **Check if protein family/domains align with what you find in literature**
-4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
-
-### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
-
-**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
-- State clearly: "The gene symbol 'BIRC6' is ambiguous or literature is limited for this specific protein"
-- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
-- Describe the protein based ONLY on the UniProt information provided above
-- Suggest that the protein function can be inferred from domain/family information
-
-### Research Target:
-
-Please provide a comprehensive research report on the gene **BIRC6** (gene ID: BIRC6, UniProt: Q9NR09) in human.
-
-The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
-
-You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
-this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
-
-We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
-
-We are interested in where in or outside the cell the gene product carries out its function.
-
-We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
-
-Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
 # Comprehensive Research Report: Human **BIRC6** (BRUCE/Apollon) Functional Annotation
 

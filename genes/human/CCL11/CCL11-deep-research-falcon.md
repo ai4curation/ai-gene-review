@@ -78,64 +78,6 @@ Include evidence where possible. We are interested in both experimental evidence
 
 ## Output
 
-Question: You are an expert researcher providing comprehensive, well-cited information.
-
-Provide detailed information focusing on:
-1. Key concepts and definitions with current understanding
-2. Recent developments and latest research (prioritize 2023-2024 sources)
-3. Current applications and real-world implementations
-4. Expert opinions and analysis from authoritative sources
-5. Relevant statistics and data from recent studies
-
-Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.
-Always prioritize recent, authoritative sources and provide specific citations for all major claims.
-
-# Gene Research for Functional Annotation
-
-## ⚠️ CRITICAL: Gene/Protein Identification Context
-
-**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
-
-### Target Gene/Protein Identity (from UniProt):
-- **UniProt Accession:** P51671
-- **Protein Description:** RecName: Full=Eotaxin; AltName: Full=C-C motif chemokine 11; AltName: Full=Eosinophil chemotactic protein; AltName: Full=Small-inducible cytokine A11; Flags: Precursor;
-- **Gene Information:** Name=CCL11; Synonyms=SCYA11;
-- **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the intercrine beta (chemokine CC) family.
-- **Key Domains:** Chemokine_b/g/d. (IPR039809); Chemokine_CC_CS. (IPR000827); Chemokine_IL8-like_dom. (IPR001811); Interleukin_8-like_sf. (IPR036048); IL8 (PF00048)
-
-### MANDATORY VERIFICATION STEPS:
-
-1. **Check if the gene symbol "CCL11" matches the protein description above**
-2. **Verify the organism is correct:** Homo sapiens (Human).
-3. **Check if protein family/domains align with what you find in literature**
-4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
-
-### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
-
-**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
-- State clearly: "The gene symbol 'CCL11' is ambiguous or literature is limited for this specific protein"
-- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
-- Describe the protein based ONLY on the UniProt information provided above
-- Suggest that the protein function can be inferred from domain/family information
-
-### Research Target:
-
-Please provide a comprehensive research report on the gene **CCL11** (gene ID: CCL11, UniProt: P51671) in human.
-
-The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
-
-You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
-this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
-
-We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
-
-We are interested in where in or outside the cell the gene product carries out its function.
-
-We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
-
-Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
-
 # Research report: Human **CCL11** (Eotaxin-1) functional annotation (UniProt **P51671**)
 
 ## 1) Verification of gene/protein identity (mandatory)
