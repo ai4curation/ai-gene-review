@@ -1120,6 +1120,104 @@ classes:
         multivalued: true
         description: Supporting text from literature for this assessment
 
+  # ============== Prediction Review Classes ==============
+
+  PredictionReview:
+    description: >-
+      Review of computational/ML predictions for a gene that are NOT in the curated
+      GOA/UniProt annotations. This captures predictions from methods like DeepECTF,
+      PANTHER/IBA, InterPro2GO, CLEAN, GloEC, MAPred, etc. and evaluates them against
+      literature and bioinformatic evidence. Inspired by the systematic evaluation in
+      de Crécy-Lagard et al. 2025 (PMID:40703034).
+    tree_root: true
+    slots:
+      - id
+      - gene_symbol
+      - taxon
+      - description
+      - references
+      - status
+    attributes:
+      locus_tag:
+        range: string
+        description: Locus tag for the gene (e.g., b1267 for E. coli)
+      predictions:
+        range: PredictedAnnotation
+        multivalued: true
+        inlined_as_list: true
+        description: List of predictions to review
+    slot_usage:
+      id:
+        description: UniProt accession for the gene product
+      description:
+        description: Summary of the prediction review findings
+        recommended: true
+
+  PredictedAnnotation:
+    description: >-
+      A single computational prediction and its review. Each prediction comes from
+      a specific method and predicts a term (EC number, GO term, etc.) for the gene.
+    attributes:
+      source_method:
+        range: string
+        required: true
+        description: >-
+          Name of the prediction method (e.g., DeepECTF, PANTHER_IBA, InterPro2GO,
+          CLEAN, GloEC, MAPred, ProteinInfer)
+      source_version:
+        range: string
+        description: Version or date of the prediction method
+      source_reference_id:
+        range: string
+        description: >-
+          Reference for the prediction method or study (e.g., PMID:37820725 for
+          the Kim et al. 2023 DeepECTF study)
+      predicted_term:
+        range: Term
+        inlined: true
+        required: true
+        description: The predicted term (GO term, EC number, etc.)
+      predicted_term_type:
+        range: PredictedTermTypeEnum
+        required: true
+        description: Type of predicted term (EC, GO_MF, GO_BP, GO_CC)
+      review:
+        range: PredictionAssessment
+        inlined: true
+        required: true
+        description: Assessment of this prediction
+
+  PredictionAssessment:
+    description: >-
+      Assessment of a single computational prediction. Uses categories from
+      de Crécy-Lagard et al. 2025 (PMID:40703034) plus extensions for GO predictions.
+    attributes:
+      assessment:
+        range: PredictionAssessmentEnum
+        required: true
+        description: Assessment category for this prediction
+      confidence_score:
+        range: integer
+        minimum_value: 0
+        maximum_value: 2
+        required: true
+        description: >-
+          Confidence score following de Crécy-Lagard et al. 2025:
+          2 = concordant with evidence, 1 = uncertain, 0 = discordant with evidence
+      error_type:
+        range: PredictionErrorTypeEnum
+        description: >-
+          Type of error that led to the incorrect prediction, following
+          Table 1 of de Crécy-Lagard et al. 2025
+      summary:
+        range: string
+        required: true
+        description: Summary of the assessment rationale
+      supported_by:
+        range: SupportingTextInReference
+        multivalued: true
+        description: Supporting evidence for the assessment
+
 
 enums:
   EvidenceType:
@@ -1736,3 +1834,102 @@ enums:
         description: UniProt isoform ID (e.g., P19544-1, Q07817-2)
       UNIPROT_CHAIN:
         description: UniProt chain/peptide ID from FT PEPTIDE (e.g., PRO_0000024969)
+
+  # ============== Prediction Review Enums ==============
+
+  PredictedTermTypeEnum:
+    description: Type of predicted annotation term
+    permissible_values:
+      EC:
+        description: Enzyme Commission number (e.g., EC:2.7.7.87)
+      GO_MF:
+        description: GO Molecular Function term
+      GO_BP:
+        description: GO Biological Process term
+      GO_CC:
+        description: GO Cellular Component term
+
+  PredictionAssessmentEnum:
+    description: >-
+      Assessment categories for computational predictions, based on
+      de Crécy-Lagard et al. 2025 (PMID:40703034) Fig. 4.
+    permissible_values:
+      COR:
+        description: >-
+          Correct prediction - validated by literature/bioinformatic evidence as a
+          genuinely novel correct prediction (CS=2)
+      CNN:
+        description: >-
+          Correct but Not Novel - the prediction matches an annotation already present
+          in UniProt or in the training data. Not a novel discovery (CS=2)
+      LSP:
+        description: >-
+          Less Precise - the prediction is more generic than the existing annotation.
+          Correct at a higher level but not informative (CS=2)
+      UNC:
+        description: >-
+          Uncertain - the prediction cannot be validated or refuted with available
+          evidence. Requires additional experiments or data (CS=1)
+      PLI:
+        description: >-
+          Paralog Incorrect - wrong prediction due to failure to distinguish
+          nonisofunctional paralogs within a protein superfamily (CS=0)
+      NPI:
+        description: >-
+          Nonparalog Incorrect - wrong prediction refuted by evidence:
+          pathway absent in organism, activity belongs to a different gene,
+          or published data contradict the prediction (CS=0)
+      REP:
+        description: >-
+          Repetition - frequency-biased duplication of a common EC/GO term.
+          The model assigns a high-frequency term (e.g., histidine kinase) to
+          proteins with no sequence similarity to that family (CS=0)
+
+  PredictionErrorTypeEnum:
+    description: >-
+      Types of errors that lead to incorrect functional predictions,
+      based on Table 1 of de Crécy-Lagard et al. 2025 (PMID:40703034).
+    permissible_values:
+      FAILURE_TO_CAPTURE_LITERATURE:
+        description: >-
+          Type 1: Function is known and published but not captured in the database
+          used for training. The protein is falsely labeled as unknown.
+      NAMING_INCONSISTENCY:
+        description: >-
+          Type 2: Inconsistent naming of the same entity across databases leads
+          to missed or incorrect propagation.
+      MULTIPLE_FUNCTIONS:
+        description: >-
+          Type 3: Protein has multiple functions (fusion, moonlighting, promiscuity)
+          and only one function is captured or a non-primary function is predicted.
+      CURATION_MISTAKE:
+        description: >-
+          Type 4: The training data contain an incorrect annotation from a biocuration
+          error or an outdated annotation that has since been corrected.
+      EXPERIMENTAL_MISTAKE:
+        description: >-
+          Type 5: The training data are based on experimental findings that have been
+          refuted or are inconclusive.
+      PARALOG_OVERANNOTATION:
+        description: >-
+          Type 6: Annotation wrongly propagated to a nonisofunctional paralog.
+          The model fails to distinguish between paralogs with different substrate
+          specificities or functions within the same superfamily.
+      FREQUENCY_BIAS:
+        description: >-
+          The model makes predictions biased toward high-frequency labels in the
+          training data, regardless of sequence features. Common with EC numbers
+          like histidine kinase (2.7.13.3) or PTS transporter (2.7.1.69).
+      TRAINING_DATA_CONTAMINATION:
+        description: >-
+          The prediction appears novel but the annotation was already present in
+          the version of the database used to build the training set.
+      PATHWAY_CONTEXT_IGNORED:
+        description: >-
+          The model ignores metabolic/pathway context. The predicted activity requires
+          a pathway that is absent from the organism's genome.
+      IN_VITRO_NOT_IN_VIVO:
+        description: >-
+          The predicted activity can be demonstrated in vitro but does not represent
+          the in vivo biological function (e.g., promiscuous activity at orders of
+          magnitude lower rate than the dedicated enzyme).
