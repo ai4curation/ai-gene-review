@@ -40,7 +40,7 @@ Lysosome                        Cytoplasm                   Nucleus
 | lipl-4 | Q94252 | IN_PROGRESS | 14 reviewed | Yes | Lysosomal acid lipase, signal generator |
 | lbp-8 | O02324 | IN_PROGRESS | 17 reviewed | Yes | Lipid chaperone, lysosome-to-nucleus shuttle |
 | nhr-80 | Q8ITW8 | IN_PROGRESS | 16 reviewed | Yes | OEA receptor, desaturase regulator |
-| nhr-49 | -- | NOT STARTED | -- | -- | Key partner; regulates beta-oxidation and desaturation |
+| nhr-49 | O45666 | IN_PROGRESS | 28 reviewed | Yes (3) | Orphan NHR; fatty acid metabolism, longevity, hypoxia |
 
 ## Missing Genes
 
