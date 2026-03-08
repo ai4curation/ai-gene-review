@@ -83,3 +83,61 @@ PPP3CB was identified as the key calcineurin isoform for TFEB regulation:
 - Isoform 2 (different C-terminus with 54bp insert + different 3' end)
 - Isoform 3 (insertion at aa395 + deletion of aa456-465)
 - Isoform 4 (insertion at aa395)
+
+## Key Findings from Deep Research (2023-2024 Literature)
+
+### New: SMURF1-mediated non-canonical activation at lysosomes (Xia et al., Autophagy 2024)
+This study goes beyond the canonical MCOLN1/Ca2+ activation of calcineurin-TFEB (PMID:25720963) and reveals a new regulatory layer:
+- Lysosomal damage recruits PPP3CB to damaged lysosomes via a **Galectin-3 (LGALS3) → SMURF1 → PPP3CB/PPP3R1** scaffold [PMID:37846590 "SMURF1 controls the PPP3/calcineurin complex and TFEB at a regulatory node for lysosomal biogenesis"]
+- SMURF1 ubiquitinates PPP3CB at **K146 with K63-linked chains**, which displaces the autoinhibitory domain (AID) from the catalytic domain — a non-canonical activation mechanism independent of Ca2+/CaM alone
+- K146R mutant reduces ubiquitination and weakens TFEB nuclear translocation
+- PPP3CB AID directly interacts with TFEB residues 444-476
+- This defines a spatial regulation model: lysosomal damage → local calcineurin activation → local TFEB dephosphorylation
+
+**Annotation implication**: Supports lysosomal membrane localization (conditional) and positive regulation of autophagy annotations. Adds ubiquitin-dependent regulation as a new activation mechanism for PPP3CB.
+
+### New: PPP3CB overexpression as EGFR TKI resistance mechanism (Gazzeri et al., Life Sci Alliance 2024)
+- PPP3CB (including exon-16 splice variant) accumulates in EGFR-mutant NSCLC cells resistant to EGFR TKIs [PMID: not yet in publications, DOI:10.26508/lsa.202402873]
+- Mechanism: EGFR TKIs increase intracellular Ca2+ → calcineurin/PPP3CB activates **KSR2 → MEK → ERK** survival pathway that prevents apoptosis
+- 26% (11/43) post-progression biopsies showed PPP3CB accumulation (P=0.001)
+- Cyclosporin A restores TKI sensitivity
+- Triple combination (osimertinib + trametinib + CsA) showed significant antitumor response in mice (P=0.0002)
+
+**Annotation implication**: Primarily a cancer biology/clinical finding. The calcineurin→MEK→ERK axis is interesting but likely represents a downstream pleiotropic effect rather than a core function requiring new GO annotation.
+
+### New: PSD-95 Ser295 as a calcineurin substrate (Chimura & Manabe, PLOS ONE 2024)
+- PP2B/calcineurin dephosphorylates PSD-95 at Ser295 in NMDA receptor-dependent plasticity [DOI:10.1371/journal.pone.0313441]
+- Defines a "Ca2+-PP2B-PSD-95 axis" for long-term depression (LTD)
+- Not isoform-specific (could be PPP3CA or PPP3CB)
+
+**Annotation implication**: Adds PSD-95 as a specific substrate but cannot be attributed to PPP3CB specifically without isoform-resolution data.
+
+### New: Parkinson's disease plasma biomarker (Hällqvist et al., Nat Commun 2024)
+- PPP3CB plasma levels strongly downregulated in de novo PD [PMID: DOI:10.1038/s41467-024-48961-3]
+- Significant correlations with clinical scores: UPDRS II (rho=-0.42, p=3.1E-6), MMSE (rho=-0.34, p=3.4E-4)
+- Potentially reflects altered Wnt/Ca2+ signaling
+
+**Annotation implication**: Biomarker association only — does not warrant GO annotation changes. Interesting for disease context but not functional annotation.
+
+### New: Psychosis biomarker (Hill et al., Mol Psychiatry 2024)
+- PPP3CB ranked as a top blood gene-expression biomarker for hallucinations [DOI:10.1038/s41380-024-02433-8]
+- Part of precision medicine framework for psychotic disorders
+
+**Annotation implication**: Similar to PD — biomarker association, not a direct functional role.
+
+### Review: Calcineurin in angiogenesis (Fonódi et al., Int J Mol Sci 2024)
+- Comprehensive review of calcineurin's role in tumor angiogenesis via NFAT signaling [DOI:10.3390/ijms25136868]
+- Confirms canonical structural features: CnA catalytic domain, CnB-binding region, AID, and PxIxIT/LxVP substrate docking motifs
+- CsA/FK506 inhibit by interfering with substrate/regulator docking pockets
+
+**Annotation implication**: Reinforces existing annotations; no new functional insights specific to PPP3CB vs other calcineurin isoforms.
+
+## Summary: What's New vs. What Was Already Known
+
+| Finding | Novel? | Impact on Annotations |
+|---|---|---|
+| SMURF1/K63-Ub activation at lysosomes | Yes — new activation mechanism | Supports lysosomal localization annotation; strengthens autophagy annotation |
+| EGFR TKI resistance via MEK/ERK | Yes — new clinical context | Pleiotropic/clinical, not core function |
+| PSD-95 Ser295 substrate | Yes — new specific substrate | Not PPP3CB-specific |
+| PD/psychosis biomarker | Yes — new clinical association | No annotation impact |
+| Ca2+/CaM activation, NFAT signaling | No — well established | Already annotated |
