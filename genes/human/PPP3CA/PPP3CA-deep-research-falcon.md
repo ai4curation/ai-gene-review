@@ -22,7 +22,7 @@ template_variables:
   gene_info: Name=PPP3CA {ECO:0000312|HGNC:HGNC:9314}; Synonyms=CALNA, CNA;
   organism_full: Homo sapiens (Human).
   protein_family: Belongs to the PPP phosphatase family. PP-2B subfamily.
-  protein_domains: Calcineurin-like_PHP. (IPR004843); Metallo-depent_PP-like. (IPR029052);
+  protein_domains: Calcineurin-like_PHP. (IPR004843); Metallo-dependent_PP-like. (IPR029052);
     MPP_PP2B. (IPR041751); PP2B. (IPR043360); Ser/Thr-sp_prot-phosphatase. (IPR006186)
 provider_config:
   timeout: 600
@@ -47,7 +47,7 @@ citation_count: 36
 - **Gene Information:** Name=PPP3CA {ECO:0000312|HGNC:HGNC:9314}; Synonyms=CALNA, CNA;
 - **Organism (full):** Homo sapiens (Human).
 - **Protein Family:** Belongs to the PPP phosphatase family. PP-2B subfamily.
-- **Key Domains:** Calcineurin-like_PHP. (IPR004843); Metallo-depent_PP-like. (IPR029052); MPP_PP2B. (IPR041751); PP2B. (IPR043360); Ser/Thr-sp_prot-phosphatase. (IPR006186)
+- **Key Domains:** Calcineurin-like_PHP. (IPR004843); Metallo-dependent_PP-like. (IPR029052); MPP_PP2B. (IPR041751); PP2B. (IPR043360); Ser/Thr-sp_prot-phosphatase. (IPR006186)
 
 ### MANDATORY VERIFICATION STEPS:
 
@@ -94,52 +94,6 @@ Provide detailed information focusing on:
 
 Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.
 Always prioritize recent, authoritative sources and provide specific citations for all major claims.
-
-# Gene Research for Functional Annotation
-
-## ⚠️ CRITICAL: Gene/Protein Identification Context
-
-**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
-
-### Target Gene/Protein Identity (from UniProt):
-- **UniProt Accession:** Q08209
-- **Protein Description:** RecName: Full=Protein phosphatase 3 catalytic subunit alpha {ECO:0000312|HGNC:HGNC:9314}; EC=3.1.3.16 {ECO:0000269|PubMed:15671020, ECO:0000269|PubMed:18838687, ECO:0000269|PubMed:19154138, ECO:0000269|PubMed:23468591, ECO:0000269|PubMed:31375679, ECO:0000305|PubMed:26248042, ECO:0000305|PubMed:30718414}; AltName: Full=CAM-PRP catalytic subunit; AltName: Full=Calcineurin A alpha {ECO:0000303|PubMed:8392375}; AltName: Full=Calmodulin-dependent calcineurin A subunit alpha isoform {ECO:0000250|UniProtKB:P63328}; Short=CNA alpha {ECO:0000250|UniProtKB:P63328}; AltName: Full=Serine/threonine-protein phosphatase 2B catalytic subunit alpha isoform {ECO:0000312|HGNC:HGNC:9314};
-- **Gene Information:** Name=PPP3CA {ECO:0000312|HGNC:HGNC:9314}; Synonyms=CALNA, CNA;
-- **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the PPP phosphatase family. PP-2B subfamily.
-- **Key Domains:** Calcineurin-like_PHP. (IPR004843); Metallo-depent_PP-like. (IPR029052); MPP_PP2B. (IPR041751); PP2B. (IPR043360); Ser/Thr-sp_prot-phosphatase. (IPR006186)
-
-### MANDATORY VERIFICATION STEPS:
-
-1. **Check if the gene symbol "PPP3CA" matches the protein description above**
-2. **Verify the organism is correct:** Homo sapiens (Human).
-3. **Check if protein family/domains align with what you find in literature**
-4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
-
-### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
-
-**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
-- State clearly: "The gene symbol 'PPP3CA' is ambiguous or literature is limited for this specific protein"
-- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
-- Describe the protein based ONLY on the UniProt information provided above
-- Suggest that the protein function can be inferred from domain/family information
-
-### Research Target:
-
-Please provide a comprehensive research report on the gene **PPP3CA** (gene ID: PPP3CA, UniProt: Q08209) in human.
-
-The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
-
-You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
-this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
-
-We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
-
-We are interested in where in or outside the cell the gene product carries out its function.
-
-We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
-
-Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
 # Research Report: Human **PPP3CA** (UniProt **Q08209**) — Functional Annotation of Calcineurin Aα (PP2B catalytic subunit)
 
