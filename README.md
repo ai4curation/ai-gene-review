@@ -45,6 +45,29 @@ uv run ai-gene-review validate genes/human/TP53/TP53-ai-review.yaml
 uv run ai-gene-review fetch-gene-pmids genes/human/TP53/TP53-ai-review.yaml
 ```
 
+**Publication-centric annotation review (projects/publication_annotation_review):**
+```bash
+just pub-list-refs human
+just pub-review PMID:23991106 PTPN22
+just pub-review-org PMID:23991106 human
+just pub-review-quickgo PMID:23991106 --taxon 9606
+just pub-denovo PMID:23991106 PTPN22
+```
+
+This workflow supports:
+- publication-based annotation review from local GOA files,
+- QuickGO fallback when local GOA files are missing, and
+- de novo candidate GO assignment from publication text for PMIDs with no existing annotations.
+
+| If you want to... | Use this command |
+|---|---|
+| Find candidate PMIDs already present in local GOA for one organism | `just pub-list-refs human` |
+| Review one PMID for one known gene | `just pub-review PMID:23991106 PTPN22` |
+| Review one PMID across all genes in one organism | `just pub-review-org PMID:23991106 human` |
+| Review one PMID across all local GOA data | `just pub-review-all PMID:23991106` |
+| Review a PMID without local GOA (query QuickGO directly) | `just pub-review-quickgo PMID:23991106 --taxon 9606` |
+| Generate de novo GO candidates from publication text (no GOA/QuickGO annotations) | `just pub-denovo PMID:23991106 PTPN22` |
+
 **Generate statistics report:**
 
 The stats command analyzes all gene review files in the `genes/` directory and generates an interactive HTML report with visualizations and metrics.
