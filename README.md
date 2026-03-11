@@ -18,7 +18,10 @@ The AI Gene Review tool helps researchers and curators:
 ### Installation
 
 1. Install [uv](https://docs.astral.sh/uv/) for dependency management
-2. Clone the repository and install dependencies:
+2. Install [just](https://github.com/casey/just) command runner (version 1.23.0 or later required):
+   - See installation instructions at https://github.com/casey/just#installation
+   - Verify version: `just --version`
+3. Clone the repository and install dependencies:
    ```bash
    git clone https://github.com/cmungall/ai-gene-review.git
    cd ai-gene-review
@@ -42,11 +45,42 @@ uv run ai-gene-review validate genes/human/TP53/TP53-ai-review.yaml
 uv run ai-gene-review fetch-gene-pmids human TP53
 ```
 
-**Generate statistics report:**
+**Publication-centric annotation review (projects/publication_annotation_review):**
 ```bash
-just stats                # Generate HTML report
+just pub-list-refs human
+just pub-review PMID:23991106 PTPN22
+just pub-review-org PMID:23991106 human
+just pub-review-quickgo PMID:23991106 --taxon 9606
+just pub-denovo PMID:23991106 PTPN22
+```
+
+This workflow supports:
+- publication-based annotation review from local GOA files,
+- QuickGO fallback when local GOA files are missing, and
+- de novo candidate GO assignment from publication text for PMIDs with no existing annotations.
+
+| If you want to... | Use this command |
+|---|---|
+| Find candidate PMIDs already present in local GOA for one organism | `just pub-list-refs human` |
+| Review one PMID for one known gene | `just pub-review PMID:23991106 PTPN22` |
+| Review one PMID across all genes in one organism | `just pub-review-org PMID:23991106 human` |
+| Review one PMID across all local GOA data | `just pub-review-all PMID:23991106` |
+| Review a PMID without local GOA (query QuickGO directly) | `just pub-review-quickgo PMID:23991106 --taxon 9606` |
+| Generate de novo GO candidates from publication text (no GOA/QuickGO annotations) | `just pub-denovo PMID:23991106 PTPN22` |
+
+**Generate statistics report:**
+
+The stats command analyzes all gene review files in the `genes/` directory and generates an interactive HTML report with visualizations and metrics.
+
+```bash
+just stats                # Generate HTML report at docs/stats_report.html
 just stats-open           # Generate and open in browser
 ```
+
+*Prerequisites:* You need at least one completed gene review file (`*-ai-review.yaml`) in the `genes/` directory. The command will:
+1. Export annotations from all review files to `exports/exported_annotations.tsv`
+2. Execute the `docs/stats.ipynb` Jupyter notebook to generate visualizations
+3. Create `docs/stats_report.html` with the statistics dashboard
 
 ## Workflow Overview
 
@@ -362,7 +396,7 @@ rules/
 
 ## Developer Tools
 
-This project uses [just](https://github.com/casey/just/) command runner for development tasks.
+This project uses [just](https://github.com/casey/just/) - a command runner similar to `make` but simpler and more user-friendly. Version 1.23.0 or later is required.
 
 **Available commands:**
 ```bash
@@ -386,6 +420,16 @@ just render human BRCA1        # Render single gene to HTML
 just render-all                # Render all gene reviews to HTML
 python -m ai_gene_review.render --all genes/    # Alternative rendering command
 ```
+
+**Export Commands:**
+```bash
+just export-annotations-tsv    # Export to TSV format (used by stats)
+just export-annotations-json   # Export to JSON format
+just export-annotations-jsonl  # Export to JSONL format (one object per line)
+just export-annotations-duckdb # Export to DuckDB database with redundancy analysis
+```
+
+*Note:* Export commands process all `*-ai-review.yaml` files in the `genes/` directory and create outputs in the `exports/` folder.
 
 ## Contributing
 

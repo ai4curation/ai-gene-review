@@ -1612,3 +1612,58 @@ ui-legacy port="5123":
     @echo "Using direct file I/O (may be slow for 343+ genes)"
     @echo "For better performance, use 'just ui' with API server"
     uv run python -m ai4cui --legacy --port {{port}}
+
+# ============ Publication-centric annotation review (Option 3 subproject) ============
+
+# Generate a publication-centric annotation review file filtered by gene symbol.
+# Example: just pub-review PMID:23991106 PTPN22
+# Example: just pub-review PMID:23991106 PTPN22 --max-annotations 30
+pub-review reference gene *args="":
+    uv run python projects/publication_annotation_review/scripts/generate_publication_review.py \
+      {{reference}} --gene {{gene}} {{args}}
+
+# Generate a publication-centric annotation review file filtered by organism.
+# Example: just pub-review-org PMID:23991106 human
+# Example: just pub-review-org PMID:23991106 human --max-annotations 30
+pub-review-org reference organism *args="":
+    uv run python projects/publication_annotation_review/scripts/generate_publication_review.py \
+      {{reference}} --organism {{organism}} {{args}}
+
+# Generate a publication-centric annotation review with no filter (all organisms in repo).
+pub-review-all reference *args="":
+    uv run python projects/publication_annotation_review/scripts/generate_publication_review.py \
+      {{reference}} {{args}}
+
+# Generate a publication-centric annotation review by querying QuickGO directly.
+# Use when you don't have local GOA data for the genes.
+# Optional --taxon 9606 to filter by taxon (human), and --gene SYMBOL to filter by gene.
+# Example: just pub-review-quickgo PMID:23991106
+# Example: just pub-review-quickgo PMID:23991106 --taxon 9606 --gene PTPN22
+pub-review-quickgo reference *args="":
+        uv run python projects/publication_annotation_review/scripts/generate_publication_review.py \
+            {{reference}} --from-quickgo {{args}}
+
+# Generate de novo GO candidate assignments from a cached PMID and gene symbol.
+# Use when no GOA or QuickGO annotations exist yet.
+# Example: just pub-denovo PMID:23991106 PTPN22
+pub-denovo reference gene *args="":
+        uv run python projects/publication_annotation_review/scripts/generate_denovo_candidates.py \
+            {{reference}} {{gene}} {{args}}
+
+# List all distinct references present in GOA files for a given organism.
+# Example: just pub-list-refs human
+pub-list-refs organism:
+    #!/usr/bin/env python3
+    import csv, pathlib, sys
+    refs: set[str] = set()
+    for f in sorted(pathlib.Path("genes/{{organism}}").glob("*/*-goa.tsv")):
+        with f.open() as fh:
+            for row in csv.DictReader(fh, delimiter="\t"):
+                ref = row.get("REFERENCE", "").strip()
+                if ref.startswith("PMID:"):
+                    refs.add(ref)
+    try:
+        for r in sorted(refs):
+            print(r)
+    except BrokenPipeError:
+        sys.exit(0)
