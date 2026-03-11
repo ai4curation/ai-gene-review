@@ -2402,6 +2402,123 @@ def render_projects(
         raise typer.Exit(code=1)
 
 
+@app.command()
+def fetch_descriptions(
+    organism: Annotated[
+        str, typer.Argument(help="Organism name (e.g., human, yeast)")
+    ],
+    gene: Annotated[
+        str, typer.Argument(help="Gene symbol (e.g., CAT2, TP53)")
+    ],
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", "-o", help="Output directory (default: current directory)"),
+    ] = None,
+):
+    """Fetch gene descriptions from external sources (Alliance_Imported, Alliance_Automated, UniProt, RefSeq).
+
+    Creates a sidecar file: genes/<organism>/<gene>/<gene>-descriptions.yaml
+
+    Examples:
+        ai-gene-review fetch-descriptions yeast CAT2
+        ai-gene-review fetch-descriptions human TP53
+    """
+    from ai_gene_review.etl.descriptions import fetch_and_save_gene_descriptions
+
+    typer.echo(f"Fetching descriptions for {gene} ({organism})...")
+    try:
+        path = fetch_and_save_gene_descriptions(organism, gene, base_path=output_dir)
+        typer.echo(f"Saved to {path}")
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def fetch_descriptions_bulk(
+    organism: Annotated[
+        str, typer.Argument(help="Organism name (e.g., yeast, human)")
+    ],
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", "-o", help="Output directory (default: current directory)"),
+    ] = None,
+    delay: Annotated[
+        float,
+        typer.Option("--delay", "-d", help="Delay between API calls in seconds"),
+    ] = 0.5,
+    genes: Annotated[
+        Optional[List[str]],
+        typer.Option("--gene", "-g", help="Specific gene(s) to fetch (default: all)"),
+    ] = None,
+):
+    """Fetch gene descriptions for all genes in an organism directory.
+
+    Creates per-gene sidecar files at genes/<organism>/<gene>/<gene>-descriptions.yaml
+
+    Examples:
+        ai-gene-review fetch-descriptions-bulk yeast
+        ai-gene-review fetch-descriptions-bulk yeast -g CAT2 -g SSA1
+    """
+    from ai_gene_review.etl.descriptions import fetch_organism_descriptions
+
+    typer.echo(f"Fetching descriptions for all {organism} genes...")
+    try:
+        count = fetch_organism_descriptions(
+            organism, base_path=output_dir, delay=delay, gene_symbols=genes,
+        )
+        typer.echo(f"Fetched descriptions for {count} genes")
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def descriptions_status(
+    organism: Annotated[
+        str, typer.Argument(help="Organism name (e.g., yeast, human)")
+    ],
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", "-o", help="Output directory (default: current directory)"),
+    ] = None,
+    update: Annotated[
+        bool,
+        typer.Option("--update", help="Write computed status back into each YAML file"),
+    ] = False,
+    show_all: Annotated[
+        bool,
+        typer.Option("--all", help="Show all genes, not just summary"),
+    ] = False,
+):
+    """Report review status of gene description files.
+
+    Shows how many description files are STUB, IN_PROGRESS, REVIEWED, or COMPLETE.
+
+    Examples:
+        ai-gene-review descriptions-status yeast
+        ai-gene-review descriptions-status yeast --update
+        ai-gene-review descriptions-status yeast --all
+    """
+    from ai_gene_review.etl.descriptions import compute_organism_description_status
+
+    report = compute_organism_description_status(organism, base_path=output_dir, update=update)
+
+    typer.echo(f"\nDescription review status for {organism} ({report.total} genes):")
+    for status in ["STUB", "IN_PROGRESS", "REVIEWED", "COMPLETE"]:
+        count = report.by_status.get(status, 0)
+        if count > 0:
+            typer.echo(f"  {status}: {count}")
+
+    if show_all:
+        typer.echo("")
+        for gene in report.genes:
+            typer.echo(f"  {gene['gene_symbol']}: {gene['status']}")
+
+    if update:
+        typer.echo("\nStatus fields updated in YAML files.")
+
+
 def main():
     """Main entry point for the CLI."""
     app()

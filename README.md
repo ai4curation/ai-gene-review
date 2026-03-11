@@ -42,7 +42,7 @@ uv run ai-gene-review validate genes/human/TP53/TP53-ai-review.yaml
 
 **Fetch publications for a gene:**
 ```bash
-uv run ai-gene-review fetch-gene-pmids genes/human/TP53/TP53-ai-review.yaml
+uv run ai-gene-review fetch-gene-pmids human TP53
 ```
 
 **Publication-centric annotation review (projects/publication_annotation_review):**

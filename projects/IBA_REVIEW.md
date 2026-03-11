@@ -155,6 +155,40 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 - The family research explicitly warns: "Avoid propagating 'regulation of neurotransmitter release' to RIMBP3 paralogs"
 - This demonstrates that IBA issues can affect entire subfamilies, not just individual genes
 
+### arnF (PTHR30561) - Functional Divergence Within SMR Superfamily
+
+**Species**: ECOLI (Escherichia coli K12)
+**Status**: COMPLETE
+**Family**: PTHR30561 (Small Multidrug Resistance / Drug-Metabolite Transporter superfamily)
+
+**IBA Annotations Flagged**:
+| Term | Issue | Action |
+|------|-------|--------|
+| GO:0022857 transmembrane transporter activity | Too generic; conflates drug efflux with lipid flipping | MODIFY → GO:0140303 |
+| GO:0005886 plasma membrane | Correct | ACCEPT |
+| GO:0055085 transmembrane transport | Acceptable broad term | ACCEPT |
+
+**Lesson**: The PANTHER family PTHR30561 groups **four functionally distinct protein families** that share the SMR/DMT fold:
+- **ArnE/ArnF** — undecaprenyl phosphate-L-Ara4N **flippases** (intramembrane lipid translocation)
+- **EmrE** (P23895) — multidrug **efflux pump** (exports lipophilic cations)
+- **MdtI/MdtJ** (P69210/P69212) — **spermidine export**
+- **Gdx/SugE** (P69937) — **guanidinium export**
+- **Mmr** (P9WGF1) — *M. tuberculosis* multidrug resistance
+
+The IBA inference of "transmembrane transporter activity" comes from propagating annotations from these bona fide solute exporters (EmrE, MdtI/J, Gdx, Mmr) to ArnF. But ArnF does something mechanistically different: it **flips a lipid-linked sugar between membrane leaflets**, not export a solute across the membrane. The correct MF term is GO:0140303 (intramembrane lipid transporter activity).
+
+**Why this is instructive**: Unlike the cds1 case (opposite reaction) or Epe1 (lost activity), arnF retains *transport* function — the IBA isn't wrong in kind, just wrong in specificity. The SMR superfamily is a case where sequence homology correctly identifies the structural fold (small multidrug resistance-like) but the functional annotation doesn't track the divergence from drug efflux to lipid flipping. This is a **moderate severity** issue because the parent term "transmembrane transporter" is not false, but it's misleading about mechanism.
+
+**EcoCyc vs. IBA comparison**: EcoCyc contributed 5 annotations for arnF, including two "response to iron(III) ion" annotations (IGI from PMID:12139617, IEP from PMID:15322361) that were marked as over-annotated — they conflate transcriptional regulation of the arn operon by BasS-BasR with direct gene function. The IMP annotations from EcoCyc (carbohydrate derivative transport/transporter activity, plasma membrane IDA) are well-supported. The IBA annotations from GO_Central are reasonable at the superfamily level but miss the flippase specialization.
+
+**Root Cause Analysis**:
+| Feature | ArnE/ArnF | EmrE | MdtI/J | Gdx |
+|---------|-----------|------|--------|-----|
+| Function | Lipid flippase | Drug efflux | Spermidine export | Guanidinium export |
+| Substrate | Lipid-linked sugar | Lipophilic cations | Spermidine | Guanidinium |
+| Mechanism | Intramembrane flip | Transmembrane export | Transmembrane export | Transmembrane export |
+| PANTHER SF | SF9 | (family-level) | SF6 | (family-level) |
+
 ### Cds1 (PTHR10314) - Neo-Functionalization (Opposite Reaction)
 
 **Species**: MYCTU (Mycobacterium tuberculosis), VIBCH (Vibrio cholerae)
@@ -197,6 +231,7 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 | LPL1 | CANAL | Substrate specificity | MEDIUM | COMPLETE |
 | UBA7 | human | Generic vs specific terms | LOW | COMPLETE |
 | RIMBP2 | human | Context-specific term transfer | MEDIUM | COMPLETE |
+| arnF | ECOLI | Functional divergence within SMR superfamily | MEDIUM | COMPLETE |
 
 ## Recommendations for IBA Curation
 
@@ -218,6 +253,7 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 - Generic terms when specific function is known
 - Process annotations that don't match organism biology
 - Multiple conflicting IBA annotations
+- **Superfamily contains members with different transport mechanisms** (e.g., solute export vs lipid flipping in SMR family)
 
 **Signs of reliable IBA**:
 - Core metabolic enzymes with conserved mechanism
@@ -237,6 +273,7 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 - [x] CANAL/LPL1 - Substrate specificity (MEDIUM severity)
 - [x] human/UBA7 - Generic vs specific terms (LOW severity)
 - [x] human/RIMBP2 - Organism/tissue context transfer (MEDIUM severity)
+- [x] ECOLI/arnF - Mechanism divergence in SMR superfamily (MEDIUM severity)
 
 ## Patterns Identified
 - [x] Pseudo-enzyme IBA propagation
@@ -244,10 +281,30 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 - [x] Substrate specificity over-transfer
 - [x] Secondary activity promotion
 - [x] Organism/tissue context transfer
+- [x] Mechanism divergence within structural superfamily (same fold, different transport mechanism)
 
-Last updated: 2026-01-26
+Last updated: 2026-03-04
 
 # NOTES
+
+## 2026-03-04
+
+**Added ECOLI/arnF - Mechanism Divergence Within SMR Superfamily**
+
+arnF illustrates a new pattern: **mechanism divergence within a structural superfamily**. The PANTHER family PTHR30561 groups the entire SMR/DMT superfamily — EmrE (drug efflux), MdtI/J (spermidine export), Gdx (guanidinium export), Mmr (multidrug resistance), and ArnE/ArnF (lipid flipping). All share the same 4-TM-helix fold, but ArnE/ArnF evolved a fundamentally different transport mechanism: intramembrane lipid translocation rather than transmembrane solute export.
+
+The IBA WITH/FROM field reveals the problem directly:
+- GO:0022857 (transmembrane transporter activity): inferred from EmrE (P23895), MdtI (P69210), MdtJ (P69212), Gdx (P69937), Mmr (P9WGF1), ArnE (Q47377), and ArnF itself
+- All the non-ArnE/ArnF proteins are genuine solute exporters; the annotation is correct for them but misleading for arnF
+
+**Comparison with other IBA issue types**:
+- Epe1: function **lost** (pseudo-enzyme) — HIGH severity
+- cds1: function **inverted** (opposite reaction) — CRITICAL severity
+- arnF: function **diverged in mechanism** (flip vs export) — MEDIUM severity
+
+arnF sits in a middle ground: the IBA isn't wrong (it IS a transporter), but it mischaracterizes the mechanism. The correct term GO:0140303 (intramembrane lipid transporter activity) captures the flippase specificity.
+
+**EcoCyc annotation quality**: EcoCyc contributed 5 of 18 annotations. The two "response to iron(III) ion" annotations (IGI + IEP) are classic over-annotations — they annotate based on transcriptional regulation rather than direct function. Iron activates BasS-BasR → induces arn operon → ArnF is expressed. But ArnF doesn't sense, bind, or respond to iron. EcoCyc's IMP annotations (carbohydrate derivative transport/transporter activity) and IDA (plasma membrane) are well-supported and accurate.
 
 ## 2026-01-26
 

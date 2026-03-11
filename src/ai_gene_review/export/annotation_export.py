@@ -47,7 +47,6 @@ TAXON_TO_ORGANISM_DIR = {
     "NCBITaxon:7227": "DROME",
     # C. elegans (species + Bristol N2)
     "NCBITaxon:6239": "worm",
-    "NCBITaxon:6239": "worm",
     # D. rerio (zebrafish)
     "NCBITaxon:7955": "DANRE",
     # A. thaliana
