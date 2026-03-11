@@ -1632,6 +1632,19 @@ pub-denovo reference gene *args="":
         uv run python projects/publication_annotation_review/scripts/generate_denovo_candidates.py \
             {{reference}} {{gene}} {{args}}
 
+# Generate GO:0007263 term-obsoletion transfer review candidates.
+# Example: just go7263-seed
+# Example: just go7263-seed --organism human --gene NOS2
+# Example: just go7263-seed --all-evidence
+go7263-seed *args="":
+    uv run python projects/GO_0007263nitricoxidemediatedsignaltransduction/scripts/generate_go0007263_transfer_review.py {{args}}
+
+# Generate GO:0007263 transfer review candidates from QuickGO (cross-species, not limited by local GOA cache).
+# Example: just go7263-seed-quickgo
+# Example: just go7263-seed-quickgo --taxon 9606 --gene NOS2
+go7263-seed-quickgo *args="":
+    uv run python projects/GO_0007263nitricoxidemediatedsignaltransduction/scripts/generate_go0007263_transfer_review.py --from-quickgo {{args}}
+
 # List all distinct references present in GOA files for a given organism.
 # Example: just pub-list-refs human
 pub-list-refs organism:
