@@ -1,0 +1,3186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNIPE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SNIPE</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A8T9CRB7" target="_blank" class="term-link">
+                        A0A8T9CRB7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Escherichia coli</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SNIPE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="DESCRIPTION: SNIPE (Surface-associated Nuclease Inhibiting Phag..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SNIPE (Surface-associated Nuclease Inhibiting Phage Entry) is a 500 amino acid inner membrane-bound GIY-YIG family DNA endonuclease that provides direct anti-bacteriophage defence in Escherichia coli. SNIPE constitutively localizes to the inner membrane via an N-terminal single-pass transmembrane helix (aa 5-24) and pre-associates with the ManYZ mannose permease complex before phage infection. During phage genome injection, the central DUF4041 domain (aa 144-262, now designated the SNIPE-associated domain, IPR025280) binds both incoming phage DNA and the phage tape measure protein (TMP), positioning the C-terminal GIY-YIG nuclease domain (aa 357-450, catalytic residue E414) to cleave phage DNA as it crosses the inner membrane. This provides direct defence — the infected cell survives — in contrast to abortive infection systems. SNIPE does not affect phage adsorption, does not target pre-existing intracellular phage genomes (lysogens), and does not block plasmid transformation, indicating its activity is specific to the phage genome injection process. Originally identified as PD-lambda-1 in a functional screen of 71 diverse E. coli pangenomes (PMID:36123438), SNIPE homologues (~500 curated) are found across many bacterial phyla, with 33% of well-sequenced clades harbouring at least one homologue. The N-terminal region is highly variable and functions as a phage-specificity adapter, with 59% of homologues having one TM domain, 7% having two, and 34% using alternative membrane-targeting strategies (DivIVA domains, type III secretion domains, PH domains). SNIPE represents a previously unknown self/non-self discrimination strategy based on subcellular localization rather than sequence recognition (CRISPR-Cas) or modification detection (restriction-modification).
+Note: UniProt entry A0A8T9CRB7 is from E. coli strain T0181B.E-10. The experimentally characterized SNIPE was from strain MOD1-ECOR26 (GenBank RCP76574.1, locus APT27_20780). Both share RefSeq WP_001606968.1. SNIPE is not present in E. coli K-12 MG1655.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SNIPE defense system</h3>
+                <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="SNIPE defense system" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> A defense response to a virus in which a membrane-anchored nuclease of the SNIPE family cleaves viral DNA during genome injection across the cell membrane. SNIPE proteins associate with inner membrane components at phage genome injection sites, bind phage tape measure proteins via their DUF4041 domain, and use a GIY-YIG nuclease domain to degrade incoming phage DNA before it enters the cytoplasm. Unlike restriction-modification or CRISPR-Cas systems, self/non-self discrimination is achieved through subcellular localization at the membrane rather than recognition of specific DNA sequences or modifications.</p>
+            
+
+            
+            <p><strong>Justification:</strong> The current anti-foreign nucleic acid branch (GO:0099046 clearance of foreign intracellular nucleic acids) does not capture SNIPE mechanism, because SNIPE cleaves phage DNA during translocation at the membrane before the DNA becomes intracellular. A dedicated term under GO:0051607 (defense response to virus) is needed to represent this direct anti-phage mechanism.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051607" target="_blank" class="term-link">
+                    defense response to virus
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                        PMID:41741653
+                    </a>
+                    
+                    
+                    : we demonstrate that SNIPE directly cleaves phage DNA during genome injection
+                    
+                </li>
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/36123438" target="_blank" class="term-link">
+                        PMID:36123438
+                    </a>
+                    
+                    
+                    : A functional selection reveals previously undetected anti-phage defence systems in the E. coli pangenome
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>antiviral defense by targeting viral nucleic acid</h3>
+                <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="antiviral defense by targeting viral nucleic acid" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> A defense response to a virus in which the host targets viral nucleic acid for degradation or modification, preventing viral replication. Includes systems that act on nucleic acid after cell entry (e.g. CRISPR-Cas, restriction-modification) and systems that act during genome injection (e.g. SNIPE).</p>
+            
+
+            
+            <p><strong>Justification:</strong> Optional intermediate grouping term matching the GO issue proposal. This would provide a clean parent for nucleic acid-targeting anti-viral systems such as CRISPR-Cas, restriction-modification, and SNIPE while preserving mechanistic distinctions in child terms.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051607" target="_blank" class="term-link">
+                    defense response to virus
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/37460672" target="_blank" class="term-link">
+                        PMID:37460672
+                    </a>
+                    
+                    
+                    : The highly diverse antiphage defence systems of bacteria
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004520" target="_blank" class="term-link">
+                                    GO:0004520
+                                </a>
+                            </span>
+                            <span class="term-label">DNA endonuclease activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:41741653
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A membrane-bound nuclease directly cleaves phage DNA during ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="GO:0004520" data-r="PMID:41741653" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SNIPE contains a C-terminal GIY-YIG nuclease domain (aa 357-450) that endonucleolytically cleaves phage DNA during genome injection. Substitution of the predicted catalytic residue E414 to alanine abolishes both nuclease activity and phage defence (PMID:41741653). Radiolabelled 32P phage DNA is degraded from ~42 kb to fragments &lt;100 bp and mononucleotides in SNIPE-expressing cells, dependent on E414 (PMID:41741653). The pattern of degradation (smear of fragments rather than defined products) is consistent with endonucleolytic cleavage, though in vitro reconstitution has not yet been performed. The GIY-YIG nuclease domain is the most conserved region across ~500 SNIPE homologues (PMID:41741653), and domain-level homology to the T5orf172/MUG113 family of GIY-YIG endonucleases is confirmed by InterPro/Pfam assignments (IPR018306, PF13455). GO:0004520 is the appropriate level of specificity; there is no GIY-YIG-specific child term in GO, and the data do not support a more specific term like GO:0015666 (restriction endodeoxyribonuclease activity) since SNIPE does not recognize specific DNA sequences or modification states.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function of SNIPE, directly demonstrated by multiple experimental approaches in PMID:41741653: (1) 32P-labelled phage DNA cleavage assay showing degradation during injection, (2) E414A catalytic dead mutant abolishing cleavage and defence, (3) Gam-GFP double-strand break reporter showing SNIPE-dependent foci, (4) CFP-ParB foci reduced ~30-fold indicating DNA degradation during injection. The domain architecture (GIY-YIG nuclease, IPR018306/PF13455) independently supports endonuclease activity via homology to biochemically characterized family members. IDA evidence code is appropriate because the nuclease activity was directly assayed in vivo using radiolabelled substrate and catalytic mutant controls.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                                        PMID:41741653
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we demonstrate that SNIPE directly cleaves phage DNA during genome injection</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                                        PMID:41741653
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Using radiolabelled phage DNA and time-lapse microscopy to track phage genomes, we demonstrate that SNIPE directly cleaves phage DNA during genome injection [E414A catalytic dead mutant abolishes cleavage and defence]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36123438" target="_blank" class="term-link">
+                                        PMID:36123438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a putative membrane-anchored protein with a central coiled-coil domain (DUF4041) and a C-terminal DNA binding/cleavage domain</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ECOLX/SNIPE/SNIPE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">T5orf172 is a subfamily of GIY-YIG endonucleases ... the two profiles [T5orf172 and MUG113] are highly related</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003690" target="_blank" class="term-link">
+                                    GO:0003690
+                                </a>
+                            </span>
+                            <span class="term-label">double-stranded DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:41741653
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A membrane-bound nuclease directly cleaves phage DNA during ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="GO:0003690" data-r="PMID:41741653" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The DUF4041/SNIPE-associated domain (aa 144-262) of SNIPE has a positively charged surface that facilitates DNA binding. When the TM domain is removed (SNIPE(deltaTM E414A)-GFP), the protein co-localizes with the DAPI-stained nucleoid (Pearson R=0.76), and this co-localization is abolished when DUF4041 is also deleted (deltaDUF4041 shows R=0.13) (PMID:41741653). A DUF4041-only fusion to GFP also localizes to the nucleoid. ConSurf analysis shows the positively charged DNA-binding interface is conserved across SNIPE homologues (PMID:41741653). Note that the evidence for DNA binding is based on fluorescence microscopy co-localization with the nucleoid rather than a direct biochemical binding assay (e.g. EMSA); however, the domain-dependent co-localization pattern and the conserved positively charged surface provide strong support for direct DNA binding. Phage lambda DNA is dsDNA, making GO:0003690 the appropriate specific term. The original identification also noted the C-terminal region as a &#34;DNA binding/cleavage domain&#34; (PMID:36123438).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNA binding by DUF4041 is demonstrated by microscopy showing domain-dependent nucleoid co-localization (PMID:41741653): removal of DUF4041 abolishes nucleoid association. This is further supported by the conserved positively charged surface identified by ConSurf analysis across ~500 homologues, and by domain annotation as a DNA-binding domain (IPR018306 Phage_T5_Orf172_DNA-bd). IDA evidence code is appropriate for microscopy-based localization experiments with domain deletion controls. The term GO:0003690 (double-stranded DNA binding) is preferred over GO:0003677 (DNA binding) because phage lambda DNA is dsDNA and the nucleoid is dsDNA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36123438" target="_blank" class="term-link">
+                                        PMID:36123438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a putative membrane-anchored protein with a central coiled-coil domain (DUF4041) and a C-terminal DNA binding/cleavage domain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051607" target="_blank" class="term-link">
+                                    GO:0051607
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to virus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:41741653
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A membrane-bound nuclease directly cleaves phage DNA during ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="GO:0051607" data-r="PMID:41741653" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SNIPE provides direct defence against bacteriophage lambda and diverse siphoviruses. SNIPE-expressing cells survive phage lambda infection at high MOI where control cells lyse (PMID:41741653). Defence is demonstrated by: time-lapse microscopy showing cell survival, growth curves at MOI 0.1-10, plaque assays showing 6-7 log reduction in phage titre, and the BASEL collection screen showing protection against diverse siphoviruses (both ManYZ-dependent and ManYZ-independent) (PMID:41741653). SNIPE provides direct defence (cell survival) rather than abortive infection. It was originally identified as one of 21 novel defence systems in a functional metagenomic screen of the E. coli pangenome (PMID:36123438).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Defence against bacteriophage is the primary evolved biological function of SNIPE, supported by multiple complementary experimental approaches (PMID:41741653) and by its original identification via a functional anti-phage defence screen (PMID:36123438). GO:0051607 (defense response to virus) is the most specific existing BP term. There is currently no GO term for &#34;defense response to bacteriophage&#34; specifically; a new term request has been drafted (see projects/SNIPE/go-issue-antiviral-nucleic-acid-defense.md). IDA evidence code is appropriate as defence was directly assayed by growth curves, plaque assays, and single-cell microscopy.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                                        PMID:41741653
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we characterize SNIPE, an anti-bacteriophage defence system that constitutively localizes to the bacterial cell membrane in Escherichia coli to block phage</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                                        PMID:41741653
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SNIPE as a widespread bacterial defence system that exploits the spatial organization of phage genome injection to specifically target viral DNA, representing a previously unknown strategy for distinguishing self from non-self in prokaryotic immune systems</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36123438" target="_blank" class="term-link">
+                                        PMID:36123438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Our results unveil 21 conserved defence systems, none of which were previously detected as enriched in defence islands</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045071" target="_blank" class="term-link">
+                                    GO:0045071
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of viral genome replication</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:41741653
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A membrane-bound nuclease directly cleaves phage DNA during ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="GO:0045071" data-r="PMID:41741653" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SNIPE prevents phage genome replication by destroying the phage DNA during the injection process, before the genome enters the cytoplasm intact. CFP-ParB foci (a proxy for phage genome establishment) are reduced ~30-fold in SNIPE-expressing cells (PMID:41741653). Phage produced per cell is not significantly different between SNIPE and empty vector when inducing lysogens, confirming that SNIPE targets the injection step specifically and does not affect pre-existing intracellular phage genomes (PMID:41741653). While the net effect is prevention of viral genome replication, the mechanism is more precisely described as destruction of the phage genome during membrane translocation rather than regulation of replication per se. GO:0046597 (host-mediated suppression of symbiont invasion) may be a more mechanistically precise BP term since SNIPE blocks the entry/establishment of the phage genome rather than regulating its replication after entry.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The outcome of SNIPE activity is that viral genome replication is completely prevented, making GO:0045071 a defensible annotation. The evidence is strong: CFP-ParB foci reduction demonstrates that phage genomes do not establish in SNIPE-expressing cells (PMID:41741653). However, SNIPE acts upstream of replication -- it destroys the DNA during injection, not by regulating the replication machinery. This distinction may matter for precision. The annotation is retained because the net biological outcome (no viral genome replication) is accurately captured. See also the additional GO:0046597 annotation below for a more mechanistically precise complementary term. IDA evidence code is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                                        PMID:41741653
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we demonstrate that SNIPE directly cleaves phage DNA during genome injection</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                                        PMID:41741653
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SNIPE associates with host proteins essential for lambda genome entry and with the lambda tape measure protein, which facilitates lambda genome injection across the inner membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046597" target="_blank" class="term-link">
+                                    GO:0046597
+                                </a>
+                            </span>
+                            <span class="term-label">host-mediated suppression of symbiont invasion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:41741653
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A membrane-bound nuclease directly cleaves phage DNA during ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="GO:0046597" data-r="PMID:41741653" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SNIPE inhibits phage genome entry into the bacterial cell by cleaving phage DNA during the injection process at the inner membrane. This directly suppresses the phage&#39;s invasion of the host cell. GO:0046597 is defined as &#34;a process in which a host inhibits or disrupts the entry of a symbiont into a host cell.&#34; While bacteriophages inject their genome rather than entering bodily, the phage genome translocation across the inner membrane constitutes the functional &#34;entry&#34; event that SNIPE suppresses. SNIPE does not block phage adsorption to the cell surface -- phage adsorption is unaffected (PMID:41741653) -- but it destroys the phage DNA during membrane translocation, preventing genome establishment. This term complements GO:0045071 by providing a more mechanistically precise description of SNIPE&#39;s biological role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SNIPE acts specifically at the step of phage genome injection across the inner membrane (PMID:41741653). It does not affect phage adsorption, does not target pre-existing lysogens, and does not block plasmid transformation -- it is specific to the injection process. GO:0046597 (host-mediated suppression of symbiont invasion) captures this specificity better than GO:0045071 (negative regulation of viral genome replication), which implies action on the replication process itself. GO:0046597 is the parent of several relevant child terms in GO and is compatible with bacterial hosts defending against phage. IDA evidence code is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                                        PMID:41741653
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we characterize SNIPE, an anti-bacteriophage defence system that constitutively localizes to the bacterial cell membrane in Escherichia coli to block phage</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36123438" target="_blank" class="term-link">
+                                        PMID:36123438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We confirmed that each system did not affect phage adsorption [SNIPE acts at genome injection, not adsorption]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006308" target="_blank" class="term-link">
+                                    GO:0006308
+                                </a>
+                            </span>
+                            <span class="term-label">DNA catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:41741653
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A membrane-bound nuclease directly cleaves phage DNA during ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="GO:0006308" data-r="PMID:41741653" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SNIPE degrades phage DNA from ~42 kb to fragments less than 100 bp and mononucleotides during genome injection (PMID:41741653). This is a DNA catabolic process -- the breakdown of DNA. The 32P-labelled DNA tracking experiment directly demonstrates catabolism of the phage DNA substrate. While the MF annotation (GO:0004520 DNA endonuclease activity) captures the catalytic mechanism, GO:0006308 captures the biological process of DNA degradation that results from this activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The degradation of phage DNA from intact genomic molecules (~42 kb) to small fragments (&lt;100 bp) and mononucleotides is directly demonstrated by the 32P-labelled DNA cleavage assay (PMID:41741653). This constitutes DNA catabolism. GO:0006308 provides a process-level annotation that complements the molecular function (GO:0004520) and the higher-level biological context (GO:0051607 defense response to virus). IDA evidence code is appropriate as the catabolic activity was directly measured using radiolabelled substrate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                                        PMID:41741653
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we demonstrate that SNIPE directly cleaves phage DNA during genome injection</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005887" target="_blank" class="term-link">
+                                    GO:0005887
+                                </a>
+                            </span>
+                            <span class="term-label">integral component of plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:41741653
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A membrane-bound nuclease directly cleaves phage DNA during ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="GO:0005887" data-r="PMID:41741653" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SNIPE is an integral inner membrane protein with a single-pass TM helix (aa 5-24). Topology was confirmed by PhoA-LacZalpha fusion analysis: PhoA was active only when inserted at the N-terminus (periplasmic side), and LacZalpha was active only when inserted downstream of the TM domain (cytoplasmic side) (PMID:41741653). SNIPE-GFP localizes uniformly to the cell membrane by fluorescence microscopy (PMID:41741653). Immunoblotting of fractionated cell lysates shows SNIPE is strongly enriched in the membrane fraction (PMID:41741653). DeepTMHMM and Phobius both predict a transmembrane helix at residues 6-24, consistent with the UniProt annotation (ECO:0000256|SAM:Phobius). In bacteria, GO:0005886 (plasma membrane) corresponds to the inner/cytoplasmic membrane. The single-pass TM helix makes SNIPE an integral (not peripheral) component, supporting GO:0005887 over GO:0005886.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Integral membrane localization is directly demonstrated by three independent experimental approaches in PMID:41741653: (1) PhoA/LacZalpha topology mapping confirming transmembrane orientation, (2) fluorescence microscopy of SNIPE-GFP showing uniform membrane localization, (3) membrane fractionation/immunoblotting showing enrichment in membrane fraction. This is further supported by the predicted TM helix (Phobius, DeepTMHMM) in the UniProt record. GO:0005887 (integral component of plasma membrane) is preferred over GO:0005886 (plasma membrane) because the single-pass TM helix makes SNIPE an integral membrane protein. IDA evidence code is appropriate for the topology mapping and fractionation experiments.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                                        PMID:41741653
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">an anti-bacteriophage defence system that constitutively localizes to the bacterial cell membrane in Escherichia coli</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                                        PMID:41741653
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we characterize SNIPE, an anti-bacteriophage defence system that constitutively localizes to the bacterial cell membrane in Escherichia coli to block phage [topology confirmed by PhoA/LacZalpha fusion analysis in full paper]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SNIPE is a membrane-anchored DNA endonuclease that directly cleaves bacteriophage DNA during the genome injection process. It exploits the spatial organization of phage genome entry — the fact that phage DNA must cross the inner membrane — to distinguish foreign (viral) DNA from self (chromosomal) DNA. The GIY-YIG nuclease domain provides the catalytic endonuclease activity, with E414 as the essential catalytic residue. The DUF4041 domain binds both phage DNA (via a conserved positively charged interface) and phage tape measure proteins (TMPs), positioning the nuclease at the site of genome injection. The N-terminal TM domain anchors SNIPE to the inner membrane, preventing autoimmune cleavage of host chromosomal DNA. SNIPE pre-associates with the ManYZ mannose permease complex, which is the inner membrane conduit for lambda genome injection, ensuring SNIPE is positioned at genome entry sites before infection occurs. This provides direct defence — the infected cell survives — in contrast to abortive infection systems that sacrifice the infected cell. SNIPE also provides ManYZ-independent defence against diverse siphoviruses, probably through direct interactions with their TMPs via the DUF4041 domain. The ~500 SNIPE homologues across bacterial phyla show conservation of the GIY-YIG nuclease and DUF4041 domains, while the N-terminal region is highly diversified and functions as a phage-specificity adapter with varied membrane-targeting strategies (TM helices, DivIVA domains, T3SS domains, PH domains).</h3>
+                <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="FUNCTION: SNIPE is a membrane-anchored DNA endonuclease that..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004520" target="_blank" class="term-link">
+                            DNA endonuclease activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051607" target="_blank" class="term-link">
+                                defense response to virus
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045071" target="_blank" class="term-link">
+                                negative regulation of viral genome replication
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005887" target="_blank" class="term-link">
+                                integral component of plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                                PMID:41741653
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">SNIPE as a widespread bacterial defence system that exploits the spatial organization of phage genome injection to specifically target viral DNA, representing a previously unknown strategy for distinguishing self from non-self in prokaryotic immune systems</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36123438" target="_blank" class="term-link">
+                                PMID:36123438
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">A functional selection reveals previously undetected anti-phage defence systems in the E. coli pangenome</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" target="_blank" class="term-link">
+                            PMID:41741653
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A membrane-bound nuclease directly cleaves phage DNA during genome injection</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SNIPE is a membrane-bound nuclease that directly cleaves phage DNA during genome injection, providing direct defence against bacteriophage</div>
+                        
+                        <div class="finding-text">"we demonstrate that SNIPE directly cleaves phage DNA during genome injection"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SNIPE constitutively localizes to the bacterial cell membrane</div>
+                        
+                        <div class="finding-text">"we characterize SNIPE, an anti-bacteriophage defence system that constitutively localizes to the bacterial cell membrane in Escherichia coli to block phage"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SNIPE pre-associates with host proteins for lambda genome entry and with the tape measure protein during genome injection</div>
+                        
+                        <div class="finding-text">"SNIPE associates with host proteins essential for λ genome entry and with the λ tape measure protein, which facilitates λ genome injection across the inner membrane"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Radiolabelled phage DNA tracking demonstrates SNIPE cleaves DNA during injection</div>
+                        
+                        <div class="finding-text">"Using radiolabelled phage DNA and time-lapse microscopy to track phage genomes, we demonstrate that SNIPE directly cleaves phage DNA during genome injection"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SNIPE provides ManYZ-independent defence against siphoviruses via direct TMP interaction</div>
+                        
+                        <div class="finding-text">"SNIPE also defends against diverse siphoviruses, probably through direct interactions with their tape measure proteins"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SNIPE is a widespread defence system representing a novel self/non-self discrimination strategy</div>
+                        
+                        <div class="finding-text">"SNIPE as a widespread bacterial defence system that exploits the spatial organization of phage genome injection to specifically target viral DNA, representing a previously unknown strategy for distinguishing self from non-self in prokaryotic immune systems"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36123438" target="_blank" class="term-link">
+                            PMID:36123438
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A functional selection reveals previously undetected anti-phage defence systems in the E. coli pangenome</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SNIPE (originally PD-lambda-1) was identified in a functional metagenomic screen of 71 diverse E. coli strains as a novel anti-phage defence system</div>
+                        
+                        <div class="finding-text">"Our results unveil 21 conserved defence systems, none of which were previously detected as enriched in defence islands"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SNIPE is a membrane-anchored protein with DUF4041 and a GIY-YIG nuclease domain</div>
+                        
+                        <div class="finding-text">"a putative membrane-anchored protein with a central coiled-coil domain (DUF4041) and a C-terminal DNA binding/cleavage domain"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Defence systems including SNIPE are carried primarily by prophages and mobile genetic elements</div>
+                        
+                        <div class="finding-text">"intact prophages and mobile genetic elements are primary reservoirs and distributors of defence systems in E. coli"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ECOLX/SNIPE/SNIPE-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on SNIPE/DUF4041 domain-containing protein (falcon)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">T5orf172/MUG113 (PF13455) is a GIY-YIG endonuclease subfamily; MUG113 profile is highly related to T5orf172, placing SNIPE&#39;s nuclease domain in the GIY-YIG HEG space</div>
+                        
+                        <div class="finding-text">"T5orf172 is a subfamily of GIY-YIG endonucleases ... the two profiles [T5orf172 and MUG113] are highly related"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">T5orf172-family proteins have modular architecture with variable DNA-binding modules determining target specificity, paired with a conserved nuclease domain</div>
+                        
+                        <div class="finding-text">"a nuclease domain paired with variable DNA-binding modules that determine target specificity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is GO:0004520 (DNA endonuclease activity) the correct MF term for SNIPE, or should a more specific child term (e.g. reflecting GIY-YIG family membership or the membrane-localized context) be used?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="Q: Is GO:0004520 (DNA endonuclease activity) the corr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should the ManYZ pre-association be annotated as a separate protein complex, or is it better modelled as a GO-CAM causal association (SNIPE located_in plasma membrane, colocalizes_with ManYZ complex)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="Q: Should the ManYZ pre-association be annotated as a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the tape measure protein (TMP) binding by DUF4041 warrant a specific MF annotation (e.g. viral protein binding) or is this better captured only in the GO-CAM model?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="Q: Does the tape measure protein (TMP) binding by DUF..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> The 32P cleavage assay (Fig 2d) shows a smear of fragments consistent with endonucleolytic cleavage, but the exact cleavage mechanism and products have not been biochemically characterized with purified SNIPE. In vitro reconstitution of SNIPE nuclease activity with defined DNA substrates would confirm endonuclease vs exonuclease activity, determine sequence specificity (if any), and characterize cleavage products.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SNIPE cleaves phage DNA endonucleolytically (producing internal cuts) rather than exonucleolytically</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Biochemical assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="EXPERIMENT: The 32P cleavage assay (Fig 2d) shows a smear of f..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test representative SNIPE homologues lacking TM domains for phage defence in their native hosts or heterologous expression. Determine whether these homologues also pre-associate with inner membrane proteins at genome injection sites, and whether their N-terminal domains dictate phage specificity.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SNIPE homologues with non-TM N-terminal regions (DivIVA, T3SS, PH domain) use analogous mechanisms but target different phage entry pathways</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Genetics/Functional assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A8T9CRB7" data-a="EXPERIMENT: Test representative SNIPE homologues lacking TM do..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">anti-phage defence</span>
+            
+            <span class="badge">nuclease</span>
+            
+            <span class="badge">membrane protein</span>
+            
+            <span class="badge">innate immunity</span>
+            
+            <span class="badge">phage-host interaction</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SNIPE-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A8T9CRB7" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-01T19:00:50.795734'<br />
+end_time: '2026-03-01T19:12:21.736197'<br />
+duration_seconds: 690.94<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ECOLX<br />
+  gene_id: SNIPE<br />
+  gene_symbol: SNIPE<br />
+  uniprot_accession: A0A8T9CRB7<br />
+  protein_description: 'SubName: Full=DUF4041 domain-containing protein {ECO:0000313|EMBL:TXU30727.1};'<br />
+  gene_info: ORFNames=D4N09_22825 {ECO:0000313|EMBL:TXU30727.1};<br />
+  organism_full: Escherichia coli.<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: Phage_T5_Orf172_DNA-bd. (IPR018306); SNIPE. (IPR025280); MUG113<br />
+    (PF13455); SNIPE (PF13250)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 26</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A0A8T9CRB7</li>
+<li><strong>Protein Description:</strong> SubName: Full=DUF4041 domain-containing protein {ECO:0000313|EMBL:TXU30727.1};</li>
+<li><strong>Gene Information:</strong> ORFNames=D4N09_22825 {ECO:0000313|EMBL:TXU30727.1};</li>
+<li><strong>Organism (full):</strong> Escherichia coli.</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Phage_T5_Orf172_DNA-bd. (IPR018306); SNIPE. (IPR025280); MUG113 (PF13455); SNIPE (PF13250)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "SNIPE" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Escherichia coli.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'SNIPE' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>SNIPE</strong> (gene ID: SNIPE, UniProt: A0A8T9CRB7) in ECOLX.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A0A8T9CRB7</li>
+<li><strong>Protein Description:</strong> SubName: Full=DUF4041 domain-containing protein {ECO:0000313|EMBL:TXU30727.1};</li>
+<li><strong>Gene Information:</strong> ORFNames=D4N09_22825 {ECO:0000313|EMBL:TXU30727.1};</li>
+<li><strong>Organism (full):</strong> Escherichia coli.</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Phage_T5_Orf172_DNA-bd. (IPR018306); SNIPE. (IPR025280); MUG113 (PF13455); SNIPE (PF13250)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "SNIPE" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Escherichia coli.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'SNIPE' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>SNIPE</strong> (gene ID: SNIPE, UniProt: A0A8T9CRB7) in ECOLX.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research Report: Functional Annotation of “SNIPE” (UniProt A0A8T9CRB7; ORF D4N09_22825) in Escherichia coli (ECOLX)</p>
+<ol>
+<li>Executive summary and identity verification</li>
+</ol>
+<p>Target identity provided by the user specifies UniProt A0A8T9CRB7 as an E. coli protein described as “DUF4041 domain-containing protein,” with InterPro/Pfam domain annotations including Phage_T5_Orf172_DNA-bd (IPR018306), SNIPE (IPR025280; PF13250), and MUG113 (PF13455). In the tool-retrieved literature, “SNIPE” did not appear as an E. coli gene symbol nor as PF13250/IPR025280, and no publication directly referenced A0A8T9CRB7 or ORF D4N09_22825. Therefore, the current evidence base supports only domain-context-based functional inference and does not support an experimentally validated gene-specific function for this particular E. coli protein. </p>
+<p>Critically, the only directly relevant and recent evidence recovered concerns the related T5orf172/MUG113 family, which is treated as a GIY‑YIG endonuclease subfamily and a common phage homing endonuclease gene (HEG) module. Barth et al. explicitly accept MUG113 (PF13455) for T5orf172 proteins because the profiles are highly related, supporting the interpretation that the MUG113-like part of the user’s protein is in the T5orf172-like HEG/nuclease space (https://doi.org/10.1101/2023.03.23.533998; posted 2023-03-23) (barth2023nucleasegenesoccupy pages 3-4).</p>
+<ol>
+<li>Key concepts and definitions (current understanding)</li>
+</ol>
+<p>2.1 Homing endonuclease genes (HEGs)</p>
+<p>HEGs are “selfish” mobile elements that spread by introducing site-specific DNA breaks in homologous target loci lacking the HEG, followed by repair via homologous recombination that copies the HEG into the cleaved allele (“homing”). This canonical model is explicitly described and used as a conceptual framework for T5orf172-family proteins in both bacteriophage and eukaryotic-virus-associated mobile elements (https://doi.org/10.1093/ve/veae051; published 2024-07) (barth2024genomicanalysisof pages 8-10).</p>
+<p>2.2 GIY‑YIG endonucleases and the T5orf172 subfamily</p>
+<p>The GIY‑YIG endonuclease superfamily comprises catalytic nuclease domains used by diverse mobile elements, including many phage-associated HEGs. In the retrieved corpus, T5orf172 is described as a GIY‑YIG endonuclease subfamily: Barth et al. state “T5orf172 is a subfamily of GIY-YIG endonucleases,” and note that in at least one example, nuclease activity depends on a glutamate residue whose catalytic role is inferred from alignments to biochemically characterized GIY‑YIG enzymes (https://doi.org/10.1101/2023.03.23.533998; posted 2023-03-23) (barth2023nucleasegenesoccupy pages 6-10, barth2023nucleasegenesoccupy pages 4-6). </p>
+<p>2.3 Modular architecture: DNA-binding + nuclease domains</p>
+<p>A recurring theme in T5orf172-like HEGs is domain modularity: a nuclease domain paired with variable DNA-binding modules that determine target specificity. Barth et al. operationalize this by trimming sequences to separate terminal nuclease domains from putative DNA-binding termini and then annotating DNA-binding domains (CapR-like and Zn-finger DUFs; RepA_N) (barth2023nucleasegenesoccupy pages 4-6). Their figures visually summarize the “beads-on-a-string” repeat architecture for DNA-binding modules followed by a terminal nuclease domain in representative T5orf172 HEGs (barth2023nucleasegenesoccupy media 643002a1, barth2023nucleasegenesoccupy media fc0baff9).</p>
+<p>2.4 Phage satellites and phage–satellite conflict as a functional context</p>
+<p>In Vibrio cholerae phage ICP1, and its satellites called PLEs (phage-inducible chromosomal island-like elements), there is an arms-race dynamic in which satellites inhibit phage production and phages counter-adapt. This system provides experimentally grounded examples where T5orf172-like nuclease modules (and HEG-derived DNA-binding modules) have clear functional roles in defense and counter-defense (barth2021achimericnuclease pages 12-14, barth2023nucleasegenesoccupy pages 18-20).</p>
+<ol>
+<li>Molecular function, biological process, and localization: what can be concluded for A0A8T9CRB7?</li>
+</ol>
+<p>3.1 What is directly known for A0A8T9CRB7 (SNIPE in ECOLX)</p>
+<p>No direct experimental evidence was retrieved for A0A8T9CRB7 itself, its gene/ORF D4N09_22825, or for PF13250/IPR025280 (“SNIPE”) in E. coli. Consequently, claims about its precise biochemical activity (e.g., a specific cleavage motif or substrate), its physiological pathway in E. coli, or its cellular localization cannot be made from the retrieved evidence set.</p>
+<p>3.2 High-confidence inference from the closely related T5orf172/MUG113 domain context</p>
+<p>Given (i) the explicit statement that MUG113 (PF13455) is “highly related” to T5orf172 and accepted for T5orf172-containing proteins (barth2023nucleasegenesoccupy pages 3-4), and (ii) the repeated classification of T5orf172 as a GIY‑YIG endonuclease subfamily (barth2023nucleasegenesoccupy pages 6-10, barth2023nucleasegenesoccupy pages 4-6), the strongest defensible functional inference is:</p>
+<p>• The protein family context is consistent with a DNA endonuclease (GIY‑YIG-like) that is frequently embedded in mobile genetic elements (especially phages) and often functions as a homing endonuclease or as a domesticated derivative that targets specific DNA sequences (barth2024genomicanalysisof pages 8-10, barth2023nucleasegenesoccupy pages 10-12).</p>
+<p>• The functional “substrate class” in characterized systems is DNA, and specificity is typically determined by fused DNA-binding modules (e.g., RepA_N origin-binding domains or zinc-finger-like repeats related to CapR) (barth2023nucleasegenesoccupy pages 18-20, barth2023nucleasegenesoccupy pages 15-18).</p>
+<p>• Therefore, for A0A8T9CRB7, the most plausible primary molecular role—conditional on its domain architecture being homologous to these systems—is as a sequence-specific DNA-binding protein with a nuclease-associated region (or an HEG-derived DNA-binding module), potentially involved in mobile-element dynamics rather than core E. coli metabolism.</p>
+<p>3.3 Likely cellular/biological compartment</p>
+<p>Characterized T5orf172-like effectors and their domesticated derivatives act on DNA during phage infection or mobile-element activity; this implies intracellular action on nucleic acids (host or viral DNA), not secretion or membrane localization (barth2021achimericnuclease pages 12-14, barth2023nucleasegenesoccupy pages 18-20). However, localization for A0A8T9CRB7 in E. coli cannot be asserted without accession-specific evidence.</p>
+<ol>
+<li>Experimental anchors from related systems (authoritative sources)</li>
+</ol>
+<p>Because A0A8T9CRB7 lacks direct evidence, the most useful annotation anchors come from experimentally characterized T5orf172-containing proteins in related phage/satellite systems.</p>
+<p>4.1 Odn/Gp88: a modular origin-targeting nuclease with a T5orf172-like nuclease domain</p>
+<p>Barth et al. (eLife, 2021-07; https://doi.org/10.7554/elife.68339) report that ICP1 isolates lacking CRISPR-Cas instead encode gp88, a T5orf172-domain protein (pfam10544) whose activity is consistent with a GIY‑YIG-like nuclease mechanism: it retains key catalytic residues and a conserved glutamate (E180) whose mutation (E180A) abolishes function (barth2021achimericnuclease pages 4-5, barth2021achimericnuclease pages 2-4). Functionally, gp88 is required for phage propagation on hosts carrying specific PLE variants (PLE1/4/5), linking the nuclease to anti-satellite immunity (barth2021achimericnuclease pages 4-5, barth2021achimericnuclease pages 2-4).</p>
+<p>The same study provides direct substrate specificity evidence: purified Gp88 cleaves PCR fragments containing replication origin sequences from sensitive PLEs (PLE1/4/5) but not insensitive PLEs (PLE2/3) in vitro (assayed at 500 nM protein), and the catalytic-site mutant E180A abolishes cleavage (barth2021achimericnuclease pages 7-9). Mechanistically, Odn/Gp88 is presented as a chimeric nuclease in which DNA-binding specificity and nuclease function are separable modules; escape can occur via changes in iteron spacing/architecture, suggesting steric/spacing constraints similar to GIY‑YIG endonucleases (barth2021achimericnuclease pages 12-14).</p>
+<p>4.2 CapR: domesticated HEG-derived DNA-binding module used for transcriptional repression</p>
+<p>Netter et al. (Nucleic Acids Research, 2021-11; https://doi.org/10.1101/2020.11.28.402263) describe CapR as a small (15.5 kDa) satellite-encoded DNA-binding protein that represses the ICP1 capsid morphogenesis operon. EMSAs show CapR binds specifically to the capsid operon promoter region (binds probe A; not a control probe), and mapping indicates binding upstream of the promoter core elements (netter2021aphagesatellite pages 11-13). CapR-mediated repression is tuned: it downregulates capsid operon transcription by ~3-fold (producing roughly one-third as many capsid morphogenesis proteins) without measurably inhibiting ICP1 progeny production under tested conditions, whereas stronger repression via CRISPRi harms both phage and satellite mobilization (netter2021aphagesatellite pages 13-15, netter2021aphagesatellite pages 11-13).</p>
+<p>CapR is linked bioinformatically to domains of ICP1 homing endonucleases, supporting an “expert” evolutionary interpretation: a putative HEG-derived DNA-binding module was domesticated into a transcriptional repressor after nuclease loss, analogous to known HEG regulatory behaviors (netter2021aphagesatellite pages 13-15, netter2021aphagesatellite pages 15-16).</p>
+<ol>
+<li>Recent developments (prioritizing 2023–2024)</li>
+</ol>
+<p>5.1 2023: Phage-wide genomics of T5orf172/MUG113 HEGs, domain architectures, and mobility statistics</p>
+<p>Barth et al. (bioRxiv, posted 2023-03-23; https://doi.org/10.1101/2023.03.23.533998) provide large-scale comparative genomics of HEGs across phages, with emphasis on T5orf172. They report that T5orf172 HEGs are common across multiple phage clades and frequently occur in or near essential genes. Quantitative neighborhood statistics include 468 T5orf172 neighborhoods across 204 genomes, with 35% near terminase, 33% near ribonucleotide reductase, and 31% near capsid genes (barth2023nucleasegenesoccupy pages 10-12).</p>
+<p>They also quantify DNA-binding module associations for T5orf172 HEGs: 95/229 (41.5%) encode a CapR-like domain, and 200/229 (87.3%) contain at least one of three Zn-finger-like domains (CapR, DUF723, or DUF4397), often as multiple repeats consistent with class V repeat proteins (“beads on a string”) (barth2023nucleasegenesoccupy pages 15-18). These repetitive, modular architectures provide a mechanistic rationale for rapid specificity diversification via recombination and domain shuffling (barth2023nucleasegenesoccupy pages 15-18). Figures 5–6 visually depict these repeated DNA-binding domains linked to terminal nuclease modules and illustrate recombination events that generate deletions and domain swaps (barth2023nucleasegenesoccupy media 643002a1, barth2023nucleasegenesoccupy media fc0baff9).</p>
+<p>Importantly for your target’s domain set: the authors explicitly state that for proteins with T5orf172 domains, they also accepted MUG113 (PF13455) because “the two profiles are highly related,” providing the clearest support in this corpus that MUG113-like proteins fall into the T5orf172 HEG/nuclease domain space (barth2023nucleasegenesoccupy pages 3-4).</p>
+<p>5.2 2024: T5orf172 as a mobile HEG module in eukaryotic-virus-associated elements</p>
+<p>Barth et al. (Virus Evolution, 2024-07; https://doi.org/10.1093/ve/veae051) extend the T5orf172 framing beyond bacteriophages, describing T5orf172 as a GIY‑YIG subfamily domain and discussing its association with mobility, repeats, and recombination in hyperparasitic viruses (polinton-like viruses) associated with entomopoxviruses. They highlight hallmarks consistent with HEG-like mobility (multiple homologous copies, repetitive/modular architectures, flanking repeats, rearrangements) and explicitly define the HEG homing mechanism to interpret these patterns (barth2024genomicanalysisof pages 8-10). They further discuss possible “collaborative homing” scenarios where HEGs mobilize nearby cargo and intron-associated elements, framing T5orf172-like endonucleases as contributors to module turnover and replicon evolution (barth2024genomicanalysisof pages 10-11).</p>
+<ol>
+<li>Applications and real-world implementations</li>
+</ol>
+<p>6.1 Natural, deployable design principles for sequence-targeted nucleases</p>
+<p>The Odn/Gp88 case demonstrates a naturally evolved “programmable-like” paradigm: a DNA-binding specificity module (RepA_N-like origin-binding domain) fused to a GIY‑YIG-like nuclease effector (T5orf172-like domain) creates a sequence/architecture-specific nuclease that targets satellite replication origins and provides immunity in the absence of CRISPR-Cas (barth2021achimericnuclease pages 7-9, barth2021achimericnuclease pages 4-5). This is relevant for synthetic biology and phage engineering conceptually, because it shows that modular domain shuffling can generate novel targeting specificities (barth2021achimericnuclease pages 12-14).</p>
+<p>6.2 Transcriptional regulation and particle hijacking modules (phage satellite biology)</p>
+<p>CapR represents a “domesticated endonuclease-derived” DNA-binding module used to tune helper-phage gene expression to balance inhibition and satellite propagation (netter2021aphagesatellite pages 15-16, netter2021aphagesatellite pages 13-15). This is a real biological implementation of fine-tuned repression rather than maximal suppression.</p>
+<p>6.3 Practical genome annotation and phage genomics</p>
+<p>Barth et al. 2023 provides concrete quantitative heuristics used in annotation pipelines: detection of T5orf172/MUG113 domains via Pfam HMMs, trimming strategies to isolate nuclease vs DNA-binding termini, and the empirical prevalence of specific DNA-binding modules (CapR/DUF723/DUF4397; RepA_N) that co-occur with T5orf172-like nuclease domains (barth2023nucleasegenesoccupy pages 4-6, barth2023nucleasegenesoccupy pages 15-18). These are directly applicable to real-world functional annotation workflows for prophage and mobile-element proteins.</p>
+<ol>
+<li>Expert opinions and analysis (authoritative interpretations)</li>
+</ol>
+<p>Across the retrieved works, the recurring expert interpretation is that T5orf172/MUG113-family genes are best viewed primarily through the lens of mobile-element biology (HEGs) rather than as stable, core cellular genes. Barth et al. emphasize the mobility signatures of these genes (presence/absence variation across isolates, frameshifts/deletions, intron/intein associations, proximity to essential genes) and caution that homology/domain presence does not automatically imply active “homing,” because HEG-derived proteins can be domesticated for new roles (barth2023nucleasegenesoccupy pages 6-10, barth2023nucleasegenesoccupy pages 23-25). Netter et al. similarly frame CapR as a domesticated derivative of a putative homing endonuclease lineage, emphasizing repurposing of DNA-binding function after loss of nuclease function (netter2021aphagesatellite pages 13-15, netter2021aphagesatellite pages 15-16).</p>
+<ol>
+<li>Key statistics and data (recent studies)</li>
+</ol>
+<p>Quantitative data points relevant to domain-family function and to annotation:</p>
+<p>• In phage neighborhood surveys: among 468 T5orf172 neighborhoods (204 genomes), 35% associate with terminase, 33% with ribonucleotide reductase, and 31% with capsid genes (Barth et al., bioRxiv posted 2023-03-23) (barth2023nucleasegenesoccupy pages 10-12).</p>
+<p>• DNA-binding module prevalence in T5orf172 HEGs: 95/229 (41.5%) encode a CapR-like domain; 200/229 (87.3%) encode at least one of CapR/DUF723/DUF4397 Zn-finger domains; many encode multiple repeats (barth2023nucleasegenesoccupy pages 15-18).</p>
+<p>• CapR/CRISPRi phenotypes (Netter et al., NAR 2021-11): CRISPRi targeting the capsid operon reduces capsid protein ~3-fold, reduces ICP1 plaquing efficiency to ~1/5, reduces ICP1 particle formation ~3-fold, and reduces PLE transduction by nearly an order of magnitude; in contrast, CapR-mediated repression does not inhibit ICP1 progeny despite ~3-fold transcriptional downregulation of the capsid operon (netter2021aphagesatellite pages 11-13, netter2021aphagesatellite pages 13-15).</p>
+<p>• Origin-selective cleavage by Odn/Gp88: purified protein cleaves origin-containing DNA fragments from some PLEs but not others, and catalytic mutant E180A abolishes cleavage/activity (barth2021achimericnuclease pages 7-9).</p>
+<ol>
+<li>What remains unknown for the specific E. coli protein A0A8T9CRB7 (SNIPE)</li>
+</ol>
+<p>Given the lack of accession-specific literature in the retrieved corpus, the following points cannot be responsibly concluded for A0A8T9CRB7 without additional targeted database retrieval and/or experiments:</p>
+<p>• Whether A0A8T9CRB7 is encoded in a prophage region, plasmid, integrative element, or core chromosome.</p>
+<p>• Whether it is an active nuclease, a DNA-binding protein lacking nuclease activity, or another type of mobile-element accessory factor.</p>
+<p>• Its in vivo DNA targets, if any (e.g., origin sequences, repeat elements), and whether it participates in a recognizable E. coli pathway.</p>
+<p>• Subcellular localization beyond the generic expectation of intracellular nucleic-acid interaction implied by the domain context.</p>
+<ol>
+<li>Practical functional-annotation recommendation (evidence-constrained)</li>
+</ol>
+<p>Based strictly on the retrieved evidence and the domain context provided by the user, a conservative, evidence-aligned annotation for A0A8T9CRB7 would be:</p>
+<p>• “Predicted mobile-element-associated DNA-binding protein with homing-endonuclease-related (GIY‑YIG/T5orf172/MUG113-like) nuclease domain architecture; likely involved in sequence-specific DNA interactions in prophage/mobile element contexts; function uncharacterized in E. coli.”</p>
+<p>This phrasing aligns with the demonstrated behavior of T5orf172/MUG113 proteins as modular HEG-derived nucleases and DNA-binding proteins that can be domesticated for regulation or anti-satellite defense, while explicitly acknowledging that SNIPE (PF13250/IPR025280) and the specific UniProt accession were not directly covered by the retrieved literature (barth2023nucleasegenesoccupy pages 4-6, barth2023nucleasegenesoccupy pages 6-10, netter2021aphagesatellite pages 13-15).</p>
+<p>References (URLs and dates)</p>
+<p>• Barth ZK, Dunham DT, Seed KD. Nuclease genes occupy boundaries of genetic exchange between bacteriophages. bioRxiv. Posted 2023-03-23. https://doi.org/10.1101/2023.03.23.533998 (barth2023nucleasegenesoccupy pages 3-4, barth2023nucleasegenesoccupy pages 15-18, barth2023nucleasegenesoccupy pages 10-12).</p>
+<p>• Netter Z, Boyd CM, Silvas TV, Seed KD. A phage satellite tunes inducing phage gene expression using a domesticated endonuclease to balance inhibition and virion hijacking. Nucleic Acids Research. 2021-11. https://doi.org/10.1101/2020.11.28.402263 (netter2021aphagesatellite pages 11-13, netter2021aphagesatellite pages 13-15).</p>
+<p>• Barth ZK, Nguyen MHT, Seed KD. A chimeric nuclease substitutes a phage CRISPR-Cas system to provide sequence-specific immunity against subviral parasites. eLife. 2021-07. https://doi.org/10.7554/elife.68339 (barth2021achimericnuclease pages 7-9, barth2021achimericnuclease pages 4-5).</p>
+<p>• Barth ZK, Hicklin I, Thézé J, et al. Genomic analysis of hyperparasitic viruses associated with entomopoxviruses. Virus Evolution. 2024-07. https://doi.org/10.1093/ve/veae051 (barth2024genomicanalysisof pages 8-10, barth2024genomicanalysisof pages 10-11).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(barth2023nucleasegenesoccupy pages 3-4): Zachary K Barth, Drew T Dunham, and Kimberley D Seed. Nuclease genes occupy boundaries of genetic exchange between bacteriophages. bioRxiv, Mar 2023. URL: https://doi.org/10.1101/2023.03.23.533998, doi:10.1101/2023.03.23.533998. This article has 20 citations.</p>
+</li>
+<li>
+<p>(barth2024genomicanalysisof pages 8-10): Zachary K Barth, Ian Hicklin, Julien Thézé, Jun Takatsuka, Madoka Nakai, Elisabeth A Herniou, Anne M Brown, and Frank O Aylward. Genomic analysis of hyperparasitic viruses associated with entomopoxviruses. Virus Evolution, Jul 2024. URL: https://doi.org/10.1093/ve/veae051, doi:10.1093/ve/veae051. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barth2023nucleasegenesoccupy pages 6-10): Zachary K Barth, Drew T Dunham, and Kimberley D Seed. Nuclease genes occupy boundaries of genetic exchange between bacteriophages. bioRxiv, Mar 2023. URL: https://doi.org/10.1101/2023.03.23.533998, doi:10.1101/2023.03.23.533998. This article has 20 citations.</p>
+</li>
+<li>
+<p>(barth2023nucleasegenesoccupy pages 4-6): Zachary K Barth, Drew T Dunham, and Kimberley D Seed. Nuclease genes occupy boundaries of genetic exchange between bacteriophages. bioRxiv, Mar 2023. URL: https://doi.org/10.1101/2023.03.23.533998, doi:10.1101/2023.03.23.533998. This article has 20 citations.</p>
+</li>
+<li>
+<p>(barth2023nucleasegenesoccupy media 643002a1): Zachary K Barth, Drew T Dunham, and Kimberley D Seed. Nuclease genes occupy boundaries of genetic exchange between bacteriophages. bioRxiv, Mar 2023. URL: https://doi.org/10.1101/2023.03.23.533998, doi:10.1101/2023.03.23.533998. This article has 20 citations.</p>
+</li>
+<li>
+<p>(barth2023nucleasegenesoccupy media fc0baff9): Zachary K Barth, Drew T Dunham, and Kimberley D Seed. Nuclease genes occupy boundaries of genetic exchange between bacteriophages. bioRxiv, Mar 2023. URL: https://doi.org/10.1101/2023.03.23.533998, doi:10.1101/2023.03.23.533998. This article has 20 citations.</p>
+</li>
+<li>
+<p>(barth2021achimericnuclease pages 12-14): Zachary K Barth, Maria HT Nguyen, and Kimberley D Seed. A chimeric nuclease substitutes a phage crispr-cas system to provide sequence-specific immunity against subviral parasites. eLife, Jul 2021. URL: https://doi.org/10.7554/elife.68339, doi:10.7554/elife.68339. This article has 46 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barth2023nucleasegenesoccupy pages 18-20): Zachary K Barth, Drew T Dunham, and Kimberley D Seed. Nuclease genes occupy boundaries of genetic exchange between bacteriophages. bioRxiv, Mar 2023. URL: https://doi.org/10.1101/2023.03.23.533998, doi:10.1101/2023.03.23.533998. This article has 20 citations.</p>
+</li>
+<li>
+<p>(barth2023nucleasegenesoccupy pages 10-12): Zachary K Barth, Drew T Dunham, and Kimberley D Seed. Nuclease genes occupy boundaries of genetic exchange between bacteriophages. bioRxiv, Mar 2023. URL: https://doi.org/10.1101/2023.03.23.533998, doi:10.1101/2023.03.23.533998. This article has 20 citations.</p>
+</li>
+<li>
+<p>(barth2023nucleasegenesoccupy pages 15-18): Zachary K Barth, Drew T Dunham, and Kimberley D Seed. Nuclease genes occupy boundaries of genetic exchange between bacteriophages. bioRxiv, Mar 2023. URL: https://doi.org/10.1101/2023.03.23.533998, doi:10.1101/2023.03.23.533998. This article has 20 citations.</p>
+</li>
+<li>
+<p>(barth2021achimericnuclease pages 4-5): Zachary K Barth, Maria HT Nguyen, and Kimberley D Seed. A chimeric nuclease substitutes a phage crispr-cas system to provide sequence-specific immunity against subviral parasites. eLife, Jul 2021. URL: https://doi.org/10.7554/elife.68339, doi:10.7554/elife.68339. This article has 46 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barth2021achimericnuclease pages 2-4): Zachary K Barth, Maria HT Nguyen, and Kimberley D Seed. A chimeric nuclease substitutes a phage crispr-cas system to provide sequence-specific immunity against subviral parasites. eLife, Jul 2021. URL: https://doi.org/10.7554/elife.68339, doi:10.7554/elife.68339. This article has 46 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barth2021achimericnuclease pages 7-9): Zachary K Barth, Maria HT Nguyen, and Kimberley D Seed. A chimeric nuclease substitutes a phage crispr-cas system to provide sequence-specific immunity against subviral parasites. eLife, Jul 2021. URL: https://doi.org/10.7554/elife.68339, doi:10.7554/elife.68339. This article has 46 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(netter2021aphagesatellite pages 11-13): Zoe Netter, Caroline M. Boyd, Tania V. Silvas, and Kimberley D. Seed. A phage satellite tunes inducing phage gene expression using a domesticated endonuclease to balance inhibition and virion hijacking. Nucleic Acids Research, 49:4386-4401, Nov 2021. URL: https://doi.org/10.1101/2020.11.28.402263, doi:10.1101/2020.11.28.402263. This article has 35 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(netter2021aphagesatellite pages 13-15): Zoe Netter, Caroline M. Boyd, Tania V. Silvas, and Kimberley D. Seed. A phage satellite tunes inducing phage gene expression using a domesticated endonuclease to balance inhibition and virion hijacking. Nucleic Acids Research, 49:4386-4401, Nov 2021. URL: https://doi.org/10.1101/2020.11.28.402263, doi:10.1101/2020.11.28.402263. This article has 35 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(netter2021aphagesatellite pages 15-16): Zoe Netter, Caroline M. Boyd, Tania V. Silvas, and Kimberley D. Seed. A phage satellite tunes inducing phage gene expression using a domesticated endonuclease to balance inhibition and virion hijacking. Nucleic Acids Research, 49:4386-4401, Nov 2021. URL: https://doi.org/10.1101/2020.11.28.402263, doi:10.1101/2020.11.28.402263. This article has 35 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barth2024genomicanalysisof pages 10-11): Zachary K Barth, Ian Hicklin, Julien Thézé, Jun Takatsuka, Madoka Nakai, Elisabeth A Herniou, Anne M Brown, and Frank O Aylward. Genomic analysis of hyperparasitic viruses associated with entomopoxviruses. Virus Evolution, Jul 2024. URL: https://doi.org/10.1093/ve/veae051, doi:10.1093/ve/veae051. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barth2023nucleasegenesoccupy pages 23-25): Zachary K Barth, Drew T Dunham, and Kimberley D Seed. Nuclease genes occupy boundaries of genetic exchange between bacteriophages. bioRxiv, Mar 2023. URL: https://doi.org/10.1101/2023.03.23.533998, doi:10.1101/2023.03.23.533998. This article has 20 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>barth2023nucleasegenesoccupy pages 3-4</li>
+<li>barth2024genomicanalysisof pages 8-10</li>
+<li>barth2023nucleasegenesoccupy pages 4-6</li>
+<li>barth2021achimericnuclease pages 7-9</li>
+<li>barth2021achimericnuclease pages 12-14</li>
+<li>netter2021aphagesatellite pages 11-13</li>
+<li>barth2023nucleasegenesoccupy pages 10-12</li>
+<li>barth2023nucleasegenesoccupy pages 15-18</li>
+<li>barth2024genomicanalysisof pages 10-11</li>
+<li>barth2023nucleasegenesoccupy pages 6-10</li>
+<li>barth2023nucleasegenesoccupy pages 18-20</li>
+<li>barth2021achimericnuclease pages 4-5</li>
+<li>barth2021achimericnuclease pages 2-4</li>
+<li>netter2021aphagesatellite pages 13-15</li>
+<li>netter2021aphagesatellite pages 15-16</li>
+<li>barth2023nucleasegenesoccupy pages 23-25</li>
+<li>https://doi.org/10.1101/2023.03.23.533998;</li>
+<li>https://doi.org/10.1093/ve/veae051;</li>
+<li>https://doi.org/10.7554/elife.68339</li>
+<li>https://doi.org/10.1101/2020.11.28.402263</li>
+<li>https://doi.org/10.1101/2023.03.23.533998</li>
+<li>https://doi.org/10.1093/ve/veae051</li>
+<li>https://doi.org/10.1101/2023.03.23.533998,</li>
+<li>https://doi.org/10.1093/ve/veae051,</li>
+<li>https://doi.org/10.7554/elife.68339,</li>
+<li>https://doi.org/10.1101/2020.11.28.402263,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SNIPE-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A8T9CRB7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="snipe-gene-notes">SNIPE Gene Notes</h1>
+<h2 id="key-paper-saxton-et-al-2026-nature">Key Paper: Saxton et al. (2026) Nature</h2>
+<p><strong>Title</strong>: A membrane-bound nuclease directly cleaves phage DNA during genome injection<br />
+<strong>Authors</strong>: Saxton DS, DeWeirdt PC, Doering CR, Roney IJ &amp; Laub MT<br />
+<strong>DOI</strong>: 10.1038/s41586-026-10207-1<br />
+<strong>PMID</strong>: 41741653</p>
+<h3 id="identification">Identification</h3>
+<ul>
+<li>Originally identified as PD-lambda-1 in a functional genetic screen for anti-phage defence systems in the <em>E. coli</em> pangenome <a href="https://pubmed.ncbi.nlm.nih.gov/36123438" title="A functional selection reveals previously undetected anti-phage defence systems in the *E. coli* pangenome">PMID:36123438</a></li>
+<li>Renamed SNIPE: Surface-associated Nuclease Inhibiting Phage Entry <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="we renamed this system surface-associated nuclease inhibiting phage entry (SNIPE)">PMID:41741653</a></li>
+<li>Found in wild <em>E. coli</em> strains (ECOR collection, strain MOD1-ECOR26); NOT present in K-12 MG1655</li>
+<li>UniProt: A0A8T9CRB7 (TrEMBL, ECOLX; from strain T0181B.E-10, same RefSeq WP_001606968.1)</li>
+</ul>
+<h3 id="protein-architecture-500-aa">Protein Architecture (500 aa)</h3>
+<p>Three domains confirmed by AlphaFold, HHpred, and DeepTMHMM:</p>
+<ol>
+<li><strong>N-terminal transmembrane domain</strong> (aa 5-24): single-pass TM helix anchoring to inner membrane. N-terminus is periplasmic, rest of protein is cytoplasmic <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="PhoA was functional only when inserted at the N terminus of SNIPE, and LacZalpha was functional only when inserted downstream of the transmembrane domain">PMID:41741653</a></li>
+<li><strong>DUF4041 domain</strong> (aa 144-262, now IPR025280/PF13250 "SNIPE associated domain"): positively charged surface facilitates DNA binding; also interacts with phage tape measure proteins (TMPs) <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="the DUF4041 domain contains a positively charged surface that might facilitate DNA binding">PMID:41741653</a></li>
+<li><strong>GIY-YIG nuclease domain</strong> (aa 357-450): catalytic DNA endonuclease; E414 is catalytic residue <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="Substituting a predicted catalytic residue in the nuclease domain (E414A) and deletion of the DUF4041 domain both abolished defence">PMID:41741653</a></li>
+</ol>
+<h3 id="mechanism-of-action">Mechanism of Action</h3>
+<p>SNIPE provides <strong>direct defence</strong> (infected cell survives), distinct from abortive infection:</p>
+<ul>
+<li>SNIPE pre-associates with ManYZ (mannose permease) in the inner membrane BEFORE infection <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="SNIPE interacts with ManYZ independently of SNIPE... SNIPE interacts with ManYZ before and during lambda infection">PMID:41741653</a></li>
+<li>During phage genome injection through ManYZ, DUF4041 domain binds the phage tape measure protein (TMP), positioning the nuclease to cleave incoming DNA <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="SNIPE associates with ManYZ before infection, positioning it to also associate with the TMP during infection, and DUF4041 binds to the TMP complex and phage DNA, positioning the nuclease domain to cleave the phage DNA">PMID:41741653</a></li>
+<li>32P-labelled phage DNA is cleaved from ~42,000 bp down to &lt;100 bp fragments during injection <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="infection of SNIPE-containing cells yielded a smear of DNA fragment sizes ranging from more than 4,000 bp to less than 100 bp, as well as the band that probably corresponded to mononucleotides">PMID:41741653</a></li>
+<li>SNIPE does NOT affect phage adsorption <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="SNIPE does not affect the adsorption of phage lambda">PMID:41741653</a></li>
+<li>SNIPE does NOT target pre-existing phage genomes (lysogens) <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="SNIPE did not qualitatively affect the dynamics of CFP-ParB foci or cell lysis, nor did it affect the number of phage particles produced by prophage induction">PMID:41741653</a></li>
+<li>SNIPE does NOT block plasmid DNA transformation <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="SNIPE did not block plasmid DNA transformation, indicating that its activity is specific to phage infection">PMID:41741653</a></li>
+</ul>
+<h3 id="auto-inhibition">Auto-inhibition</h3>
+<ul>
+<li>Membrane-localized SNIPE does NOT cleave host DNA <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="SNIPE is not intrinsically toxic to cells">PMID:41741653</a></li>
+<li>SNIPE(deltaTM) localizes to nucleoid and IS toxic — cleaves host DNA <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="SNIPE(deltaTM) no longer localized to the cell membrane and instead associated with bacterial DNA">PMID:41741653</a></li>
+<li>The TM domain prevents autoimmunity by anchoring SNIPE away from chromosomal DNA</li>
+</ul>
+<h3 id="manyz-interaction">ManYZ Interaction</h3>
+<ul>
+<li>ManYZ = mannose permease inner membrane complex, required for lambda genome injection</li>
+<li>SNIPE pre-associates with ManYZ (TurboID proximity labelling) <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="ManX, SNIPE-GFP, and the lambda tape measure protein were enriched only in the TurboID-ManZ samples">PMID:41741653</a></li>
+<li>Robust defence requires ManYZ against lambda and related phages</li>
+<li>ManYZ-independent defence: SNIPE provides moderate defence against siphoviruses independently of ManYZ <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="SNIPE offers broad defence against most siphoviruses independently of ManYZ">PMID:41741653</a></li>
+</ul>
+<h3 id="tmp-interaction">TMP Interaction</h3>
+<ul>
+<li>DUF4041 interacts with phage tape measure proteins physically <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="The only phage protein recovered across both replicates was the tape measure protein">PMID:41741653</a></li>
+<li>UV crosslinking + mass spec confirms SNIPE-TMP direct contact via pBPA at residue N250 (adjacent to W257R mutation site) <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="recovery of phage proteins... was dependent on the W257R I308V mutations">PMID:41741653</a></li>
+<li>SNIPE gain-of-function mutations (L253H, E264K, K305N; E223K, T319A; W257R, I308V) enhance binding to Bas14 TMP <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="Each of these SNIPE mutants had at least two point mutations that mapped to the DUF4041 and the downstream alpha-helix">PMID:41741653</a></li>
+<li>Phage escape mutations map exclusively to TMP gene <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="Strikingly, the only mutations found in escape phages mapped to the TMP">PMID:41741653</a></li>
+</ul>
+<h3 id="evolutionary-diversity">Evolutionary Diversity</h3>
+<ul>
+<li>~500 curated SNIPE homologues across many bacterial phyla <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="a set of around 500 homologues distributed across many bacterial phyla">PMID:41741653</a></li>
+<li>33% of well-sequenced bacterial clades harbour at least one SNIPE homologue [PMID:36123438, PMID:41741653]</li>
+<li>GIY-YIG nuclease domain: most conserved region</li>
+<li>DUF4041: moderate conservation, positively charged DNA-binding interface conserved</li>
+<li>N-terminal region: highest variability — functions as adapter for phage specificity</li>
+<li>59% have 1 TM domain</li>
+<li>7% have 2 TM domains</li>
+<li>34% lack TM domains — use alternative membrane-targeting strategies:<ul>
+<li>DivIVA domains (negative membrane curvature binding)</li>
+<li>Type III secretion system domains</li>
+<li>Pleckstrin homology domains (phospholipid binding)</li>
+<li>Phage tail protein fusions <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="SNIPE homologues lacking predicted transmembrane domains frequently harbour domains from proteins such as DivIVA and type III secretion system ATPases">PMID:41741653</a></li>
+</ul>
+</li>
+</ul>
+<h3 id="selfnon-self-discrimination">Self/Non-Self Discrimination</h3>
+<p>SNIPE represents a novel strategy distinct from:<br />
+- <strong>CRISPR-Cas</strong>: sequence-specific recognition via guide RNAs<br />
+- <strong>Restriction-modification</strong>: recognition of DNA methylation marks<br />
+- <strong>SNIPE</strong>: exploits spatial organization — phage DNA must pass through the membrane during injection, and SNIPE is positioned there to intercept it <a href="https://pubmed.ncbi.nlm.nih.gov/41741653" title="SNIPE as a widespread bacterial defence system that exploits the spatial organization of phage genome injection to specifically target viral DNA, representing a previously unknown strategy for distinguishing self from non-self">PMID:41741653</a></p>
+<h3 id="comparison-to-other-systems">Comparison to Other Systems</h3>
+<ul>
+<li>Zorya: also localizes to membrane at genome injection sites, but senses perturbations rather than directly cleaving DNA [PMID:41741653 ref 34,35]</li>
+<li>Kiwa: membrane-embedded defence supercomplex at phage attachment sites [PMID:41741653 ref 37]</li>
+<li>IFITM proteins (eukaryotic): block viral membrane fusion — conceptual parallel [PMID:41741653 ref 38,39]</li>
+</ul>
+<h3 id="key-references">Key References</h3>
+<ol>
+<li>PMID:41741653 - Saxton et al. 2026, Nature. SNIPE characterization.</li>
+<li>PMID:36123438 - Vassallo et al. 2022, Nat Microbiol. Original identification as PD-lambda-1.</li>
+<li>PMID:37460672 - Georjon &amp; Bernheim 2023, Cell Host Microbe. Systematic exploration of E. coli phage-host interactions (BASEL collection).</li>
+<li>PMID:31857715 - Makarova et al. 2020. Classification of CRISPR-Cas systems.</li>
+<li>PMID:36880887 - Branon et al. 2018, Nat Biotechnol. TurboID proximity labelling.</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A8T9CRB7" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="snipe-architecture-aware-feature-analysis-interpro">SNIPE Architecture-Aware Feature Analysis (InterPro)</h1>
+<h2 id="question">Question</h2>
+<p>Suggest data-driven feature combinations for:</p>
+<p><code>IPR025280 + GIY-YIG nuclease + membrane targeting features</code></p>
+<p>to support an architecture-aware annotation strategy.</p>
+<h2 id="runs">Runs</h2>
+<ul>
+<li>Primary run: <code>IPR025280</code> (SNIPE associated domain)</li>
+<li>Secondary validation run: <code>IPR029330</code> (small control run to test script on a different input)</li>
+</ul>
+<p>Output folders:</p>
+<ul>
+<li><code>results/IPR025280/</code></li>
+<li><code>results/IPR029330/</code></li>
+</ul>
+<h2 id="key-results-for-ipr025280">Key Results for IPR025280</h2>
+<h3 id="architecture-prevalence">Architecture prevalence</h3>
+<p>Top architectures from <code>results/IPR025280/architecture_table.tsv</code>:</p>
+<ol>
+<li><code>PF13250:IPR025280-PF13455</code> -&gt; 1109 proteins (68.80%)</li>
+<li><code>PF13250:IPR025280-PF10544:IPR018306</code> -&gt; 270 proteins (16.75%)</li>
+<li><code>PF13250:IPR025280</code> -&gt; 139 proteins (8.62%)</li>
+</ol>
+<p>Top 3 cover 1518/1612 proteins (94.17%).</p>
+<h3 id="catalytic-partner-giy-yig-like-proxy-co-features">Catalytic partner (GIY-YIG-like proxy) co-features</h3>
+<p>From <code>results/IPR025280/cooccurring_domain_weighted.tsv</code>:</p>
+<ul>
+<li><code>PF13455</code> -&gt; 1189 proteins (73.76%)</li>
+<li><code>PF10544</code> + <code>IPR018306</code> -&gt; 277 proteins (17.18%)</li>
+</ul>
+<p>Combined, these catalytic co-features cover 1466/1612 proteins (90.94%).</p>
+<h3 id="membrane-targeting-signals">Membrane-targeting signals</h3>
+<p>From <code>results/IPR025280/nterm_tm_heuristic_overall.tsv</code>:</p>
+<ul>
+<li>N-terminal TM-like heuristic (first 70 aa): 990/1612 proteins (61.41%)</li>
+</ul>
+<p>From <code>results/IPR025280/representative_extra_features.tsv</code>:</p>
+<ul>
+<li>Dominant representative <code>Q7MG17</code>: TMhelix <code>5-22</code>, signal peptide <code>1-23</code></li>
+<li>Second representative <code>Q6AMX9</code>: TMhelix <code>7-24</code></li>
+</ul>
+<p>Rare but explicit membrane-associated accessory domains (from <code>cooccurring_domain_weighted.tsv</code>):</p>
+<ul>
+<li><code>PF14470</code> / <code>IPR039519</code> (bacterial PH domain): 3 proteins (0.19%)</li>
+<li><code>PF05154</code> / <code>IPR007829</code> (TM2 domain): 1 protein (0.06%)</li>
+</ul>
+<p>Potentially membrane-linked but weaker evidence:</p>
+<ul>
+<li><code>PF10708</code> / <code>IPR018929</code> (DUF2510): 76 proteins (4.71%); Pfam description notes many members are putative membrane proteins.</li>
+</ul>
+<h2 id="suggested-feature-sets-for-rule-design">Suggested Feature Sets for Rule Design</h2>
+<h3 id="tier-1-high-confidence">Tier 1 (high-confidence)</h3>
+<p>Use all of:</p>
+<ol>
+<li><code>IPR025280</code> (SNIPE associated domain)</li>
+<li>Catalytic partner: <code>PF13455</code> OR <code>IPR018306</code>/<code>PF10544</code></li>
+<li>At least one membrane-targeting signal:</li>
+<li>N-terminal TMhelix/signal peptide (or equivalent N-term TM-like predictor), OR</li>
+<li>membrane-associated domain such as <code>IPR007829</code> or <code>IPR039519</code> when present</li>
+</ol>
+<h3 id="tier-2-exploratory-broader">Tier 2 (exploratory / broader)</h3>
+<p>Use:</p>
+<ol>
+<li><code>IPR025280</code></li>
+<li>Catalytic partner: <code>PF13455</code> OR <code>IPR018306</code>/<code>PF10544</code></li>
+<li>Optional membrane-linked accessory: <code>IPR018929</code> (DUF2510)</li>
+</ol>
+<p>with lower confidence due weaker direct membrane evidence.</p>
+<h2 id="recommended-wording-for-the-go-issue">Recommended wording for the GO issue</h2>
+<p>Suggested architecture-aware implementation note:</p>
+<p><code>IPR025280 + (PF13455 OR IPR018306/PF10544) + (N-term TM/signal peptide OR membrane-associated accessory domain such as IPR007829/IPR039519; optional lower-confidence IPR018929).</code></p>
+<h2 id="checklist">Checklist</h2>
+<ul>
+<li>[x] None of the scripts use hardcoded inputs or outputs</li>
+<li>[x] Scripts tested on at least one other input (<code>IPR029330</code>)</li>
+<li>[x] Analyses completed as expected for the primary target (<code>IPR025280</code>)</li>
+<li>[x] Direct script outputs are present in the analysis folder</li>
+<li>[x] Summary includes provenance and quantitative justification</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A8T9CRB7
+gene_symbol: SNIPE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:562
+  label: Escherichia coli
+description: &gt;-
+  SNIPE (Surface-associated Nuclease Inhibiting Phage Entry) is a 500 amino acid inner membrane-bound
+  GIY-YIG family DNA endonuclease that provides direct anti-bacteriophage defence in Escherichia coli.
+  SNIPE constitutively localizes to the inner membrane via an N-terminal single-pass transmembrane helix
+  (aa 5-24) and pre-associates with the ManYZ mannose permease complex before phage infection. During
+  phage genome injection, the central DUF4041 domain (aa 144-262, now designated the SNIPE-associated
+  domain, IPR025280) binds both incoming phage DNA and the phage tape measure protein (TMP), positioning
+  the C-terminal GIY-YIG nuclease domain (aa 357-450, catalytic residue E414) to cleave phage DNA as it
+  crosses the inner membrane. This provides direct defence — the infected cell survives — in contrast
+  to abortive infection systems. SNIPE does not affect phage adsorption, does not target pre-existing
+  intracellular phage genomes (lysogens), and does not block plasmid transformation, indicating its
+  activity is specific to the phage genome injection process. Originally identified as PD-lambda-1 in
+  a functional screen of 71 diverse E. coli pangenomes (PMID:36123438), SNIPE homologues (~500 curated)
+  are found across many bacterial phyla, with 33% of well-sequenced clades harbouring at least one
+  homologue. The N-terminal region is highly variable and functions as a phage-specificity adapter, with
+  59% of homologues having one TM domain, 7% having two, and 34% using alternative membrane-targeting
+  strategies (DivIVA domains, type III secretion domains, PH domains). SNIPE represents a previously
+  unknown self/non-self discrimination strategy based on subcellular localization rather than sequence
+  recognition (CRISPR-Cas) or modification detection (restriction-modification).
+
+  Note: UniProt entry A0A8T9CRB7 is from E. coli strain T0181B.E-10. The experimentally characterized
+  SNIPE was from strain MOD1-ECOR26 (GenBank RCP76574.1, locus APT27_20780). Both share RefSeq
+  WP_001606968.1. SNIPE is not present in E. coli K-12 MG1655.
+
+tags:
+  - anti-phage defence
+  - nuclease
+  - membrane protein
+  - innate immunity
+  - phage-host interaction
+
+references:
+  - id: PMID:41741653
+    title: &#34;A membrane-bound nuclease directly cleaves phage DNA during genome injection&#34;
+    findings:
+      - statement: &gt;-
+          SNIPE is a membrane-bound nuclease that directly cleaves phage DNA during genome
+          injection, providing direct defence against bacteriophage
+        supporting_text: &gt;-
+          we demonstrate that SNIPE directly cleaves phage DNA during genome injection
+      - statement: &gt;-
+          SNIPE constitutively localizes to the bacterial cell membrane
+        supporting_text: &gt;-
+          we characterize SNIPE, an anti-bacteriophage defence system that constitutively
+          localizes to the bacterial cell membrane in Escherichia coli to block phage
+      - statement: &gt;-
+          SNIPE pre-associates with host proteins for lambda genome entry and with the tape
+          measure protein during genome injection
+        supporting_text: &gt;-
+          SNIPE associates with host proteins essential for λ genome entry and with the λ
+          tape measure protein, which facilitates λ genome injection across the inner membrane
+      - statement: &gt;-
+          Radiolabelled phage DNA tracking demonstrates SNIPE cleaves DNA during injection
+        supporting_text: &gt;-
+          Using radiolabelled phage DNA and time-lapse microscopy to track phage genomes, we
+          demonstrate that SNIPE directly cleaves phage DNA during genome injection
+      - statement: &gt;-
+          SNIPE provides ManYZ-independent defence against siphoviruses via direct TMP interaction
+        supporting_text: &gt;-
+          SNIPE also defends against diverse siphoviruses, probably through direct interactions
+          with their tape measure proteins
+      - statement: &gt;-
+          SNIPE is a widespread defence system representing a novel self/non-self discrimination strategy
+        supporting_text: &gt;-
+          SNIPE as a widespread bacterial defence system that exploits the spatial organization of
+          phage genome injection to specifically target viral DNA, representing a previously unknown
+          strategy for distinguishing self from non-self in prokaryotic immune systems
+
+  - id: PMID:36123438
+    title: &gt;-
+      A functional selection reveals previously undetected anti-phage defence systems in the
+      E. coli pangenome
+    findings:
+      - statement: &gt;-
+          SNIPE (originally PD-lambda-1) was identified in a functional metagenomic screen of 71
+          diverse E. coli strains as a novel anti-phage defence system
+        supporting_text: &gt;-
+          Our results unveil 21 conserved defence systems, none of which were previously detected
+          as enriched in defence islands
+      - statement: &gt;-
+          SNIPE is a membrane-anchored protein with DUF4041 and a GIY-YIG nuclease domain
+        supporting_text: &gt;-
+          a putative membrane-anchored protein with a central coiled-coil domain (DUF4041)
+          and a C-terminal DNA binding/cleavage domain
+      - statement: &gt;-
+          Defence systems including SNIPE are carried primarily by prophages and mobile genetic elements
+        supporting_text: &gt;-
+          intact prophages and mobile genetic elements are primary reservoirs and distributors
+          of defence systems in E. coli
+
+  - id: &#34;file:ECOLX/SNIPE/SNIPE-deep-research-falcon.md&#34;
+    title: &#34;Deep research on SNIPE/DUF4041 domain-containing protein (falcon)&#34;
+    findings:
+      - statement: &gt;-
+          T5orf172/MUG113 (PF13455) is a GIY-YIG endonuclease subfamily; MUG113 profile is
+          highly related to T5orf172, placing SNIPE&#39;s nuclease domain in the GIY-YIG HEG space
+        supporting_text: &gt;-
+          T5orf172 is a subfamily of GIY-YIG endonucleases ... the two profiles [T5orf172
+          and MUG113] are highly related
+      - statement: &gt;-
+          T5orf172-family proteins have modular architecture with variable DNA-binding modules
+          determining target specificity, paired with a conserved nuclease domain
+        supporting_text: &gt;-
+          a nuclease domain paired with variable DNA-binding modules that determine target
+          specificity
+
+existing_annotations:
+  # No existing GO annotations for A0A8T9CRB7 — all annotations below are NEW proposals
+
+  # === Molecular Function ===
+  - term:
+      id: GO:0004520
+      label: DNA endonuclease activity
+    evidence_type: IDA
+    original_reference_id: PMID:41741653
+    review:
+      summary: &gt;-
+        SNIPE contains a C-terminal GIY-YIG nuclease domain (aa 357-450) that endonucleolytically
+        cleaves phage DNA during genome injection. Substitution of the predicted catalytic residue
+        E414 to alanine abolishes both nuclease activity and phage defence (PMID:41741653).
+        Radiolabelled 32P phage DNA is degraded from ~42 kb to fragments &lt;100 bp and
+        mononucleotides in SNIPE-expressing cells, dependent on E414 (PMID:41741653). The
+        pattern of degradation (smear of fragments rather than defined products) is consistent
+        with endonucleolytic cleavage, though in vitro reconstitution has not yet been performed.
+        The GIY-YIG nuclease domain is the most conserved region across ~500 SNIPE homologues
+        (PMID:41741653), and domain-level homology to the T5orf172/MUG113 family of GIY-YIG
+        endonucleases is confirmed by InterPro/Pfam assignments (IPR018306, PF13455). GO:0004520
+        is the appropriate level of specificity; there is no GIY-YIG-specific child term in GO,
+        and the data do not support a more specific term like GO:0015666 (restriction
+        endodeoxyribonuclease activity) since SNIPE does not recognize specific DNA sequences
+        or modification states.
+      action: NEW
+      reason: &gt;-
+        Core molecular function of SNIPE, directly demonstrated by multiple experimental
+        approaches in PMID:41741653: (1) 32P-labelled phage DNA cleavage assay showing
+        degradation during injection, (2) E414A catalytic dead mutant abolishing cleavage
+        and defence, (3) Gam-GFP double-strand break reporter showing SNIPE-dependent foci,
+        (4) CFP-ParB foci reduced ~30-fold indicating DNA degradation during injection.
+        The domain architecture (GIY-YIG nuclease, IPR018306/PF13455) independently supports
+        endonuclease activity via homology to biochemically characterized family members.
+        IDA evidence code is appropriate because the nuclease activity was directly assayed
+        in vivo using radiolabelled substrate and catalytic mutant controls.
+      supported_by:
+        - reference_id: PMID:41741653
+          supporting_text: &gt;-
+            we demonstrate that SNIPE directly cleaves phage DNA during genome injection
+        - reference_id: PMID:41741653
+          supporting_text: &gt;-
+            Using radiolabelled phage DNA and time-lapse microscopy to track phage genomes, we
+            demonstrate that SNIPE directly cleaves phage DNA during genome injection
+            [E414A catalytic dead mutant abolishes cleavage and defence]
+        - reference_id: PMID:36123438
+          supporting_text: &gt;-
+            a putative membrane-anchored protein with a central coiled-coil domain (DUF4041)
+            and a C-terminal DNA binding/cleavage domain
+        - reference_id: &#34;file:ECOLX/SNIPE/SNIPE-deep-research-falcon.md&#34;
+          supporting_text: &gt;-
+            T5orf172 is a subfamily of GIY-YIG endonucleases ... the two profiles [T5orf172
+            and MUG113] are highly related
+
+  - term:
+      id: GO:0003690
+      label: double-stranded DNA binding
+    evidence_type: IDA
+    original_reference_id: PMID:41741653
+    review:
+      summary: &gt;-
+        The DUF4041/SNIPE-associated domain (aa 144-262) of SNIPE has a positively charged
+        surface that facilitates DNA binding. When the TM domain is removed
+        (SNIPE(deltaTM E414A)-GFP), the protein co-localizes with the DAPI-stained nucleoid
+        (Pearson R=0.76), and this co-localization is abolished when DUF4041 is also deleted
+        (deltaDUF4041 shows R=0.13) (PMID:41741653). A DUF4041-only fusion to GFP also
+        localizes to the nucleoid. ConSurf analysis shows the positively charged DNA-binding
+        interface is conserved across SNIPE homologues (PMID:41741653). Note that the evidence
+        for DNA binding is based on fluorescence microscopy co-localization with the nucleoid
+        rather than a direct biochemical binding assay (e.g. EMSA); however, the domain-dependent
+        co-localization pattern and the conserved positively charged surface provide strong
+        support for direct DNA binding. Phage lambda DNA is dsDNA, making GO:0003690 the
+        appropriate specific term. The original identification also noted the C-terminal region
+        as a &#34;DNA binding/cleavage domain&#34; (PMID:36123438).
+      action: NEW
+      reason: &gt;-
+        DNA binding by DUF4041 is demonstrated by microscopy showing domain-dependent nucleoid
+        co-localization (PMID:41741653): removal of DUF4041 abolishes nucleoid association.
+        This is further supported by the conserved positively charged surface identified by
+        ConSurf analysis across ~500 homologues, and by domain annotation as a DNA-binding
+        domain (IPR018306 Phage_T5_Orf172_DNA-bd). IDA evidence code is appropriate for
+        microscopy-based localization experiments with domain deletion controls. The term
+        GO:0003690 (double-stranded DNA binding) is preferred over GO:0003677 (DNA binding)
+        because phage lambda DNA is dsDNA and the nucleoid is dsDNA.
+      supported_by:
+        - reference_id: PMID:36123438
+          supporting_text: &gt;-
+            a putative membrane-anchored protein with a central coiled-coil domain (DUF4041)
+            and a C-terminal DNA binding/cleavage domain
+
+  # === Biological Process ===
+  - term:
+      id: GO:0051607
+      label: defense response to virus
+    evidence_type: IDA
+    original_reference_id: PMID:41741653
+    review:
+      summary: &gt;-
+        SNIPE provides direct defence against bacteriophage lambda and diverse siphoviruses.
+        SNIPE-expressing cells survive phage lambda infection at high MOI where control cells
+        lyse (PMID:41741653). Defence is demonstrated by: time-lapse microscopy showing cell
+        survival, growth curves at MOI 0.1-10, plaque assays showing 6-7 log reduction in
+        phage titre, and the BASEL collection screen showing protection against diverse
+        siphoviruses (both ManYZ-dependent and ManYZ-independent) (PMID:41741653). SNIPE
+        provides direct defence (cell survival) rather than abortive infection. It was
+        originally identified as one of 21 novel defence systems in a functional metagenomic
+        screen of the E. coli pangenome (PMID:36123438).
+      action: NEW
+      reason: &gt;-
+        Defence against bacteriophage is the primary evolved biological function of SNIPE,
+        supported by multiple complementary experimental approaches (PMID:41741653) and by
+        its original identification via a functional anti-phage defence screen (PMID:36123438).
+        GO:0051607 (defense response to virus) is the most specific existing BP term. There
+        is currently no GO term for &#34;defense response to bacteriophage&#34; specifically; a new
+        term request has been drafted (see projects/SNIPE/go-issue-antiviral-nucleic-acid-defense.md).
+        IDA evidence code is appropriate as defence was directly assayed by growth curves,
+        plaque assays, and single-cell microscopy.
+      supported_by:
+        - reference_id: PMID:41741653
+          supporting_text: &gt;-
+            we characterize SNIPE, an anti-bacteriophage defence system that constitutively
+            localizes to the bacterial cell membrane in Escherichia coli to block phage
+        - reference_id: PMID:41741653
+          supporting_text: &gt;-
+            SNIPE as a widespread bacterial defence system that exploits the spatial organization
+            of phage genome injection to specifically target viral DNA, representing a previously
+            unknown strategy for distinguishing self from non-self in prokaryotic immune systems
+        - reference_id: PMID:36123438
+          supporting_text: &gt;-
+            Our results unveil 21 conserved defence systems, none of which were previously
+            detected as enriched in defence islands
+
+  - term:
+      id: GO:0045071
+      label: negative regulation of viral genome replication
+    evidence_type: IDA
+    original_reference_id: PMID:41741653
+    review:
+      summary: &gt;-
+        SNIPE prevents phage genome replication by destroying the phage DNA during the injection
+        process, before the genome enters the cytoplasm intact. CFP-ParB foci (a proxy for
+        phage genome establishment) are reduced ~30-fold in SNIPE-expressing cells
+        (PMID:41741653). Phage produced per cell is not significantly different between SNIPE
+        and empty vector when inducing lysogens, confirming that SNIPE targets the injection
+        step specifically and does not affect pre-existing intracellular phage genomes
+        (PMID:41741653). While the net effect is prevention of viral genome replication, the
+        mechanism is more precisely described as destruction of the phage genome during
+        membrane translocation rather than regulation of replication per se. GO:0046597
+        (host-mediated suppression of symbiont invasion) may be a more mechanistically precise
+        BP term since SNIPE blocks the entry/establishment of the phage genome rather than
+        regulating its replication after entry.
+      action: NEW
+      reason: &gt;-
+        The outcome of SNIPE activity is that viral genome replication is completely prevented,
+        making GO:0045071 a defensible annotation. The evidence is strong: CFP-ParB foci
+        reduction demonstrates that phage genomes do not establish in SNIPE-expressing cells
+        (PMID:41741653). However, SNIPE acts upstream of replication -- it destroys the DNA
+        during injection, not by regulating the replication machinery. This distinction may
+        matter for precision. The annotation is retained because the net biological outcome
+        (no viral genome replication) is accurately captured. See also the additional
+        GO:0046597 annotation below for a more mechanistically precise complementary term.
+        IDA evidence code is appropriate.
+      supported_by:
+        - reference_id: PMID:41741653
+          supporting_text: &gt;-
+            we demonstrate that SNIPE directly cleaves phage DNA during genome injection
+        - reference_id: PMID:41741653
+          supporting_text: &gt;-
+            SNIPE associates with host proteins essential for lambda genome entry and with the
+            lambda tape measure protein, which facilitates lambda genome injection across the
+            inner membrane
+
+  - term:
+      id: GO:0046597
+      label: host-mediated suppression of symbiont invasion
+    evidence_type: IDA
+    original_reference_id: PMID:41741653
+    review:
+      summary: &gt;-
+        SNIPE inhibits phage genome entry into the bacterial cell by cleaving phage DNA
+        during the injection process at the inner membrane. This directly suppresses the
+        phage&#39;s invasion of the host cell. GO:0046597 is defined as &#34;a process in which a
+        host inhibits or disrupts the entry of a symbiont into a host cell.&#34; While
+        bacteriophages inject their genome rather than entering bodily, the phage genome
+        translocation across the inner membrane constitutes the functional &#34;entry&#34; event that
+        SNIPE suppresses. SNIPE does not block phage adsorption to the cell surface -- phage
+        adsorption is unaffected (PMID:41741653) -- but it destroys the phage DNA during
+        membrane translocation, preventing genome establishment. This term complements
+        GO:0045071 by providing a more mechanistically precise description of SNIPE&#39;s
+        biological role.
+      action: NEW
+      reason: &gt;-
+        SNIPE acts specifically at the step of phage genome injection across the inner
+        membrane (PMID:41741653). It does not affect phage adsorption, does not target
+        pre-existing lysogens, and does not block plasmid transformation -- it is specific
+        to the injection process. GO:0046597 (host-mediated suppression of symbiont invasion)
+        captures this specificity better than GO:0045071 (negative regulation of viral genome
+        replication), which implies action on the replication process itself. GO:0046597 is
+        the parent of several relevant child terms in GO and is compatible with bacterial
+        hosts defending against phage. IDA evidence code is appropriate.
+      supported_by:
+        - reference_id: PMID:41741653
+          supporting_text: &gt;-
+            we characterize SNIPE, an anti-bacteriophage defence system that constitutively
+            localizes to the bacterial cell membrane in Escherichia coli to block phage
+        - reference_id: PMID:36123438
+          supporting_text: &gt;-
+            We confirmed that each system did not affect phage adsorption
+            [SNIPE acts at genome injection, not adsorption]
+
+  - term:
+      id: GO:0006308
+      label: DNA catabolic process
+    evidence_type: IDA
+    original_reference_id: PMID:41741653
+    review:
+      summary: &gt;-
+        SNIPE degrades phage DNA from ~42 kb to fragments less than 100 bp and mononucleotides
+        during genome injection (PMID:41741653). This is a DNA catabolic process -- the
+        breakdown of DNA. The 32P-labelled DNA tracking experiment directly demonstrates
+        catabolism of the phage DNA substrate. While the MF annotation (GO:0004520 DNA
+        endonuclease activity) captures the catalytic mechanism, GO:0006308 captures the
+        biological process of DNA degradation that results from this activity.
+      action: NEW
+      reason: &gt;-
+        The degradation of phage DNA from intact genomic molecules (~42 kb) to small fragments
+        (&lt;100 bp) and mononucleotides is directly demonstrated by the 32P-labelled DNA
+        cleavage assay (PMID:41741653). This constitutes DNA catabolism. GO:0006308 provides
+        a process-level annotation that complements the molecular function (GO:0004520) and
+        the higher-level biological context (GO:0051607 defense response to virus). IDA
+        evidence code is appropriate as the catabolic activity was directly measured using
+        radiolabelled substrate.
+      supported_by:
+        - reference_id: PMID:41741653
+          supporting_text: &gt;-
+            we demonstrate that SNIPE directly cleaves phage DNA during genome injection
+
+  # === Cellular Component ===
+  - term:
+      id: GO:0005887
+      label: integral component of plasma membrane
+    evidence_type: IDA
+    original_reference_id: PMID:41741653
+    review:
+      summary: &gt;-
+        SNIPE is an integral inner membrane protein with a single-pass TM helix (aa 5-24).
+        Topology was confirmed by PhoA-LacZalpha fusion analysis: PhoA was active only when
+        inserted at the N-terminus (periplasmic side), and LacZalpha was active only when
+        inserted downstream of the TM domain (cytoplasmic side) (PMID:41741653). SNIPE-GFP
+        localizes uniformly to the cell membrane by fluorescence microscopy (PMID:41741653).
+        Immunoblotting of fractionated cell lysates shows SNIPE is strongly enriched in the
+        membrane fraction (PMID:41741653). DeepTMHMM and Phobius both predict a transmembrane
+        helix at residues 6-24, consistent with the UniProt annotation (ECO:0000256|SAM:Phobius).
+        In bacteria, GO:0005886 (plasma membrane) corresponds to the inner/cytoplasmic
+        membrane. The single-pass TM helix makes SNIPE an integral (not peripheral) component,
+        supporting GO:0005887 over GO:0005886.
+      action: NEW
+      reason: &gt;-
+        Integral membrane localization is directly demonstrated by three independent
+        experimental approaches in PMID:41741653: (1) PhoA/LacZalpha topology mapping
+        confirming transmembrane orientation, (2) fluorescence microscopy of SNIPE-GFP showing
+        uniform membrane localization, (3) membrane fractionation/immunoblotting showing
+        enrichment in membrane fraction. This is further supported by the predicted TM helix
+        (Phobius, DeepTMHMM) in the UniProt record. GO:0005887 (integral component of plasma
+        membrane) is preferred over GO:0005886 (plasma membrane) because the single-pass TM
+        helix makes SNIPE an integral membrane protein. IDA evidence code is appropriate for
+        the topology mapping and fractionation experiments.
+      supported_by:
+        - reference_id: PMID:41741653
+          supporting_text: &gt;-
+            an anti-bacteriophage defence system that constitutively localizes to the bacterial
+            cell membrane in Escherichia coli
+        - reference_id: PMID:41741653
+          supporting_text: &gt;-
+            we characterize SNIPE, an anti-bacteriophage defence system that constitutively
+            localizes to the bacterial cell membrane in Escherichia coli to block phage
+            [topology confirmed by PhoA/LacZalpha fusion analysis in full paper]
+
+core_functions:
+  - description: &gt;-
+      SNIPE is a membrane-anchored DNA endonuclease that directly cleaves bacteriophage DNA
+      during the genome injection process. It exploits the spatial organization of phage genome
+      entry — the fact that phage DNA must cross the inner membrane — to distinguish foreign
+      (viral) DNA from self (chromosomal) DNA. The GIY-YIG nuclease domain provides the catalytic
+      endonuclease activity, with E414 as the essential catalytic residue. The DUF4041 domain
+      binds both phage DNA (via a conserved positively charged interface) and phage tape measure
+      proteins (TMPs), positioning the nuclease at the site of genome injection. The N-terminal
+      TM domain anchors SNIPE to the inner membrane, preventing autoimmune cleavage of host
+      chromosomal DNA. SNIPE pre-associates with the ManYZ mannose permease complex, which is
+      the inner membrane conduit for lambda genome injection, ensuring SNIPE is positioned at
+      genome entry sites before infection occurs. This provides direct defence — the infected
+      cell survives — in contrast to abortive infection systems that sacrifice the infected cell.
+      SNIPE also provides ManYZ-independent defence against diverse siphoviruses, probably through
+      direct interactions with their TMPs via the DUF4041 domain. The ~500 SNIPE homologues across
+      bacterial phyla show conservation of the GIY-YIG nuclease and DUF4041 domains, while the
+      N-terminal region is highly diversified and functions as a phage-specificity adapter with
+      varied membrane-targeting strategies (TM helices, DivIVA domains, T3SS domains, PH domains).
+    molecular_function:
+      id: GO:0004520
+      label: DNA endonuclease activity
+    directly_involved_in:
+      - id: GO:0051607
+        label: defense response to virus
+      - id: GO:0045071
+        label: negative regulation of viral genome replication
+    locations:
+      - id: GO:0005887
+        label: integral component of plasma membrane
+    supported_by:
+      - reference_id: PMID:41741653
+        supporting_text: &gt;-
+          SNIPE as a widespread bacterial defence system that exploits the spatial organization
+          of phage genome injection to specifically target viral DNA, representing a previously
+          unknown strategy for distinguishing self from non-self in prokaryotic immune systems
+      - reference_id: PMID:36123438
+        supporting_text: &gt;-
+          A functional selection reveals previously undetected anti-phage defence systems in
+          the E. coli pangenome
+
+proposed_new_terms:
+  - proposed_name: SNIPE defense system
+    proposed_definition: &gt;-
+      A defense response to a virus in which a membrane-anchored nuclease of the SNIPE
+      family cleaves viral DNA during genome injection across the cell membrane. SNIPE
+      proteins associate with inner membrane components at phage genome injection sites,
+      bind phage tape measure proteins via their DUF4041 domain, and use a GIY-YIG nuclease
+      domain to degrade incoming phage DNA before it enters the cytoplasm. Unlike
+      restriction-modification or CRISPR-Cas systems, self/non-self discrimination is
+      achieved through subcellular localization at the membrane rather than recognition of
+      specific DNA sequences or modifications.
+    justification: &gt;-
+      The current anti-foreign nucleic acid branch (GO:0099046 clearance of foreign
+      intracellular nucleic acids) does not capture SNIPE mechanism, because SNIPE cleaves
+      phage DNA during translocation at the membrane before the DNA becomes intracellular.
+      A dedicated term under GO:0051607 (defense response to virus) is needed to represent
+      this direct anti-phage mechanism.
+    proposed_parent:
+      id: GO:0051607
+      label: defense response to virus
+    supported_by:
+      - reference_id: PMID:41741653
+        supporting_text: &gt;-
+          we demonstrate that SNIPE directly cleaves phage DNA during genome injection
+      - reference_id: PMID:36123438
+        supporting_text: &gt;-
+          A functional selection reveals previously undetected anti-phage defence systems
+          in the E. coli pangenome
+
+  - proposed_name: antiviral defense by targeting viral nucleic acid
+    proposed_definition: &gt;-
+      A defense response to a virus in which the host targets viral nucleic acid for
+      degradation or modification, preventing viral replication. Includes systems that act
+      on nucleic acid after cell entry (e.g. CRISPR-Cas, restriction-modification) and
+      systems that act during genome injection (e.g. SNIPE).
+    justification: &gt;-
+      Optional intermediate grouping term matching the GO issue proposal. This would provide
+      a clean parent for nucleic acid-targeting anti-viral systems such as CRISPR-Cas,
+      restriction-modification, and SNIPE while preserving mechanistic distinctions in child terms.
+    proposed_parent:
+      id: GO:0051607
+      label: defense response to virus
+    supported_by:
+      - reference_id: PMID:37460672
+        supporting_text: &gt;-
+          The highly diverse antiphage defence systems of bacteria
+
+suggested_questions:
+  - question: &gt;-
+      Is GO:0004520 (DNA endonuclease activity) the correct MF term for SNIPE, or should
+      a more specific child term (e.g. reflecting GIY-YIG family membership or the
+      membrane-localized context) be used?
+    experts: []
+  - question: &gt;-
+      Should the ManYZ pre-association be annotated as a separate protein complex, or is it
+      better modelled as a GO-CAM causal association (SNIPE located_in plasma membrane,
+      colocalizes_with ManYZ complex)?
+    experts: []
+  - question: &gt;-
+      Does the tape measure protein (TMP) binding by DUF4041 warrant a specific MF annotation
+      (e.g. viral protein binding) or is this better captured only in the GO-CAM model?
+    experts: []
+
+suggested_experiments:
+  - hypothesis: &gt;-
+      SNIPE cleaves phage DNA endonucleolytically (producing internal cuts) rather than
+      exonucleolytically
+    description: &gt;-
+      The 32P cleavage assay (Fig 2d) shows a smear of fragments consistent with
+      endonucleolytic cleavage, but the exact cleavage mechanism and products have not been
+      biochemically characterized with purified SNIPE. In vitro reconstitution of SNIPE
+      nuclease activity with defined DNA substrates would confirm endonuclease vs exonuclease
+      activity, determine sequence specificity (if any), and characterize cleavage products.
+    experiment_type: Biochemical assay
+  - hypothesis: &gt;-
+      SNIPE homologues with non-TM N-terminal regions (DivIVA, T3SS, PH domain) use
+      analogous mechanisms but target different phage entry pathways
+    description: &gt;-
+      Test representative SNIPE homologues lacking TM domains for phage defence in their
+      native hosts or heterologous expression. Determine whether these homologues also
+      pre-associate with inner membrane proteins at genome injection sites, and whether
+      their N-terminal domains dictate phage specificity.
+    experiment_type: Genetics/Functional assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

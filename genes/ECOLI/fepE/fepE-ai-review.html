@@ -1,0 +1,2534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fepE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fepE</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P26266" target="_blank" class="term-link">
+                        P26266
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Escherichia coli (strain K12)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fepE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P26266" data-a="DESCRIPTION: FepE is a member of the WzzB/Cld/Rol family of pol..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FepE is a member of the WzzB/Cld/Rol family of polysaccharide co-polymerases (PCP-1 class). It is an inner membrane protein with two transmembrane helices and a large periplasmic domain. FepE regulates the modal chain length distribution of lipopolysaccharide (LPS) O-antigen, specifically conferring very long (VL) modal chain lengths of &gt;80-100 O-antigen repeat units. FepE was originally identified in the fep (ferric enterobactin transport) gene cluster and named accordingly, but its primary experimentally validated function is in O-antigen chain length regulation, not ferric enterobactin transport per se. It belongs to the Wzz protein family (Pfam PF02706) and forms nonameric oligomeric assemblies in the inner membrane. The PANTHER classification places it in the PTHR32309 family (labeled &#34;tyrosine-protein kinase&#34;), which is a misnomer -- Wzz/PCP-1 proteins lack a kinase domain and are structurally and functionally distinct from both eukaryotic tyrosine kinases and bacterial BY-kinases (PCP-2 class like Wzc). FepE has no kinase activity.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P26266" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FepE is an inner membrane protein with two transmembrane helices (residues 42-62 and 339-359) and a large periplasmic domain. UniProt annotates it as &#34;Cell inner membrane; Multi-pass membrane protein.&#34; The IBA annotation for plasma membrane (GO:0005886) is consistent with this localization. In E. coli, the inner membrane is annotated as plasma membrane in GO.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FepE is well established as an inner membrane protein. The topology was confirmed by large-scale analysis using C-terminal PhoA/GFP fusions (PMID:15919996). UniProt states &#34;Cell inner membrane; Multi-pass membrane protein.&#34; The IBA annotation is correct.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15919996" target="_blank" class="term-link">
+                                        PMID:15919996
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Using C-terminal tagging with the alkaline phosphatase and green fluorescent protein, we established the periplasmic or cytoplasmic locations of the C termini for 601 inner membrane proteins.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004713" target="_blank" class="term-link">
+                                    GO:0004713
+                                </a>
+                            </span>
+                            <span class="term-label">protein tyrosine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P26266" data-a="GO:0004713" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT. FepE is a PCP-1 class polysaccharide co-polymerase (Wzz family) that LACKS a kinase domain. The PANTHER family PTHR32309 is misleadingly named &#34;TYROSINE-PROTEIN KINASE&#34; but actually contains Wzz/PCP-1 proteins. PCP-1 proteins (like FepE, WzzB, WzzST) are structurally distinct from PCP-2 proteins (like Wzc) which do contain a BY-kinase domain. FepE contains only transmembrane helices and a periplasmic domain with no cytoplasmic kinase domain. The Pfam domain is PF02706 (Wzz), and InterPro classifies it under IPR003856 (LPS_length_determ_N) and IPR050445 (Bact_polysacc_biosynth/exp). None of these are kinase domains. This is a clear case of erroneous IBA propagation from a mis-classified PANTHER family. De Crecy-Lagard et al. 2025 (PMID:40703034) specifically identified FepE as an example of a frequency-biased prediction error where DeepECTF incorrectly predicted histidine kinase activity (EC 2.7.13.3), noting that FepE has NO sequence similarity to kinase families and has a different experimentally validated function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FepE has no kinase domain and no kinase activity. It is a Wzz-family polysaccharide co-polymerase. The PANTHER family PTHR32309 erroneously carries the label &#34;TYROSINE-PROTEIN KINASE,&#34; leading to incorrect IBA propagation. PCP-1 proteins like FepE are structurally unrelated to tyrosine kinases -- they consist of two transmembrane helices flanking a periplasmic domain involved in O-antigen chain length regulation. The PCP-2 class (e.g., Wzc) does have a BY-kinase domain, but FepE belongs to PCP-1 which lacks this domain entirely. De Crecy-Lagard et al. 2025 highlighted FepE specifically as having been erroneously predicted to have kinase activity by AI tools due to frequency bias (PMID:40703034).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40703034" target="_blank" class="term-link">
+                                        PMID:40703034
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">out of the 12 proteins annotated as histidine kinase (EC 2.7.13.3) in the 453 DeepECTF predictions, none of them have sequence similarity to histidine kinase families, and 8 have been annotated with different and experimentally validated functions (such as ferric enterobactin transport protein FepE for b0587)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22437828" target="_blank" class="term-link">
+                                        PMID:22437828
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also present the structure of a Wzz FepE mutant, which exhibits severe attenuation in its ability to produce very long O-antigen polymers.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12603743" target="_blank" class="term-link">
+                                        PMID:12603743
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In addition to the previously described wzzST that results in long (L) modal length LPS with 16-35 Oag repeat units (RUs), we now report that wzzfepE, a homologue of Escherichia coli fepE, is responsible for the production of very long (VL) modal length LPS Oag, estimated to contain&gt; 100 Oag RUs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P26266" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB/Swiss-Prot Subcellular Location mapping. UniProt states &#34;Cell inner membrane; Multi-pass membrane protein.&#34; This is consistent with FepE being an integral inner membrane protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correctly maps from UniProt subcellular location annotation. FepE is an inner membrane protein with two transmembrane helices, consistent with plasma membrane localization in GO terminology for bacteria.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15919996" target="_blank" class="term-link">
+                                        PMID:15919996
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Using C-terminal tagging with the alkaline phosphatase and green fluorescent protein, we established the periplasmic or cytoplasmic locations of the C termini for 601 inner membrane proteins.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P26266" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro mapping (IPR003856, LPS_length_determ_N). FepE is indeed a membrane protein. This is a broader term than GO:0005886 (plasma membrane) which is also annotated. While redundant with the more specific plasma membrane annotations, this IEA annotation is not incorrect.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FepE is a multi-pass membrane protein. The term is broader than the more specific plasma membrane annotations but is not wrong. IEA annotations mapping to broader terms are acceptable even when more specific annotations exist.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15919996" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15919996
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global topology analysis of the Escherichia coli inner membr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P26266" data-a="GO:0005886" data-r="PMID:15919996" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from EcoCyc based on the Daley et al. 2005 large-scale topology study. This study used C-terminal PhoA and GFP fusions to determine the orientation and localization of E. coli inner membrane proteins. FepE was confirmed as an inner membrane protein with its C-terminus in the cytoplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally validated localization. The Daley et al. study used PhoA/GFP dual-reporter fusions to systematically determine the topology of E. coli inner membrane proteins. FepE was among the 601 proteins characterized.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15919996" target="_blank" class="term-link">
+                                        PMID:15919996
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Using C-terminal tagging with the alkaline phosphatase and green fluorescent protein, we established the periplasmic or cytoplasmic locations of the C termini for 601 inner membrane proteins.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015620" target="_blank" class="term-link">
+                                    GO:0015620
+                                </a>
+                            </span>
+                            <span class="term-label">ferric-enterobactin transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2956250" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2956250
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic organization of multiple fep genes encoding ferric e...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P26266" data-a="GO:0015620" data-r="PMID:2956250" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on the original 1987 study by Ozenberger et al. that identified fepE through insertion mutagenesis. Insertions in fepE disrupted iron transport via enterobactin, leading to the proposal that FepE acts as part of the ferric enterobactin cytoplasmic membrane permease together with FepC and FepD. However, subsequent work (Murray et al. 2003, PMID:12603743; Kalynych et al. 2012, PMID:22437828) established that FepE is actually a Wzz-family polysaccharide co-polymerase that regulates O-antigen chain length. FepE belongs to the Wzz/PCP-1 family (Pfam PF02706), not to any transporter family. The original observation that fepE mutations disrupted enterobactin-mediated iron transport may reflect indirect/pleiotropic effects -- alterations in O-antigen chain length could affect outer membrane integrity and thus iron uptake -- or polar effects on downstream fep genes in the original insertion mutants. FepE lacks any recognizable transporter domain (no ABC transporter domains, no permease domains).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FepE is not a transporter. It is a Wzz-family polysaccharide co-polymerase (PCP-1 class) with established structural and functional characterization as an O-antigen chain length regulator. The protein contains a Wzz domain (PF02706) and belongs to InterPro family IPR050445 (Bact_polysacc_biosynth/exp). It has no transporter domains. The original 1987 finding that fepE insertion mutations disrupted enterobactin transport likely reflected polar effects on downstream fep genes or indirect effects of altered LPS structure on outer membrane function. Multiple subsequent studies have firmly established FepE as an O-antigen chain length determinant, not a transporter.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2956250" target="_blank" class="term-link">
+                                        PMID:2956250
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Another insertion mutation between entF and fepC was also shown to disrupt iron transport via enterobactin and thus defined the fepE locus; fepE weakly expressed a 43,000-dalton protein in minicells. It is proposed that these newly identified genes, fepD and fepE, provide functions which act in conjunction with the fepC product to form the ferric enterobactin-specific cytoplasmic membrane permease.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12603743" target="_blank" class="term-link">
+                                        PMID:12603743
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In addition to the previously described wzzST that results in long (L) modal length LPS with 16-35 Oag repeat units (RUs), we now report that wzzfepE, a homologue of Escherichia coli fepE, is responsible for the production of very long (VL) modal length LPS Oag, estimated to contain&gt; 100 Oag RUs</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22437828" target="_blank" class="term-link">
+                                        PMID:22437828
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also present the structure of a Wzz FepE mutant, which exhibits severe attenuation in its ability to produce very long O-antigen polymers.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015685" target="_blank" class="term-link">
+                                    GO:0015685
+                                </a>
+                            </span>
+                            <span class="term-label">ferric-enterobactin import into cell</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2956250" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2956250
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic organization of multiple fep genes encoding ferric e...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P26266" data-a="GO:0015685" data-r="PMID:2956250" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This biological process annotation suffers from the same issue as the transporter activity annotation above. It is based on the original 1987 Ozenberger et al. study where fepE insertion mutants showed disrupted enterobactin-dependent iron transport. However, FepE has since been firmly established as a Wzz-family polysaccharide co-polymerase involved in O-antigen chain length regulation, not in ferric enterobactin import. Note that the qualifier in the GOA file is &#34;acts_upstream_of_or_within&#34; rather than &#34;involved_in,&#34; reflecting some uncertainty, but even this weaker claim is not well supported given the likely polar/indirect nature of the original observation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FepE is not directly involved in ferric-enterobactin import. Its true biological process is O-antigen biosynthesis / LPS O-antigen chain length determination. The annotation should be replaced with GO:0009243 (O antigen biosynthetic process), which accurately reflects FepE&#39;s role as a Wzz-family O-antigen chain length regulator. The original observation of disrupted enterobactin transport in fepE mutants was likely due to polar effects or indirect consequences of altered O-antigen/LPS structure.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009243" target="_blank" class="term-link">
+                                    O antigen biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12603743" target="_blank" class="term-link">
+                                        PMID:12603743
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Wzz proteins regulate the degree of polymerization of the O antigen (Oag) subunits in lipopolysaccharide (LPS) biosynthesis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22437828" target="_blank" class="term-link">
+                                        PMID:22437828
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also present the structure of a Wzz FepE mutant, which exhibits severe attenuation in its ability to produce very long O-antigen polymers.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22437828" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22437828
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural characterization of closely related O-antigen lip...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P26266" data-a="GO:0005198" data-r="PMID:22437828" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FepE functions as a polysaccharide co-polymerase (PCP-1 class) that regulates O-antigen chain length through its oligomeric periplasmic structure. It has no enzymatic activity but acts as a structural regulator modulating Wzy polymerase processivity. Structural molecule activity is the most appropriate molecular function term for a protein that functions through its structural properties rather than through catalysis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FepE has no kinase or transporter activity. Its molecular function is structural -- it forms nonameric oligomeric assemblies that regulate the chain length of O-antigen polymers through structural interactions with the Wzy polymerase machinery. GO:0005198 (structural molecule activity) captures this non-catalytic, structure-dependent molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22437828" target="_blank" class="term-link">
+                                        PMID:22437828
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The surface O-antigen polymers of Gram-negative bacteria exhibit a modal length distribution that depends on dedicated chain length regulator periplasmic proteins (polysaccharide co-polymerases, PCPs) anchored in the inner membrane by two transmembrane helices.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009243" target="_blank" class="term-link">
+                                    GO:0009243
+                                </a>
+                            </span>
+                            <span class="term-label">O antigen biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12603743" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12603743
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of Salmonella typhimurium lipopolysaccharide O an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P26266" data-a="GO:0009243" data-r="PMID:12603743" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FepE (WzzfepE) is a polysaccharide co-polymerase that regulates the modal chain length of O-antigen in lipopolysaccharide biosynthesis. Murray et al. 2003 demonstrated that FepE homologs in Salmonella typhimurium confer very long (VL) modal length O-antigen of &gt;100 repeat units. This is the core biological process function of FepE.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FepE is a Wzz-family O-antigen chain length regulator. Its involvement in O-antigen biosynthesis is well established by multiple studies. This is the correct biological process annotation that should replace the ferric-enterobactin import annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12603743" target="_blank" class="term-link">
+                                        PMID:12603743
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Wzz proteins regulate the degree of polymerization of the O antigen (Oag) subunits in lipopolysaccharide (LPS) biosynthesis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22437828" target="_blank" class="term-link">
+                                        PMID:22437828
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The surface O-antigen polymers of Gram-negative bacteria exhibit a modal length distribution that depends on dedicated chain length regulator periplasmic proteins (polysaccharide co-polymerases, PCPs) anchored in the inner membrane by two transmembrane helices.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FepE is a Wzz-family polysaccharide co-polymerase (PCP-1 class) that determines the modal chain length of O-antigen in lipopolysaccharide. It confers very long modal chain lengths of &gt;80-100 O-antigen repeat units. The protein contains the Wzz domain (Pfam PF02706) and forms nonameric oligomeric assemblies in the inner membrane. FepE has no known independent enzymatic activity -- it functions as a structural regulator of Wzy polymerase processivity.</h3>
+                <span class="vote-buttons" data-g="P26266" data-a="FUNCTION: FepE is a Wzz-family polysaccharide co-polymerase ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009243" target="_blank" class="term-link">
+                                O antigen biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12603743" target="_blank" class="term-link">
+                                PMID:12603743
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">In addition to the previously described wzzST that results in long (L) modal length LPS with 16-35 Oag repeat units (RUs), we now report that wzzfepE, a homologue of Escherichia coli fepE, is responsible for the production of very long (VL) modal length LPS Oag, estimated to contain&gt; 100 Oag RUs</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22437828" target="_blank" class="term-link">
+                                PMID:22437828
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The surface O-antigen polymers of Gram-negative bacteria exhibit a modal length distribution that depends on dedicated chain length regulator periplasmic proteins (polysaccharide co-polymerases, PCPs) anchored in the inner membrane by two transmembrane helices.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15919996" target="_blank" class="term-link">
+                            PMID:15919996
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Global topology analysis of the Escherichia coli inner membrane proteome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FepE was confirmed as an inner membrane protein by large-scale PhoA/GFP topology analysis of the E. coli inner membrane proteome.</div>
+                        
+                        <div class="finding-text">"Using C-terminal tagging with the alkaline phosphatase and green fluorescent protein, we established the periplasmic or cytoplasmic locations of the C termini for 601 inner membrane proteins."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2956250" target="_blank" class="term-link">
+                            PMID:2956250
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic organization of multiple fep genes encoding ferric enterobactin transport functions in Escherichia coli.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Original identification of fepE through insertion mutagenesis. Insertions between entF and fepC disrupted iron transport via enterobactin. The gene was proposed to encode a component of the ferric enterobactin permease. However, this functional assignment has been superseded by the identification of FepE as a Wzz-family O-antigen chain length regulator.</div>
+                        
+                        <div class="finding-text">"Another insertion mutation between entF and fepC was also shown to disrupt iron transport via enterobactin and thus defined the fepE locus; fepE weakly expressed a 43,000-dalton protein in minicells. It is proposed that these newly identified genes, fepD and fepE, provide functions which act in conjunction with the fepC product to form the ferric enterobactin-specific cytoplasmic membrane permease."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12603743" target="_blank" class="term-link">
+                            PMID:12603743
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Regulation of Salmonella typhimurium lipopolysaccharide O antigen chain length is required for virulence; identification of FepE as a second Wzz.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrated that FepE (WzzfepE) is a second Wzz protein in Salmonella typhimurium responsible for very long modal length O-antigen (&gt;100 repeat units). Established that bimodal O-antigen chain length distribution is important for complement resistance and virulence.</div>
+                        
+                        <div class="finding-text">"In addition to the previously described wzzST that results in long (L) modal length LPS with 16-35 Oag repeat units (RUs), we now report that wzzfepE, a homologue of Escherichia coli fepE, is responsible for the production of very long (VL) modal length LPS Oag, estimated to contain&gt; 100 Oag RUs"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22437828" target="_blank" class="term-link">
+                            PMID:22437828
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural characterization of closely related O-antigen lipopolysaccharide (LPS) chain length regulators.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Determined crystal structure of FepE mutant. Showed FepE is a polysaccharide co-polymerase (PCP-1 family) whose structure determines O-antigen modal chain length. Mutations in FepE severely attenuate very long O-antigen polymer production.</div>
+                        
+                        <div class="finding-text">"We also present the structure of a Wzz FepE mutant, which exhibits severe attenuation in its ability to produce very long O-antigen polymers."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22069314" target="_blank" class="term-link">
+                            PMID:22069314
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Site-directed mutagenesis reveals key residue for O antigen chain length regulation and protein stability in Pseudomonas aeruginosa Wzz2.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Used the solved E. coli Wzz FepE crystal structure as a reference for mapping residues important for chain length regulation. Confirmed that Wzz proteins form oligomeric assemblies essential for chain length regulating activity.</div>
+                        
+                        <div class="finding-text">"Mapping residue 321 onto the solved Escherichia coli Wzz FepE crystal structure predicted it to be located within alpha helix 8, which participates in intermonomeric interactions."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40703034" target="_blank" class="term-link">
+                            PMID:40703034
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Limitations of current machine learning models in predicting enzymatic functions for uncharacterized proteins.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified FepE as an example of a frequency-biased AI prediction error. DeepECTF incorrectly predicted histidine kinase activity (EC 2.7.13.3) for FepE, which has no sequence similarity to kinase families.</div>
+                        
+                        <div class="finding-text">"out of the 12 proteins annotated as histidine kinase (EC 2.7.13.3) in the 453 DeepECTF predictions, none of them have sequence similarity to histidine kinase families, and 8 have been annotated with different and experimentally validated functions (such as ferric enterobactin transport protein FepE for b0587)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P26266
+gene_symbol: fepE
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:83333
+  label: Escherichia coli (strain K12)
+description: &gt;-
+  FepE is a member of the WzzB/Cld/Rol family of polysaccharide co-polymerases (PCP-1 class).
+  It is an inner membrane protein with two transmembrane helices and a large periplasmic domain.
+  FepE regulates the modal chain length distribution of lipopolysaccharide (LPS) O-antigen,
+  specifically conferring very long (VL) modal chain lengths of &gt;80-100 O-antigen repeat units.
+  FepE was originally identified in the fep (ferric enterobactin transport) gene cluster and
+  named accordingly, but its primary experimentally validated function is in O-antigen chain
+  length regulation, not ferric enterobactin transport per se. It belongs to the Wzz protein
+  family (Pfam PF02706) and forms nonameric oligomeric assemblies in the inner membrane.
+  The PANTHER classification places it in the PTHR32309 family (labeled &#34;tyrosine-protein kinase&#34;),
+  which is a misnomer -- Wzz/PCP-1 proteins lack a kinase domain and are structurally and
+  functionally distinct from both eukaryotic tyrosine kinases and bacterial BY-kinases (PCP-2 class
+  like Wzc). FepE has no kinase activity.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      FepE is an inner membrane protein with two transmembrane helices (residues 42-62 and 339-359)
+      and a large periplasmic domain. UniProt annotates it as &#34;Cell inner membrane; Multi-pass
+      membrane protein.&#34; The IBA annotation for plasma membrane (GO:0005886) is consistent with
+      this localization. In E. coli, the inner membrane is annotated as plasma membrane in GO.
+    action: ACCEPT
+    reason: &gt;-
+      FepE is well established as an inner membrane protein. The topology was confirmed by
+      large-scale analysis using C-terminal PhoA/GFP fusions (PMID:15919996). UniProt states
+      &#34;Cell inner membrane; Multi-pass membrane protein.&#34; The IBA annotation is correct.
+    supported_by:
+      - reference_id: PMID:15919996
+        supporting_text: &gt;-
+          Using C-terminal tagging with the alkaline phosphatase and green fluorescent protein,
+          we established the periplasmic or cytoplasmic locations of the C termini for 601
+          inner membrane proteins.
+
+- term:
+    id: GO:0004713
+    label: protein tyrosine kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation is INCORRECT. FepE is a PCP-1 class polysaccharide co-polymerase (Wzz family)
+      that LACKS a kinase domain. The PANTHER family PTHR32309 is misleadingly named
+      &#34;TYROSINE-PROTEIN KINASE&#34; but actually contains Wzz/PCP-1 proteins. PCP-1 proteins (like FepE,
+      WzzB, WzzST) are structurally distinct from PCP-2 proteins (like Wzc) which do contain a
+      BY-kinase domain. FepE contains only transmembrane helices and a periplasmic domain with
+      no cytoplasmic kinase domain. The Pfam domain is PF02706 (Wzz), and InterPro classifies it
+      under IPR003856 (LPS_length_determ_N) and IPR050445 (Bact_polysacc_biosynth/exp). None of
+      these are kinase domains. This is a clear case of erroneous IBA propagation from a
+      mis-classified PANTHER family. De Crecy-Lagard et al. 2025 (PMID:40703034) specifically
+      identified FepE as an example of a frequency-biased prediction error where DeepECTF
+      incorrectly predicted histidine kinase activity (EC 2.7.13.3), noting that FepE has NO
+      sequence similarity to kinase families and has a different experimentally validated function.
+    action: REMOVE
+    reason: &gt;-
+      FepE has no kinase domain and no kinase activity. It is a Wzz-family polysaccharide
+      co-polymerase. The PANTHER family PTHR32309 erroneously carries the label &#34;TYROSINE-PROTEIN
+      KINASE,&#34; leading to incorrect IBA propagation. PCP-1 proteins like FepE are structurally
+      unrelated to tyrosine kinases -- they consist of two transmembrane helices flanking a
+      periplasmic domain involved in O-antigen chain length regulation. The PCP-2 class (e.g., Wzc)
+      does have a BY-kinase domain, but FepE belongs to PCP-1 which lacks this domain entirely.
+      De Crecy-Lagard et al. 2025 highlighted FepE specifically as having been erroneously predicted
+      to have kinase activity by AI tools due to frequency bias (PMID:40703034).
+    supported_by:
+      - reference_id: PMID:40703034
+        supporting_text: &gt;-
+          out of the 12 proteins annotated as histidine kinase (EC 2.7.13.3) in the 453
+          DeepECTF predictions, none of them have sequence similarity to histidine kinase
+          families, and 8 have been annotated with different and experimentally validated
+          functions (such as ferric enterobactin transport protein FepE for b0587)
+      - reference_id: PMID:22437828
+        supporting_text: &gt;-
+          We also present the structure of a Wzz FepE mutant, which exhibits severe attenuation
+          in its ability to produce very long O-antigen polymers.
+      - reference_id: PMID:12603743
+        supporting_text: &gt;-
+          In addition to the previously described wzzST that results in long
+          (L) modal length LPS with 16-35 Oag repeat units (RUs), we now report that
+          wzzfepE, a homologue of Escherichia coli fepE, is responsible for the production
+          of very long (VL) modal length LPS Oag, estimated to contain&gt; 100 Oag RUs
+
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation based on UniProtKB/Swiss-Prot Subcellular Location mapping. UniProt states
+      &#34;Cell inner membrane; Multi-pass membrane protein.&#34; This is consistent with FepE being an
+      integral inner membrane protein.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly maps from UniProt subcellular location annotation. FepE is an inner membrane
+      protein with two transmembrane helices, consistent with plasma membrane localization in
+      GO terminology for bacteria.
+    supported_by:
+      - reference_id: PMID:15919996
+        supporting_text: &gt;-
+          Using C-terminal tagging with the alkaline phosphatase and green fluorescent protein,
+          we established the periplasmic or cytoplasmic locations of the C termini for 601
+          inner membrane proteins.
+
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation from InterPro mapping (IPR003856, LPS_length_determ_N). FepE is indeed a
+      membrane protein. This is a broader term than GO:0005886 (plasma membrane) which is also
+      annotated. While redundant with the more specific plasma membrane annotations, this IEA
+      annotation is not incorrect.
+    action: ACCEPT
+    reason: &gt;-
+      FepE is a multi-pass membrane protein. The term is broader than the more specific plasma
+      membrane annotations but is not wrong. IEA annotations mapping to broader terms are
+      acceptable even when more specific annotations exist.
+
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:15919996
+  review:
+    summary: &gt;-
+      IDA annotation from EcoCyc based on the Daley et al. 2005 large-scale topology study.
+      This study used C-terminal PhoA and GFP fusions to determine the orientation and
+      localization of E. coli inner membrane proteins. FepE was confirmed as an inner membrane
+      protein with its C-terminus in the cytoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally validated localization. The Daley et al. study used PhoA/GFP dual-reporter
+      fusions to systematically determine the topology of E. coli inner membrane proteins.
+      FepE was among the 601 proteins characterized.
+    supported_by:
+      - reference_id: PMID:15919996
+        supporting_text: &gt;-
+          Using C-terminal tagging with the alkaline phosphatase and green fluorescent protein,
+          we established the periplasmic or cytoplasmic locations of the C termini for 601
+          inner membrane proteins.
+
+- term:
+    id: GO:0015620
+    label: ferric-enterobactin transmembrane transporter activity
+  evidence_type: IMP
+  original_reference_id: PMID:2956250
+  review:
+    summary: &gt;-
+      This annotation is based on the original 1987 study by Ozenberger et al. that identified
+      fepE through insertion mutagenesis. Insertions in fepE disrupted iron transport via
+      enterobactin, leading to the proposal that FepE acts as part of the ferric enterobactin
+      cytoplasmic membrane permease together with FepC and FepD. However, subsequent work
+      (Murray et al. 2003, PMID:12603743; Kalynych et al. 2012, PMID:22437828) established
+      that FepE is actually a Wzz-family polysaccharide co-polymerase that regulates O-antigen
+      chain length. FepE belongs to the Wzz/PCP-1 family (Pfam PF02706), not to any transporter
+      family. The original observation that fepE mutations disrupted enterobactin-mediated iron
+      transport may reflect indirect/pleiotropic effects -- alterations in O-antigen chain
+      length could affect outer membrane integrity and thus iron uptake -- or polar effects on
+      downstream fep genes in the original insertion mutants. FepE lacks any recognizable
+      transporter domain (no ABC transporter domains, no permease domains).
+    action: REMOVE
+    reason: &gt;-
+      FepE is not a transporter. It is a Wzz-family polysaccharide co-polymerase (PCP-1 class)
+      with established structural and functional characterization as an O-antigen chain length
+      regulator. The protein contains a Wzz domain (PF02706) and belongs to InterPro family
+      IPR050445 (Bact_polysacc_biosynth/exp). It has no transporter domains. The original 1987
+      finding that fepE insertion mutations disrupted enterobactin transport likely reflected
+      polar effects on downstream fep genes or indirect effects of altered LPS structure on
+      outer membrane function. Multiple subsequent studies have firmly established FepE as an
+      O-antigen chain length determinant, not a transporter.
+    supported_by:
+      - reference_id: PMID:2956250
+        supporting_text: &gt;-
+          Another insertion mutation between entF and fepC was also shown to disrupt iron
+          transport via enterobactin and thus defined the fepE locus; fepE weakly expressed a
+          43,000-dalton protein in minicells. It is proposed that these newly identified genes,
+          fepD and fepE, provide functions which act in conjunction with the fepC product to form
+          the ferric enterobactin-specific cytoplasmic membrane permease.
+      - reference_id: PMID:12603743
+        supporting_text: &gt;-
+          In addition to the previously described wzzST that results in long
+          (L) modal length LPS with 16-35 Oag repeat units (RUs), we now report that
+          wzzfepE, a homologue of Escherichia coli fepE, is responsible for the production
+          of very long (VL) modal length LPS Oag, estimated to contain&gt; 100 Oag RUs
+      - reference_id: PMID:22437828
+        supporting_text: &gt;-
+          We also present the structure of a Wzz FepE mutant, which exhibits severe attenuation
+          in its ability to produce very long O-antigen polymers.
+
+- term:
+    id: GO:0015685
+    label: ferric-enterobactin import into cell
+  evidence_type: IMP
+  original_reference_id: PMID:2956250
+  review:
+    summary: &gt;-
+      This biological process annotation suffers from the same issue as the transporter activity
+      annotation above. It is based on the original 1987 Ozenberger et al. study where fepE
+      insertion mutants showed disrupted enterobactin-dependent iron transport. However, FepE
+      has since been firmly established as a Wzz-family polysaccharide co-polymerase involved
+      in O-antigen chain length regulation, not in ferric enterobactin import. Note that the
+      qualifier in the GOA file is &#34;acts_upstream_of_or_within&#34; rather than &#34;involved_in,&#34;
+      reflecting some uncertainty, but even this weaker claim is not well supported given the
+      likely polar/indirect nature of the original observation.
+    action: MODIFY
+    reason: &gt;-
+      FepE is not directly involved in ferric-enterobactin import. Its true biological process
+      is O-antigen biosynthesis / LPS O-antigen chain length determination. The annotation
+      should be replaced with GO:0009243 (O antigen biosynthetic process), which accurately
+      reflects FepE&#39;s role as a Wzz-family O-antigen chain length regulator. The original
+      observation of disrupted enterobactin transport in fepE mutants was likely due to polar
+      effects or indirect consequences of altered O-antigen/LPS structure.
+    proposed_replacement_terms:
+      - id: GO:0009243
+        label: O antigen biosynthetic process
+    additional_reference_ids:
+      - PMID:12603743
+      - PMID:22437828
+    supported_by:
+      - reference_id: PMID:12603743
+        supporting_text: &gt;-
+          Wzz proteins regulate the degree of polymerization of the O antigen (Oag)
+          subunits in lipopolysaccharide (LPS) biosynthesis
+      - reference_id: PMID:22437828
+        supporting_text: &gt;-
+          We also present the structure of a Wzz FepE mutant, which exhibits severe attenuation
+          in its ability to produce very long O-antigen polymers.
+
+# NEW annotations that should exist for FepE based on current knowledge
+- term:
+    id: GO:0005198
+    label: structural molecule activity
+  evidence_type: ISS
+  original_reference_id: PMID:22437828
+  review:
+    summary: &gt;-
+      FepE functions as a polysaccharide co-polymerase (PCP-1 class) that regulates O-antigen
+      chain length through its oligomeric periplasmic structure. It has no enzymatic activity
+      but acts as a structural regulator modulating Wzy polymerase processivity. Structural
+      molecule activity is the most appropriate molecular function term for a protein that
+      functions through its structural properties rather than through catalysis.
+    action: NEW
+    reason: &gt;-
+      FepE has no kinase or transporter activity. Its molecular function is structural -- it
+      forms nonameric oligomeric assemblies that regulate the chain length of O-antigen polymers
+      through structural interactions with the Wzy polymerase machinery. GO:0005198 (structural
+      molecule activity) captures this non-catalytic, structure-dependent molecular function.
+    supported_by:
+      - reference_id: PMID:22437828
+        supporting_text: &gt;-
+          The surface O-antigen polymers of Gram-negative bacteria exhibit a modal length
+          distribution that depends on dedicated chain length regulator periplasmic proteins
+          (polysaccharide co-polymerases, PCPs) anchored in the inner membrane by two
+          transmembrane helices.
+
+- term:
+    id: GO:0009243
+    label: O antigen biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:12603743
+  review:
+    summary: &gt;-
+      FepE (WzzfepE) is a polysaccharide co-polymerase that regulates the modal chain length
+      of O-antigen in lipopolysaccharide biosynthesis. Murray et al. 2003 demonstrated that
+      FepE homologs in Salmonella typhimurium confer very long (VL) modal length O-antigen
+      of &gt;100 repeat units. This is the core biological process function of FepE.
+    action: NEW
+    reason: &gt;-
+      FepE is a Wzz-family O-antigen chain length regulator. Its involvement in O-antigen
+      biosynthesis is well established by multiple studies. This is the correct biological
+      process annotation that should replace the ferric-enterobactin import annotation.
+    supported_by:
+      - reference_id: PMID:12603743
+        supporting_text: &gt;-
+          Wzz proteins regulate the degree of polymerization of the O antigen (Oag)
+          subunits in lipopolysaccharide (LPS) biosynthesis
+      - reference_id: PMID:22437828
+        supporting_text: &gt;-
+          The surface O-antigen polymers of Gram-negative bacteria exhibit a modal length
+          distribution that depends on dedicated chain length regulator periplasmic proteins
+          (polysaccharide co-polymerases, PCPs) anchored in the inner membrane by two
+          transmembrane helices.
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:15919996
+  title: Global topology analysis of the Escherichia coli inner membrane proteome.
+  findings:
+    - statement: &gt;-
+        FepE was confirmed as an inner membrane protein by large-scale PhoA/GFP topology
+        analysis of the E. coli inner membrane proteome.
+      supporting_text: &gt;-
+        Using C-terminal tagging with the alkaline phosphatase and green fluorescent protein,
+        we established the periplasmic or cytoplasmic locations of the C termini for 601
+        inner membrane proteins.
+- id: PMID:2956250
+  title: &gt;-
+    Genetic organization of multiple fep genes encoding ferric enterobactin transport
+    functions in Escherichia coli.
+  findings:
+    - statement: &gt;-
+        Original identification of fepE through insertion mutagenesis. Insertions between entF
+        and fepC disrupted iron transport via enterobactin. The gene was proposed to encode a
+        component of the ferric enterobactin permease. However, this functional assignment has
+        been superseded by the identification of FepE as a Wzz-family O-antigen chain length
+        regulator.
+      supporting_text: &gt;-
+        Another insertion mutation between entF and fepC was also shown to disrupt iron
+        transport via enterobactin and thus defined the fepE locus; fepE weakly expressed a
+        43,000-dalton protein in minicells. It is proposed that these newly identified genes,
+        fepD and fepE, provide functions which act in conjunction with the fepC product to form
+        the ferric enterobactin-specific cytoplasmic membrane permease.
+- id: PMID:12603743
+  title: &gt;-
+    Regulation of Salmonella typhimurium lipopolysaccharide O antigen chain length is required
+    for virulence; identification of FepE as a second Wzz.
+  findings:
+    - statement: &gt;-
+        Demonstrated that FepE (WzzfepE) is a second Wzz protein in Salmonella typhimurium
+        responsible for very long modal length O-antigen (&gt;100 repeat units). Established
+        that bimodal O-antigen chain length distribution is important for complement resistance
+        and virulence.
+      supporting_text: &gt;-
+        In addition to the previously described wzzST that results in long
+        (L) modal length LPS with 16-35 Oag repeat units (RUs), we now report that
+        wzzfepE, a homologue of Escherichia coli fepE, is responsible for the production
+        of very long (VL) modal length LPS Oag, estimated to contain&gt; 100 Oag RUs
+- id: PMID:22437828
+  title: &gt;-
+    Structural characterization of closely related O-antigen lipopolysaccharide (LPS)
+    chain length regulators.
+  findings:
+    - statement: &gt;-
+        Determined crystal structure of FepE mutant. Showed FepE is a polysaccharide
+        co-polymerase (PCP-1 family) whose structure determines O-antigen modal chain length.
+        Mutations in FepE severely attenuate very long O-antigen polymer production.
+      supporting_text: &gt;-
+        We also present the structure of a Wzz FepE mutant, which exhibits severe attenuation
+        in its ability to produce very long O-antigen polymers.
+- id: PMID:22069314
+  title: &gt;-
+    Site-directed mutagenesis reveals key residue for O antigen chain length regulation
+    and protein stability in Pseudomonas aeruginosa Wzz2.
+  findings:
+    - statement: &gt;-
+        Used the solved E. coli Wzz FepE crystal structure as a reference for mapping
+        residues important for chain length regulation. Confirmed that Wzz proteins form
+        oligomeric assemblies essential for chain length regulating activity.
+      supporting_text: &gt;-
+        Mapping residue 321 onto the solved Escherichia coli Wzz FepE crystal structure
+        predicted it to be located within alpha helix 8, which participates in intermonomeric
+        interactions.
+- id: PMID:40703034
+  title: &gt;-
+    Limitations of current machine learning models in predicting enzymatic functions
+    for uncharacterized proteins.
+  findings:
+    - statement: &gt;-
+        Identified FepE as an example of a frequency-biased AI prediction error. DeepECTF
+        incorrectly predicted histidine kinase activity (EC 2.7.13.3) for FepE, which has
+        no sequence similarity to kinase families.
+      supporting_text: &gt;-
+        out of the 12 proteins annotated as histidine kinase (EC 2.7.13.3) in the 453
+        DeepECTF predictions, none of them have sequence similarity to histidine kinase
+        families, and 8 have been annotated with different and experimentally validated
+        functions (such as ferric enterobactin transport protein FepE for b0587)
+
+core_functions:
+- description: &gt;-
+    FepE is a Wzz-family polysaccharide co-polymerase (PCP-1 class) that determines the
+    modal chain length of O-antigen in lipopolysaccharide. It confers very long modal
+    chain lengths of &gt;80-100 O-antigen repeat units. The protein contains the Wzz domain
+    (Pfam PF02706) and forms nonameric oligomeric assemblies in the inner membrane. FepE
+    has no known independent enzymatic activity -- it functions as a structural regulator
+    of Wzy polymerase processivity.
+  molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  directly_involved_in:
+    - id: GO:0009243
+      label: O antigen biosynthetic process
+  locations:
+    - id: GO:0005886
+      label: plasma membrane
+  supported_by:
+    - reference_id: PMID:12603743
+      supporting_text: &gt;-
+        In addition to the previously described wzzST that results in long
+        (L) modal length LPS with 16-35 Oag repeat units (RUs), we now report that
+        wzzfepE, a homologue of Escherichia coli fepE, is responsible for the production
+        of very long (VL) modal length LPS Oag, estimated to contain&gt; 100 Oag RUs
+    - reference_id: PMID:22437828
+      supporting_text: &gt;-
+        The surface O-antigen polymers of Gram-negative bacteria exhibit a modal length
+        distribution that depends on dedicated chain length regulator periplasmic proteins
+        (polysaccharide co-polymerases, PCPs) anchored in the inner membrane by two
+        transmembrane helices.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
