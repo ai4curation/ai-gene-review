@@ -145,18 +145,19 @@ Chromatin remodeling is well-established across eukaryotes:
 This rule needs substantial simplification and restructuring:
 
 #### 1. Split into Multiple Specialized Rules
-- **ATP-dependent chromatin remodeling** (SWI/SNF, ISWI, CHD, INO80)
-- **Histone acetyltransferases** (GO:0016573)
-- **Histone deacetylases** (GO:0016575)
-- **Histone methyltransferases** (GO:0016570)
-- **Histone demethylases** (GO:0016577)
-- **Chromatin assembly factors** (GO:0006335)
+- **ATP-dependent chromatin remodelers** - use GO:0140658 (ATP-dependent chromatin remodeler activity, MF)
+- **Histone modifying enzymes** - use GO:0140993 (histone modifying activity, MF) or more specific child terms
+- **Histone deacetylases** - use GO:0004407 (histone deacetylase activity, MF)
+- **Chromatin assembly factors** - use GO:0006335 (DNA replication-dependent chromatin assembly, BP)
+
+**NOTE**: The following GO terms are OBSOLETE and must not be used: GO:0043044, GO:0016573, GO:0016575, GO:0016570, GO:0016577.
 
 #### 2. Use More Specific GO Terms
-Replace GO:0006338 with specific child terms:
-- GO:0043044 - ATP-dependent chromatin remodeling
-- GO:0016573 - histone acetylation
-- GO:0006335 - DNA replication-dependent chromatin assembly
+Replace GO:0006338 with valid current terms:
+- GO:0140658 - ATP-dependent chromatin remodeler activity (MF)
+- GO:0140993 - histone modifying activity (MF)
+- GO:0004407 - histone deacetylase activity (MF)
+- GO:0006335 - DNA replication-dependent chromatin assembly (BP)
 
 #### 3. Reduce Condition Set Complexity
 - Target 5-10 condition sets per rule maximum
