@@ -3,83 +3,78 @@
 ## Rule Overview
 - **Rule ID**: ARBA00035048
 - **GO Term**: GO:0005681 (spliceosomal complex)
-- **Condition Sets**: 17 (exceeds recommended maximum of 12)
+- **Condition Sets**: 18 (17 with conditions + 1 empty; exceeds recommended maximum of 12)
 - **Created**: 2023-03-22
 - **Modified**: 2025-03-21
+- **Flagged in**: [GO annotation issue #4733](https://github.com/geneontology/go-annotation/issues/4733)
 
 ## Key Findings
 
-### 1. Biological Validity
-**POSITIVE**: The rule targets legitimate spliceosomal complex components:
-- DEAH-box helicases involved in splicing
-- Small nuclear ribonucleoproteins (snRNPs): U1, U2, U5 subunits
-- Sm proteins (core snRNP components)
-- Auxiliary splicing factors (branchpoint-bridging proteins, hnRNPs)
+### 1. False Positive Problem (CRITICAL)
+The rule produces false positive spliceosomal complex annotations for non-spliceosomal DEAH-box helicases. This was documented in GO annotation issue #4733 with specific examples from S. pombe:
+- **dhx37 / SPAPB1A10.06c**: Small subunit processome component, NOT spliceosomal
+- **prh1 / SPAC2G11.11c**: Nucleolar protein, NOT spliceosomal
+- **ucp12 / SPCC895.09c**: Unknown location, unlikely spliceosomal
 
-**CONCERN**: GO term GO:0005681 "spliceosomal complex" is appropriate for these proteins.
+The root cause: DEAH-box helicases are highly similar to each other, but only 4 are spliceosomal in S. cerevisiae (Prp2, Prp16, Prp22, Prp43), and 5 in S. pombe/humans (PMID:37441768).
 
-### 2. Rule Complexity Issues
-**CRITICAL**: 17 condition sets make this rule:
+### 2. Problematic Condition Sets
+- **Set 1** (IPR002464 + IPR007502 + Taphrinomycotina): IPR002464 "DNA/RNA helicase, DEAH-box type, conserved site" is too broad - matches ALL DEAH-box helicases regardless of function. This is the primary source of the S. pombe false positives.
+- **Set 2** (FunFam 3.40.50.300:FF:000007 + Fungi): P-loop NTPase superfamily FunFam may capture non-spliceosomal helicases.
+- **Set 18** (empty): Contains no conditions at all - data quality issue.
+
+### 3. Biological Validity (Mixed)
+**Sound for snRNP/Sm protein conditions**: Sets targeting snRNP components and Sm proteins (Sets 5-17) likely identify genuine spliceosomal components.
+
+**Problematic for helicase conditions**: Sets 1-4 target helicase families too broadly, capturing proteins involved in ribosome biogenesis, RNA quality control, and other non-spliceosomal RNA processing.
+
+### 4. Rule Complexity Issues
+18 condition sets make this rule:
 - Computationally prohibitive to analyze (exceeds system limits)
 - Difficult to maintain and review
 - Potentially redundant across similar protein families
+- Multiple CATH superfamilies repeated across sets (2.30.30.100 in 4 sets, 3.30.70.330 in 4 sets)
 
-### 3. Taxonomic Scope Inconsistencies
+### 5. Taxonomic Scope Inconsistencies
 The rule shows inconsistent taxonomic logic:
-- **Broad scope**: Some conditions apply to all Eukaryota or Metazoa
-- **Narrow scope**: Others restricted to Primates, Mammalia, or Taphrinomycotina
-- **No scope**: Several conditions lack taxonomic restrictions entirely
-
-### 4. Potential Redundancy
-Multiple condition sets target overlapping protein families:
-- **snRNP components**: Conditions 5-10, 12-16 all target small nuclear ribonucleoproteins
-- **Helicase families**: Conditions 1-4 target related DEAH-box helicases
-- **Sm proteins**: Multiple conditions for similar Sm ring components
+- **Narrow scope**: Sets 1, 11 restricted to Taphrinomycotina; Set 8 to Haplorrhini
+- **Broad scope**: Set 4 restricted to Eukaryota; Set 7 to Metazoa
+- **No scope**: Sets 12-17 have no taxonomic restriction at all
+- **Notable**: Set 1's restriction to Taphrinomycotina means it specifically targets the clade where false positives were identified
 
 ## Recommendations
 
 ### Primary Action: MODIFY
-The rule should be substantially restructured rather than removed because:
-1. The biological foundation is sound
-2. The GO term is appropriate
-3. Individual components are correctly identified
+The rule requires substantial modification rather than removal because:
+1. The GO term is appropriate for genuine spliceosomal components
+2. Most snRNP/Sm protein condition sets are likely valid
+3. Only the helicase-targeting conditions need replacement
 
 ### Specific Modifications Required:
 
-1. **Consolidate Condition Sets**
-   - Merge related snRNP conditions into fewer, more comprehensive sets
-   - Combine similar helicase families where appropriate
-   - Reduce total condition sets from 17 to <12
+1. **Remove/Replace Condition Set 1** (highest priority)
+   - IPR002464 is too broad for DEAH-box helicases
+   - Replace with specific InterPro signatures or FunFams for spliceosomal DEAH-box ATPases (Prp2, Prp16, Prp22, Prp43 orthologs)
 
-2. **Standardize Taxonomic Scope**
-   - Establish consistent criteria for taxonomic restrictions
-   - Either apply broad eukaryotic scope or provide clear biological justification for lineage-specific restrictions
+2. **Evaluate Condition Set 2**
+   - Verify FunFam 3.40.50.300:FF:000007 specificity for spliceosomal helicases
 
-3. **Separate Rule Functions**
-   - Consider splitting into separate rules for:
-     - Core spliceosomal machinery (U snRNPs, Sm proteins)
-     - Auxiliary splicing factors
-     - Lineage-specific variants
+3. **Remove Condition Set 18**
+   - Empty condition set is a data quality defect
 
-4. **Improve Parsimony**
-   - Remove redundant conditions that capture the same protein populations
-   - Focus on the most specific and reliable protein family identifiers
+4. **Consolidate Related Conditions**
+   - Merge condition sets using FunFams from the same CATH superfamily where appropriate
+   - Reduce total condition sets to fewer than 12
+
+5. **Standardize Taxonomic Scope**
+   - Establish consistent criteria based on biological distribution
 
 ## Assessment Scores
-- **Parsimony**: OVERLY_COMPLEX (17 condition sets)
-- **Literature Support**: STRONG (well-established splicing machinery)
-- **Condition Overlap**: SIGNIFICANT (multiple overlapping families)
-- **GO Specificity**: APPROPRIATE (correct cellular component term)
-- **Taxonomic Scope**: MISSING (inconsistent restrictions)
+- **Parsimony**: OVERLY_COMPLEX (18 condition sets including one empty)
+- **Literature Support**: MODERATE (strong for snRNPs, but literature explicitly warns against broad DEAH-box helicase annotation)
+- **Condition Overlap**: SIGNIFICANT (multiple overlapping CATH superfamilies)
+- **GO Specificity**: APPROPRIATE (correct term, but applied to wrong proteins by broad conditions)
+- **Taxonomic Scope**: MISSING (inconsistent restrictions without clear biological rationale)
 
-## Confidence Level: 0.6
-Moderate confidence based on clear biological validity but significant structural issues requiring substantial modification.
-
-## GO Curator Concerns
-This rule likely appeared in the GO annotation issue tracker due to:
-1. Excessive complexity making it difficult to review and validate
-2. Potential false positive annotations from overly broad conditions
-3. Inconsistent taxonomic application across related organisms
-4. Possible redundancy with other ARBA rules targeting similar proteins
-
-The rule represents a case where biological accuracy is undermined by poor rule design and excessive complexity.
+## Confidence Level: 0.5
+Moderate-low confidence due to documented false positives. The rule is partially sound (snRNP/Sm conditions) but the helicase conditions cause real harm through misannotation.
