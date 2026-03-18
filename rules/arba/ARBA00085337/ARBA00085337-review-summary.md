@@ -62,9 +62,9 @@
 
 ## Files Created
 
-1. **/home/runner/work/ai-gene-review/ai-gene-review/rules/arba/ARBA00085337/ARBA00085337-review.yaml** - Complete review assessment
-2. **/home/runner/work/ai-gene-review/ai-gene-review/rules/arba/ARBA00085337/ARBA00085337-deep-research-manual.md** - Manual literature analysis
-3. **/home/runner/work/ai-gene-review/ai-gene-review/rules/arba/ARBA00085337/ARBA00085337-review.html** - Interactive visualization
+1. **rules/arba/ARBA00085337/ARBA00085337-review.yaml** - Complete review assessment
+2. **rules/arba/ARBA00085337/ARBA00085337-deep-research-manual.md** - Manual literature analysis
+3. **rules/arba/ARBA00085337/ARBA00085337-review.html** - Interactive visualization
 
 ## Conclusion
 
