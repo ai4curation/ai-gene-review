@@ -1,0 +1,25 @@
+# cbrB Gene Review Notes
+
+## Identity and naming
+
+- The KT2440 locus reviewed here is PP_4696. Primary literature on this strain consistently treats PP_4696 as `cbrB`, whereas the current UniProt entry Q88DX2 uses the homology-based name `AlgB` and assigns an alginate-related product description [file:PSEPK/cbrB/cbrB-uniprot.txt "GN   OrderedLocusNames=PP_4696 {ECO:0000313|EMBL:AAN70269.1};"] [file:PSEPK/cbrB/cbrB-uniprot.txt "DE   RecName: Full=Alginate biosynthesis transcriptional regulatory protein AlgB {ECO:0000256|ARBA:ARBA00073743};"]
+
+## Core molecular role
+
+- CbrB is the response regulator output of the CbrAB two-component system and directly activates sigma-N-dependent transcription [PMID:23692431 Transcriptional activation of the CrcZ and CrcY regulatory RNAs by the CbrB response regulator in Pseudomonas putida, "We show that the response regulatory protein CbrB, an activator of σ(N) -dependent promoters, directly controls the expression of the small RNAs CrcZ and CrcY in P. putida."]
+- CbrA transfers phosphate to CbrB in vitro, supporting the missing MF term `phosphorelay response regulator activity` for cbrB [PMID:32214184 Transport and kinase activities of CbrA of Pseudomonas putida KT2440., "it is shown that the histidine kinase can autophosphorylate and transfer the phosphoryl group to the response regulator CbrB."]
+- The 2018 regulon paper reinforces that CbrB is a sigma-N-dependent activator with direct DNA-level control over many loci and unusual phospho-dependence properties [PMID:30557364 The CbrB Regulon: Promoter dissection reveals novel insights into the CbrAB expression network in Pseudomonas putida., "determined that it directly controls the expression of at least 61 genes"] [PMID:30557364 The CbrB Regulon: Promoter dissection reveals novel insights into the CbrAB expression network in Pseudomonas putida., "CbrB is a quite peculiar σN-dependent activator since it is barely dependent on phosphorylation for transcriptional activation."]
+
+## Biological role
+
+- CbrAB/CbrB is a high-level regulator of carbon/nitrogen balance and amino-acid assimilation in P. putida rather than a pathway-specific metabolic enzyme [PMID:20553554 Lack of CbrB in Pseudomonas putida affects not only amino acids metabolism but also different stress responses and biofilm development., "CbrB is involved in coordination with the nitrogen control system activator, NtrC, in the uptake and assimilation of several amino acids."] [PMID:32214184 Transport and kinase activities of CbrA of Pseudomonas putida KT2440., "CbrA/CbrB regulates carbon utilization and together with NtrB/NtrC ensures a balanced carbon/nitrogen relationship"]
+- A central direct output is activation of the regulatory RNAs CrcZ and CrcY, linking CbrB to carbon catabolite repression control [PMID:23692431 Transcriptional activation of the CrcZ and CrcY regulatory RNAs by the CbrB response regulator in Pseudomonas putida, "Thus, CbrAB constitute a global signal transduction pathway integrated in a higher regulatory network that also controls catabolite repression through the expression of the two regulatory RNAs CrcZ and CrcY."] [PMID:22053874 Two small RNAs, CrcY and CrcZ, act in concert to sequester the Crc global regulator in Pseudomonas putida, modulating catabolite repression., "The CbrA/CbrB two-component system activated crcZ transcription, but had little effect on crcY."]
+- Broader phenotypes including chemotaxis, stress tolerance and biofilm behaviour are real, but they are likely a mixture of direct and indirect effects and should not all be elevated to core GO claims [PMID:20553554 Lack of CbrB in Pseudomonas putida affects not only amino acids metabolism but also different stress responses and biofilm development., "CbrB affects other carbon utilization pathways and a number of apparently unrelated functions, such as chemotaxis, stress tolerance and biofilm development."] [PMID:27085034 A Pseudomonas putida cbrB transposon insertion mutant displays a biofilm hyperproducing phenotype that is resistant to dispersal., "Also, two additional point mutations in lapG and lapD have been detected in MPO406 by whole genome sequencing. Combination of these effects provides a robust biofilm overproducing phenotype."]
+
+## Curation implications
+
+- Keep `GO:0000160 phosphorelay signal transduction system` as a core BP term.
+- Add `GO:0000156 phosphorelay response regulator activity` as a missing core MF term.
+- Replace the generic transcription BP annotation with activator-specific language centered on `GO:0045893 positive regulation of DNA-templated transcription`.
+- Add `GO:0001216 DNA-binding transcription activator activity` as a core MF term for direct activation of sigma-N-dependent targets.
+- Add `GO:0061985 carbon catabolite repression` as a process term only because there is direct evidence that CbrB controls catabolite repression through `crcZ` and `crcY`; keep stress/biofilm terms in the narrative unless a direct target-level GO mapping is justified.
