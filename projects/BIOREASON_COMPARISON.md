@@ -125,7 +125,7 @@ Full reasoning traces provided in supplementary C.6–C.15 (SFT, RL, and GPT-5.2
 **AIGR review status:**
 - eEFSec: not yet reviewed
 - CFAP61: ✅ review complete (`feat/review-human-cfap61`)
-- EvoAcr1/2: synthetic proteins, not applicable for standard review
+- EvoAcr1/2: synthetic proteins, deferred for now
 
 ### CFAP61 vs Epe1 — same class, opposite results
 Both are pseudoenzymes with catalytic domain signatures. BioReason **correctly** identifies CFAP61 as non-enzymatic (paper's featured result) but **fails** on Epe1, confidently calling it an active demethylase. Possible explanations: training data coverage, organism-specific context, or domain-specific cues (CFAP61's exapted residues may be more distinctive).
