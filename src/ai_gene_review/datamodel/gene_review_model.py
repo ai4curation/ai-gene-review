@@ -1,6 +1,6 @@
 WARNING:linkml.utils.generator:Duplicate tree_root: PredictionReview with GeneReview
 # Auto generated from gene_review.yaml by pythongen.py version: 0.0.1
-# Generation date: 2026-03-22T08:09:22
+# Generation date: 2026-03-22T08:11:01
 # Schema: gene_review
 #
 # id: https://ai4curation.io/ai-gene-review
@@ -1522,7 +1522,7 @@ class PredictionReview(YAMLRoot):
     references: Optional[Union[dict[Union[str, ReferenceId], Union[dict, Reference]], list[Union[dict, Reference]]]] = empty_dict()
     status: Optional[Union[str, "GeneReviewStatusEnum"]] = None
     locus_tag: Optional[str] = None
-    source_file: Optional[str] = None
+    source_documents: Optional[Union[str, list[str]]] = empty_list()
     predictions: Optional[Union[Union[dict, "PredictedAnnotation"], list[Union[dict, "PredictedAnnotation"]]]] = empty_list()
 
     def __post_init__(self, *_: str, **kwargs: Any):
@@ -1552,8 +1552,9 @@ class PredictionReview(YAMLRoot):
         if self.locus_tag is not None and not isinstance(self.locus_tag, str):
             self.locus_tag = str(self.locus_tag)
 
-        if self.source_file is not None and not isinstance(self.source_file, str):
-            self.source_file = str(self.source_file)
+        if not isinstance(self.source_documents, list):
+            self.source_documents = [self.source_documents] if self.source_documents is not None else []
+        self.source_documents = [v if isinstance(v, str) else str(v) for v in self.source_documents]
 
         if not isinstance(self.predictions, list):
             self.predictions = [self.predictions] if self.predictions is not None else []
@@ -3023,8 +3024,8 @@ slots.taxonomicScopeAssessment__supported_by = Slot(uri=GENE_REVIEW.supported_by
 slots.predictionReview__locus_tag = Slot(uri=GENE_REVIEW.locus_tag, name="predictionReview__locus_tag", curie=GENE_REVIEW.curie('locus_tag'),
                    model_uri=GENE_REVIEW.predictionReview__locus_tag, domain=None, range=Optional[str])
 
-slots.predictionReview__source_file = Slot(uri=GENE_REVIEW.source_file, name="predictionReview__source_file", curie=GENE_REVIEW.curie('source_file'),
-                   model_uri=GENE_REVIEW.predictionReview__source_file, domain=None, range=Optional[str])
+slots.predictionReview__source_documents = Slot(uri=GENE_REVIEW.source_documents, name="predictionReview__source_documents", curie=GENE_REVIEW.curie('source_documents'),
+                   model_uri=GENE_REVIEW.predictionReview__source_documents, domain=None, range=Optional[Union[str, list[str]]])
 
 slots.predictionReview__predictions = Slot(uri=GENE_REVIEW.predictions, name="predictionReview__predictions", curie=GENE_REVIEW.curie('predictions'),
                    model_uri=GENE_REVIEW.predictionReview__predictions, domain=None, range=Optional[Union[Union[dict, PredictedAnnotation], list[Union[dict, PredictedAnnotation]]]])
