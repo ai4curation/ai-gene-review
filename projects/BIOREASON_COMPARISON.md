@@ -21,7 +21,7 @@ The GO-GPT raw term lists are overly broad (full GO hierarchy dumps) and add lit
 - **GO-GPT**: autoregressive transformer (ESM2 embeddings + organism → GO terms). Upstream predictor.
 - **BioReason-Pro**: multimodal reasoning LLM (GO-GPT predictions + InterPro domains → chain-of-thought reasoning trace + functional summary). Two variants: **SFT** (richer mechanistic depth) and **RL** (fewer hallucinations, web app default).
 
-**Key insight:** The GO term list in web exports is raw GO-GPT output (input to reasoning). The true BioReason-Pro output is the reasoning trace and functional summary. We evaluate the reasoning, not the term list.
+**Key insight:** The GO term list in web exports is raw GO-GPT output (input to reasoning). Per the paper's architecture figure, BioReason-Pro produces its own GO terms as structured output after the `</think>` reasoning step (using Qwen3 backbone with chain-of-thought). However, the current web app export does not separately expose these post-reasoning GO terms — it only includes the GO-GPT input list. We assume this will be fixed before final publication. For now, we evaluate the reasoning traces and functional summaries, not the term lists.
 
 **Web app:** app.bioreason.net (model toggle top-left: SFT / RL)
 
