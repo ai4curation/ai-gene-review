@@ -80,10 +80,25 @@ The paper features two detailed case studies with structural validation:
 | CFAP61 | Q8NHU2 | Human | Fig. 6, §2.7 | Non-enzymatic axonemal scaffold with exapted active site. BioReason correctly overrides superfamily-level catalytic annotation — attention enriched at repurposed residues. |
 
 ### Paper evaluation sets
-- **Temporal holdout test set**: 8,630 proteins with newly acquired annotations (post Nov 2022), avg 26.75 GO terms/protein
+- **Temporal holdout test set**: 8,630 proteins (HuggingFace: `wanglab/bioreason-pro-test-data`), post Nov 2022, avg 26.75 GO terms/protein
 - **Human expert evaluation**: 192 proteins randomly sampled from test set; 162 evaluated by 27 external (non-team) biologists
 - **DNA-binding attention analysis**: 63 non-training BioLiP proteins
-- Individual protein lists in supplementary tables (not extracted yet)
+- Test set IDs saved: `/tmp/bioreason_test_ids.txt`
+
+### Overlap with AIGR
+Only 7 of our 1,211 reviewed genes appear in their 8,630 test set:
+
+| UniProt | Gene | BioReason export? |
+|---------|------|-------------------|
+| A0A8M9Q8E3 | DANRE/cryabb | No |
+| Q9HDX8 | SCHPO/alo1 | ✓ |
+| Q8TCG5 | human/CPT1C | No |
+| Q71F56 | human/MED13L | No |
+| Q96AW1 | human/VOPP1 | No |
+| Q22156 | worm/atf-4 | No |
+| G5EED4 | worm/nipi-3 | No |
+
+Low overlap — their test set is temporal holdout (newly annotated post-2022), while our KB focuses on well-studied genes. The value of our comparison is different: we have deep expert-curated reviews to judge reasoning quality, not just GO term F-max.
 
 ### Notable: CFAP61 (paper) vs Epe1 (our review) — same class, opposite results
 Both are pseudoenzymes with catalytic domain signatures. The paper highlights CFAP61 as a case where BioReason **correctly** overrides the superfamily catalytic annotation and identifies it as a non-enzymatic scaffold. Our Epe1 review (SCHPO) shows BioReason **fails** at the same task — it confidently calls Epe1 an active histone demethylase when it's actually a pseudoenzyme with degenerate active site residues. The difference may be in training data coverage or organism-specific context.
