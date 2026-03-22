@@ -1,36 +1,53 @@
 # BioReason-Pro Comparison Project
 
-Systematic evaluation of BioReason-Pro (Fallahpour et al. 2026, doi:10.64898/2026.03.19.712954) predictions against curated AIGR gene reviews.
+Systematic evaluation of BioReason-Pro reasoning traces and GO-GPT predictions (Fallahpour et al. 2026, doi:10.64898/2026.03.19.712954) against expert-curated AIGR gene reviews.
+
+## Summary
+
+We evaluate both the **GO-GPT predictions** (raw GO term lists) and the **BioReason-Pro reasoning traces** (chain-of-thought functional analysis) against our curated reviews across 139 genes and 16 organisms.
+
+Key findings so far (139 RL reviews completed):
+- **Correctness: 3.4/5 avg** — decent for core molecular function, unreliable for edge cases
+- **Completeness: 2.4/5 avg** — consistently superficial, stays at InterPro-derivable level
+- **No gene scored 5/5 on both axes** — BioReason never gives a complete picture
+- **Well-studied model organisms score higher**: mouse (4.2) > rat (4.1) > bacteria (~2.8)
+- **Critical blind spots**: pseudoenzymes, multi-complex biology, conditional activities, organism-specific context
+
+The GO-GPT raw term lists are overly broad (full GO hierarchy dumps) and add little over existing IBA/IEA. The real value — and the real evaluation target — is the reasoning trace.
 
 ## Background
 
-BioReason-Pro is a multimodal reasoning LLM for protein function prediction from Arc Institute / UHN / Vector / UofT.
-
-**Architecture:**
+**Architecture (from paper):**
 - **GO-GPT**: autoregressive transformer (ESM2 embeddings + organism → GO terms). Upstream predictor.
-- **BioReason-Pro**: multimodal reasoning LLM (GO-GPT predictions + InterPro domains → chain-of-thought reasoning trace + functional summary). Two variants: SFT and RL (RL is better, web app default).
+- **BioReason-Pro**: multimodal reasoning LLM (GO-GPT predictions + InterPro domains → chain-of-thought reasoning trace + functional summary). Two variants: **SFT** (richer mechanistic depth) and **RL** (fewer hallucinations, web app default).
+
+**Key insight:** The GO term list in web exports is raw GO-GPT output (input to reasoning). The true BioReason-Pro output is the reasoning trace and functional summary. We evaluate the reasoning, not the term list.
 
 **Web app:** app.bioreason.net (model toggle top-left: SFT / RL)
 
-**Key insight:** The GO term list in the web export is raw GO-GPT output (input to reasoning). The real BioReason-Pro output is the reasoning trace and functional summary.
-
 ## Data
 
-### Raw web exports (139 genes, RL model)
-- `genes/<org>/<gene>/<gene>-deep-research-bioreason-rl.md`
-- Collected 2026-03-22 via automated browser scraping
+### BioReason-Pro web exports
+- **139 genes, RL model**: `genes/<org>/<gene>/<gene>-deep-research-bioreason-rl.md`
+- **SFT model**: collection in progress (~58/134 as of 2026-03-22 11:45)
+- Collected via automated Chrome scraping with triple validation (organism, sequence, format)
 - Contains: thinking trace, functional summary, InterPro domains, GO-GPT term list
 
 ### GO-GPT prediction YAMLs (139 genes)
 - `genes/<org>/<gene>/<gene>-bioreason-rl-predictions.yaml`
-- Leaf-filtered (17,963 raw → 6,299 via OAK IS_A ancestor removal)
+- Leaf-filtered via OAK IS_A (17,963 raw → 6,299 leaf terms, 65% reduction)
 - PredictionReview schema, `source_method: GO-GPT`
-- Low-value — same as local GO-GPT, overly broad
+- Low-value for evaluation — same as local GO-GPT, overly broad
 
-### BioReason-Pro RL reviews (in progress)
+### BioReason-Pro RL reviews (139/139 complete)
 - `genes/<org>/<gene>/<gene>-bioreason-rl-review.md`
-- Manual/agent-curated evaluation of reasoning trace quality
+- Agent-curated evaluation of reasoning trace vs curated review
 - Scores: Correctness (1-5), Completeness (1-5), freeform analysis
+
+### Test set gene reviews (in progress)
+- 99 genes sampled from BioReason paper's test set (10 per organism)
+- Standard AIGR reviews being created by 3 parallel agents
+- Batch A: 33/33 ✅ | Batch B: 33/33 ✅ | Batch C: 4/33 in progress
 
 ## Evaluation rubric
 
@@ -45,22 +62,46 @@ BioReason-Pro is a multimodal reasoning LLM for protein function prediction from
 - 1: Superficial or one-dimensional
 
 ### Review format
-One markdown file per gene. Scores at top, freeform analysis below. Suggested sections:
-- What it got right
-- What it got wrong
-- What it missed
-- Failure modes
-- Comparison with curated review
+One markdown file per gene (`*-bioreason-rl-review.md`). Scores at top, freeform analysis below.
 
-## Results so far
+## Results (139 genes)
 
-| Gene | Organism | Correctness | Completeness | Key finding |
-|------|----------|-------------|--------------|-------------|
-| Epe1 | S. pombe | 1 | 2 | Pseudoenzyme misclassified as active demethylase |
-| SIR2 | S. cerevisiae | 5 | 3 | Core function correct; misses RENT complex, lifespan biology |
-| RidA | E. coli | 3 | 3 | Describes right chemistry but assigns wrong GO function |
+### Score distribution
 
-## Emerging failure modes
+| Score | Correctness | Completeness |
+|-------|-------------|--------------|
+| 5 | 15 (11%) | 0 (0%) |
+| 4 | 57 (41%) | 5 (4%) |
+| 3 | 37 (27%) | 57 (41%) |
+| 2 | 22 (16%) | 67 (48%) |
+| 1 | 8 (6%) | 10 (7%) |
+
+### By organism
+
+| Organism | Correctness | Completeness | n |
+|----------|-------------|--------------|---|
+| mouse | 4.2 | 2.7 | 11 |
+| rat | 4.1 | 2.8 | 12 |
+| human | 3.7 | 2.4 | 19 |
+| yeast | 3.5 | 2.5 | 11 |
+| DROME | 3.5 | 2.2 | 8 |
+| worm | 3.3 | 2.1 | 15 |
+| ECOLI | 3.1 | 2.5 | 13 |
+| SCHPO | 2.9 | 2.5 | 23 |
+| BACSU | 2.8 | 2.2 | 13 |
+| PSEPK | 2.8 | 2.4 | 8 |
+
+### Critical failures (correctness ≤ 1)
+Epe1 (pseudoenzyme), Spy, Shu1, atg16, pol5, csr-1, pgl-1, pmp20
+
+### Highlighted reviews
+| Gene | Correctness | Completeness | Key finding |
+|------|-------------|--------------|-------------|
+| Epe1 | 1 | 2 | Pseudoenzyme misclassified as active demethylase |
+| SIR2 | 5 | 3 | Core function correct; misses RENT complex, lifespan biology |
+| RidA | 3 | 3 | Describes right chemistry but assigns wrong GO function |
+
+## Failure modes
 
 - **Pseudoenzyme blind spot**: Assumes catalytic activity from conserved but degenerate domains
 - **Fold/family name bias**: Defaults to protein binding when InterPro family emphasizes scaffold
@@ -72,54 +113,53 @@ One markdown file per gene. Scores at top, freeform analysis below. Suggested se
 
 ## Paper case study proteins
 
-The paper features two detailed case studies with structural validation:
+| Protein | UniProt | Paper section | Key finding |
+|---------|---------|---------------|-------------|
+| eEFSec | P57772 | Fig. 5, §2.6 | De novo predicted SBP2 as binding partner, validated by cryo-EM |
+| CFAP61 | Q8NHU2 | Fig. 6, §2.7 | Correctly identified pseudoenzyme scaffold despite catalytic domain signatures |
 
-| Protein | UniProt | Organism | Paper section | Key finding |
-|---------|---------|----------|---------------|-------------|
-| eEFSec | P57772 | Human | Fig. 5, §2.6 | De novo predicted SBP2 as binding partner, validated by 2.8 Å cryo-EM selenosome structure. Attention maps localize to contact residues. |
-| CFAP61 | Q8NHU2 | Human | Fig. 6, §2.7 | Non-enzymatic axonemal scaffold with exapted active site. BioReason correctly overrides superfamily-level catalytic annotation — attention enriched at repurposed residues. |
+### CFAP61 vs Epe1 — same class, opposite results
+Both are pseudoenzymes with catalytic domain signatures. BioReason **correctly** identifies CFAP61 as non-enzymatic (paper's featured result) but **fails** on Epe1, confidently calling it an active demethylase. Possible explanations: training data coverage, organism-specific context, or domain-specific cues (CFAP61's exapted residues may be more distinctive).
 
-### Paper evaluation sets
-- **Temporal holdout test set**: 8,630 proteins (HuggingFace: `wanglab/bioreason-pro-test-data`), post Nov 2022, avg 26.75 GO terms/protein
-- **Human expert evaluation**: 192 proteins randomly sampled from test set; 162 evaluated by 27 external (non-team) biologists
-- **DNA-binding attention analysis**: 63 non-training BioLiP proteins
-- Test set available on HuggingFace: `wanglab/bioreason-pro-test-data` (parquet)
-- **Human eval protein list NOT published** — 192 randomly sampled, only aggregate scores reported
-- Code repo: `bowang-lab/BioReason-Pro` on GitHub
-- Models on HuggingFace: `wanglab/gogpt`, `wanglab/bioreason-pro-sft`, `wanglab/bioreason-pro-rl`
-- Training data: `wanglab/bioreason-pro-sft-reasoning-data` (124k), `wanglab/bioreason-pro-rl-reasoning-data` (9.2k)
+## Paper evaluation sets & overlap
 
-### Human eval key findings (from paper)
-- 79% tie-or-exceed rate vs UniProt (SFT), 73% (RL)
-- Avg 8.0/10 overall (SFT), 7.4/10 (RL) across 7 axes
-- SFT preferred when: richer mechanistic depth
-- RL preferred when: fewer hallucinations, fewer major errors (enzyme misID, inverted pathway directionality)
-- Performance stable across sequence similarity, organism, protein length
-- TODO: request 192-protein list from authors for direct comparison
+### Their data
+- **Test set**: 8,630 proteins (HuggingFace: `wanglab/bioreason-pro-test-data`), temporal holdout (post Nov 2022)
+- **Human eval**: 192 randomly sampled, 162 by 27 external biologists. Protein list not published.
+- **Models**: `wanglab/gogpt`, `wanglab/bioreason-pro-sft`, `wanglab/bioreason-pro-rl` on HuggingFace
+- **Training data**: `wanglab/bioreason-pro-sft-reasoning-data` (124k), `wanglab/bioreason-pro-rl-reasoning-data` (9.2k)
+- **Code**: `bowang-lab/BioReason-Pro` on GitHub
+
+### Test set composition
+Dominated by zebrafish (3,899), rat (1,675), human (1,648). These are heavily pre-annotated proteins (zebrafish avg 404 GO terms) — the "temporal holdout" means new experimental annotations were added post-2022, but IBA/IEA already covered most of the GO hierarchy. This makes their Fmax metric less informative than reasoning quality evaluation.
 
 ### Overlap with AIGR
-Only 7 of our 1,211 reviewed genes appear in their 8,630 test set:
+Only 7 of our 1,211 reviewed genes appear in their 8,630 test set. Low overlap by design — their test set is newly annotated, ours is deeply characterized.
 
 | UniProt | Gene | BioReason export? |
 |---------|------|-------------------|
-| A0A8M9Q8E3 | DANRE/cryabb | No |
-| Q9HDX8 | SCHPO/alo1 | ✓ |
-| Q8TCG5 | human/CPT1C | No |
-| Q71F56 | human/MED13L | No |
-| Q96AW1 | human/VOPP1 | No |
-| Q22156 | worm/atf-4 | No |
-| G5EED4 | worm/nipi-3 | No |
+| Q9HDX8 | SCHPO/alo1 | ✓ RL |
+| A0A8M9Q8E3 | DANRE/cryabb | — |
+| Q8TCG5 | human/CPT1C | — |
+| Q71F56 | human/MED13L | — |
+| Q96AW1 | human/VOPP1 | — |
+| Q22156 | worm/atf-4 | — |
+| G5EED4 | worm/nipi-3 | — |
 
-Low overlap — their test set is temporal holdout (newly annotated post-2022), while our KB focuses on well-studied genes. The value of our comparison is different: we have deep expert-curated reviews to judge reasoning quality, not just GO term F-max.
+### Expanding overlap
+99 genes sampled from their test set (10 per organism) are being reviewed through the standard AIGR pipeline to increase cross-comparison opportunity.
 
-### Notable: CFAP61 (paper) vs Epe1 (our review) — same class, opposite results
-Both are pseudoenzymes with catalytic domain signatures. The paper highlights CFAP61 as a case where BioReason **correctly** overrides the superfamily catalytic annotation and identifies it as a non-enzymatic scaffold. Our Epe1 review (SCHPO) shows BioReason **fails** at the same task — it confidently calls Epe1 an active histone demethylase when it's actually a pseudoenzyme with degenerate active site residues. The difference may be in training data coverage or organism-specific context.
+### SFT vs RL (from paper)
+- SFT: 8.0/10 avg, preferred for mechanistic depth
+- RL: 7.4/10 avg, preferred for factual reliability (fewer hallucinations, enzyme misID)
+- Our SFT collection in progress for direct comparison
 
 ## Tools
 
-- Converter script: `~/.openclaw/workspace/scripts/bioreason_to_yaml.py`
-- Local GO-GPT: `scripts/gogpt_predict.py` (same predictions as web, no reasoning trace)
-- Batch comparison: `scripts/gogpt_batch.py`, `scripts/gogpt_compare_levels.py`
+- BioReason web scraper: `/tmp/bioreason_sft_batch.sh` (RL version: `/tmp/bioreason_final.sh`)
+- YAML converter: `~/.openclaw/workspace/scripts/bioreason_to_yaml.py`
+- Local GO-GPT: `scripts/gogpt_predict.py`
+- Agent skill: `.claude/skills/bioreason-predictions.md`
 
 ## PR
 
