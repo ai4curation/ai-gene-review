@@ -124,3 +124,130 @@ For each gene with both a curated AIGR review and a UniProt sequence:
 - GO-GPT predictions: `genes/<organism>/<gene>/<gene>-gogpt-predictions.json`
 - Comparison script: `scripts/gogpt_predict.py`
 - Just targets: `just gogpt-predict`, `just gogpt-compare`, `just gogpt-compare-all`
+
+## Updated Results (2026-03-21)
+
+### Systematic GO-GPT Batch Comparison (250 genes)
+
+Three-level comparison against AIGR curated reviews:
+
+| Level | Overlap | Reference | Recall | Predicted | Precision |
+|-------|---------|-----------|--------|-----------|-----------|
+| vs GOA (raw annotations) | 1,046 | 2,967 | **35.3%** | 8,910 | 11.7% |
+| vs Post-Review (accepted+new) | 971 | 2,913 | **33.3%** | 8,910 | 10.9% |
+| vs Core Functions | 210 | 933 | **22.5%** | 8,910 | 2.4% |
+
+**Key findings:**
+1. GO-GPT recovers ~35% of existing GOA annotations from sequence alone
+2. Post-review overlap (33.3%) is slightly LOWER than GOA (35.3%) — some GO-GPT predictions were removed during curation
+3. Core function recall at 22.5% — GO-GPT gets ~1 in 5 core terms
+4. Precision is low (11.7%) — massive over-prediction
+
+**Per-aspect:**
+- MF: 19.9% overlap (69/346)
+- BP: 24.2% overlap (114/471)
+- CC: 0% (reviews rarely capture CC in core_functions — this is a gap to fix)
+
+### Where GO-GPT Excels
+
+**Sigma factors** — correctly predicted GO:0016987 for B. subtilis sigE/sigF/sigG (but missed it for P. putida rpoS — organism-specific training gap)
+
+**Classic enzymes with strong sequence→function mapping:**
+- Dihydrofolate reductase (GO:0004146) — dfrP, frd
+- Cellulase (GO:0008810) — P10477, celA, Q9RGE6
+- Lysozyme (GO:0003796) — BPT4/E, LysB
+- Alpha-amylase (GO:0004556) — amyE
+- Serine endopeptidase (GO:0004252) — aprE
+- Peptidyl-prolyl isomerase (GO:0003755) — SlyD, surA
+
+**Top overlap genes:** Dscam1 (24/29 GOA), DnaJ (18/23), DnaK (18/27), SlyD (16/16 perfect recall)
+
+### Where GO-GPT Fails
+
+**Genes with zero overlap despite many predictions:**
+- DROME/Hsp83: 43 predicted, 5 reviewed, 0 overlap
+- DROME/git: 41 predicted, 10 reviewed, 0 overlap  
+- ARATH/AT5G52640: 33 predicted, 18 reviewed, 0 overlap
+- BACSU/spoIIE: 35 predicted, 6 reviewed, 0 overlap
+
+Pattern: GO-GPT over-predicts generic terms (catalytic activity, protein binding) while missing the specific functional terms captured by literature-grounded curation.
+
+### Full BioReason-Pro Reasoning Traces (Web App)
+
+Successfully accessed BioReason-Pro web interface (app.bioreason.net) via Chrome AppleScript automation. The app provides:
+- InterPro domain analysis
+- GO-GPT predictions
+- **Thinking trace** — structured chain-of-thought reasoning from domains to function
+- Functional summary
+- GO term predictions with hierarchy
+- Downloadable markdown export
+
+#### Case Study: E. coli SlyD — Sequence Length Sensitivity
+
+Two runs were performed with different sequence lengths:
+
+**Run 1: Full-length SlyD (196 aa, with His-rich C-terminal tail)**
+- InterPro: IPR046357 (PPIase superfamily) + IPR001179 (FKBP domain) + **IPR048261 (SlpA/SlyD-like insertion domain)**
+- MF predictions include: GO:0003755 (PPIase) ✅, **GO:0016151 (nickel binding) ✅**, GO:0008270 (zinc binding) ✅, GO:0051082 (unfolded protein binding) ✅
+- BP: GO:0006457 (protein folding) ✅, GO:0042026 (protein refolding) ✅
+- Reasoning trace correctly identified the SlyD-like insertion domain and metal-assisted folding
+
+**Run 2: Truncated SlyD (110 aa, FKBP domain only)**
+- InterPro: IPR046357 + IPR001179 only (no SlyD insertion domain)
+- MF: GO:0003755 (PPIase) ✅ but **NO metal binding predictions** ❌
+- Reasoning trace: correct for PPIase but completely missed the metallochaperone function
+
+**Critical finding:** BioReason-Pro's predictions are **sequence-length-sensitive**. The C-terminal nickel/zinc-binding domain was essential for correct functional prediction. Truncation (which happens automatically for proteins >2000 aa in the ESM context window) can eliminate functionally critical domains.
+
+#### Comparison with AIGR Curated Review
+
+| Feature | BioReason-Pro (full) | AIGR Review |
+|---------|---------------------|-------------|
+| PPIase activity | ✅ GO:0003755 | ✅ GO:0003755 |
+| Chaperone | ✅ GO:0051082 (unfolded protein binding) | ✅ GO:0051082 |
+| Nickel binding | ✅ GO:0016151 | ✅ + specific role in hydrogenase/urease maturation |
+| Zinc binding | ✅ GO:0008270 | ✅ |
+| Metal homeostasis | ❌ Not mentioned | ✅ Nickel insertion into metalloenzymes |
+| Interaction partners | Hypothesized: GroEL, Trigger Factor, DnaK | Literature-confirmed: HypB, UreE, specific PMIDs |
+| Evidence provenance | None (reasoning from domains) | PMIDs with exact quotes |
+
+**BioReason-Pro advantage:** Clean domain→function reasoning chain, no literature search needed
+**AIGR advantage:** Literature-backed specificity, evidence provenance, dual function identification (PPIase + metallochaperone for specific metalloenzymes)
+
+## Accessing BioReason-Pro Web Interface
+
+### Method (for reproducibility)
+
+The web app at app.bioreason.net requires Google OAuth (routed through institutional SSO). Browser automation via Playwright is blocked by Google's bot detection. The working approach:
+
+1. Open Chrome tab via AppleScript: `osascript -e 'tell application "Google Chrome" to open location "https://app.bioreason.net/"'`
+2. User logs in manually through Google OAuth / institutional SSO
+3. Wait for login to complete (poll URL via AppleScript until `auth` is no longer in the URL)
+4. Interact with the app via Chrome AppleScript JavaScript execution:
+   - Fill sequence textarea: `document.querySelectorAll('textarea')[0]`
+   - Fill organism textarea: `document.querySelectorAll('textarea')[1]`
+   - Click send button (40x40 icon button)
+5. Wait for results (~60-90 seconds for InterPro + GO-GPT + reasoning trace)
+6. Click "Download Response" button to get markdown export
+7. Downloaded files appear in ~/Downloads/ as `bioreason-chat-YYYY-MM-DD.md`
+
+### Key technical notes
+- Must use React-compatible input simulation (native value setter + dispatchEvent)
+- Google OAuth blocks Playwright/Chromium automation — must use real Chrome with user session
+- The app is a chat interface, not a form — "New Chat" button resets for each protein
+- Results include: InterPro domains, GO-GPT predictions, thinking trace, functional summary, UniProt summary
+
+## Updated TODO
+
+- [ ] Fix GO-GPT batch script memory leak (torch.no_grad + gc.collect applied, needs testing at scale)
+- [ ] Run full 1,207 gene comparison (parked due to 54GB memory issue)
+- [ ] Run BioReason-Pro web app on 5-10 key proteins for detailed comparison
+- [ ] Compute semantic similarity (Resnik/Lin) between predicted and curated terms
+- [ ] Stratify by organism, protein length, annotation density
+- [ ] Compare GO-GPT against IBA (phylogenetic) and InterPro2GO (IEA) baselines
+- [ ] Generate PredictionReview YAMLs for BioReason-Pro web results
+- [ ] Evaluate whether truncation at 2000 aa systematically removes C-terminal domains
+- [x] ~~Run GO-GPT on case study genes (TP53, CAT2, rpoS)~~
+- [x] ~~Set up three-level comparison (GOA, post-review, core functions)~~
+- [x] ~~Access BioReason-Pro web interface~~
+- [x] ~~Capture reasoning traces~~
