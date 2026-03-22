@@ -122,10 +122,31 @@ Full reasoning traces provided in supplementary C.6–C.15 (SFT, RL, and GPT-5.2
 | EvoAcr1 | synthetic (169 aa) | §2.8 | C.12 (SFT), C.13 (RL) | AI-designed anti-CRISPR, no homology/domains. Predictions varied by organism label (ribosomal in E. coli, DNA-binding repressor in K12, TF in human). SFT fabricated InterPro entries. |
 | EvoAcr2 | synthetic (157 aa) | §2.8 | C.14 (SFT), C.15 (RL) | AI-designed anti-CRISPR. RL predicted phage-encoded host modulator in O157:H7 — biologically coherent. Strong organism-label sensitivity. |
 
+### Section 2.8: "Pushing to limits" — short proteins and peptides (22 sequences)
+Full-length proteins performed well; short peptides failed systematically:
+
+| Protein | Size | BioReason result |
+|---------|------|------------------|
+| HLA-A*02:01 | full | Accurate |
+| p53 | full | Accurate |
+| BRINP2 | full | Accurate (but missed post-cutoff prohormone role) |
+| IA-2 | full | Accurate |
+| preproinsulin | 110 aa | Mixed — correct family, missed feeding/receptor functions |
+| CCK | 115 aa | Mixed |
+| GDF15 | 112 aa | Mixed — missed appetite suppression |
+| GLP-1 | 30 aa | Failed — conflated with glucagon |
+| GAD65 epitope | short | SFT fabricated InterPro (myosin domain); RL acknowledged no domains |
+| IA-2 epitope | short | SFT fabricated InterPro (SPFH domain) |
+| proinsulin junction | short | SFT fabricated InterPro (ARID4B) |
+| BRP | 12 aa | Failed — predicted generic TF, missed appetite/GPCR role |
+
+Key finding: SFT fabricates InterPro entries for short sequences; RL never does.
+
 **AIGR review status:**
-- eEFSec: not yet reviewed
+- eEFSec: ✅ review complete (`feat/review-human-eefsec`)
 - CFAP61: ✅ review complete (`feat/review-human-cfap61`)
 - EvoAcr1/2: synthetic proteins, deferred for now
+- Section 2.8 proteins: p53 and TP53 already in KB; others not yet reviewed
 
 ### CFAP61 vs Epe1 — same class, opposite results
 Both are pseudoenzymes with catalytic domain signatures. BioReason **correctly** identifies CFAP61 as non-enzymatic (paper's featured result) but **fails** on Epe1, confidently calling it an active demethylase. Possible explanations: training data coverage, organism-specific context, or domain-specific cues (CFAP61's exapted residues may be more distinctive).
