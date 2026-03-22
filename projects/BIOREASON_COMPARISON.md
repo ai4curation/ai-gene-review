@@ -113,10 +113,19 @@ Epe1 (pseudoenzyme), Spy, Shu1, atg16, pol5, csr-1, pgl-1, pmp20
 
 ## Paper case study proteins
 
-| Protein | UniProt | Paper section | Key finding |
-|---------|---------|---------------|-------------|
-| eEFSec | P57772 | Fig. 5, §2.6 | De novo predicted SBP2 as binding partner, validated by cryo-EM |
-| CFAP61 | Q8NHU2 | Fig. 6, §2.7 | Correctly identified pseudoenzyme scaffold despite catalytic domain signatures |
+Full reasoning traces provided in supplementary C.6–C.15 (SFT, RL, and GPT-5.2 comparisons):
+
+| Protein | UniProt | Paper section | Traces | Key finding |
+|---------|---------|---------------|--------|-------------|
+| eEFSec | P57772 | Fig. 5, §2.6 | C.6 (SFT), C.7 (RL), C.8 (GPT-5.2) | De novo predicted SBP2 as binding partner, validated by 2.8 Å cryo-EM selenosome structure |
+| CFAP61 | Q8NHU2 | Fig. 6, §2.7 | C.9 (SFT), C.10 (RL), C.11 (GPT-5.2) | Correctly identified pseudoenzyme scaffold despite catalytic domain signatures |
+| EvoAcr1 | synthetic (169 aa) | §2.8 | C.12 (SFT), C.13 (RL) | AI-designed anti-CRISPR, no homology/domains. Predictions varied by organism label (ribosomal in E. coli, DNA-binding repressor in K12, TF in human). SFT fabricated InterPro entries. |
+| EvoAcr2 | synthetic (157 aa) | §2.8 | C.14 (SFT), C.15 (RL) | AI-designed anti-CRISPR. RL predicted phage-encoded host modulator in O157:H7 — biologically coherent. Strong organism-label sensitivity. |
+
+**AIGR review status:**
+- eEFSec: not yet reviewed
+- CFAP61: ✅ review complete (`feat/review-human-cfap61`)
+- EvoAcr1/2: synthetic proteins, not applicable for standard review
 
 ### CFAP61 vs Epe1 — same class, opposite results
 Both are pseudoenzymes with catalytic domain signatures. BioReason **correctly** identifies CFAP61 as non-enzymatic (paper's featured result) but **fails** on Epe1, confidently calling it an active demethylase. Possible explanations: training data coverage, organism-specific context, or domain-specific cues (CFAP61's exapted residues may be more distinctive).
