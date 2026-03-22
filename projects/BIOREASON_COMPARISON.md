@@ -146,7 +146,10 @@ Key finding: SFT fabricates InterPro entries for short sequences; RL never does.
 - eEFSec: ✅ review complete (`feat/review-human-eefsec`)
 - CFAP61: ✅ review complete (`feat/review-human-cfap61`)
 - EvoAcr1/2: synthetic proteins, deferred for now
-- Section 2.8 proteins: p53 and TP53 already in KB; others not yet reviewed
+- Section 2.8 proteins:
+  - TP53, INS: already in KB
+  - HLA-A, BRINP2, PTPRN (IA-2), CCK, GDF15, GCG: reviews in progress (`feat/bioreason-paper-proteins`, agent `agr-paper-prots`)
+  - Short peptides (GLP-1, GAD65 epitope, etc.): deferred — too short for standard review pipeline
 
 ### CFAP61 vs Epe1 — same class, opposite results
 Both are pseudoenzymes with catalytic domain signatures. BioReason **correctly** identifies CFAP61 as non-enzymatic (paper's featured result) but **fails** on Epe1, confidently calling it an active demethylase. Possible explanations: training data coverage, organism-specific context, or domain-specific cues (CFAP61's exapted residues may be more distinctive).
