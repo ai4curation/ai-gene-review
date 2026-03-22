@@ -83,7 +83,19 @@ The paper features two detailed case studies with structural validation:
 - **Temporal holdout test set**: 8,630 proteins (HuggingFace: `wanglab/bioreason-pro-test-data`), post Nov 2022, avg 26.75 GO terms/protein
 - **Human expert evaluation**: 192 proteins randomly sampled from test set; 162 evaluated by 27 external (non-team) biologists
 - **DNA-binding attention analysis**: 63 non-training BioLiP proteins
-- Test set IDs saved: `/tmp/bioreason_test_ids.txt`
+- Test set available on HuggingFace: `wanglab/bioreason-pro-test-data` (parquet)
+- **Human eval protein list NOT published** — 192 randomly sampled, only aggregate scores reported
+- Code repo: `bowang-lab/BioReason-Pro` on GitHub
+- Models on HuggingFace: `wanglab/gogpt`, `wanglab/bioreason-pro-sft`, `wanglab/bioreason-pro-rl`
+- Training data: `wanglab/bioreason-pro-sft-reasoning-data` (124k), `wanglab/bioreason-pro-rl-reasoning-data` (9.2k)
+
+### Human eval key findings (from paper)
+- 79% tie-or-exceed rate vs UniProt (SFT), 73% (RL)
+- Avg 8.0/10 overall (SFT), 7.4/10 (RL) across 7 axes
+- SFT preferred when: richer mechanistic depth
+- RL preferred when: fewer hallucinations, fewer major errors (enzyme misID, inverted pathway directionality)
+- Performance stable across sequence similarity, organism, protein length
+- TODO: request 192-protein list from authors for direct comparison
 
 ### Overlap with AIGR
 Only 7 of our 1,211 reviewed genes appear in their 8,630 test set:
