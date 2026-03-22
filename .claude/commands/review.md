@@ -14,3 +14,13 @@ If the user specifies a deep research provider(s), make sure to perform deep res
 least this provider(s), otherwise default to falcon.
 
 E.g. `just deep-research-falcon ORGANISM GENE_SYMBOL`
+
+For bacterial organisms (e.g. PSEPK, ECOLI, SALTY, or any prokaryote), after deep research,
+also fetch FEBA/RB-TnSeq fitness data if available:
+
+```
+just fetch-fitness ORGANISM GENE_SYMBOL
+```
+
+This creates a GENE-fitness.md file with mutant fitness phenotypes and cofitness partners.
+The annotation-reviewer agent will use this data as additional evidence when reviewing annotations.
