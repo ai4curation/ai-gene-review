@@ -2,7 +2,8 @@
 
 Source: SIR2-deep-research-bioreason-rl.md
 
-## Verdict: MOSTLY CORRECT — good core function, misses specificity and breadth
+- **Correctness**: 5/5
+- **Completeness**: 3/5
 
 BioReason-Pro correctly identifies SIR2 as an NAD-dependent histone deacetylase involved in chromatin silencing. The core molecular function is right. However, it stays at a generic level and misses the rich biology that makes SIR2 interesting.
 

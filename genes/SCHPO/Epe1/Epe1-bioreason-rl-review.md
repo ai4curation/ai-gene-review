@@ -2,7 +2,8 @@
 
 Source: Epe1-deep-research-bioreason-rl.md
 
-## Verdict: MAJOR ERRORS — pseudoenzyme misclassified as active enzyme
+- **Correctness**: 1/5
+- **Completeness**: 2/5
 
 BioReason-Pro confidently assigns Epe1 as an active Fe(II)/2-oxoglutarate-dependent histone demethylase. This is **wrong**. Epe1 is a well-characterized pseudoenzyme — it has a JmjC domain with degenerate active site residues and no detectable catalytic activity.
 

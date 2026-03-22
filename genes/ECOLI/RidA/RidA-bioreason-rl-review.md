@@ -2,7 +2,8 @@
 
 Source: RidA-deep-research-bioreason-rl.md
 
-## Verdict: MIXED — correct broad picture, wrong molecular function, interesting near-misses
+- **Correctness**: 3/5
+- **Completeness**: 3/5
 
 BioReason-Pro captures the general idea (small soluble trimer that handles reactive intermediates in amino acid metabolism) but assigns the wrong molecular function and misses the specific enzymatic activity that defines RidA.
 
