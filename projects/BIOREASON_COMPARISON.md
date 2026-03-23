@@ -1,5 +1,7 @@
 ---
 species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE]
+sidecars:
+  genes: BIOREASON_COMPARISON/genes.csv
 ---
 # BioReason-Pro Comparison Project
 
