@@ -14,19 +14,28 @@ Systematic AI-assisted review of GO annotations for *Pseudomonas putida*, focusi
 
 ## Completed Reviews
 
-### PSEPK (P. putida KT2440) — 9 genes, 89 annotations reviewed
+### PSEPK (P. putida KT2440) — 18 genes reviewed
 
-| Gene | Annotations | Function | Notes |
-|------|-------------|----------|-------|
-| **BenR** | 8 | Transcriptional regulator, benzoate catabolism | AraC/XylS family |
-| **PP_0635** | 9 | Uncharacterized protein | DUF domain analysis |
-| **ada** | 16 | Methyltransferase, DNA repair | Adaptive response to alkylation |
-| **ampC** | 5 | Beta-lactamase | Antibiotic resistance |
-| **ftsY** | 11 | Signal recognition particle receptor | Sec-dependent protein targeting |
-| **hglS** | 2 | Hydroxyglutarate synthase | Rare enzymatic function |
-| **mrcA** | 16 | Penicillin-binding protein 1a | Peptidoglycan biosynthesis |
-| **pedH** | 14 | PQQ-dependent alcohol dehydrogenase | **Rare earth element (lanthanide) utilization** — flagship gene for REE biology |
-| **quiC1_qsuB** | 8 | Quinate/shikimate dehydrogenase | Aromatic compound catabolism |
+| Gene | Annotations | Function | Notes | PR |
+|------|-------------|----------|-------|----|
+| **BenR** | 8 | Transcriptional regulator, benzoate catabolism | AraC/XylS family | — |
+| **PP_0635** | 9 | Uncharacterized protein | DUF domain analysis | — |
+| **ada** | 16 | Methyltransferase, DNA repair | Adaptive response to alkylation | — |
+| **ampC** | 5 | Beta-lactamase | Antibiotic resistance | — |
+| **ftsY** | 11 | Signal recognition particle receptor | Sec-dependent protein targeting | — |
+| **hglS** | 2 | Hydroxyglutarate synthase | Rare enzymatic function | — |
+| **mrcA** | 16 | Penicillin-binding protein 1a | Peptidoglycan biosynthesis | — |
+| **pedH** | 14 | PQQ-dependent alcohol dehydrogenase | REE/lanthanide utilization | — |
+| **quiC1_qsuB** | 8 | Quinate/shikimate dehydrogenase | Aromatic compound catabolism | — |
+| **rpoS** | — | Stationary phase sigma factor | GO:0016987 core; added starvation/biofilm terms; DRAFT | [#159](https://github.com/ai4curation/ai-gene-review/pull/159) |
+| **fleQ** | — | Flagellar/biofilm master regulator | Sigma-54 associated; added flagellum assembly/biofilm terms | [#162](https://github.com/ai4curation/ai-gene-review/pull/162) |
+| **pvdA** | — | L-ornithine N5-monooxygenase | Pyoverdine biosynthesis; COMPLETE | [#163](https://github.com/ai4curation/ai-gene-review/pull/163) |
+| **algD** | — | GDP-mannose 6-dehydrogenase | Alginate biosynthesis | [#157](https://github.com/ai4curation/ai-gene-review/pull/157) |
+| **gacA** | — | GacS/GacA response regulator | Phosphorelay; biofilm/T6SS regulation | [#155](https://github.com/ai4curation/ai-gene-review/pull/155) |
+| **pcaG** | — | Protocatechuate 3,4-dioxygenase α subunit | Iron-binding terms corrected (β subunit) | [#160](https://github.com/ai4curation/ai-gene-review/pull/160) |
+| **phaC** | — | PHA synthase (phaC-II, Q88D23) | Corrected to PHA biosynthetic process | [#161](https://github.com/ai4curation/ai-gene-review/pull/161) |
+| **cbrB** | — | CbrA/CbrB response regulator | Carbon catabolite repression; COMPLETE | [#158](https://github.com/ai4curation/ai-gene-review/pull/158) |
+| **xylR** | — | TOL plasmid regulator (P06519) | Not native KT2440; organism mismatch noted | [#156](https://github.com/ai4curation/ai-gene-review/pull/156) |
 
 ### PSEPU (general P. putida) — 1 gene
 

@@ -1615,3 +1615,65 @@ ui-legacy port="5123":
     @echo "Using direct file I/O (may be slow for 343+ genes)"
     @echo "For better performance, use 'just ui' with API server"
     uv run python -m ai4cui --legacy --port {{port}}
+
+# ============== GO-GPT Predictions (BioReason-Pro) ==============
+
+# Run GO-GPT prediction for a gene (outputs PredictionReview YAML)
+# Requires: GO-GPT model at ~/repos/BioReason-Pro/models/gogpt
+# Examples:
+#   just gogpt-predict human TP53
+#   just gogpt-predict PSEPK rpoS
+gogpt-predict organism gene:
+    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --output-dir .
+
+# Run GO-GPT prediction and compare with curated review
+# Outputs GENE-gogpt-predictions.yaml in PredictionReview schema format
+# Examples:
+#   just gogpt-compare human TP53
+#   just gogpt-compare PSEPK rpoS
+gogpt-compare organism gene:
+    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+
+# Alias for gogpt-compare
+gogpt-review organism gene:
+    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+
+# Run GO-GPT predictions for all genes in an organism
+gogpt-predict-organism organism:
+    #!/usr/bin/env bash
+    echo "Running GO-GPT predictions for all {{organism}} genes..."
+    count=0
+    for gene_dir in genes/{{organism}}/*/; do
+        if [ -d "$gene_dir" ]; then
+            gene=$(basename "$gene_dir")
+            uniprot="$gene_dir/${gene}-uniprot.txt"
+            if [ -f "$uniprot" ]; then
+                echo "Processing $gene..."
+                ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $gene"
+                count=$((count + 1))
+            fi
+        fi
+    done
+    echo "Processed $count genes"
+
+# Run GO-GPT comparison for all reviewed genes
+gogpt-compare-all:
+    #!/usr/bin/env bash
+    echo "Running GO-GPT comparison for all reviewed genes..."
+    total=0
+    for organism_dir in genes/*/; do
+        organism=$(basename "$organism_dir")
+        for gene_dir in "$organism_dir"*/; do
+            if [ -d "$gene_dir" ]; then
+                gene=$(basename "$gene_dir")
+                review="$gene_dir/${gene}-ai-review.yaml"
+                uniprot="$gene_dir/${gene}-uniprot.txt"
+                if [ -f "$review" ] && [ -f "$uniprot" ]; then
+                    echo "Comparing $organism/$gene..."
+                    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py "$organism" "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $organism/$gene"
+                    total=$((total + 1))
+                fi
+            fi
+        done
+    done
+    echo "Total: compared $total genes"
