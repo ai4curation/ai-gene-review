@@ -3,54 +3,37 @@
 Source: hsf-1-deep-research-bioreason-rl.md
 
 - **Correctness**: 4/5
-- **Completeness**: 2/5
+- **Completeness**: 3/5
 
-## What BioReason got right
+## Functional Summary Review
 
-BioReason correctly identified the HSF-type DNA-binding domain (IPR000232) within a winged-helix fold and made accurate predictions:
-- DNA-binding transcription factor activity (GO:0003700) -- correct
-- Response to stress (GO:0006950) -- correct and more specific than generic bZIP/forkhead predictions
-- Nuclear localization (GO:0005634) -- correct
-- Heat shock element binding -- correctly inferred from HSF domain
-- Trimerization-and-activation cycle -- accurate mechanistic hypothesis
-- Chaperone depletion as upstream signal -- correct
+The BioReason functional summary states:
 
-This is the strongest BioReason prediction in this set, because the HSF domain is sufficiently diagnostic to narrow the functional prediction beyond "generic transcription factor."
+> A nuclear transcriptional regulator in Caenorhabditis elegans that uses a winged-helix DNA-binding core to engage specific promoter elements and drive stress-responsive gene expression. By assembling transcriptional machinery at stress-inducible loci, it orchestrates proteostasis pathways and broader stress adaptation programs from within the nucleus, likely switching between repressed and active states in response to proteotoxic cues.
 
-## What BioReason missed
+This is a notably better summary than most others in this set. It correctly identifies:
 
-| Feature | BioReason | Curated Review |
-|---------|-----------|----------------|
-| HSE binding specificity | "stress-responsive promoter elements" | Specifically nGAAn pentamer inverted repeats |
-| Developmental functions | Not mentioned | Heat shock-independent roles in larval development (with efl-1/E2F) |
-| Linker cell death | Not mentioned | Promotes linker cell death via ubiquitin-proteasome system |
-| DHIC complex | Not mentioned | DDL-1/2 form inhibitory complex with HSF-1 |
-| IIS regulation | Not mentioned | Activity regulated by insulin/IGF-1 pathway |
-| Serotonin modulation | Not mentioned | Serotonin signaling (SER-1) primes HSF-1 for activation |
-| Nuclear stress granules | Not mentioned | Forms dynamic subnuclear structures upon heat shock (IDA) |
-| Innate immunity | Not mentioned | Required for defense against Gram-negative pathogens |
-| Longevity role | Not mentioned | Essential for lifespan regulation |
-| Homodimer/homotrimer formation | Mentioned generically | Experimentally demonstrated (IPI evidence) |
-| Ascaroside biosynthesis | Not mentioned | Regulates pheromone biosynthesis genes (PMID:26759377) |
-| Calmodulin binding | Not mentioned | GO:0005516 in existing annotations |
+- HSF-1 as a nuclear transcription factor with a winged-helix/HSF-type DNA-binding domain
+- The stress-responsive nature of its transcriptional activity
+- The role in proteostasis pathways
+- The switching between repressed and active states in response to proteotoxic cues
 
-## Failure mode analysis
+These align well with the curated review's description of HSF-1 as the master regulator of the heat shock response that binds heat shock elements (HSEs) and activates expression of HSPs and molecular chaperones.
 
-**Best case for domain-to-function, but still misses biology.** The HSF domain is more functionally diagnostic than generic bZIP or bHLH domains, so BioReason's prediction is meaningfully more specific. It correctly predicted "stress response" rather than just "regulation of transcription." The hypothesis about chaperone depletion releasing repression is genuinely insightful.
+The correctness score is docked slightly because the summary does not distinguish between the canonical heat shock response and the broader stress responses -- it refers generically to "proteotoxic cues" without specifying heat stress as the primary trigger.
 
-However, the analysis still misses all the C. elegans-specific biology: the non-canonical developmental functions (linker cell death, larval development), the regulatory integration with IIS and serotonin signaling, the formation of nuclear stress granules, and the connection to innate immunity. These represent the aspects of HSF-1 biology that distinguish it from a textbook heat shock factor.
+Key aspects missing from completeness:
 
-## Summary across all 8 genes
+- HSF-1 binds specifically to heat shock elements (HSEs) containing inverted 5'-NGAAN-3' pentamer sequences
+- Heat shock-independent developmental functions, including regulation of larval development and linker cell death
+- The connection to lifespan regulation and insulin/IGF-1-like signaling via the DHIC inhibitory complex (DDL-1/2)
+- HSF-1 forms homotrimers and localizes to nuclear stress granules upon heat shock
+- Role in innate immunity against bacterial pathogens
 
-| Gene | Correctness | Completeness | Key failure mode |
-|------|------------|--------------|------------------|
-| atfs-1 | 3/5 | 2/5 | Generic bZIP -- missed UPRmt, dual targeting |
-| cmd-1 | 4/5 | 3/5 | Correct core biochemistry, missing organism-specific biology |
-| csr-1 | 1/5 | 1/5 | **Wrong gene** (analyzed nhr-47 sequence instead) |
-| daf-16 | 3/5 | 2/5 | Generic forkhead -- missed IIS, longevity, dauer, stress |
-| daf-2 | 4/5 | 2/5 | Good RTK analysis but failed to identify as insulin receptor |
-| drp-1 | 3/5 | 2/5 | **Fold-bias**: dynamin mapped to endocytosis instead of mito fission |
-| hlh-30 | 3/5 | 1/5 | Generic bHLH -- missed autophagy/lysosomal/TFEB biology entirely |
-| hsf-1 | 4/5 | 2/5 | Best case -- HSF domain is diagnostic, but organism-specific biology absent |
+Comparison with interpro2go:
 
-**Overall pattern**: BioReason performs competent domain architecture analysis but its functional predictions are limited to what can be inferred from protein folds alone. For well-characterized genes with extensive experimental literature, this produces correct but superficial output that misses the biology that matters for gene annotation.
+The interpro2go annotations (GO_REF:0000002) assign GO:0003700 (DNA-binding transcription factor activity) and GO:0006355 (regulation of DNA-templated transcription). BioReason goes beyond these by correctly identifying the stress-responsive nature of HSF-1 and the proteostasis connection, which reflects genuine added value from the HSF-type domain annotation (IPR000232) rather than just the generic winged-helix superfamily.
+
+## Notes on thinking trace
+
+The trace correctly identifies the HSF-type DNA-binding domain and draws appropriate mechanistic conclusions about stress-responsive trimerization and activation. The mention of "chaperone depletion" as a stress cue and "proteostasis program" is well-calibrated. This is one of the better-performing BioReason analyses because the HSF domain is functionally diagnostic.

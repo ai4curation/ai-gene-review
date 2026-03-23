@@ -2,40 +2,38 @@
 
 Source: hsp-90-deep-research-bioreason-rl.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
-## Analysis
+## Functional Summary Review
 
-BioReason correctly identifies HSP-90 as a cytoplasmic ATP-dependent molecular chaperone with the canonical tripartite domain organization (N-terminal ATPase, middle client-regulatory domain, C-terminal dimerization platform). The core molecular function assignment of ATP binding, hydrolysis, and chaperone activity is accurate.
+The BioReason functional summary states:
 
-### What was right
+> A cytoplasmic ATP-dependent molecular chaperone that uses an N-terminal nucleotide-binding module and a dimerizing C-terminus to drive conformational cycles that fold and stabilize labile client proteins. By coupling ATP binding and hydrolysis to transient recognition of non-native polypeptides, it promotes proteostasis and stress-adaptive signaling in the cytosol, coordinating with co-chaperones to assemble and remodel multiprotein complexes.
 
-| Aspect | BioReason claim | Curated review |
-|--------|----------------|----------------|
-| Domain architecture | N-terminal ATPase, middle domain, C-terminal dimerization | Confirmed |
-| ATP hydrolysis | Core function driving conformational cycle | Accepted (PMID:19559711) |
-| Cytoplasmic localization | Correctly inferred | Accepted; cytosol/perinuclear confirmed (PMID:12950278) |
-| Co-chaperone interactions | Mentions Hsp70, CDC37, p23, Aha1 analogs | CDC-37, STI-1/Hop, AHA-1, PPH-5 confirmed |
-| Protein folding | Core function | Accepted |
+This is an accurate and well-constructed summary. All core assertions are supported by the curated review:
 
-### What was wrong or imprecise
+- ATP-dependent molecular chaperone: matches GO:0140662 (ATP-dependent protein folding chaperone) and GO:0016887 (ATP hydrolysis activity)
+- N-terminal nucleotide-binding module driving conformational cycles: correctly describes the HSP90 N-terminal ATPase domain
+- Dimerizing C-terminus: accurate for HSP90 architecture
+- Folding and stabilizing labile client proteins: matches GO:0006457 (protein folding)
+- Cytoplasmic/cytosolic localization: correct
+- Coordination with co-chaperones: the curated review explicitly mentions STI-1/Hop, CDC-37, AHA-1, and PPH-5
 
-- BioReason uses the odd GO annotation `GO:0003824` (catalytic activity) as a "formal label for function" -- this is far too generic and shows confusion about GO annotation specificity.
-- The GO:0006355 (regulation of transcription) is cited as the biological process label, which is bizarre for a chaperone. This appears to be a hallucinated or mismatched GO term assignment. The curated review correctly identifies protein folding (GO:0006457), cellular response to heat (GO:0034605), and protein stabilization (GO:0050821) as the relevant processes.
-- No mention of the DAF-21 alias, which is the commonly used genetic name in C. elegans.
+The thinking trace even correctly hypothesizes interactions with "Hsp70 and its adaptors," "CDC37-like adaptor," and "p23- and Aha1-like co-chaperones" -- all confirmed by the curated review.
 
-### Missing biology
+Missing aspects for completeness:
 
-- No mention of specific client proteins (myosin via UNC-45, DAF-11 guanylyl cyclase, kinases).
-- No discussion of the essential role in larval development, dauer formation, or chemosensory behavior.
-- Misses the transcellular chaperone signaling (TCS) function documented in PMID:29949773.
-- Does not mention heat stress induction via PQM-1 or HSF-1/DAF-16 regulation.
-- Plasma membrane/lipid raft association (PMID:21070894) is not discussed.
-- No mention of germline-enriched expression pattern.
+- HSP-90 is also known as DAF-21 in C. elegans
+- Specific client proteins: kinases, guanylyl cyclases, steroid hormone receptors
+- Essential for larval development, chemosensory behavior, dauer formation, germline development
+- Role in transcellular chaperone signaling (protection of distant tissues)
+- Predominantly expressed in germline under normal conditions, induced body-wide under heat stress via PQM-1
 
-### Failure modes
+Comparison with interpro2go:
 
-- **Incorrect GO term assignment**: Assigning GO:0006355 (regulation of transcription) as the biological process is a significant error, likely a slot-filling artifact.
-- **Generic function labels**: Using GO:0003824 (catalytic activity) as a primary function annotation is uninformative.
-- **Missing organism-specific biology**: The analysis reads as a generic HSP90 textbook description rather than a C. elegans-specific review.
+The interpro2go annotations (GO_REF:0000002) assign GO:0006457 (protein folding), GO:0016887 (ATP hydrolysis activity), GO:0051082 (unfolded protein binding, proposed for obsoletion), and GO:0140662 (ATP-dependent protein folding chaperone). BioReason's summary accurately captures all of these in mechanistic prose. For HSP-90, the domain architecture is sufficiently diagnostic that interpro2go and BioReason converge on an accurate description. BioReason adds value by integrating the tripartite domain organization into a coherent mechanistic narrative.
+
+## Notes on thinking trace
+
+The trace provides an excellent structural dissection of the HSP90 N-terminal ATPase, middle domain, and C-terminal dimerization platform. The co-chaperone hypotheses (Hsp70, CDC37, p23/Aha1) are particularly well-calibrated. This is a case where domain architecture is highly diagnostic and the system performs well.

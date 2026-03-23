@@ -1,32 +1,26 @@
-# BioReason-Pro RL Review: atg16 (SCHPO)
+# BioReason-Pro RL Review: atg16 (S. pombe)
 
 Source: atg16-deep-research-bioreason-rl.md
 
 - **Correctness**: 1/5
 - **Completeness**: 1/5
 
-BioReason-Pro RL produces a fundamentally wrong prediction for atg16. The model describes a "soluble cytoplasmic enzyme that participates in carbohydrate metabolism and supports energy generation" and hypothesizes it "channels carbohydrate-derived intermediates toward ATP-producing pathways." This has no relationship to the actual function of Atg16, which is a core autophagy scaffold protein that functions as part of the Atg12-Atg5-Atg16 E3-like ligase complex promoting Atg8 lipidation during autophagosome biogenesis.
+## Functional Summary Review
 
-**What it got right:** The cytoplasmic/cytosolic localization is correct (the protein is indeed soluble and cytoplasmic under basal conditions). Beyond that, essentially nothing.
+The BioReason functional summary describes atg16 as:
 
-**What it got wrong:**
-- The entire functional narrative is fabricated. Atg16 has no enzymatic activity in carbohydrate metabolism or energy generation.
-- The thinking trace misinterprets GO:0005515 (protein binding) as a "cellular component term" and as evidence for a "soluble enzyme assembly," which is nonsensical. GO:0005515 is a molecular function term.
-- The claim about "carbohydrate-catabolic reactions" and "ATP-generating routes" appears to be hallucinated from the minimal UniProt summary "Involved in energy generation," which itself is likely a misannotation or an indirect effect of autophagy on cellular energy homeostasis.
-- The GO terms listed under Biological Process and Cellular Component are overwhelmingly about cell cycle, chromosome segregation, mitotic division, spindle pole body, and protein kinase complexes - none of which are correct for Atg16. These appear to be borrowed from an entirely different protein.
+> A soluble cytoplasmic enzyme that participates in carbohydrate metabolism and supports energy generation. It likely operates within a cytosolic enzyme assembly that channels carbohydrate-derived intermediates toward ATP-producing pathways, tuning metabolic flux through transient associations with central carbon and energy-transduction enzymes.
 
-**What it missed:**
-- Autophagy - the core function of the protein - is completely absent from the prediction.
-- The Atg12-Atg5-Atg16 complex and its E3-like ligase activity for Atg8 lipidation.
-- Phagophore assembly site (PAS) localization.
-- The coiled-coil domain required for homodimerization.
-- The Atg5-binding domain.
-- The role of Atg18a in recruiting Atg16 to the PAS.
+This is fundamentally wrong. Atg16 is a core autophagy protein -- an essential structural component of the Atg12-Atg5-Atg16 complex, which functions as an E3-like ligase promoting the conjugation of Atg8 to phosphatidylethanolamine during autophagosome biogenesis. The curated review identifies the molecular function as Atg8-family ligase activity (GO:0019776) and the biological process as macroautophagy (GO:0016236). Atg16 has absolutely nothing to do with carbohydrate metabolism, energy generation, or ATP production.
 
-**Failure modes observed:**
-1. **Extreme hallucination from minimal input**: The model appears to have taken a vague UniProt keyword ("energy generation") and constructed an elaborate but entirely wrong functional narrative around it.
-2. **GO term contamination**: The predicted GO terms (cell cycle, chromosome segregation, spindle pole body, protein kinase complex) appear to belong to an unrelated protein, suggesting the model confused this protein with another or drew from incorrect training data.
-3. **Ontology misunderstanding**: The thinking trace confuses molecular function terms with cellular component terms (GO:0005515 described as a "cellular component term").
-4. **Fold-bias absent, replaced by worse problem**: Rather than fold-bias, the model shows what appears to be random or confused functional assignment with no grounding in the actual sequence or domain architecture.
+The BioReason thinking trace reveals the root cause of this failure: the model apparently received no informative InterPro domain hits (the trace references "GO:0005515" as a domain label and describes generic "soluble enzymatic assemblies"), then fell back on the UniProt summary "Involved in energy generation" -- which itself appears to be an error or placeholder. Instead of recognizing the lack of informative domain data, BioReason confabulated an entire metabolic narrative about glycolysis and ATP production.
 
-The curated review correctly identifies Atg16 as a core autophagy protein with well-supported experimental evidence for macroautophagy involvement (IMP from PMID:23950735), PAS localization (IDA from two independent studies), and Atg8-family ligase activity (ISO from S. cerevisiae). The curated review also appropriately flags over-annotations (protein transport, meiotic cell cycle) and proposes refinements (autophagy to macroautophagy). BioReason's prediction captures none of this biology.
+The GO terms predicted by BioReason include cell cycle, chromosome segregation, and mitotic nuclear division, none of which are correct for atg16. This is a complete failure of functional prediction.
+
+## Comparison with interpro2go
+
+There appear to be no informative interpro2go annotations for atg16 (the protein was originally annotated as a "sequence orphan" before being identified as an Atg16 homolog in PMID:23950735). BioReason's output is worse than having no prediction at all, as it confidently assigns incorrect functions rather than acknowledging uncertainty.
+
+## Notes on thinking trace
+
+The reasoning trace is incoherent -- it references GO IDs as InterPro domain identifiers and constructs an elaborate but entirely fabricated metabolic narrative. The trace quality is very poor, suggesting the model struggled fundamentally with this input.

@@ -1,36 +1,34 @@
-# BioReason-Pro RL Review: CDC37 (yeast)
+# BioReason-Pro RL Review: CDC37 (S. cerevisiae)
 
 Source: CDC37-deep-research-bioreason-rl.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5
 
-## Analysis
+## Functional Summary Review
 
-BioReason provides a generally accurate characterization of CDC37 as an Hsp90 co-chaperone that facilitates kinase client maturation. The domain architecture analysis (N-terminal client-binding, central Hsp90-binding, C-terminal stabilization) is well-reasoned and matches the established biology.
+The BioReason summary states:
 
-### What was right
+> A soluble co-chaperone that assembles with the Hsp90 system to stabilize and mature metastable client proteins -- especially kinase-class substrates -- in baker's yeast.
 
-- Correct identification as an Hsp90 co-chaperone specialized for kinase clients
-- Accurate domain architecture: N-terminal client capture, central Hsp90 binding, C-terminal stabilization
-- Correct assignment to protein folding (GO:0006457) as biological process
-- Cytosolic localization (GO:0005829) is appropriate
-- Recognition that CDC37 mediates protein stabilization through the Hsp90 system
+This is accurate. The curated review confirms CDC37 is an Hsp90 co-chaperone that promotes maturation of specific Hsp90 client proteins, with kinase specificity well documented (GO:0019901 protein kinase binding from GO_REF:0000002; protein stabilization GO:0050821).
 
-### What was wrong or missing
+> Its N-terminal module captures labile clients, a central region docks Hsp90 to drive ATP-dependent folding cycles, and the C-terminal domain consolidates the assembly.
 
-| Aspect | BioReason Prediction | Curated Review |
-|--------|---------------------|----------------|
-| **MF** | Protein binding (GO:0005515) | Heat shock protein binding (GO:0031072), protein kinase binding (GO:0019901), protein-folding chaperone binding (GO:0051087) |
-| **Kinase specificity** | Mentioned in narrative but not in GO terms | Protein kinase binding (GO:0019901) correctly annotated |
-| **Downstream processes** | Not mentioned | MAPK cascade, cell cycle regulation, osmotic stress response, spindle pole body duplication |
+This domain-level description correctly maps to the three known CDC37 domains (IPR013855, IPR013874, IPR013873) and their functional roles.
 
-### Failure modes
+> By orchestrating chaperone-mediated folding in the cytosol, it promotes the attainment and maintenance of functional conformations central to cellular signaling and proteostasis.
 
-1. **Generic MF term**: BioReason assigns GO:0005515 (protein binding) as the molecular function. This is exactly the kind of uninformative annotation flagged in the curated review as MARK_AS_OVER_ANNOTATED. The curated review uses more specific binding terms: heat shock protein binding (GO:0031072), protein kinase binding (GO:0019901), and protein-folding chaperone binding (GO:0051087). BioReason correctly describes the specific binding in its narrative but fails to translate this into specific GO terms.
+Cytosolic localization is correct (multiple lines of evidence in curated review: IBA, IEA, HDA). The connection to protein folding (GO:0006457) and protein stabilization (GO:0050821) is accurate.
 
-2. **Missing downstream biological context**: The curated review documents CDC37's involvement in MAPK cascade signaling (HOG pathway, PKC pathway), cell cycle regulation (START, Cdc28 association), osmotic stress response, cell wall integrity, and spindle pole body duplication. BioReason mentions "signaling and cell-cycle control" generically but captures none of this organism-specific biology.
+The summary correctly captures protein folding and protein stabilization as core functions. However, it misses several important non-core but documented functions: the requirement for passage through START in the cell cycle (GO:0051726), involvement in HOG and PKC MAP kinase signaling cascades (GO:0043410, GO:0038066), spindle pole body duplication (GO:0030474), and the cellular hyperosmotic response (GO:0071474). These are context-dependent functions documented by IMP evidence (PMID:17220467, PMID:9060463, PMID:7753858).
 
-3. **Unfolded protein binding**: BioReason includes GO:0051082 (unfolded protein binding) as a predicted function, which the curated review marks as MARK_AS_OVER_ANNOTATED for both the IBA and IDA evidence -- CDC37 binds nascent kinases, not generic unfolded proteins.
+The molecular function is described as "selective protein binding," which the curated review marks as over-annotated when generic (GO:0005515). The more informative terms are heat shock protein binding (GO:0031072), protein-folding chaperone binding (GO:0051087), and protein kinase binding (GO:0019901).
 
-4. **Missing protein stabilization as explicit function**: While BioReason mentions stabilization narratively, the curated review specifically accepts GO:0050821 (protein stabilization) with IMP evidence from PMID:17242065 showing CDC37 has distinct roles in protecting nascent kinase chains from degradation.
+Comparison with interpro2go:
+
+The interpro2go annotation (GO_REF:0000002) provides protein kinase binding (GO:0019901), which is a specific and informative molecular function term. BioReason's summary describes kinase-client binding in prose but does not reach this level of specificity in its GO term predictions -- it outputs only protein binding (GO:0005515) and unfolded protein binding (GO:0051082) as MF terms, both of which the curated review marks as over-annotated. BioReason adds narrative value about the tri-partite domain architecture and mechanism but does not improve on interpro2go for functional specificity.
+
+## Notes on thinking trace
+
+The trace correctly identifies the three-domain architecture and its functional implications. The reasoning from domain structure to co-chaperone function is sound. The prediction of Hsp70 system cooperation is reasonable but the specific downstream signaling roles (MAPK cascades, cell cycle) are entirely absent from the reasoning, which stays at the level of generic chaperone biology.

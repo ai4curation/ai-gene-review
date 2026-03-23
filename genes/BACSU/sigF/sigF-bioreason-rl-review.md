@@ -1,39 +1,32 @@
-# BioReason-Pro RL Review: sigF (Bacillus subtilis)
+# BioReason-Pro RL Review: sigF (B. subtilis)
 
 Source: sigF-deep-research-bioreason-rl.md
 
-- **Correctness**: 3/5
-- **Completeness**: 2/5
+- **Correctness**: 4/5
+- **Completeness**: 3/5
 
-## What It Got Right
+## Functional Summary Review
 
-BioReason correctly identifies SigF as a sigma-70 family transcription initiation factor and accurately maps the modular domain architecture (regions 2, 3, 4 plus the HTH in region 4). It correctly describes the mechanistic logic — region 2 for -10 element recognition and open complex stabilization, region 3 for upstream element sensing, region 4 HTH for -35 recognition and RNAP-beta-flap docking. The conclusion that the primary molecular function is sigma factor activity (GO:0016987) is correct. Identifying sporulation (GO:0030435) as the relevant biological process and cytoplasm as the cellular component are both accurate.
+The BioReason functional summary reads:
 
-The InterPro-to-function reasoning is structurally sound: the model correctly distinguishes the sigma-B/F/G subfamily signature from generic sigma-70 factors and connects this to sporulation-stage regulation.
+> A cytoplasmic initiation factor that redirects bacterial transcription toward sporulation programs. It binds bacterial RNA polymerase and engages promoter DNA via a modular sigma-70 fold, using distinct recognition and melting elements to assemble open complexes at sporulation promoters. By selecting and activating the appropriate initiation sites, it drives developmental transcription required for the formation and maturation of spores.
 
-## What It Got Wrong
+The summary correctly identifies SigF as a sigma factor with sigma-70 architecture that drives sporulation-associated transcription. The description of promoter recognition and open complex formation aligns with sigma factor activity (GO:0016987) and DNA-templated transcription initiation (GO:0006352). The sporulation connection is correct (GO:0030435).
 
-The assigned GO molecular function in the output is GO:0005515 (protein binding), which is incorrect. The curated review assigns GO:0016987 (sigma factor activity) as the primary term and specifically flags GO:0003899 (DNA-directed RNA polymerase activity) for removal because sigma factors do not catalyze RNA synthesis. BioReason at least correctly states sigma factor activity in the prose, but the formal GO term listed is the uninformative "protein binding."
+However, the summary has notable gaps:
 
-The cellular component GO output includes GO:0005886 (plasma membrane), GO:0005618 (cell wall), and GO:0031160 (spore wall). These are not appropriate localizations for a soluble cytoplasmic sigma factor. SigF is a soluble protein that associates with RNAP in the cytoplasm; it does not localize to the membrane, cell wall, or spore wall. These appear to be spurious mappings from the database.
+1. **Missing compartment specificity**: SigF is specifically the first forespore-specific sigma factor, activated exclusively in the forespore compartment after asymmetric septation. The BioReason summary generically says "sporulation programs" without capturing this critical compartment-specific activation that distinguishes SigF from other sporulation sigma factors.
 
-The biological process GO list includes GO:0043620 (regulation of DNA-templated transcription in response to stress), which while not wrong for the gene family is misleading for SigF specifically — SigF is primarily a developmental regulator of sporulation, not a stress-response sigma factor (that role belongs more to SigB).
+2. **Missing regulatory mechanism**: The partner-switching mechanism (SpoIIAB anti-sigma factor, SpoIIAA anti-anti-sigma factor, SpoIIE phosphatase) is the hallmark of SigF regulation and is completely absent. The curated review identifies the sigma factor antagonist complex (GO:1903865) as a core annotation.
 
-## What Was Missed
+3. **Incorrect GO predictions**: BioReason's predicted GO terms include cell wall (GO:0005618), plasma membrane (GO:0005886), spore wall (GO:0031160), and cell periphery (GO:0071944) as cellular components -- these are all incorrect for a cytoplasmic sigma factor. The curated review notes cytoplasmic localization.
 
-The most critical missing biology is the partner-switching regulatory mechanism, which is the defining feature of SigF biology:
-- No mention of the anti-sigma factor SpoIIAB, which sequesters SigF and prevents holoenzyme formation before septation.
-- No mention of the anti-anti-sigma factor SpoIIAA and its phosphorylation state.
-- The septal phosphatase SpoIIE, which preferentially dephosphorylates SpoIIAA-P in the forespore to trigger compartment-specific SigF release, is entirely absent.
-- The sigma factor antagonist complex (GO:1903865, i.e., SigF-SpoIIAB complex) is not mentioned.
-- The compartment-specific activation of SigF exclusively in the forespore — despite SigF protein being present in both compartments — is not described.
+4. **Missing specific regulon**: SigF directs transcription of sigG, csfB, and the forespore-specific rho promoter. None of this specificity is captured.
 
-The specific SigF regulon is not mentioned: sigG (the late forespore sigma), csfB (anti-sigma-G factor), and the forespore-specific rho promoter are all SigF targets absent from the BioReason output.
+Comparison with interpro2go:
 
-The autoregulatory aspect (SigF drives transcription of the spoIIA operon, which encodes itself) is missing.
+The interpro2go annotations for sigF include DNA-binding transcription factor activity (GO:0003700), which the curated review flags as incorrect for sigma factors (should be GO:0016987, sigma factor activity). BioReason correctly identifies sigma factor activity in its thinking trace but oddly lists protein binding (GO:0005515) as the MF GO term rather than sigma factor activity. The BP predictions from interpro2go include broad regulatory terms, which BioReason recapitulates. BioReason's functional summary narrative is more informative than interpro2go, but the GO term predictions contain errors not present in interpro2go (e.g., membrane/cell wall CC terms).
 
-The statement that SigF "drives the biological process of sporulation" is correct at a high level but the description reads as if SigF is a generic sporulation sigma factor rather than specifically the early forespore compartment factor that initiates the first tier of the cascade.
+## Notes on thinking trace
 
-## Summary
-
-BioReason gets the basic sigma-factor identity and domain architecture right, but completely misses the regulatory machinery (partner-switching system) that is the most important and interesting biology of SigF. The formal GO term output defaults to uninformative "protein binding" and includes biologically inappropriate cellular component localizations (membrane, cell wall, spore wall). This is a significant gap for a protein where the regulation of its activity is as important as the activity itself.
+The trace correctly identifies sigma-70 regions 2, 3, and 4 and their roles in promoter recognition and RNAP binding. The identification of sigma-B/F/G family signatures correctly places SigF in the sporulation sigma factor clade. However, the trace does not leverage this clade information to identify forespore-specific function.

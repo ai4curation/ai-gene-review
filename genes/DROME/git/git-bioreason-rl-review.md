@@ -1,32 +1,39 @@
-# BioReason-Pro RL Review: git (fruit fly)
+# BioReason-Pro RL Review: git (DROME)
 
 Source: git-deep-research-bioreason-rl.md
 
 - **Correctness**: 4/5
-- **Completeness**: 2/5
+- **Completeness**: 3/5
 
-## What it got right
+## Functional Summary Review
 
-BioReason correctly identifies the core domain architecture of Git: an N-terminal ArfGAP catalytic module (IPR001164, IPR038508, IPR037278), ankyrin repeats (IPR036770, IPR002110), a GIT Spa2-homology domain (SHD; IPR013724), and a GIT1-specific C-terminal domain (IPR022018). The inference of ARF GTPase activator activity (GO:0008065) as the primary molecular function is correct — this is precisely what GO:0005096 (GTPase activator activity) captures and the curated review accepts.
+The BioReason summary states:
 
-The description of the protein as a multidomain scaffold that couples GTPase inactivation to downstream effector assembly is sound. The prediction of cytoplasmic localization is correct. The mention of interactions with Arf small GTPases and coupling of membrane trafficking to actin dynamics is consistent with the established biology.
+> A cytoplasmic scaffold that accelerates GTP hydrolysis on Arf small GTPases and organizes endocytic and recycling pathways in fruit fly cells. Its N-terminal catalytic module drives Arf inactivation, while central ankyrin repeats and a GIT platform assemble multiprotein complexes that couple membrane trafficking to actin remodeling. By positioning catalytic and scaffolding elements in a GIT-like architecture, it coordinates vesicle dynamics and cytoskeletal control from soluble cytoplasmic hubs.
 
-The GO terms output correctly includes GTPase activator activity, molecular adaptor activity (GO:0060090), vesicle-mediated transport, synaptic vesicle cycle (GO:0099504), synaptic vesicle recycling (GO:0036465), brain development (GO:0007420), and mushroom body development (GO:0016319).
+This is a solid summary that correctly identifies the dual nature of Git: ARF-GAP catalytic activity and scaffold function. The curated review confirms Git as an "ARF GTPase-activating protein that functions as a multidomain scaffold protein, forming a conserved dPix-Git-PAK complex." The core molecular function of GTPase activator activity (GO:0005096) is well-captured.
 
-## What it got wrong or missed
+**Strengths**:
+- Correctly identifies the ArfGAP catalytic function
+- Recognizes the scaffolding role via ankyrin repeats and SHD domain
+- Accurately describes coupling of membrane trafficking to cytoskeletal control
 
-**The Hippo pathway connection — a major Drosophila-specific discovery — is absent.** The curated review documents that Git activates the Hippo pathway by inactivating Arf79F (the Drosophila ARF1 ortholog), which interacts with Hippo (Hpo). The pathway involves Lgl → Vap33 → RtGEF/Git/Arf79F → Hippo signaling (PMID:38240353). This represents a key tissue growth regulatory role discovered in Drosophila. BioReason's analysis of Git as an endocytic/cytoskeletal scaffold misses this entirely.
+**Omissions**:
 
-**Synaptic vesicle recycling specifics are missing.** While synaptic vesicle recycling appears in the GO terms output, BioReason's reasoning focuses on generic endocytic trafficking rather than the specific presynaptic role. The curated review documents that dGit at presynaptic active zones directly interacts with the endocytic adaptor stonin 2/stoned B (PMID:24882013), and that dgit mutants show reduced synaptotagmin levels and mislocalized stoned B. BioReason's reasoning does not develop this.
+1. **Hippo pathway regulation**: The curated review identifies positive regulation of Hippo signaling (GO:0035332) as a core function, with Git regulating Arf79F upstream of Hippo (PMID:38240353). This is entirely absent from BioReason's summary.
 
-**The PIX/PAK complex — the defining scaffold function — is absent.** Git forms a conserved dPix-Git-PAK complex at focal adhesion-like sites. This is the canonical scaffold function described in the curated review description. BioReason mentions "paxillin and PIX/PAFAH1B1-like GEFs" briefly as hypothetical interaction partners but does not identify the GIT-PIX-PAK complex as the core organizational unit.
+2. **Synaptic vesicle recycling**: The curated review documents Git's role at presynaptic active zones and in synaptic vesicle recycling (PMID:24882013). BioReason mentions "vesicle dynamics" generically but misses the synaptic context.
 
-**Muscle attachment site function is missed.** The curated review documents that dGIT localizes to muscle attachment sites in late-stage embryos and is required for somatic muscle development (GO:0007525). BioReason does not mention muscle biology.
+3. **Brain development**: The curated review notes severely decreased central brain size in dGit mutants (PMID:25792865). Not mentioned.
 
-**The GPCR kinase connection is absent.** While the curated review notes this is "non-core" for Drosophila Git, BioReason does not discuss the historical context — the protein was originally named for GPCR kinase interaction, a function reflected in an IBA annotation (GO:0008277) that the curated review keeps as non-core pending Drosophila-specific evidence.
+4. **Specific complex**: The dPix-Git-PAK complex and paxillin-binding domain-mediated basal targeting are key features documented in the curated review but absent from the summary.
 
-**Regulation of organ growth (Hippo-related)** GO terms appear in the BioReason output (negative regulation of organ growth, GO:0046621) without any corresponding reasoning in the thinking trace, suggesting again a disconnect between pre-loaded GO term labels and the analytical narrative.
+5. **Localization**: The curated review places Git at presynaptic active zones, focal adhesion-like structures, and the cell cortex. BioReason only mentions "cytoplasm."
 
-## Summary
+Comparison with interpro2go:
 
-BioReason correctly captures the ArfGAP domain architecture and core GTPase activator function, which is the molecular foundation of Git biology. The correctness score is reasonable because the core enzymatic claim is accurate. However, the analysis misses the biologically most important Drosophila-specific findings: the Hippo pathway activation mechanism, the presynaptic stonin interaction and synaptic vesicle recycling specifics, and the conserved PIX-PAK scaffold complex. The GO terms output includes Hippo pathway-related terms (positive regulation of Hippo signaling, GO:0035332) that do not appear in the reasoning, further indicating a disconnect between the model's stated inference chain and its final annotations.
+The ai-review.yaml contains two GO_REF:0000002 annotations: brain development (GO:0007420) and regulation of ARF protein signal transduction (GO:0032012). BioReason's summary recapitulates the ARF signal transduction aspect well, essentially matching the interpro2go reasoning. However, it misses the brain development annotation entirely. BioReason adds value by describing the scaffolding function and vesicle trafficking context beyond what interpro2go provides, but does not reach the specific biological contexts (Hippo, synapses, brain development) documented in the curated review.
+
+## Notes on thinking trace
+
+The trace provides accurate domain-by-domain analysis. The identification of the ArfGAP-ankyrin-SHD-GIT1C architecture is correct. The hypothesized interactions with "clathrin/adaptor assemblies" and "PIX/PAFAH1B1-like GEFs" show awareness of GIT-family biology, though dPix is not named specifically.

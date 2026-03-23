@@ -3,32 +3,24 @@
 Source: FXN-deep-research-bioreason-rl.md
 
 - **Correctness**: 4/5
-- **Completeness**: 3/5
+- **Completeness**: 4/5
 
-## Analysis
+## Functional Summary Review
 
-BioReason-Pro RL produces a solid analysis of frataxin that correctly captures its core identity as a mitochondrial iron-binding protein involved in iron-sulfur cluster assembly. The domain-to-function reasoning works well here because the frataxin fold is directly tied to iron handling.
+The BioReason functional summary states:
 
-### What it got right
+> A soluble mitochondrial factor that organizes iron handling within the matrix to fuel iron-sulfur cluster biogenesis. Its conserved frataxin fold binds ferrous iron and assembles transient oligomers that present iron to the mitochondrial assembly machinery, thereby sustaining cofactor production and cellular iron balance. By coupling iron chaperoning with multivalent protein interactions, it coordinates with ISC components to channel iron efficiently into downstream metabolic pathways.
 
-- Correctly identifies the frataxin/CyaY fold and its iron-binding function.
-- Accurately assigns iron ion binding (GO:0005506) as a molecular function.
-- Correctly places FXN in iron-sulfur cluster assembly (GO:0016226/GO:0000103) and iron homeostasis (GO:0055072).
-- Proper localization to mitochondrial matrix (GO:0005759).
-- Correctly describes oligomerization propensity and iron chaperoning activity.
-- Accurately hypothesizes interactions with ISCU and NFS1 (ISC machinery components).
-- Mentions ferredoxin system (FDX1/FDX2) as likely partners, which is correct.
+This is a good summary that correctly identifies FXN's core functions: iron binding, iron-sulfur cluster assembly, and mitochondrial matrix localization. The curated review describes FXN as "a mitochondrial iron chaperone that functions as an allosteric activator of the cysteine desulfurase NFS1 within the core ISC complex." BioReason captures the iron chaperoning and ISC complex interaction themes accurately.
 
-### What it got wrong or missed
+One notable issue: BioReason mentions FXN "assembles transient oligomers." The oligomerization hypothesis for frataxin has been largely debunked -- the current consensus is that FXN functions as a monomer within the ISC complex (ISCU-NFS1-ISD11-ACP complex). The curated review does not mention oligomerization. This is a factual error, though a common one in the literature.
 
-- **Missing the allosteric activator function**: The curated review identifies FXN as a "transient allosteric activator" of the cysteine desulfurase NFS1, accelerating persulfide transfer from NFS1 to ISCU. This is a critical mechanistic insight -- FXN does not just deliver iron, it also activates the sulfur-transfer chemistry. BioReason does not mention this enzyme activator role (GO:0008047).
-- **Iron chaperone activity not named**: The curated review assigns the specific term GO:0034986 (iron chaperone activity). BioReason uses the more generic GO:0005506 (iron ion binding). The chaperone concept -- regulated delivery of iron to specific acceptors -- is more informative than simple binding.
-- **Ferrous vs ferric specificity not addressed**: The curated review notes FXN binds Fe2+ but not Fe3+ (GO:0008198, ferrous iron binding). BioReason generically mentions "iron binding" without specifying oxidation state.
-- **Heme biosynthesis role missed**: The curated review notes FXN also functions as an iron donor for ferrochelatase in heme biosynthesis. BioReason does not mention this secondary function.
-- **Ferroxidase activity of oligomeric form**: The curated review mentions the oligomeric form exhibits ferroxidase activity for detoxifying redox-active iron. BioReason mentions oligomerization but not ferroxidase activity.
-- **Missing disease context**: No mention of Friedreich ataxia, the most common inherited ataxia, caused by FXN deficiency.
-- **Missing complex composition details**: The curated review describes the specific ISC assembly complex (NFS1, LYRM4/ISD11, ACP1, ISCU, FDX2, FXN). BioReason generically references "ISC machinery."
+The identification of ferrous iron binding is correct -- the curated review notes that recent NMR evidence (PMID:29576242) shows FXN binds Fe2+ but not Fe3+, and the interpro2go-derived ferric iron binding annotation (GO:0008199) was marked as over-annotated.
 
-### Assessment
+Comparison with interpro2go:
 
-FXN is a good case for BioReason because the frataxin fold is diagnostic and its primary functions (iron binding, ISC assembly) are encoded in the domain architecture. The main gap is the allosteric activator role, which requires biochemical knowledge beyond what domain structure alone can provide. The analysis is correct in its claims but misses the mechanistic depth that distinguishes FXN from a simple iron-binding protein.
+The curated review includes interpro2go (GO_REF:0000002) annotations for intracellular iron ion homeostasis (GO:0006879, kept as non-core), ferric iron binding (GO:0008199, marked as over-annotated), and iron-sulfur cluster assembly (GO:0016226, accepted). BioReason correctly identifies iron binding and Fe-S cluster assembly from the frataxin domains, matching the accepted interpro2go annotations. Notably, BioReason correctly specifies "ferrous iron" rather than ferric iron, which is more accurate than the interpro2go mapping. This is a case where BioReason adds genuine value by providing better specificity than the automated pipeline.
+
+## Notes on thinking trace
+
+The trace correctly identifies the frataxin/CyaY family and conserved site. The hypothesis about ISCU, ISCA, and NFS1 interactions is well-supported. The mention of ferroxidase activity in the GO term predictions is questionable -- while some studies have suggested this, it remains controversial.
