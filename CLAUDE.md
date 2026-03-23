@@ -110,6 +110,8 @@ just deep-research SPECIES GENE --provider perplexity
 
 This will create a file like `GENE-deep-research-perplexity.md`. You can also make your own notes in `genes/SPECIES/GENE/GENE-notes.md`.
 
+NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
+
 Be aware that many GO terms are over-annotations. You should also not take existing annotations as gospel, whether experimental or bioinformatic.
 always use a holistic synthesized picture of the gene function that you have obtained from your research.
 
@@ -251,5 +253,4 @@ other computational method that produces GO or EC predictions.
 
 There is also support code in `src/ai_gene_review`, see the CLAUDE.md file in that directory for more details
 on best practices for working with the code.
-
 

@@ -274,6 +274,9 @@ fix-labels *args="":
 validate-files files:
     uv run ai-gene-review validate {{files}}
 
+validate-deep-research:
+    uv run python scripts/validate_deep_research.py
+
 # Validate a specific gene's review file AND check PMID references (short alias)
 validate organism gene:
     @echo "Validating {{organism}}/{{gene}} review file..."
