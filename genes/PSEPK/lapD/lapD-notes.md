@@ -1,0 +1,8 @@
+# lapD notes
+
+- Q88RG5 / PP_0165 is not explicitly named `lapD` in the current UniProt flatfile, but the domain composition and family calls identify it as a LapD-like receptor: `DR   Gene3D; 6.20.270.20; LapD/MoxY periplasmic domain; 1.` and `DR   NCBIfam; NF045673; c-di-GMPRcptLapD; 1.` [file:PSEPK/lapD/lapD-uniprot.txt]
+- LapD is a membrane c-di-GMP receptor whose cytoplasmic ligand binding is coupled to periplasmic control of LapG. [PMID:21304926 "c-di-GMP binding to the LapD degenerate phosphodiesterase domain is communicated via the HAMP relay to the periplasmic domain"]
+- Activated LapD sequesters the periplasmic protease LapG and prevents cleavage of the surface adhesin LapA. [PMID:21304920 "c-di-GMP binding to LapD promotes interaction with and inhibition of the periplasmic protease LapG"]
+- LapD contains a HAMP domain and degenerate GGDEF/EAL signaling module, so the key conserved activity is c-di-GMP sensing rather than catalytic c-di-GMP turnover. [PMID:21304926 "LapD exhibits a conserved and widely used modular architecture containing a HAMP domain and degenerate diguanylate cyclase and phosphodiesterase domains"]
+- In P. putida, DibA modulates the cell surface adhesin LapA level in a c-di-GMP receptor LapD-dependent manner and thereby inhibits biofilm formation. [PMID:37927230 "DibA modulates the cell surface adhesin LapA level in a c-di-GMP receptor LapD-dependent manner, thereby inhibiting biofilm formation"]
+- DibA interacts and colocalizes with LapD in the cell membrane, indicating that LapD sits in a broader local c-di-GMP signaling network in KT2440. [PMID:37927230 "DibA interacts and colocalizes with LapD in the cell membrane"]
