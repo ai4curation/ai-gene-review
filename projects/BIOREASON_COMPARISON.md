@@ -5,11 +5,11 @@ sidecars:
 ---
 # BioReason-Pro Comparison Project
 
-Systematic evaluation of BioReason-Pro reasoning traces and GO-GPT predictions (Fallahpour et al. 2026, doi:10.64898/2026.03.19.712954) against expert-curated AIGR gene reviews.
+Systematic evaluation of BioReason-Pro functional summaries and reasoning traces (Fallahpour et al. 2026, doi:10.64898/2026.03.19.712954) against expert-curated AIGR gene reviews.
 
 ## Summary
 
-We evaluate both the **GO-GPT predictions** (raw GO term lists) and the **BioReason-Pro reasoning traces** (chain-of-thought functional analysis) against our curated reviews across 139 genes and 16 organisms.
+We evaluate the **BioReason-Pro functional summaries and reasoning traces** — chain-of-thought analyses that reason from InterPro domains, PPI data, and organism context to predict protein function — against our curated reviews across 139 genes and 16 organisms.
 
 Key findings so far (139 RL reviews completed):
 - **Correctness: 3.4/5 avg** — decent for core molecular function, unreliable for edge cases
