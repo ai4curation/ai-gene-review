@@ -91,6 +91,40 @@ Epe1 (pseudoenzyme), Spy, Shu1, atg16, pol5, csr-1, pgl-1, pmp20
 | [SIR2](https://github.com/ai4curation/ai-gene-review/blob/main/genes/yeast/SIR2/SIR2-bioreason-rl-review.md) | 5 | 3 | Core function correct; misses RENT complex, lifespan biology |
 | [RidA](https://github.com/ai4curation/ai-gene-review/blob/main/genes/ECOLI/RidA/RidA-bioreason-rl-review.md) | 3 | 3 | Describes right chemistry but assigns wrong GO function |
 
+## Detailed examples of disagreement
+
+### Pseudoenzyme misclassification: Epe1
+
+BioReason says: *"JmjC catalytic center dictates a lysine demethylase mechanism that consumes Fe(II) and 2-oxoglutarate."*
+
+Our review: Epe1 has **degenerate active site residues** (HVD instead of HXD motif, Tyr307 instead of catalytic His). Mass spectrometry assays show **no detectable demethylase activity**. It functions through protein-protein interactions (HP1/Swi6 binding, SAGA recruitment), not catalysis.
+
+### Right chemistry, wrong function: RidA
+
+BioReason says: *"Non-enzymatic yet catalytic chaperone-like module that binds and dissipates reactive enamine/imine intermediates, accelerating their hydrolysis."*
+
+Our review: The description of the chemistry is **correct** — but RidA IS an enzyme (EC 3.5.99.10, deaminase). BioReason's own words describe the enzymatic activity ("accelerating their hydrolysis") then assigns GO:0005515 (protein binding) instead of GO:0019239 (deaminase activity). The InterPro family name emphasizes the scaffold, biasing the model away from recognizing catalysis.
+
+### Localization errors: ETR1, CpxP, Skp, Spy
+
+BioReason systematically misassigns **membrane/periplasmic proteins as cytoplasmic** when InterPro annotations lack transmembrane domains:
+- **ETR1** (Arabidopsis ethylene receptor): Called "soluble cytoplasmic signal transducer." Actually an ER membrane integral protein with 3 TM helices forming the ethylene-binding site.
+- **CpxP**: Called cytoplasmic. Actually periplasmic (has signal peptide, confirmed by crystal structure).
+- **Skp**: Reasoning concludes cytoplasmic chaperone while the GO terms listed include periplasmic space — internal contradiction.
+- **Spy**: Misidentified as Cpx signaling adaptor. Actually a periplasmic holdase/foldase chaperone.
+
+### Anti-folding chaperone: SecB
+
+BioReason assigns GO:0006457 (protein folding). Our review flags this as **wrong** — SecB is an *anti-folding* holdase that actively prevents stable tertiary contacts. The curated review cites Bechtluft et al. showing SecB "completely prevents stable tertiary contacts." This is a frequency-bias error where chaperone family associations pull in protein folding terms.
+
+### Cross-kingdom fold bias: aprE (B. subtilis subtilisin)
+
+BioReason correctly identifies the serine endopeptidase activity but then predicts **human hemostasis/blood coagulation** biological processes for a B. subtilis enzyme. This fold-bias artifact comes from subtilisin-family annotations dominated by human proteins in the training data.
+
+### Means vs. ends: comK
+
+BioReason assigns protein homooligomerization (GO:0051260) as the primary biological process. While ComK does tetramerize, that's the **means** — the actual function is competence establishment (GO:0030420). BioReason confuses the structural mechanism with the biological purpose.
+
 ## Failure modes
 
 - **Pseudoenzyme blind spot**: Assumes catalytic activity from conserved but degenerate domains
