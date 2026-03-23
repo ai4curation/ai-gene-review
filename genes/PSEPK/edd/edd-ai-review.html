@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>edd - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>edd</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88P43" target="_blank" class="term-link">
+                        Q88P43
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida KT2440</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_1010</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "edd";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88P43" data-a="DESCRIPTION: edd encodes the IlvD/Edd-family 6-phosphogluconate..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>edd encodes the IlvD/Edd-family 6-phosphogluconate dehydratase that catalyzes dehydration of 6-phospho-D-gluconate to 2-keto-3-deoxy-6-phosphogluconate (KDPG; EC 4.2.1.12). In Pseudomonas putida KT2440 this reaction is the committed Entner-Doudoroff (ED) pathway step downstream of 6-phosphogluconate production from glucose, gluconate, or 2-ketogluconate. The protein is a predicted soluble cytosolic enzyme with an essential [4Fe-4S] cofactor and is part of the metabolic architecture that makes KT2440 rely strongly on ED catabolism during sugar utilization.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P43" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent term is technically correct for an enzyme, but it adds no useful specificity once the more precise phosphogluconate dehydratase activity annotation is present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0003824 is fully subsumed by GO:0004456 for this gene product and is therefore not informative as a separate functional statement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004456" target="_blank" class="term-link">
+                                    GO:0004456
+                                </a>
+                            </span>
+                            <span class="term-label">phosphogluconate dehydratase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P43" data-a="GO:0004456" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the specific core molecular function of Edd. UniProt assigns the EC 4.2.1.12 activity and describes dehydration of 6-phospho-D-gluconate to 2-dehydro-3-deoxy-6-phospho-D-gluconate, and species-specific studies on KT2440 place PP_1010/Edd at this ED-pathway step.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term captures the exact catalytic activity of the protein and is the most informative GO molecular-function term in the current annotation set.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/edd/edd-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Catalyzes the dehydration of 6-phospho-D-gluconate to 2-dehydro-3-deoxy-6-phospho-D-gluconate.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P43" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This localization is plausible for a soluble central-metabolism enzyme acting on cytosolic 6-phosphogluconate and KDPG. It is reasonable to keep, but it is less informative than the catalytic and pathway terms for defining the gene&#39;s core evolved role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytosolic localization is compatible with the known organization of sugar catabolism in KT2440, but the main biological value of this review is the enzyme activity and ED-pathway assignment.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009255" target="_blank" class="term-link">
+                                    GO:0009255
+                                </a>
+                            </span>
+                            <span class="term-label">Entner-Doudoroff pathway through 6-phosphogluconate</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P43" data-a="GO:0009255" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the correct pathway-level annotation. In KT2440, 6-phosphogluconate enters the ED route by conversion to KDPG through Edd, and edd mutants are explicitly included in experimental analyses of glucose catabolism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term accurately captures the pathway context of the specific Edd reaction and is directly consistent with the established glucose catabolic network of P. putida KT2440.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/edd/edd-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The ED pathway is not a peripheral option; it is a major organizing principle of glucose catabolism...This supports the GO process term `Entner-Doudoroff pathway through 6-phosphogluconate` as the right pathway annotation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016836" target="_blank" class="term-link">
+                                    GO:0016836
+                                </a>
+                            </span>
+                            <span class="term-label">hydro-lyase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P43" data-a="GO:0016836" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This mechanistic parent term is not wrong, but it is considerably less informative than the child term phosphogluconate dehydratase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The child term GO:0004456 already captures the relevant hydro-lyase chemistry for this protein with appropriate substrate specificity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    GO:0051539
+                                </a>
+                            </span>
+                            <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P43" data-a="GO:0051539" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Edd-family dehydratases typically require a [4Fe-4S] cluster, and the UniProt entry predicts the cofactor plus ligand residues for this protein. The annotation is therefore plausible, but it is best treated as a mechanistic supporting feature rather than the primary core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cofactor binding is important for catalysis, but the more central biological statement for this gene is its phosphogluconate dehydratase activity in the ED pathway.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Edd catalyzes the committed Entner-Doudoroff-pathway conversion of 6-phospho-D-gluconate to 2-keto-3-deoxy-6-phosphogluconate in the cytosol of P. putida KT2440. This IlvD/Edd-family enzyme is predicted to use a [4Fe-4S] cofactor and is part of the sugar-catabolic architecture that channels glucose-derived carbon through the ED route in this organism.</h3>
+                <span class="vote-buttons" data-g="Q88P43" data-a="FUNCTION: Edd catalyzes the committed Entner-Doudoroff-pathw..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004456" target="_blank" class="term-link">
+                            phosphogluconate dehydratase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009255" target="_blank" class="term-link">
+                                Entner-Doudoroff pathway through 6-phosphogluconate
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/edd/edd-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Catalyzes the dehydration of 6-phospho-D-gluconate to 2-dehydro-3-deoxy-6-phospho-D-gluconate...Pathway: Carbohydrate metabolism; Entner-Doudoroff pathway.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/edd/edd-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">The KT2440 `edd` locus corresponds to UniProt Q88P43 / locus tag `PP_1010` and encodes phosphogluconate dehydratase...The ED pathway is not a peripheral option; it is a major organizing principle of glucose catabolism.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/edd/edd-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for edd phosphogluconate dehydratase</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns EC 4.2.1.12 and describes Edd as an IlvD/Edd-family phosphogluconate dehydratase in the Entner-Doudoroff pathway.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/edd/edd-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for edd in Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24951791" target="_blank" class="term-link">
+                            PMID:24951791
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The functional structure of central carbon metabolism in Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26350459" target="_blank" class="term-link">
+                            PMID:26350459
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pseudomonas putida KT2440 strain metabolizes glucose through a cycle formed by enzymes of the Entner-Doudoroff, Embden-Meyerhof-Parnas, and pentose phosphate pathways</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23301697" target="_blank" class="term-link">
+                            PMID:23301697
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Entner-Doudoroff pathway empowers Pseudomonas putida KT2440 with a high tolerance to oxidative stress</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How strongly is Edd activity modulated at the protein or metabolite level during oxidative stress, beyond the pathway-level phenotypes already known for KT2440?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Pablo I. Nikel, Victor de Lorenzo</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P43" data-a="Q: How strongly is Edd activity modulated at the prot..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the predicted [4Fe-4S] cluster of PP_1010 show unusual stability or repair dynamics during oxidative stress compared with other IlvD-family dehydratases?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Pablo I. Nikel</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P43" data-a="Q: Does the predicted [4Fe-4S] cluster of PP_1010 sho..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify PP_1010 and measure conversion of 6-phosphogluconate to KDPG in vitro with and without Fe-S cluster reconstitution.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PP_1010 is a bona fide [4Fe-4S]-dependent phosphogluconate dehydratase whose catalytic activity depends on intact Fe-S loading.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P43" data-a="EXPERIMENT: Purify PP_1010 and measure conversion of 6-phospho..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare wild type, delta-edd, and complemented strains for growth, flux redistribution, and intracellular NADPH/NADP+ balance during glucose growth with and without oxidant challenge.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of edd will block normal ED flux and exacerbate the redox defects that accompany oxidative stress in KT2440.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P43" data-a="EXPERIMENT: Compare wild type, delta-edd, and complemented str..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantify Edd protein abundance and enzyme activity after shifts from succinate to glucose, gluconate, or 2-ketogluconate.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Edd activity will increase when KT2440 is routed into hexose catabolism even if transcriptional changes are modest.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P43" data-a="EXPERIMENT: Quantify Edd protein abundance and enzyme activity..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(edd-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P43" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="edd-pp_1010-in-pseudomonas-putida-kt2440">edd (PP_1010) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="geneprotein-identity">Gene/protein identity</h2>
+<p>The KT2440 <code>edd</code> locus corresponds to UniProt Q88P43 / locus tag <code>PP_1010</code> and<br />
+encodes phosphogluconate dehydratase (EC 4.2.1.12), an IlvD/Edd-family enzyme<br />
+that converts 6-phospho-D-gluconate to 2-keto-3-deoxy-6-phosphogluconate<br />
+(KDPG). The UniProt record explicitly assigns the Entner-Doudoroff (ED)<br />
+pathway, predicts an Fe-S cofactor, and places the protein in the<br />
+IlvD/Edd family. [file:PSEPK/edd/edd-uniprot.txt, "RecName:<br />
+Full=Phosphogluconate dehydratase"; "EC=4.2.1.12"; "Pathway: Carbohydrate<br />
+metabolism; Entner-Doudoroff pathway"; "Belongs to the IlvD/Edd family"]</p>
+<h2 id="core-molecular-function">Core molecular function</h2>
+<p>The clearest functional conclusion is that <code>edd</code> encodes the specific ED-pathway<br />
+dehydratase rather than a generic lyase/catalytic activity. UniProt gives the<br />
+reaction directly, and KT2440 metabolic studies use <code>edd (PP1010,
+6-phosphogluconate dehydratase)</code> as the defined gene product when measuring<br />
+glucose-catabolic flux and enzyme activity. [file:PSEPK/edd/edd-uniprot.txt,<br />
+"Catalyzes the dehydration of 6-phospho-D-gluconate to<br />
+2-dehydro-3-deoxy-6-phospho-D-gluconate"] [PMID:26350459 Pseudomonas putida<br />
+KT2440 strain metabolizes glucose through a cycle formed by enzymes of the<br />
+Entner-Doudoroff, Embden-Meyerhof-Parnas, and pentose phosphate pathways, "edd<br />
+(PP1010, 6-phosphogluconate dehydratase)", "Specific (Sp) enzymatic activities<br />
+of Edd"]</p>
+<p>An earlier KT2440 paper describes the same biochemical step in the glucose<br />
+network: 6-phosphogluconate enters the ED branch by conversion to KDPG through<br />
+Edd. [PMID:20971912 Compartmentalized Glucose Metabolism in Pseudomonas putida<br />
+Is Controlled by the PtxS Repressor, "6PG...enters the Entner-Doudoroff route,<br />
+where it is first converted into 2-keto-3-deoxy-6-phosphogluconate (KDPG) by<br />
+the Edd enzyme"]</p>
+<h2 id="pathway-context-in-kt2440">Pathway context in KT2440</h2>
+<p>In <em>P. putida</em> KT2440 the ED pathway is not a peripheral option; it is a major<br />
+organizing principle of glucose catabolism. Studies of central carbon<br />
+metabolism, including mutant analysis of <code>edd</code>, show that glucose is processed<br />
+through a cyclic architecture that mixes ED, pentose-phosphate, and partial EMP<br />
+reactions. [PMID:24951791 The functional structure of central carbon metabolism<br />
+in Pseudomonas putida KT2440] [PMID:26350459 Pseudomonas putida KT2440 strain<br />
+metabolizes glucose through a cycle formed by enzymes of the Entner-Doudoroff,<br />
+Embden-Meyerhof-Parnas, and pentose phosphate pathways]</p>
+<p>This supports the GO process term <code>Entner-Doudoroff pathway through
+6-phosphogluconate</code> as the right pathway annotation. Broader parent terms such<br />
+as <code>catalytic activity</code> or <code>hydro-lyase activity</code> are true but less informative<br />
+than the specific dehydratase function.</p>
+<h2 id="cofactor-and-localization">Cofactor and localization</h2>
+<p>The UniProt entry predicts a bound [4Fe-4S] cluster and specific binding<br />
+residues, which is consistent with known IlvD/Edd-family dehydratase chemistry.<br />
+This makes <code>4 iron, 4 sulfur cluster binding</code> a plausible mechanistic<br />
+annotation, but it is secondary to the specific catalytic function in the review<br />
+hierarchy. [file:PSEPK/edd/edd-uniprot.txt, "Name=[4Fe-4S] cluster"; "Binds 1<br />
+[4Fe-4S] cluster"; "BINDING         154"; "BINDING         221"]</p>
+<p>No direct localization experiment for PP_1010 was identified in the reviewed<br />
+KT2440 literature, but the enzyme is most plausibly cytosolic because it acts on<br />
+soluble ED intermediates within the bacterial central-carbon-metabolism network.<br />
+That makes <code>cytosol</code> reasonable to keep as a non-core localization statement.</p>
+<h2 id="physiological-significance">Physiological significance</h2>
+<p>The ED pathway is a key contributor to KT2440 physiology beyond simple glucose<br />
+catabolism. Oxidative-stress work shows that ED metabolism is essential for sugar<br />
+catabolism and contributes strongly to NADPH/redox robustness. This does not<br />
+establish a special moonlighting role for Edd, but it strengthens the case that<br />
+the ED-pathway annotation is biologically meaningful in this organism.<br />
+[PMID:23301697 The Entner-Doudoroff pathway empowers Pseudomonas putida KT2440<br />
+with a high tolerance to oxidative stress, "Glucose catabolism of Pseudomonas<br />
+putida is carried out exclusively through the Entner-Doudoroff (ED) pathway";<br />
+"ED was essential for sugar catabolism"; "required for counteracting oxidative<br />
+stress"]</p>
+<h2 id="curation-takeaways">Curation takeaways</h2>
+<ol>
+<li>Accept <code>GO:0004456 phosphogluconate dehydratase activity</code> as the core MF.</li>
+<li>Accept <code>GO:0009255 Entner-Doudoroff pathway through 6-phosphogluconate</code> as<br />
+   the core BP.</li>
+<li>Treat <code>GO:0003824 catalytic activity</code> and <code>GO:0016836 hydro-lyase activity</code><br />
+   as over-annotated parent terms.</li>
+<li>Keep <code>GO:0051539 4 iron, 4 sulfur cluster binding</code> and <code>GO:0005829 cytosol</code><br />
+   as plausible but non-core supporting annotations.</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(edd-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P43" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="edd-notes">edd notes</h1>
+<ul>
+<li>
+<p>UniProt Q88P43 identifies <code>edd</code> / <code>PP_1010</code> in <em>Pseudomonas putida</em> KT2440 as<br />
+  phosphogluconate dehydratase (EC 4.2.1.12) of the IlvD/Edd family and states<br />
+  that it catalyzes dehydration of 6-phospho-D-gluconate to<br />
+  2-dehydro-3-deoxy-6-phospho-D-gluconate. [file:PSEPK/edd/edd-uniprot.txt,<br />
+  "RecName: Full=Phosphogluconate dehydratase"; "Catalyzes the dehydration of<br />
+  6-phospho-D-gluconate to 2-dehydro-3-deoxy-6-phospho-D-gluconate"; "Belongs to<br />
+  the IlvD/Edd family"]</p>
+</li>
+<li>
+<p>UniProt also predicts a bound [4Fe-4S] cluster with specific ligand residues,<br />
+  supporting the cofactor-binding annotation as mechanistically plausible rather<br />
+  than the primary biological function. [file:PSEPK/edd/edd-uniprot.txt,<br />
+  "Name=[4Fe-4S] cluster"; "Binds 1 [4Fe-4S] cluster"; "BINDING         154";<br />
+  "BINDING         221"]</p>
+</li>
+<li>
+<p>A KT2440 glucose-metabolism review/experimental study describes 6PG entering<br />
+  the ED route by conversion to KDPG through Edd and includes <code>edd (PP1010,
+  6-phosphogluconate dehydratase)</code> among the glucose-catabolic mutants and<br />
+  enzyme assays. [PMID:26350459 Pseudomonas putida KT2440 strain metabolizes<br />
+  glucose through a cycle formed by enzymes of the Entner-Doudoroff,<br />
+  Embden-Meyerhof-Parnas, and pentose phosphate pathways, "6PG...is first<br />
+  converted into 2-keto-3-deoxy-6-phosphogluconate (KDPG) by the Edd enzyme";<br />
+  "edd (PP1010, 6-phosphogluconate dehydratase)"; "Specific (Sp) enzymatic<br />
+  activities of Edd"]</p>
+</li>
+<li>
+<p>Earlier KT2440 work on compartmentalized glucose metabolism likewise describes<br />
+  Edd as the enzyme that converts 6PG to KDPG in the ED branch of the network.<br />
+  [PMID:20971912 Compartmentalized Glucose Metabolism in Pseudomonas putida Is<br />
+  Controlled by the PtxS Repressor, "6PG...enters the Entner-Doudoroff route,<br />
+  where it is first converted into 2-keto-3-deoxy-6-phosphogluconate (KDPG) by<br />
+  the Edd enzyme"]</p>
+</li>
+<li>
+<p>KT2440 relies strongly on ED catabolism rather than a canonical EMP glycolytic<br />
+  route; pathway-level studies connect this organization to redox balance and<br />
+  oxidative-stress tolerance. This supports retaining the ED-process annotation,<br />
+  but it does not justify broad extra pathway over-annotation beyond the specific<br />
+  ED-through-6PG term already present. [PMID:23301697 The Entner-Doudoroff<br />
+  pathway empowers Pseudomonas putida KT2440 with a high tolerance to oxidative<br />
+  stress, "Glucose catabolism of Pseudomonas putida is carried out exclusively<br />
+  through the Entner-Doudoroff (ED) pathway"; "ED was essential for sugar<br />
+  catabolism"; "required for counteracting oxidative stress"]</p>
+</li>
+<li>
+<p>Working curation judgement:</p>
+</li>
+<li><code>GO:0004456 phosphogluconate dehydratase activity</code> should be core/accepted.</li>
+<li><code>GO:0009255 Entner-Doudoroff pathway through 6-phosphogluconate</code> should be<br />
+    core/accepted.</li>
+<li><code>GO:0003824 catalytic activity</code> and <code>GO:0016836 hydro-lyase activity</code> are<br />
+    true but redundant parent terms and should not be treated as core.</li>
+<li><code>GO:0005829 cytosol</code> and <code>GO:0051539 4 iron, 4 sulfur cluster binding</code> are<br />
+    reasonable non-core supporting annotations.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88P43
+gene_symbol: edd
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida KT2440
+aliases:
+- PP_1010
+description: edd encodes the IlvD/Edd-family 6-phosphogluconate dehydratase that catalyzes
+  dehydration of 6-phospho-D-gluconate to 2-keto-3-deoxy-6-phosphogluconate (KDPG;
+  EC 4.2.1.12). In Pseudomonas putida KT2440 this reaction is the committed Entner-Doudoroff
+  (ED) pathway step downstream of 6-phosphogluconate production from glucose, gluconate,
+  or 2-ketogluconate. The protein is a predicted soluble cytosolic enzyme with an
+  essential [4Fe-4S] cofactor and is part of the metabolic architecture that makes
+  KT2440 rely strongly on ED catabolism during sugar utilization.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This parent term is technically correct for an enzyme, but it adds no
+      useful specificity once the more precise phosphogluconate dehydratase activity
+      annotation is present.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0003824 is fully subsumed by GO:0004456 for this gene product and is
+      therefore not informative as a separate functional statement.
+- term:
+    id: GO:0004456
+    label: phosphogluconate dehydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the specific core molecular function of Edd. UniProt assigns
+      the EC 4.2.1.12 activity and describes dehydration of 6-phospho-D-gluconate
+      to 2-dehydro-3-deoxy-6-phospho-D-gluconate, and species-specific studies on
+      KT2440 place PP_1010/Edd at this ED-pathway step.
+    action: ACCEPT
+    reason: The term captures the exact catalytic activity of the protein and is the
+      most informative GO molecular-function term in the current annotation set.
+    supported_by:
+    - reference_id: file:PSEPK/edd/edd-uniprot.txt
+      supporting_text: Catalyzes the dehydration of 6-phospho-D-gluconate to 2-dehydro-3-deoxy-6-phospho-D-gluconate.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: This localization is plausible for a soluble central-metabolism enzyme
+      acting on cytosolic 6-phosphogluconate and KDPG. It is reasonable to keep, but
+      it is less informative than the catalytic and pathway terms for defining the
+      gene&#39;s core evolved role.
+    action: KEEP_AS_NON_CORE
+    reason: Cytosolic localization is compatible with the known organization of sugar
+      catabolism in KT2440, but the main biological value of this review is the enzyme
+      activity and ED-pathway assignment.
+- term:
+    id: GO:0009255
+    label: Entner-Doudoroff pathway through 6-phosphogluconate
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the correct pathway-level annotation. In KT2440, 6-phosphogluconate
+      enters the ED route by conversion to KDPG through Edd, and edd mutants are explicitly
+      included in experimental analyses of glucose catabolism.
+    action: ACCEPT
+    reason: The term accurately captures the pathway context of the specific Edd reaction
+      and is directly consistent with the established glucose catabolic network of
+      P. putida KT2440.
+    supported_by:
+    - reference_id: file:PSEPK/edd/edd-deep-research-falcon.md
+      supporting_text: The ED pathway is not a peripheral option; it is a major organizing
+        principle of glucose catabolism...This supports the GO process term `Entner-Doudoroff
+        pathway through 6-phosphogluconate` as the right pathway annotation.
+- term:
+    id: GO:0016836
+    label: hydro-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This mechanistic parent term is not wrong, but it is considerably less
+      informative than the child term phosphogluconate dehydratase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The child term GO:0004456 already captures the relevant hydro-lyase chemistry
+      for this protein with appropriate substrate specificity.
+- term:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: Edd-family dehydratases typically require a [4Fe-4S] cluster, and the
+      UniProt entry predicts the cofactor plus ligand residues for this protein. The
+      annotation is therefore plausible, but it is best treated as a mechanistic supporting
+      feature rather than the primary core function.
+    action: KEEP_AS_NON_CORE
+    reason: Cofactor binding is important for catalysis, but the more central biological
+      statement for this gene is its phosphogluconate dehydratase activity in the
+      ED pathway.
+core_functions:
+- description: Edd catalyzes the committed Entner-Doudoroff-pathway conversion of
+    6-phospho-D-gluconate to 2-keto-3-deoxy-6-phosphogluconate in the cytosol of P.
+    putida KT2440. This IlvD/Edd-family enzyme is predicted to use a [4Fe-4S] cofactor
+    and is part of the sugar-catabolic architecture that channels glucose-derived
+    carbon through the ED route in this organism.
+  molecular_function:
+    id: GO:0004456
+    label: phosphogluconate dehydratase activity
+  directly_involved_in:
+  - id: GO:0009255
+    label: Entner-Doudoroff pathway through 6-phosphogluconate
+  supported_by:
+  - reference_id: file:PSEPK/edd/edd-uniprot.txt
+    supporting_text: &#39;Catalyzes the dehydration of 6-phospho-D-gluconate to 2-dehydro-3-deoxy-6-phospho-D-gluconate...Pathway:
+      Carbohydrate metabolism; Entner-Doudoroff pathway.&#39;
+  - reference_id: file:PSEPK/edd/edd-deep-research-falcon.md
+    supporting_text: The KT2440 `edd` locus corresponds to UniProt Q88P43 / locus
+      tag `PP_1010` and encodes phosphogluconate dehydratase...The ED pathway is
+      not a peripheral option; it is a major organizing principle of glucose catabolism.
+references:
+- id: file:PSEPK/edd/edd-uniprot.txt
+  title: UniProt entry for edd phosphogluconate dehydratase
+  findings:
+  - statement: UniProt assigns EC 4.2.1.12 and describes Edd as an IlvD/Edd-family
+      phosphogluconate dehydratase in the Entner-Doudoroff pathway.
+- id: file:PSEPK/edd/edd-deep-research-falcon.md
+  title: Deep research summary for edd in Pseudomonas putida KT2440
+  findings: []
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features.
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile
+    Pseudomonas putida KT2440
+  findings: []
+- id: PMID:24951791
+  title: The functional structure of central carbon metabolism in Pseudomonas putida
+    KT2440
+  findings: []
+- id: PMID:26350459
+  title: Pseudomonas putida KT2440 strain metabolizes glucose through a cycle formed
+    by enzymes of the Entner-Doudoroff, Embden-Meyerhof-Parnas, and pentose phosphate
+    pathways
+  findings: []
+- id: PMID:23301697
+  title: The Entner-Doudoroff pathway empowers Pseudomonas putida KT2440 with a high
+    tolerance to oxidative stress
+  findings: []
+proposed_new_terms: []
+suggested_questions:
+- question: How strongly is Edd activity modulated at the protein or metabolite level
+    during oxidative stress, beyond the pathway-level phenotypes already known for
+    KT2440?
+  experts:
+  - Pablo I. Nikel
+  - Victor de Lorenzo
+- question: Does the predicted [4Fe-4S] cluster of PP_1010 show unusual stability
+    or repair dynamics during oxidative stress compared with other IlvD-family dehydratases?
+  experts:
+  - Pablo I. Nikel
+suggested_experiments:
+- description: Purify PP_1010 and measure conversion of 6-phosphogluconate to KDPG
+    in vitro with and without Fe-S cluster reconstitution.
+  hypothesis: PP_1010 is a bona fide [4Fe-4S]-dependent phosphogluconate dehydratase
+    whose catalytic activity depends on intact Fe-S loading.
+- description: Compare wild type, delta-edd, and complemented strains for growth,
+    flux redistribution, and intracellular NADPH/NADP+ balance during glucose growth
+    with and without oxidant challenge.
+  hypothesis: Loss of edd will block normal ED flux and exacerbate the redox defects
+    that accompany oxidative stress in KT2440.
+- description: Quantify Edd protein abundance and enzyme activity after shifts from
+    succinate to glucose, gluconate, or 2-ketogluconate.
+  hypothesis: Edd activity will increase when KT2440 is routed into hexose catabolism
+    even if transcriptional changes are modest.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

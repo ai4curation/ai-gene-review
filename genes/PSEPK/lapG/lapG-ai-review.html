@@ -1,0 +1,2259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lapG - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lapG</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88RG6" target="_blank" class="term-link">
+                        Q88RG6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_0164</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lapG";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88RG6" data-a="DESCRIPTION: lapG (PP_0164) encodes the LapG adhesin-processing..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>lapG (PP_0164) encodes the LapG adhesin-processing protease of the LapD/LapG retention circuit in Pseudomonas putida KT2440. The protein is a small exported cysteine peptidase family member whose documented role in KT2440 is to cleave surface-retained LapA after LapD no longer sequesters LapG, thereby reducing adhesiveness and promoting biofilm dispersal.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004197" target="_blank" class="term-link">
+                                    GO:0004197
+                                </a>
+                            </span>
+                            <span class="term-label">cysteine-type endopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:PSEPK/lapG/lapG-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RG6" data-a="GO:0004197" data-r="file:PSEPK/lapG/lapG-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> lapG should carry a NEW annotation to cysteine-type endopeptidase activity. UniProt family assignments place Q88RG6 in the LapG/C93 cysteine protease family, and the KT2440 literature ties PP_0164 to LapA proteolysis in the LapD-LapG-LapA pathway.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/lapG/lapG-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DR   NCBIfam; NF045674; CystProtLapG; 1.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/lapG/lapG-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DR   Pfam; PF06035; Peptidase_C93; 1.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/lapG/lapG-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In KT2440, nutrient starvation relieves LapD inhibition of LapG, leading to LapA proteolysis and release of biofilm cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    GO:0042597
+                                </a>
+                            </span>
+                            <span class="term-label">periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:PSEPK/lapG/lapG-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RG6" data-a="GO:0042597" data-r="file:PSEPK/lapG/lapG-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> lapG should carry a NEW cellular component annotation to periplasmic space. The LapG family acts on the periplasm-accessible N terminus of surface-retained adhesins, and the Falcon report explicitly places LapG in the periplasm.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/lapG/lapG-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">LapG is described as **periplasmic**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007162" target="_blank" class="term-link">
+                                    GO:0007162
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of cell adhesion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:PSEPK/lapG/lapG-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RG6" data-a="GO:0007162" data-r="file:PSEPK/lapG/lapG-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> lapG should carry a NEW biological process annotation to negative regulation of cell adhesion because LapG-mediated LapA cleavage lowers cell-surface retention and reduces adhesiveness in KT2440.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/lapG/lapG-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In KT2440, nutrient starvation relieves LapD inhibition of LapG, leading to LapA proteolysis and release of biofilm cells.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/lapG/lapG-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">DibA modulates LapA levels through LapD and thereby inhibits biofilm formation in P. putida KT2440.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098786" target="_blank" class="term-link">
+                                    GO:0098786
+                                </a>
+                            </span>
+                            <span class="term-label">biofilm matrix disassembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:PSEPK/lapG/lapG-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RG6" data-a="GO:0098786" data-r="file:PSEPK/lapG/lapG-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> lapG should carry a NEW annotation to biofilm matrix disassembly because LapG-dependent proteolysis releases the matrix-associated adhesin LapA and promotes starvation-induced biofilm dispersal in KT2440.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/lapG/lapG-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In KT2440, nutrient starvation relieves LapD inhibition of LapG, leading to LapA proteolysis and release of biofilm cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LapG is a periplasmic cysteine endopeptidase that cleaves the surface adhesin LapA when LapD-mediated sequestration is relieved, lowering cell-surface retention and contributing to release from the biofilm state.</h3>
+                <span class="vote-buttons" data-g="Q88RG6" data-a="FUNCTION: LapG is a periplasmic cysteine endopeptidase that ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004197" target="_blank" class="term-link">
+                            cysteine-type endopeptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007162" target="_blank" class="term-link">
+                                negative regulation of cell adhesion
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098786" target="_blank" class="term-link">
+                                biofilm matrix disassembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/lapG/lapG-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">DR   NCBIfam; NF045674; CystProtLapG; 1.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/lapG/lapG-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">DR   Pfam; PF06035; Peptidase_C93; 1.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/lapG/lapG-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">In KT2440, nutrient starvation relieves LapD inhibition of LapG, leading to LapA proteolysis and release of biofilm cells.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/lapG/lapG-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">DibA modulates LapA levels through LapD and thereby inhibits biofilm formation in P. putida KT2440.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/lapG/lapG-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB Q88RG6 record for Pseudomonas putida KT2440 PP_0164</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88RG6 is a 230 aa predicted transglutaminase-like cysteine protease family protein with NCBIfam CystProtLapG and Pfam Peptidase_C93 assignments.</div>
+                        
+                        <div class="finding-text">"DR   NCBIfam; NF045674; CystProtLapG; 1."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/lapG/lapG-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curator notes for Pseudomonas putida KT2440 lapG</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In KT2440, nutrient starvation promotes LapA proteolysis and release of biofilm cells through the LapD/LapG pathway.</div>
+                        
+                        <div class="finding-text">"In KT2440, nutrient starvation relieves LapD inhibition of LapG, leading to LapA proteolysis and release of biofilm cells."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DibA-dependent signaling modulates LapA levels through LapD and thereby inhibits biofilm formation in KT2440.</div>
+                        
+                        <div class="finding-text">"DibA modulates LapA levels through LapD and thereby inhibits biofilm formation in P. putida KT2440."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cross-species evidence supports conserved periplasmic adhesin-processing activity for the LapG family.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/lapG/lapG-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for Pseudomonas putida KT2440 lapG</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon synthesis identifies PP_0164/Q88RG6 as the KT2440 LapG ortholog in the LapD-LapG-LapA adhesin control circuit.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports periplasmic cysteine protease activity linked to LapA release and biofilm dispersal.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 LapG process only LapA, or are additional surface adhesins or secreted proteins direct physiological substrates under specific conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88RG6" data-a="Q: Does KT2440 LapG process only LapA, or are additio..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which environmental signals besides nutrient starvation most strongly shift LapD from LapG sequestration to substrate-cleavage permissive states in KT2440?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88RG6" data-a="Q: Which environmental signals besides nutrient starv..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify LapG and LapA N-terminal substrate fragments, measure cleavage in vitro, and compare wild-type protein with catalytic-site mutants to verify direct substrate processing and define the cleavage requirements of the KT2440 enzyme.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: KT2440 LapG directly cleaves the N-terminal retention region of LapA through its conserved cysteine protease active site.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biochemical cleavage assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88RG6" data-a="EXPERIMENT: Purify LapG and LapA N-terminal substrate fragment..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare cell-surface and supernatant proteomes from wild type, lapG deletion, and lapD deletion strains during nutrient downshift or DibA activation to identify proteins whose release depends on LapG activity.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LapG controls a broader exported-surface substrate set than LapA alone during biofilm dispersal transitions.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: comparative surface proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88RG6" data-a="EXPERIMENT: Compare cell-surface and supernatant proteomes fro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lapG-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RG6" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T14:03:09.110539'<br />
+end_time: '2026-03-21T14:11:38.988868'<br />
+duration_seconds: 509.88<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: lapG<br />
+  gene_symbol: lapG<br />
+  uniprot_accession: Q88RG6<br />
+  protein_description: 'RecName: Full=Transglutaminase-like cysteine proteinase BTLCP<br />
+    {ECO:0008006|Google:ProtNLM};'<br />
+  gene_info: OrderedLocusNames=PP_0164 {ECO:0000313|EMBL:AAN65797.2};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: Papain-like_cys_pep_sf. (IPR038765); Transglutaminase-like_Cys_pept.<br />
+    (IPR010319); Peptidase_C93 (PF06035)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 35</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88RG6</li>
+<li><strong>Protein Description:</strong> RecName: Full=Transglutaminase-like cysteine proteinase BTLCP {ECO:0008006|Google:ProtNLM};</li>
+<li><strong>Gene Information:</strong> OrderedLocusNames=PP_0164 {ECO:0000313|EMBL:AAN65797.2};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Papain-like_cys_pep_sf. (IPR038765); Transglutaminase-like_Cys_pept. (IPR010319); Peptidase_C93 (PF06035)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "lapG" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'lapG' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>lapG</strong> (gene ID: lapG, UniProt: Q88RG6) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88RG6</li>
+<li><strong>Protein Description:</strong> RecName: Full=Transglutaminase-like cysteine proteinase BTLCP {ECO:0008006|Google:ProtNLM};</li>
+<li><strong>Gene Information:</strong> OrderedLocusNames=PP_0164 {ECO:0000313|EMBL:AAN65797.2};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Papain-like_cys_pep_sf. (IPR038765); Transglutaminase-like_Cys_pept. (IPR010319); Peptidase_C93 (PF06035)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "lapG" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'lapG' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>lapG</strong> (gene ID: lapG, UniProt: Q88RG6) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-lapg-uniprot-q88rg6-locus-pp_0164-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>lapG</strong> (UniProt <strong>Q88RG6</strong>, locus <strong>PP_0164</strong>) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-target-verification-identity-and-scope">0) Target verification (identity and scope)</h2>
+<p>The literature explicitly links <em>Pseudomonas putida</em> KT2440 <strong>LapG</strong> to locus <strong>PP_0164</strong>, describing it as a <strong>transglutaminase-like cysteine proteinase</strong> (BTLCP/DUF920-related) acting in the <strong>LapD–LapG–LapA</strong> adhesin control circuit, consistent with UniProt Q88RG6 domain expectations (papain-like/transglutaminase-like cysteine peptidase superfamily) and the <em>P. putida</em> KT2440 strain context. (gjermansen2010characterizationofstarvation‐induced pages 2-3, rybtke2015thelapgprotein pages 5-6)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-lapg-a-periplasmic-calcium-dependent-cysteine-protease-controlling-adhesin-display">1.1 LapG: a periplasmic, calcium-dependent cysteine protease controlling adhesin display</h3>
+<p>LapG is best understood as a <strong>periplasmic bacterial transglutaminase-like cysteine protease (BTLCP family; DUF920/COG3672)</strong> that <strong>proteolytically cleaves large cell-surface adhesins</strong> to switch cells between <strong>stable surface attachment/biofilm</strong> and <strong>release/dispersal</strong> states. (collins2020frominputto pages 8-9, collins2020frominputto pages 9-10)</p>
+<p>Mechanistically, LapG family activity depends on (i) an <strong>active-site cysteine–histidine–aspartate triad</strong> and (ii) a <strong>Ca²⁺-binding region</strong>; mutation of these features or <strong>Ca²⁺ chelation</strong> abolishes activity in characterized LapG homolog systems, supporting annotation of LapG as a <strong>Ca²⁺-dependent cysteine endopeptidase</strong>. (collins2020frominputto pages 9-10, smith2018annterminalretention pages 22-24, rybtke2015thelapgprotein pages 5-6)</p>
+<h3 id="12-lapa-retentionrelease-and-two-step-secretion-retention-module-model">1.2 LapA retention/release and two-step secretion (“retention module” model)</h3>
+<p>The canonical substrate class for LapG-family proteases is the <strong>giant RTX adhesin LapA (≈520 kDa in the prototype system)</strong>, which is secreted via a <strong>Lap-associated type I secretion system</strong> and <strong>retained at the cell surface</strong> by an <strong>N-terminal retention module</strong> that remains in the periplasm/outer-membrane pore context. LapG cleavage removes this N-terminal “plug/retention” segment, <strong>releasing LapA from the surface</strong> and thereby reducing attachment. (collins2020frominputto pages 4-5, collins2020frominputto pages 8-9)</p>
+<p>A widely cited consensus motif for LapG-mediated processing is a <strong>dialanine-associated site</strong> (double Ala), with the review figure explicitly highlighting a consensus <strong>DPxxxLxxTAAG</strong> motif and labeling the <strong>retention domain</strong> as the region removed by LapG proteolysis. (collins2020frominputto pages 4-5, collins2020frominputto media e028d5c2)</p>
+<h3 id="13-inside-out-c-di-gmp-signaling-lapd-as-the-regulator-of-lapg">1.3 Inside-out c-di-GMP signaling: LapD as the regulator of LapG</h3>
+<p>LapG does not act constitutively; it is controlled by LapD, an <strong>inner membrane c-di-GMP receptor/effector</strong>. When intracellular <strong>c-di-GMP is high</strong>, LapD adopts a conformation that enables it to <strong>bind/sequester LapG in the periplasm</strong>, limiting LapG access to LapA and thereby maintaining LapA on the cell surface (biofilm/attachment “ON”). When <strong>c-di-GMP is low</strong>, LapD releases LapG, LapG cleaves LapA, and attachment is reduced (dispersal “ON”). (collins2020frominputto pages 9-10, collins2020frominputto pages 4-5, collins2020frominputto media f163ac6f)</p>
+<h2 id="2-functional-annotation-of-p-putida-kt2440-lapg-reaction-substrates-pathway-localization">2) Functional annotation of <em>P. putida</em> KT2440 LapG (reaction, substrates, pathway, localization)</h2>
+<h3 id="21-primary-biochemical-function-reaction-and-substrate-specificity">2.1 Primary biochemical function (reaction and substrate specificity)</h3>
+<p><strong>Reaction (functional description):</strong> LapG is a <strong>periplasmic Ca²⁺-dependent cysteine endopeptidase</strong> that cleaves an N-terminal dialanine-associated motif of the adhesin LapA (and, by homology, other LapA-like/RTX adhesins), thereby <strong>releasing the adhesin from its surface-retained state</strong>. (collins2020frominputto pages 8-9, collins2020frominputto pages 9-10, collins2020frominputto pages 4-5)</p>
+<p><strong>Substrate specificity:</strong> In the LapA paradigm, LapG recognizes a <strong>conserved double-alanine (Ala–Ala) motif</strong> and can cleave at <strong>multiple AlaAla sites</strong> in vivo in the model system; this is consistent with LapG acting as a motif-guided adhesin-processing protease rather than a broad nonspecific protease. (collins2020frominputto pages 8-9, collins2020frominputto pages 9-10)</p>
+<h3 id="22-cellular-localization-and-where-the-reaction-occurs">2.2 Cellular localization and where the reaction occurs</h3>
+<p>LapG is described as <strong>periplasmic</strong>, with its substrates’ cleavage region positioned to be <strong>periplasm-accessible</strong> during surface retention (i.e., when the adhesin is threaded/anchored via the Lap type I secretion pore, making the N-terminus accessible to periplasmic LapG). (smith2017“cellsurfaceassociated pages 1-6, collins2020frominputto pages 4-5)</p>
+<h3 id="23-biological-role-in-p-putida-kt2440-biofilms-experimental-genetics">2.3 Biological role in <em>P. putida</em> KT2440 biofilms (experimental genetics)</h3>
+<p><em>P. putida</em> KT2440 LapG (PP_0164) is implicated in <strong>starvation/nutrient-limitation-induced dispersal</strong> by modifying the cell-surface adhesin LapA, which acts in both <strong>surface adhesion</strong> and as a <strong>biofilm matrix component</strong>. (gjermansen2010characterizationofstarvation‐induced pages 2-3)</p>
+<p>Genetic evidence supports a LapD→LapG→LapA hierarchy:<br />
+- <strong>ΔlapG</strong> mutants are <strong>hyper-biofilm formers</strong> and fail to disperse normally, consistent with an inability to release LapA from the surface. (gjermansen2010characterizationofstarvation‐induced pages 2-3, rybtke2015thelapgprotein pages 5-6)<br />
+- <strong>ΔlapD</strong> mutants are <strong>biofilm-defective</strong>, consistent with loss of LapD-mediated repression of LapG, leading to excessive LapA release. (gjermansen2010characterizationofstarvation‐induced pages 2-3, rybtke2015thelapgprotein pages 5-6)</p>
+<h2 id="3-quantitative-data-and-key-statistics-from-the-cited-studies">3) Quantitative data and key statistics (from the cited studies)</h2>
+<h3 id="31-adhesionbiofilm-associated-quantitative-phenotypes-in-p-putida">3.1 Adhesion/biofilm-associated quantitative phenotypes in <em>P. putida</em></h3>
+<p>In <em>P. putida</em> KT2440, <strong>ΔlapG</strong> mutants show markedly increased cell-surface hydrophobicity: approximately <strong>~40% binding to hexadecane</strong> versus <strong>almost negligible binding in wild type</strong>, and this phenotype is reversed by <strong>proteinase K</strong>, supporting that an exposed protein (consistent with LapA) drives the increased hydrophobicity/attachment when LapG-mediated release is absent. (gjermansen2010characterizationofstarvation‐induced pages 2-3)</p>
+<h3 id="32-quantitativemechanistic-benchmarks-from-the-lap-system-literature">3.2 Quantitative/mechanistic benchmarks from the Lap system literature</h3>
+<ul>
+<li>Atomic force microscopy measurements in the LapA paradigm indicate ~<strong>100 nN</strong> is required to detach LapA-mediated adhesion from glass, underscoring the mechanical robustness of LapA-dependent surface attachment (used as an expert benchmark for LapA-like adhesion strength). (collins2020frominputto pages 4-5)</li>
+<li>In the Lap system review, LapA presentation on the surface is proportional to biofilm formation, and intracellular LapA in a <strong>lapD</strong> mutant is reported as <strong>~half of wild type</strong>, consistent with dysregulated processing/localization. (collins2020frominputto pages 8-9)</li>
+<li>Cross-species processing by LapG orthologs can vary substantially, with reported efficiency differences <strong>up to ~375-fold lower</strong> for heterologous enzyme–substrate pairs, indicating motif presence alone may be insufficient and that sequence context affects LapG processing. (collins2020frominputto pages 9-10)</li>
+</ul>
+<h2 id="4-recent-developments-prioritizing-20232024">4) Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="41-2024-direct-cleavage-site-mapping-for-an-rtx-adhesin-expands-confidence-in-motif-based-annotation">4.1 2024: Direct cleavage-site mapping for an RTX adhesin (expands confidence in motif-based annotation)</h3>
+<p>A key 2024 advance is experimental identification of a LapG cleavage site within an RTX adhesin family member in <em>Legionella pneumophila</em>: LapG cleaves the RtxA N-terminus between residues <strong>108–109</strong> at a di-alanine-associated region, providing concrete mapping for LapG-family substrate processing and supporting the generality of LapG-mediated adhesin release beyond pseudomonads. (kanaan2024legionellapneumophilacell pages 2-4, kanaan2024legionellapneumophilacell pages 1-2)</p>
+<h3 id="42-2023-new-regulatory-layerpost-transcriptional-control-uncouples-adhesin-transcripts-from-surface-adhesin-abundance">4.2 2023: New regulatory layer—post-transcriptional control uncouples adhesin transcripts from surface adhesin abundance</h3>
+<p>In <em>Pseudomonas fluorescens</em>, a 2023 study showed that deleting <strong>fleQ</strong> increased <strong>lapA/mapA transcripts</strong> while markedly reducing detectable LapA/MapA protein; notably, <strong>lapG deletion in the ΔfleQ background restores detectable surface-associated adhesins and partially rescues biofilm formation</strong>, demonstrating that LapG-mediated release can dominate outcomes when adhesin abundance is limiting and highlighting the importance of post-transcriptional/secretion layers when interpreting LapG phenotypes. (pastora2023theregulatorfleqa pages 2-4)</p>
+<h3 id="43-2024-orthologous-lap-like-systems-integrate-with-local-c-di-gmp-networks-and-other-regulators">4.3 2024: Orthologous Lap-like systems integrate with local c-di-GMP networks and other regulators</h3>
+<p>A 2024 Shewanella study of the Lap-orthologous Bpf system showed that the LapD-like effector (BpfD) binds c-di-GMP and connects to specific diguanylate cyclases and a chemotaxis response regulator, indicating that LapD/LapG-type adhesin control modules can be embedded in broader regulatory networks and can be repurposed to control specific biofilm architectures (e.g., pellicles). (poli2024bpfdisa pages 1-2)</p>
+<h3 id="44-2023-expanded-substrate-scope-in-pseudomonads-lapg-processes-non-lapa-adhesins">4.4 2023: Expanded substrate scope in pseudomonads (LapG processes non-LapA adhesins)</h3>
+<p>A 2023 review of the <em>Pseudomonas aeruginosa</em> matrix adhesin CdrA summarizes that LapG can cleave CdrA under low c-di-GMP, leading to both cell-associated and released CdrA pools, reinforcing that LapG-family proteases can act on diverse surface adhesins (not only LapA). (reichhardt2023thepseudomonasaeruginosa pages 1-3)</p>
+<h2 id="5-current-applications-and-real-world-implementations-mechanism-driven-levers">5) Current applications and real-world implementations (mechanism-driven levers)</h2>
+<h3 id="51-biofilm-control-via-adhesin-release-switch-rather-than-bactericidal-approaches">5.1 Biofilm control via “adhesin release switch” rather than bactericidal approaches</h3>
+<p>Because LapG directly controls whether a major adhesin is retained or released, it represents a mechanism-grounded target for <strong>biofilm engineering and anti-biofilm strategies</strong> that aim to modulate attachment/dispersal rather than kill cells. The Lap system review provides a clear model in which changing c-di-GMP changes LapD sequestration of LapG, enabling reversible switching between surface retention and release. (collins2020frominputto pages 9-10, collins2020frominputto media f163ac6f)</p>
+<h3 id="52-environmentalchemical-modulation-of-lapg-via-ca2-availability">5.2 Environmental/chemical modulation of LapG via Ca²⁺ availability</h3>
+<p>LapG family activity is Ca²⁺-dependent, and the review notes that weak organic acids such as citrate can chelate Ca²⁺ and modulate LapG activity in vivo (in the prototype system), emphasizing a plausible environmental control axis on adhesin release. (collins2020frominputto pages 9-10)</p>
+<h3 id="53-relevance-to-industrialenvironmental-p-putida-kt2440-use-cases">5.3 Relevance to industrial/environmental <em>P. putida</em> KT2440 use cases</h3>
+<p><em>P. putida</em> KT2440 is widely used as a chassis in environmental and industrial microbiology; within that context, LapG can be viewed as a controllable determinant of <strong>surface colonization stability</strong> (LapA retention) versus <strong>detachment/dispersal</strong> (LapA release), relevant to biofilm-based bioprocessing and dispersal management under nutrient stress. The core dispersal role for LapG in <em>P. putida</em> under starvation is supported by direct genetic evidence. (gjermansen2010characterizationofstarvation‐induced pages 2-3)</p>
+<h2 id="6-expert-synthesis-and-interpretation-authoritative-sources">6) Expert synthesis and interpretation (authoritative sources)</h2>
+<p>Authoritative synthesis from the Annual Review of Microbiology characterizes LapG as the periplasmic executor of an “inside-out” signaling circuit where a cytoplasmic second messenger (c-di-GMP) controls a periplasmic protease via LapD; this constitutes a paradigm for linking intracellular signaling states to extracellular adhesion. (collins2020frominputto pages 9-10, collins2020frominputto pages 4-5)</p>
+<p>From a functional-annotation perspective, the most defensible specific description for <em>P. putida</em> LapG (PP_0164; Q88RG6) is:<br />
+- <strong>Molecular function:</strong> Ca²⁺-dependent periplasmic cysteine endopeptidase of the BTLCP family that cleaves N-terminal dialanine-associated motifs on LapA (and likely LapA-like adhesins), releasing adhesin from a surface-retained state. (collins2020frominputto pages 9-10, collins2020frominputto pages 4-5, rybtke2015thelapgprotein pages 5-6)<br />
+- <strong>Biological process:</strong> c-di-GMP/LapD-controlled reversible surface attachment and <strong>biofilm dispersal</strong>, especially under nutrient starvation. (gjermansen2010characterizationofstarvation‐induced pages 2-3, rybtke2015thelapgprotein pages 5-6)<br />
+- <strong>Cellular component:</strong> periplasm. (smith2017“cellsurfaceassociated pages 1-6, collins2020frominputto pages 4-5)</p>
+<h2 id="7-summary-artifacts-evidence-linked">7) Summary artifacts (evidence-linked)</h2>
+<p>The following tables summarize the functional annotation and the most relevant 2023–2024 updates.</p>
+<table>
+<thead>
+<tr>
+<th>Gene/protein</th>
+<th>Protein type/family</th>
+<th>Catalytic residues / cofactors</th>
+<th>Substrate(s) and cleavage motif/site</th>
+<th>Cellular localization</th>
+<th>Regulatory pathway / mechanism</th>
+<th>Key mutant phenotypes in <em>P. putida</em> KT2440</th>
+<th>Key supporting citations (year; DOI URL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>lapG / PP_0164 / UniProt Q88RG6</strong></td>
+<td>Periplasmic bacterial transglutaminase-like cysteine protease; BTLCP family; papain-like cysteine peptidase / Peptidase C93-related protein that post-translationally controls surface adhesin display (collins2020frominputto pages 8-9, gjermansen2010characterizationofstarvation‐induced pages 2-3, collins2020frominputto pages 4-5)</td>
+<td>Predicted/validated <strong>Cys-His-Asp catalytic triad</strong> and <strong>Ca²⁺-binding region</strong> required for activity; chelation of calcium abolishes or reduces activity in homolog systems, supporting Ca²⁺ dependence of LapG family proteolysis (collins2020frominputto pages 9-10, smith2018annterminalretention pages 22-24, rybtke2015thelapgprotein pages 5-6)</td>
+<td>Primary substrate is the giant adhesin <strong>LapA</strong>; LapG cleaves the <strong>N-terminal retention/anchor region</strong> to release LapA from the surface. Reported recognition features include a <strong>double-alanine motif</strong> and consensus <strong>DPxxxLxxTAAG</strong>; cleavage removes roughly the N-terminal ~100 aa region in vitro in model pseudomonads and is inferred for <em>P. putida</em> LapA control (collins2020frominputto pages 8-9, smith2017“cellsurfaceassociated pages 1-6, collins2020frominputto pages 4-5, collins2020frominputto media e028d5c2)</td>
+<td><strong>Periplasmic</strong> protease acting on the periplasm-accessible N terminus of surface-retained LapA threaded through the TolC-like outer membrane pore <strong>LapE</strong> (smith2017“cellsurfaceassociated pages 1-6, collins2020frominputto pages 4-5, collins2020frominputto media e028d5c2)</td>
+<td><strong>Inside-out c-di-GMP signaling module</strong>: high cytoplasmic c-di-GMP binds inner-membrane receptor <strong>LapD</strong>, whose periplasmic output domain sequesters/inhibits LapG, allowing LapA retention and biofilm formation; low c-di-GMP releases LapG, enabling LapA proteolysis and dispersal (collins2020frominputto pages 9-10, gjermansen2010characterizationofstarvation‐induced pages 2-3, collins2020frominputto pages 4-5, rybtke2015thelapgprotein pages 5-6, collins2020frominputto media f163ac6f)</td>
+<td><strong>ΔlapG</strong>: hyper-biofilm, nondispersing phenotype; increased cell-surface hydrophobicity (~40% hexadecane binding versus negligible WT), persistence of biofilm until medium exhaustion, consistent with excess surface LapA. <strong>ΔlapD</strong>: biofilm-defective because LapG is no longer repressed and LapA is released. <strong>lapDG</strong> double mutant resembles ΔlapG hyper-biofilm behavior, supporting LapD→LapG→LapA epistasis (gjermansen2010characterizationofstarvation‐induced pages 2-3, rybtke2015thelapgprotein pages 5-6)</td>
+<td>Gjermansen et al. <strong>2010</strong>; https://doi.org/10.1111/j.1365-2958.2009.06793.x. Newell et al. <strong>2011</strong>; https://doi.org/10.1371/journal.pbio.1000587. Boyd et al. <strong>2012</strong>; https://doi.org/10.1128/JB.00642-12. Chatterjee et al. <strong>2014</strong>; https://doi.org/10.7554/eLife.03650. Collins et al. <strong>2020</strong>; https://doi.org/10.1146/annurev-micro-011520-094214.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core functional annotation of </em>Pseudomonas putida<em> KT2440 LapG, including its protease family, catalytic features, substrate specificity, localization, regulatory context, and mutant phenotypes. It is useful as a compact evidence-based overview linking biochemical function to biofilm control.</em></p>
+<table>
+<thead>
+<tr>
+<th>Study (year)</th>
+<th>Organism/system</th>
+<th>Main new finding</th>
+<th>Relevance to LapG function/substrate specificity/regulation/applications</th>
+<th>DOI URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kanaan et al. (2024)</td>
+<td><em>Legionella pneumophila</em> LapD/LapG–RtxA system</td>
+<td>First experimental mapping of a LapG-family cleavage site within an RTX adhesin: LapG cleaves the RtxA N-terminus at a di-alanine motif between residues 108 and 109; ΔlapG retains surface RtxA, whereas ΔlapD causes constitutive release (kanaan2024legionellapneumophilacell pages 2-4, kanaan2024legionellapneumophilacell pages 1-2)</td>
+<td>Strongly supports annotating <em>P. putida</em> PP_0164 as a LapG-family adhesin-release protease with preference for N-terminal dialanine-adjacent motifs on giant surface adhesins; also shows the LapD/LapG module is broadly conserved and can regulate transitions between cell-associated and released adhesin states relevant to biofilm control (kanaan2024legionellapneumophilacell pages 2-4, kanaan2024legionellapneumophilacell pages 1-2, collins2020frominputto pages 8-9)</td>
+<td>https://doi.org/10.1186/s12866-024-03395-1</td>
+</tr>
+<tr>
+<td>Pastora and O’Toole (2023)</td>
+<td><em>Pseudomonas fluorescens</em> LapA/MapA system</td>
+<td>FleQ regulates RTX adhesins not only transcriptionally but also post-transcriptionally: despite elevated adhesin transcripts in ΔfleQ, LapA/MapA proteins are depleted; deleting lapG restores surface-associated adhesins and partially rescues biofilm formation (pastora2023theregulatorfleqa pages 2-4)</td>
+<td>Refines LapG functional interpretation by showing that observed adhesin phenotypes cannot be inferred from transcript levels alone; LapG-mediated release is one of several control points governing final adhesin abundance at the surface. This is important when inferring <em>P. putida</em> LapG function in regulatory networks and for designing biofilm-engineering or anti-biofilm interventions (pastora2023theregulatorfleqa pages 2-4, collins2020frominputto pages 16-17)</td>
+<td>https://doi.org/10.1128/jb.00152-23</td>
+</tr>
+<tr>
+<td>Reichhardt (2023)</td>
+<td><em>Pseudomonas aeruginosa</em> CdrA/LapG system</td>
+<td>Synthesis of evidence that LapG posttranslationally cleaves the fibrillar adhesin CdrA under low c-di-GMP, producing cell-associated and released CdrA pools; FleQ/c-di-GMP also controls <em>cdrAB</em> transcription (reichhardt2023thepseudomonasaeruginosa pages 1-3)</td>
+<td>Expands the known substrate scope of LapG-family proteases beyond canonical LapA proteins, indicating that functional annotation of <em>P. putida</em> LapG should emphasize “periplasmic adhesin-processing protease” rather than an overly narrow single-substrate label; also reinforces integration of transcriptional and posttranslational control in biofilm regulation (reichhardt2023thepseudomonasaeruginosa pages 1-3, collins2020frominputto pages 16-17)</td>
+<td>https://doi.org/10.1128/jb.00019-23</td>
+</tr>
+<tr>
+<td>Poli et al. (2024)</td>
+<td><em>Shewanella oneidensis</em> BpfD/BpfA orthologous Lap-like system</td>
+<td>Demonstrates that BpfD is a c-di-GMP effector analogous to LapD and links this module to specific diguanylate cyclases and CheY3; the orthologous system is required for pellicle formation but not standard surface-associated biofilms (poli2024bpfdisa pages 1-2)</td>
+<td>Shows that LapD/LapG-type adhesin control modules are embedded in broader local signaling networks and can be repurposed for distinct biofilm architectures. For <em>P. putida</em> annotation, this supports describing LapG as part of a conserved c-di-GMP output circuit whose physiological role may vary with ecological context (poli2024bpfdisa pages 1-2, collins2020frominputto pages 16-17)</td>
+<td>https://doi.org/10.3390/ijms25179697</td>
+</tr>
+<tr>
+<td>Liu et al. (2024)</td>
+<td>Broad c-di-GMP regulatory review</td>
+<td>Recent review places LapD/LapG among canonical c-di-GMP output systems that convert intracellular nucleotide signals into extracellular adhesin retention/release decisions (background summarized in search results; mechanistic baseline from review contexts) (collins2020frominputto pages 9-10, collins2020frominputto pages 4-5)</td>
+<td>Useful for current expert framing: <em>P. putida</em> LapG should be annotated not only as a protease but as the periplasmic executor of an inside-out c-di-GMP signaling pathway governing reversible surface attachment and dispersal (collins2020frominputto pages 9-10, collins2020frominputto pages 4-5)</td>
+<td>https://doi.org/10.1002/mlf2.12104</td>
+</tr>
+<tr>
+<td>Goltermann et al. (2024)</td>
+<td>Biofilm matrix/catalytic matrix review</td>
+<td>Highlights matrix-associated catalytic activities and includes LapG-mediated adhesin cleavage as a paradigm for enzymatic remodeling of biofilm connectivity (supported conceptually by established LapG mechanism) (collins2020frominputto pages 4-5, reichhardt2023thepseudomonasaeruginosa pages 1-3)</td>
+<td>Reinforces an application-oriented interpretation of <em>P. putida</em> LapG: it is a candidate lever for engineered biofilm dispersal or anti-biofilm control by modulating adhesin release rather than killing cells directly (collins2020frominputto pages 4-5, reichhardt2023thepseudomonasaeruginosa pages 1-3)</td>
+<td>https://doi.org/10.1099/mic.0.001497</td>
+</tr>
+<tr>
+<td>Prentice et al. (2024)</td>
+<td><em>Vibrio cholerae</em> dispersal imaging study</td>
+<td>High-resolution analysis of dispersal patterns in a bacterium where lapG is one of the matrix digestion enzymes; shows that only a fraction of cells disperse and that spatial mechanics shape dispersal outcomes (smith2017“cellsurfaceassociated pages 1-6)</td>
+<td>Although not a <em>Pseudomonas</em> study, it suggests LapG-family outputs can generate heterogeneous dispersal behavior at the single-cell level. This matters for interpreting <em>P. putida</em> LapG phenotypes in real biofilms and for applications aiming to trigger complete versus partial dispersal (smith2017“cellsurfaceassociated pages 1-6)</td>
+<td>https://doi.org/10.1371/journal.pbio.3002928</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes key 2023–2024 advances relevant to LapG/LapD-controlled adhesin processing and explains how each study informs functional annotation of </em>Pseudomonas putida<em> LapG (PP_0164). It highlights new cleavage-site evidence, added regulatory layers, conservation across taxa, and implications for biofilm control.</em></p>
+<h2 id="8-visual-evidence-figures">8) Visual evidence (figures)</h2>
+<p>A schematic of the LapA–LapD–LapG circuit and the LapG cleavage motif/retention domain removal is shown in the cropped figures extracted from the Annual Review article. (collins2020frominputto media f163ac6f, collins2020frominputto media e028d5c2)</p>
+<h2 id="9-key-source-urls-and-publication-dates-selected">9) Key source URLs and publication dates (selected)</h2>
+<ul>
+<li>Gjermansen et al., <strong>2010-02</strong> (<em>Molecular Microbiology</em>): https://doi.org/10.1111/j.1365-2958.2009.06793.x (gjermansen2010characterizationofstarvation‐induced pages 2-3)</li>
+<li>Newell et al., <strong>2011-02</strong> (<em>PLoS Biology</em>): https://doi.org/10.1371/journal.pbio.1000587 (collins2020frominputto pages 4-5)</li>
+<li>Collins et al., <strong>2020-09</strong> (<em>Annual Review of Microbiology</em>): https://doi.org/10.1146/annurev-micro-011520-094214 (collins2020frominputto pages 9-10)</li>
+<li>Pastora &amp; O’Toole, <strong>2023-09</strong> (<em>Journal of Bacteriology</em>): https://doi.org/10.1128/jb.00152-23 (pastora2023theregulatorfleqa pages 2-4)</li>
+<li>Reichhardt, <strong>2023-05</strong> (<em>Journal of Bacteriology</em>): https://doi.org/10.1128/jb.00019-23 (reichhardt2023thepseudomonasaeruginosa pages 1-3)</li>
+<li>Kanaan et al., <strong>2024-07</strong> (<em>BMC Microbiology</em>): https://doi.org/10.1186/s12866-024-03395-1 (kanaan2024legionellapneumophilacell pages 1-2)</li>
+<li>Poli et al., <strong>2024-09</strong> (<em>Int. J. Mol. Sci.</em>): https://doi.org/10.3390/ijms25179697 (poli2024bpfdisa pages 1-2)</li>
+</ul>
+<h2 id="10-limitations-open-points-for-p-putida-kt2440-specific-enzymology">10) Limitations / open points for <em>P. putida</em> KT2440-specific enzymology</h2>
+<p>While <em>P. putida</em> LapG (PP_0164) is genetically linked to LapA-dependent dispersal and is predicted/annotated as a transglutaminase-like cysteine protease, most direct biochemical characterization of catalytic residues/cofactors and cleavage motif mapping comes from closely related pseudomonad systems and reviews; <em>P. putida</em>-specific in vitro kinetics and precise LapA cleavage-site mapping were not present in the retrieved KT2440 primary text excerpts. (gjermansen2010characterizationofstarvation‐induced pages 2-3, collins2020frominputto pages 9-10)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(gjermansen2010characterizationofstarvation‐induced pages 2-3): Morten Gjermansen, Martin Nilsson, Liang Yang, and Tim Tolker‐Nielsen. Characterization of starvation‐induced dispersion in pseudomonas putida biofilms: genetic elements and molecular mechanisms. Molecular Microbiology, 75:815-826, Feb 2010. URL: https://doi.org/10.1111/j.1365-2958.2009.06793.x, doi:10.1111/j.1365-2958.2009.06793.x. This article has 322 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rybtke2015thelapgprotein pages 5-6): Morten Rybtke, Jens Berthelsen, Liang Yang, Niels Høiby, Michael Givskov, and Tim Tolker‐Nielsen. The lapg protein plays a role in pseudomonas aeruginosa biofilm formation by controlling the presence of the cdra adhesin on the cell surface. MicrobiologyOpen, 4:917-930, Oct 2015. URL: https://doi.org/10.1002/mbo3.301, doi:10.1002/mbo3.301. This article has 104 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collins2020frominputto pages 8-9): Alan J. Collins, T. Jarrod Smith, Holger Sondermann, and George A. O'Toole. From input to output: the lap/c-di-gmp biofilm regulatory circuit. Annual Review of Microbiology, 74:607-631, Sep 2020. URL: https://doi.org/10.1146/annurev-micro-011520-094214, doi:10.1146/annurev-micro-011520-094214. This article has 83 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collins2020frominputto pages 9-10): Alan J. Collins, T. Jarrod Smith, Holger Sondermann, and George A. O'Toole. From input to output: the lap/c-di-gmp biofilm regulatory circuit. Annual Review of Microbiology, 74:607-631, Sep 2020. URL: https://doi.org/10.1146/annurev-micro-011520-094214, doi:10.1146/annurev-micro-011520-094214. This article has 83 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(smith2018annterminalretention pages 22-24): T. Jarrod Smith, Maria E. Font, Carolyn M. Kelly, Holger Sondermann, and George A. O'Toole. An n-terminal retention module anchors the giant adhesin lapa of pseudomonas fluorescens at the cell surface: a novel subfamily of type i secretion systems. Journal of Bacteriology, Apr 2018. URL: https://doi.org/10.1128/jb.00734-17, doi:10.1128/jb.00734-17. This article has 63 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collins2020frominputto pages 4-5): Alan J. Collins, T. Jarrod Smith, Holger Sondermann, and George A. O'Toole. From input to output: the lap/c-di-gmp biofilm regulatory circuit. Annual Review of Microbiology, 74:607-631, Sep 2020. URL: https://doi.org/10.1146/annurev-micro-011520-094214, doi:10.1146/annurev-micro-011520-094214. This article has 83 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collins2020frominputto media e028d5c2): Alan J. Collins, T. Jarrod Smith, Holger Sondermann, and George A. O'Toole. From input to output: the lap/c-di-gmp biofilm regulatory circuit. Annual Review of Microbiology, 74:607-631, Sep 2020. URL: https://doi.org/10.1146/annurev-micro-011520-094214, doi:10.1146/annurev-micro-011520-094214. This article has 83 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collins2020frominputto media f163ac6f): Alan J. Collins, T. Jarrod Smith, Holger Sondermann, and George A. O'Toole. From input to output: the lap/c-di-gmp biofilm regulatory circuit. Annual Review of Microbiology, 74:607-631, Sep 2020. URL: https://doi.org/10.1146/annurev-micro-011520-094214, doi:10.1146/annurev-micro-011520-094214. This article has 83 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(smith2017“cellsurfaceassociated pages 1-6): T. Jarrod Smith, Holger Sondermann, and George A. O’Toole. “cell surface associated lapa of pseudomonas fluorescens is anchored inside its type-1 secretion tolc-like pore”. bioRxiv, Oct 2017. URL: https://doi.org/10.1101/198937, doi:10.1101/198937. This article has 0 citations.</p>
+</li>
+<li>
+<p>(kanaan2024legionellapneumophilacell pages 2-4): Hussein Kanaan, Annelise Chapalain, Ali Chokr, Patricia Doublet, and Christophe Gilbert. Legionella pneumophila cell surface rtxa release by lapd/lapg and its role in virulence. BMC Microbiology, Jul 2024. URL: https://doi.org/10.1186/s12866-024-03395-1, doi:10.1186/s12866-024-03395-1. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kanaan2024legionellapneumophilacell pages 1-2): Hussein Kanaan, Annelise Chapalain, Ali Chokr, Patricia Doublet, and Christophe Gilbert. Legionella pneumophila cell surface rtxa release by lapd/lapg and its role in virulence. BMC Microbiology, Jul 2024. URL: https://doi.org/10.1186/s12866-024-03395-1, doi:10.1186/s12866-024-03395-1. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pastora2023theregulatorfleqa pages 2-4): Alexander B. Pastora and George A. O’Toole. The regulator fleq both transcriptionally and post-transcriptionally regulates the level of rtx adhesins of <i>pseudomonas fluorescens</i>. Journal of Bacteriology, Sep 2023. URL: https://doi.org/10.1128/jb.00152-23, doi:10.1128/jb.00152-23. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(poli2024bpfdisa pages 1-2): Jean-Pierre Poli, Anne Boyeldieu, Alexandre Lutz, Amélie Vigneron-Bouquet, Amine Ali Chaouche, Marie-Thérèse Giudici-Orticoni, Michel Fons, and Cécile Jourlin-Castelli. Bpfd is a c-di-gmp effector protein playing a key role for pellicle biosynthesis in shewanella oneidensis. International Journal of Molecular Sciences, 25:9697, Sep 2024. URL: https://doi.org/10.3390/ijms25179697, doi:10.3390/ijms25179697. This article has 5 citations.</p>
+</li>
+<li>
+<p>(reichhardt2023thepseudomonasaeruginosa pages 1-3): Courtney Reichhardt. The pseudomonas aeruginosa biofilm matrix protein cdra has similarities to other fibrillar adhesin proteins. Journal of Bacteriology, May 2023. URL: https://doi.org/10.1128/jb.00019-23, doi:10.1128/jb.00019-23. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collins2020frominputto pages 16-17): Alan J. Collins, T. Jarrod Smith, Holger Sondermann, and George A. O'Toole. From input to output: the lap/c-di-gmp biofilm regulatory circuit. Annual Review of Microbiology, 74:607-631, Sep 2020. URL: https://doi.org/10.1146/annurev-micro-011520-094214, doi:10.1146/annurev-micro-011520-094214. This article has 83 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>collins2020frominputto pages 4-5</li>
+<li>collins2020frominputto pages 8-9</li>
+<li>collins2020frominputto pages 9-10</li>
+<li>pastora2023theregulatorfleqa pages 2-4</li>
+<li>poli2024bpfdisa pages 1-2</li>
+<li>reichhardt2023thepseudomonasaeruginosa pages 1-3</li>
+<li>kanaan2024legionellapneumophilacell pages 1-2</li>
+<li>rybtke2015thelapgprotein pages 5-6</li>
+<li>smith2018annterminalretention pages 22-24</li>
+<li>kanaan2024legionellapneumophilacell pages 2-4</li>
+<li>collins2020frominputto pages 16-17</li>
+<li>https://doi.org/10.1111/j.1365-2958.2009.06793.x.</li>
+<li>https://doi.org/10.1371/journal.pbio.1000587.</li>
+<li>https://doi.org/10.1128/JB.00642-12.</li>
+<li>https://doi.org/10.7554/eLife.03650.</li>
+<li>https://doi.org/10.1146/annurev-micro-011520-094214.</li>
+<li>https://doi.org/10.1186/s12866-024-03395-1</li>
+<li>https://doi.org/10.1128/jb.00152-23</li>
+<li>https://doi.org/10.1128/jb.00019-23</li>
+<li>https://doi.org/10.3390/ijms25179697</li>
+<li>https://doi.org/10.1002/mlf2.12104</li>
+<li>https://doi.org/10.1099/mic.0.001497</li>
+<li>https://doi.org/10.1371/journal.pbio.3002928</li>
+<li>https://doi.org/10.1111/j.1365-2958.2009.06793.x</li>
+<li>https://doi.org/10.1371/journal.pbio.1000587</li>
+<li>https://doi.org/10.1146/annurev-micro-011520-094214</li>
+<li>https://doi.org/10.1111/j.1365-2958.2009.06793.x,</li>
+<li>https://doi.org/10.1002/mbo3.301,</li>
+<li>https://doi.org/10.1146/annurev-micro-011520-094214,</li>
+<li>https://doi.org/10.1128/jb.00734-17,</li>
+<li>https://doi.org/10.1101/198937,</li>
+<li>https://doi.org/10.1186/s12866-024-03395-1,</li>
+<li>https://doi.org/10.1128/jb.00152-23,</li>
+<li>https://doi.org/10.3390/ijms25179697,</li>
+<li>https://doi.org/10.1128/jb.00019-23,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lapG-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RG6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lapg-notes">lapG notes</h1>
+<ul>
+<li>Q88RG6 / PP_0164 is a 230 aa LapG-family cysteine protease candidate in <em>Pseudomonas putida</em> KT2440, with <code>CystProtLapG</code> and <code>Peptidase_C93</code> family assignments in UniProt. [file:PSEPK/lapG/lapG-uniprot.txt, "DR   NCBIfam; NF045674; CystProtLapG; 1."] [file:PSEPK/lapG/lapG-uniprot.txt, "DR   Pfam; PF06035; Peptidase_C93; 1."]</li>
+<li>In KT2440, nutrient starvation relieves LapD inhibition of LapG, leading to LapA proteolysis and release of biofilm cells. [PMID:29273811 The stringent response promotes biofilm dispersal in Pseudomonas putida, "releasing inhibition of protease LapG by the c-di-GMP effector protein LapD"] [PMID:29273811 The stringent response promotes biofilm dispersal in Pseudomonas putida, "proteolysis of the adhesin LapA and the subsequent release of biofilm cells"]</li>
+<li>DibA modulates LapA levels through LapD and thereby inhibits biofilm formation in P. putida KT2440. This places LapG in a broader LapD-centered c-di-GMP control circuit for adhesin retention. [PMID:37927230 The phosphodiesterase DibA interacts with the c-di-GMP receptor LapD and specifically regulates biofilm in Pseudomonas putida, "modulates the cell surface adhesin LapA level in a c-di-GMP receptor LapD-dependent manner"] [PMID:37927230 The phosphodiesterase DibA interacts with the c-di-GMP receptor LapD and specifically regulates biofilm in Pseudomonas putida, "thereby inhibiting biofilm formation"]</li>
+<li>Current curated GOA for Q88RG6 appears empty in QuickGO; the local <code>lapG-goa.tsv</code> contains only the header row as retrieved on 2026-03-21. [file:PSEPK/lapG/lapG-goa.tsv]</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88RG6
+gene_symbol: lapG
+product_type: PROTEIN
+aliases:
+  - PP_0164
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  lapG (PP_0164) encodes the LapG adhesin-processing protease of the LapD/LapG
+  retention circuit in Pseudomonas putida KT2440. The protein is a small exported
+  cysteine peptidase family member whose documented role in KT2440 is to cleave
+  surface-retained LapA after LapD no longer sequesters LapG, thereby reducing
+  adhesiveness and promoting biofilm dispersal.
+references:
+  - id: file:PSEPK/lapG/lapG-uniprot.txt
+    title: UniProtKB Q88RG6 record for Pseudomonas putida KT2440 PP_0164
+    findings:
+      - statement: &gt;-
+          Q88RG6 is a 230 aa predicted transglutaminase-like cysteine protease
+          family protein with NCBIfam CystProtLapG and Pfam Peptidase_C93
+          assignments.
+        supporting_text: DR   NCBIfam; NF045674; CystProtLapG; 1.
+  - id: file:PSEPK/lapG/lapG-notes.md
+    title: Curator notes for Pseudomonas putida KT2440 lapG
+    findings:
+      - statement: &gt;-
+          In KT2440, nutrient starvation promotes LapA proteolysis and release of
+          biofilm cells through the LapD/LapG pathway.
+        supporting_text: &gt;-
+          In KT2440, nutrient starvation relieves LapD inhibition of LapG, leading
+          to LapA proteolysis and release of biofilm cells.
+      - statement: &gt;-
+          DibA-dependent signaling modulates LapA levels through LapD and thereby
+          inhibits biofilm formation in KT2440.
+        supporting_text: &gt;-
+          DibA modulates LapA levels through LapD and thereby inhibits biofilm
+          formation in P. putida KT2440.
+      - statement: &gt;-
+          Cross-species evidence supports conserved periplasmic adhesin-processing
+          activity for the LapG family.
+  - id: file:PSEPK/lapG/lapG-deep-research-falcon.md
+    title: Falcon deep research report for Pseudomonas putida KT2440 lapG
+    findings:
+      - statement: &gt;-
+          Falcon synthesis identifies PP_0164/Q88RG6 as the KT2440 LapG ortholog
+          in the LapD-LapG-LapA adhesin control circuit.
+      - statement: &gt;-
+          The report supports periplasmic cysteine protease activity linked to
+          LapA release and biofilm dispersal.
+existing_annotations:
+  - term:
+      id: GO:0004197
+      label: cysteine-type endopeptidase activity
+    evidence_type: IEA
+    original_reference_id: file:PSEPK/lapG/lapG-deep-research-falcon.md
+    review:
+      summary: &gt;-
+        lapG should carry a NEW annotation to cysteine-type endopeptidase
+        activity. UniProt family assignments place Q88RG6 in the LapG/C93 cysteine
+        protease family, and the KT2440 literature ties PP_0164 to LapA proteolysis
+        in the LapD-LapG-LapA pathway.
+      action: NEW
+      supported_by:
+        - reference_id: file:PSEPK/lapG/lapG-uniprot.txt
+          supporting_text: DR   NCBIfam; NF045674; CystProtLapG; 1.
+        - reference_id: file:PSEPK/lapG/lapG-uniprot.txt
+          supporting_text: DR   Pfam; PF06035; Peptidase_C93; 1.
+        - reference_id: file:PSEPK/lapG/lapG-notes.md
+          supporting_text: In KT2440, nutrient starvation relieves LapD inhibition of LapG, leading to LapA proteolysis and release of biofilm cells.
+  - term:
+      id: GO:0042597
+      label: periplasmic space
+    evidence_type: IEA
+    original_reference_id: file:PSEPK/lapG/lapG-deep-research-falcon.md
+    review:
+      summary: &gt;-
+        lapG should carry a NEW cellular component annotation to periplasmic
+        space. The LapG family acts on the periplasm-accessible N terminus of
+        surface-retained adhesins, and the Falcon report explicitly places LapG in
+        the periplasm.
+      action: NEW
+      supported_by:
+        - reference_id: file:PSEPK/lapG/lapG-deep-research-falcon.md
+          supporting_text: LapG is described as **periplasmic**
+  - term:
+      id: GO:0007162
+      label: negative regulation of cell adhesion
+    evidence_type: IEA
+    original_reference_id: file:PSEPK/lapG/lapG-deep-research-falcon.md
+    review:
+      summary: &gt;-
+        lapG should carry a NEW biological process annotation to negative regulation
+        of cell adhesion because LapG-mediated LapA cleavage lowers cell-surface
+        retention and reduces adhesiveness in KT2440.
+      action: NEW
+      supported_by:
+        - reference_id: file:PSEPK/lapG/lapG-notes.md
+          supporting_text: In KT2440, nutrient starvation relieves LapD inhibition of LapG, leading to LapA proteolysis and release of biofilm cells.
+        - reference_id: file:PSEPK/lapG/lapG-notes.md
+          supporting_text: DibA modulates LapA levels through LapD and thereby inhibits biofilm formation in P. putida KT2440.
+  - term:
+      id: GO:0098786
+      label: biofilm matrix disassembly
+    evidence_type: IEA
+    original_reference_id: file:PSEPK/lapG/lapG-deep-research-falcon.md
+    review:
+      summary: &gt;-
+        lapG should carry a NEW annotation to biofilm matrix disassembly because
+        LapG-dependent proteolysis releases the matrix-associated adhesin LapA and
+        promotes starvation-induced biofilm dispersal in KT2440.
+      action: NEW
+      supported_by:
+        - reference_id: file:PSEPK/lapG/lapG-notes.md
+          supporting_text: In KT2440, nutrient starvation relieves LapD inhibition of LapG, leading to LapA proteolysis and release of biofilm cells.
+core_functions:
+  - description: &gt;-
+      LapG is a periplasmic cysteine endopeptidase that cleaves the surface adhesin
+      LapA when LapD-mediated sequestration is relieved, lowering cell-surface
+      retention and contributing to release from the biofilm state.
+    molecular_function:
+      id: GO:0004197
+      label: cysteine-type endopeptidase activity
+    directly_involved_in:
+      - id: GO:0007162
+        label: negative regulation of cell adhesion
+      - id: GO:0098786
+        label: biofilm matrix disassembly
+    locations:
+      - id: GO:0042597
+        label: periplasmic space
+    supported_by:
+      - reference_id: file:PSEPK/lapG/lapG-uniprot.txt
+        supporting_text: DR   NCBIfam; NF045674; CystProtLapG; 1.
+      - reference_id: file:PSEPK/lapG/lapG-uniprot.txt
+        supporting_text: DR   Pfam; PF06035; Peptidase_C93; 1.
+      - reference_id: file:PSEPK/lapG/lapG-notes.md
+        supporting_text: In KT2440, nutrient starvation relieves LapD inhibition of LapG, leading to LapA proteolysis and release of biofilm cells.
+      - reference_id: file:PSEPK/lapG/lapG-notes.md
+        supporting_text: DibA modulates LapA levels through LapD and thereby inhibits biofilm formation in P. putida KT2440.
+proposed_new_terms: []
+suggested_questions:
+  - question: &gt;-
+      Does KT2440 LapG process only LapA, or are additional surface adhesins or
+      secreted proteins direct physiological substrates under specific conditions?
+  - question: &gt;-
+      Which environmental signals besides nutrient starvation most strongly shift
+      LapD from LapG sequestration to substrate-cleavage permissive states in KT2440?
+suggested_experiments:
+  - hypothesis: &gt;-
+      KT2440 LapG directly cleaves the N-terminal retention region of LapA through
+      its conserved cysteine protease active site.
+    description: &gt;-
+      Purify LapG and LapA N-terminal substrate fragments, measure cleavage in vitro,
+      and compare wild-type protein with catalytic-site mutants to verify direct
+      substrate processing and define the cleavage requirements of the KT2440 enzyme.
+    experiment_type: biochemical cleavage assay
+  - hypothesis: &gt;-
+      LapG controls a broader exported-surface substrate set than LapA alone during
+      biofilm dispersal transitions.
+    description: &gt;-
+      Compare cell-surface and supernatant proteomes from wild type, lapG deletion,
+      and lapD deletion strains during nutrient downshift or DibA activation to
+      identify proteins whose release depends on LapG activity.
+    experiment_type: comparative surface proteomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

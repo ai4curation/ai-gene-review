@@ -1,0 +1,2675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cheA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cheA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88EW4" target="_blank" class="term-link">
+                        Q88EW4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_4338</span>
+                    
+                    <span class="badge">cheA2</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cheA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88EW4" data-a="DESCRIPTION: cheA encodes the chemotaxis histidine kinase CheA ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>cheA encodes the chemotaxis histidine kinase CheA of Pseudomonas putida KT2440. The protein is a 747 aa phosphorelay kinase with an N-terminal HPt domain, a central histidine kinase ATPase/dimerization region, and a C-terminal CheW-like domain. In KT2440 literature this locus corresponds to PP_4338/cheA2, the CheA paralog assigned to the canonical chemotaxis pathway rather than the Wsp-like c-di-GMP signaling branch. Its core role is to relay chemoreceptor input by autophosphorylating on histidine and transferring phosphate to response regulators such as CheY and CheB, thereby controlling chemotaxis.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000155" target="_blank" class="term-link">
+                                    GO:0000155
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay sensor kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW4" data-a="GO:0000155" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation captures the general CheA-like phosphorelay kinase role, but it is broader than the more specific child term GO:0004673 protein histidine kinase activity, which is also already present for this gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Retaining the broader phosphorelay sensor kinase term adds little beyond the specific protein histidine kinase annotation and obscures the more informative catalytic term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/cheA/cheA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0000155 is broader than GO:0004673 and becomes redundant when the child protein histidine kinase term is already present.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004673" target="_blank" class="term-link">
+                                    GO:0004673
+                                </a>
+                            </span>
+                            <span class="term-label">protein histidine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW4" data-a="GO:0004673" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the best existing molecular-function term for cheA. UniProt assigns the canonical CheA chemistry: ATP-dependent autophosphorylation on histidine followed by phosphotransfer to downstream response regulators.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein histidine kinase activity precisely captures the catalytic role of CheA in the chemotaxis phosphorelay and is supported by conserved domain architecture, phosphohistidine annotation, and the established CheA reaction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88EW4
+                                    
+                                </span>
+                                
+                                <div class="support-text">CheA is autophosphorylated; it can transfer its phosphate group to either CheB or CheY.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88EW4
+                                    
+                                </span>
+                                
+                                <div class="support-text">-!- CATALYTIC ACTIVITY: Reaction=ATP + protein L-histidine = ADP + protein N-phospho-L- histidine.; EC=2.7.13.3;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/cheA/cheA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CheA is the central histidine kinase of the canonical chemotaxis phosphorelay in KT2440.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016772" target="_blank" class="term-link">
+                                    GO:0016772
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity, transferring phosphorus-containing groups</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW4" data-a="GO:0016772" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is technically true for a histidine kinase, but it is a very broad parent term that adds no information beyond GO:0004673.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The broader transferase term is redundant once the specific protein histidine kinase activity is retained.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/cheA/cheA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0016772 is a very broad parent term and does not add useful specificity beyond protein histidine kinase activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW4" data-a="GO:0000160" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is an appropriate core biological-process term for cheA because the protein is the autophosphorylating histidine kinase that relays sensory input to CheY/CheB response regulators.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The phosphorelay system is the direct mechanistic context of CheA function, and this term is specific enough to retain as a core process annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88EW4
+                                    
+                                </span>
+                                
+                                <div class="support-text">CheA is autophosphorylated; it can transfer its phosphate group to either CheB or CheY.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/cheA/cheA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CheA is the central histidine kinase of the canonical chemotaxis phosphorelay in KT2440.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                    GO:0006935
+                                </a>
+                            </span>
+                            <span class="term-label">chemotaxis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW4" data-a="GO:0006935" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chemotaxis is a core process annotation for this locus. The strongest species-specific evidence in KT2440 shows that PP_4338/cheA2 is required for chemotaxis toward maize root exudates.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The KT2440 cheA2 mutant phenotype directly connects this paralog to the canonical chemotaxis pathway rather than only to generic signaling.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.3389/fmicb.2019.00078
+                                    
+                                </span>
+                                
+                                <div class="support-text">a cheA2 mutant was entirely deficient in MRE chemotaxis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/cheA/cheA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PP_4338/Q88EW4 is the CheA paralog for the flagellar chemotaxis pathway rather than the Wsp-like surface signaling pathway.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW4" data-a="GO:0007165" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term is true but too broad. CheA participates specifically in phosphorelay signaling for chemotaxis, which is already captured by more informative child terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0007165 is a very high-level parent of the more informative phosphorelay and chemotaxis terms already present for this gene.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/cheA/cheA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0007165 is a broad parent term and does not add useful specificity once phosphorelay signal transduction system and chemotaxis are retained.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW4" data-a="GO:0005737" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is acceptable as a broad localization because CheA is a soluble signaling kinase rather than a transmembrane receptor. However, this term does not capture the membrane-proximal chemosensory array context in which the protein actually operates.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is not wrong, but it is too generic to represent the most informative localization context for the chemotaxis machinery.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88EW4
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO; GO:0005737; C:cytoplasm; IEA:InterPro</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/cheA/cheA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The safest curation decision is to keep cytoplasm as a non-core location rather than assert a more specific cell-pole or membrane-complex term.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CheA is the chemotaxis histidine kinase of the KT2440 chemosensory phosphorelay. It autophosphorylates on histidine and transfers phosphate to downstream response regulators such as CheY and CheB to couple chemoreceptor input to chemotactic behavior.</h3>
+                <span class="vote-buttons" data-g="Q88EW4" data-a="FUNCTION: CheA is the chemotaxis histidine kinase of the KT2..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004673" target="_blank" class="term-link">
+                            protein histidine kinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                phosphorelay signal transduction system
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                chemotaxis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q88EW4
+                            
+                        </span>
+                        
+                        <div class="finding-text">Involved in the transmission of sensory signals from the chemoreceptors to the flagellar motors.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q88EW4
+                            
+                        </span>
+                        
+                        <div class="finding-text">CheA is autophosphorylated; it can transfer its phosphate group to either CheB or CheY.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            DOI:10.3389/fmicb.2019.00078
+                            
+                        </span>
+                        
+                        <div class="finding-text">a cheA2 mutant was entirely deficient in MRE chemotaxis</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro mappings recover the broad conserved chemotaxis and phosphorelay context for CheA-family histidine kinases, but they also seed very broad parent terms that should be reviewed for redundancy.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined automated methods recover the kinase activity of CheA, but the broader phosphorelay sensor kinase term is less specific than protein histidine kinase activity for this gene.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:Q88EW4
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q88EW4 for Pseudomonas putida KT2440 chemotaxis protein CheA</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88EW4 as chemotaxis protein CheA and states that it is autophosphorylated and can transfer phosphate to CheB or CheY.</div>
+                        
+                        <div class="finding-text">"RecName: Full=Chemotaxis protein CheA...CheA is autophosphorylated; it can transfer its phosphate group to either CheB or CheY."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The sequence carries an HPt domain, a histidine kinase region, and a CheW-like domain, with a phosphohistidine annotated at residue 49.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.3389/fmicb.2019.00078
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Concentration Dependent Effect of Plant Root Exudates on the Chemosensory Systems of Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The KT2440 study identifies PP_4338 as cheA2 and reports that a cheA2 mutant is entirely deficient in maize root exudate chemotaxis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The same study separates cheA paralog roles, with cheA1 affecting c-di-GMP and biofilm formation while cheA2 maps to the canonical chemotaxis pathway.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/cheA/cheA-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for cheA in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Synthesizes KT2440 cheA2 literature, conserved CheA domain architecture, and recent chemosensory-system reviews into a curation-focused assessment of core versus over-broad GO terms.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which KT2440 response regulators are the dominant in vivo phospho-acceptors for PP_4338/CheA during chemotaxis under rhizosphere conditions?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Tino Krell, Miguel A Matilla, Jose A Reyes-Darias</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW4" data-a="Q: Which KT2440 response regulators are the dominant ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How are signaling duties partitioned among the three KT2440 CheA paralogs across defined attractants and surface-associated states?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Tino Krell, Miguel A Matilla</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW4" data-a="Q: How are signaling duties partitioned among the thr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_4338 form stable polar chemosensory arrays with specific MCP and CheW partners in KT2440, and how condition-dependent is that assembly?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Tino Krell</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW4" data-a="Q: Does PP_4338 form stable polar chemosensory arrays..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify PP_4338/CheA and test ATP-dependent autophosphorylation plus phosphotransfer to candidate KT2440 CheY and CheB proteins.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PP_4338 is the cognate chemotaxis histidine kinase that directly transfers phosphate to the canonical chemotaxis response regulators.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biochemical phosphotransfer assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW4" data-a="EXPERIMENT: Purify PP_4338/CheA and test ATP-dependent autopho..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare cheA1, cheA2, and cheA3 single and combinatorial mutants across defined attractants, root-exudate mixtures, motility, and root-colonization assays.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: cheA2 carries the core flagellar chemotaxis pathway, while the other paralogs control distinct surface-sensing or c-di-GMP-linked signaling branches.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: comparative mutant phenotyping</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW4" data-a="EXPERIMENT: Compare cheA1, cheA2, and cheA3 single and combina..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Tag PP_4338 with a minimally perturbing fluorescent marker and image its localization relative to chemoreceptor arrays during planktonic and rhizosphere-like growth.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The core chemotaxis CheA paralog forms membrane-proximal polar signaling arrays whose abundance changes with environmental context.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: live-cell localization microscopy</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW4" data-a="EXPERIMENT: Tag PP_4338 with a minimally perturbing fluorescen..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cheA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88EW4" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T13:54:47.142375'<br />
+end_time: '2026-03-21T14:07:36.612640'<br />
+duration_seconds: 769.52<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: cheA<br />
+  gene_symbol: cheA<br />
+  uniprot_accession: Q88EW4<br />
+  protein_description: 'RecName: Full=Chemotaxis protein CheA {ECO:0000256|ARBA:ARBA00021495};<br />
+    EC=2.7.13.3 {ECO:0000256|ARBA:ARBA00012438};'<br />
+  gene_info: Name=cheA {ECO:0000313|EMBL:AAN69917.1}; OrderedLocusNames=PP_4338 {ECO:0000313|EMBL:AAN69917.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: Bact_Chemotaxis_CheA. (IPR051315); CheA-like_dim. (IPR004105);<br />
+    CheA-like_homodim_sf. (IPR037006); CheW-like_dom_sf. (IPR036061); CheW-lke_dom.<br />
+    (IPR002545)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 31</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88EW4</li>
+<li><strong>Protein Description:</strong> RecName: Full=Chemotaxis protein CheA {ECO:0000256|ARBA:ARBA00021495}; EC=2.7.13.3 {ECO:0000256|ARBA:ARBA00012438};</li>
+<li><strong>Gene Information:</strong> Name=cheA {ECO:0000313|EMBL:AAN69917.1}; OrderedLocusNames=PP_4338 {ECO:0000313|EMBL:AAN69917.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Bact_Chemotaxis_CheA. (IPR051315); CheA-like_dim. (IPR004105); CheA-like_homodim_sf. (IPR037006); CheW-like_dom_sf. (IPR036061); CheW-lke_dom. (IPR002545)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "cheA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'cheA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>cheA</strong> (gene ID: cheA, UniProt: Q88EW4) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88EW4</li>
+<li><strong>Protein Description:</strong> RecName: Full=Chemotaxis protein CheA {ECO:0000256|ARBA:ARBA00021495}; EC=2.7.13.3 {ECO:0000256|ARBA:ARBA00012438};</li>
+<li><strong>Gene Information:</strong> Name=cheA {ECO:0000313|EMBL:AAN69917.1}; OrderedLocusNames=PP_4338 {ECO:0000313|EMBL:AAN69917.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Bact_Chemotaxis_CheA. (IPR051315); CheA-like_dim. (IPR004105); CheA-like_homodim_sf. (IPR037006); CheW-like_dom_sf. (IPR036061); CheW-lke_dom. (IPR002545)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "cheA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'cheA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>cheA</strong> (gene ID: cheA, UniProt: Q88EW4) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-chea2-pp_4338-uniprot-q88ew4-in-pseudomonas-putida-kt2440">Research report: <strong>cheA2 (PP_4338; UniProt Q88EW4)</strong> in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="executive-summary-identity-verified">Executive summary (identity verified)</h3>
+<p>The UniProt accession <strong>Q88EW4</strong> corresponds to <strong>Chemotaxis protein CheA</strong> (EC <strong>2.7.13.3</strong>) encoded by <strong>cheA</strong> with ordered locus name <strong>PP_4338</strong> in <em>Pseudomonas putida</em> KT2440; this locus is explicitly identified as <strong>cheA2</strong> in KT2440 genetic work, which also distinguishes <strong>cheA1 (pp1492)</strong> and <strong>cheA3 (pp4988)</strong> paralogs. (lopezfarfan2019concentrationdependenteffect pages 5-6, lopezfarfan2019concentrationdependenteffect pages 3-5)</p>
+<p>In KT2440, <strong>CheA2 (PP_4338)</strong> functions as the <strong>central histidine kinase of the canonical chemotaxis signaling pathway</strong>, required for chemotaxis to maize root exudates in quantitative capillary assays. (lopezfarfan2019concentrationdependenteffect pages 1-2, lopezfarfan2019concentrationdependenteffect pages 10-11)</p>
+<h3 id="1-key-concepts-definitions-and-current-understanding">1) Key concepts, definitions, and current understanding</h3>
+<h4 id="11-what-chea-is-definition">1.1 What CheA is (definition)</h4>
+<p>CheA is the <strong>dimeric histidine kinase</strong> at the core of bacterial chemotaxis pathways. It is activated/inhibited by chemoreceptor signaling complexes and initiates a phosphorylation cascade by <strong>autophosphorylation</strong> and <strong>phosphotransfer</strong> to response regulators (CheY, CheB). (muok2024unpackingalternativefeatures pages 2-4, vass2023analysisofchew‐like pages 1-3)</p>
+<h4 id="12-catalytic-reaction-and-substrate-specificity-for-q88ew4">1.2 Catalytic reaction and substrate specificity (for Q88EW4)</h4>
+<p>CheA catalyzes an <strong>ATP-dependent autophosphorylation</strong> on a conserved histidine in the P1 (Hpt/HPT) domain, driven by the P4 (ATP-binding catalytic) domain, and subsequently transfers the phosphoryl group to response regulators such as <strong>CheY</strong> (and typically CheB) as part of the chemotaxis two-component-like system. (muok2024unpackingalternativefeatures pages 2-4, vass2023analysisofchew‐like pages 1-3)</p>
+<p>Direct biochemical evidence in <em>P. putida</em> shows purified CheA has strong <strong>[32P]ATPγP-dependent autophosphorylation</strong> and that addition of CheY yields <strong>CheY labeling</strong> with a reduction in CheA label, consistent with phosphate transfer from CheA to CheY. (he2025coordinatedregulationof pages 3-5)</p>
+<h4 id="13-domain-architecture-and-mapping-to-uniprot-domains">1.3 Domain architecture (and mapping to UniProt domains)</h4>
+<p>A canonical CheA comprises five domains (P1–P5):<br />
+- <strong>P1 (Hpt/HPT):</strong> phosphoacceptor histidine-bearing domain<br />
+- <strong>P2:</strong> docking/binding of response regulators (CheY/CheB)<br />
+- <strong>P3:</strong> dimerization domain<br />
+- <strong>P4 (HATPase_c):</strong> ATP-binding/catalytic domain that phosphorylates P1<br />
+- <strong>P5 (CheW-like):</strong> coupling to receptors and CheW for array assembly</p>
+<p>These functions and the five-domain model are summarized in authoritative recent reviews and are consistent with UniProt’s CheA-like/CheW-like domain annotations provided in the prompt. (muok2024unpackingalternativefeatures pages 2-4, he2025coordinatedregulationof pages 1-2)</p>
+<h4 id="14-pathway-role-and-cellular-localization-current-understanding">1.4 Pathway role and cellular localization (current understanding)</h4>
+<p>CheA functions within <strong>chemosensory arrays</strong> (also called receptor arrays) made of chemoreceptors plus coupling proteins (CheW) and CheA. The <strong>core signaling unit (CSU)</strong> is commonly defined as <strong>one CheA dimer + two CheW + two receptor trimers-of-dimers</strong>, which then assemble into larger hexagonal lattices. (muok2024unpackingalternativefeatures pages 2-4)</p>
+<p>Although the retrieved KT2440-specific texts did not directly image CheA2 localization, the conserved mechanism implies that KT2440 CheA2 operates at these <strong>membrane-proximal/polar chemosensory arrays</strong> to integrate receptor inputs and control downstream phosphorylation. (muok2024unpackingalternativefeatures pages 2-4)</p>
+<h3 id="2-kt2440-specific-functional-evidence-for-chea2-pp_4338-q88ew4">2) KT2440-specific functional evidence for <strong>cheA2 (PP_4338; Q88EW4)</strong></h3>
+<h4 id="21-kt2440-has-three-chea-paralogs-with-distinct-roles">2.1 KT2440 has three cheA paralogs with distinct roles</h4>
+<p>In <em>P. putida</em> KT2440, three cheA paralogs are present (<strong>cheA1, cheA2, cheA3</strong>). Functional analyses support <strong>division of labor</strong>:<br />
+- <strong>cheA2 (PP_4338)</strong> is required for <strong>chemotaxis</strong> to maize root exudates (MRE)<br />
+- <strong>cheA1</strong> aligns with a <strong>wsp-like</strong> pathway that modulates <strong>c-di-GMP/biofilm</strong> traits<br />
+- <strong>cheA3</strong> showed no defect in the specific MRE chemotaxis assay and was described as similar to wild type under those conditions, with broader role unresolved<br />
+(lopezfarfan2019concentrationdependenteffect pages 1-2, lopezfarfan2019concentrationdependenteffect pages 10-11)</p>
+<p>The key identity mapping—<strong>PP_4338 = cheA2</strong>—is explicitly stated in the KT2440 mutant construction methods and strain descriptions (including pp4338::km). (lopezfarfan2019concentrationdependenteffect pages 5-6, lopezfarfan2019concentrationdependenteffect pages 3-5)</p>
+<h4 id="22-mutant-phenotypes-directly-implicate-chea2-in-chemotaxis">2.2 Mutant phenotypes directly implicate CheA2 in chemotaxis</h4>
+<p>In KT2440, a <strong>cheA2 mutant</strong> was reported to be <strong>entirely deficient in MRE chemotaxis</strong>, supporting CheA2 as the primary kinase in the chemotaxis (che) pathway for this cue. (lopezfarfan2019concentrationdependenteffect pages 1-2, lopezfarfan2019concentrationdependenteffect pages 10-11)</p>
+<p>In the same study, quantitative capillary assays provided CFU counts in the chemotaxis readout (means ± SD; replicated), demonstrating a measurable chemotactic response to MRE, though many effect sizes for genotype comparisons were presented in figures rather than fully tabulated in text. (lopezfarfan2019concentrationdependenteffect pages 11-12)</p>
+<h4 id="23-genomicoperon-context-in-kt2440">2.3 Genomic/operon context in KT2440</h4>
+<p>Transcriptional mapping in a KT2440 motility/chemotaxis region placed <strong>cheA in a cheYZA operon</strong>, i.e., transcriptional linkage with <strong>cheY</strong> and <strong>cheZ</strong> in at least one chemotaxis-associated operon context. This supports a functional module organization typical of chemotaxis systems. (navarro‐aviles2010physiologicalandtranscriptomic pages 1-2)</p>
+<h3 id="3-regulation-and-cross-talk-recent-mechanistic-insights-from-p-putida">3) Regulation and cross-talk: recent mechanistic insights from <em>P. putida</em></h3>
+<p>A 2025 study identified multiple CheA-interacting proteins and showed that at least two regulators, <strong>CsoR</strong> (a copper-binding repressor) and <strong>PhaD</strong>, can <strong>inhibit CheA autophosphorylation</strong> in vitro in a dose-dependent manner, without acting as ATPases, indicating direct modulation of CheA catalytic activity rather than ATP depletion. (he2025coordinatedregulationof pages 3-5, he2025coordinatedregulationof pages 5-8)</p>
+<p>The study also reports a <strong>CheA-dependent chemorepellent response to copper</strong> and quantifies this behavior using response indices and tracking-based metrics; for example, perturbation of CsoR expression altered a response index (RI) from <strong>0.373 ± 0.021</strong> (vector control) to <strong>0.428 ± 0.015</strong> (pcsoR) and changed center-of-mass displacement (e.g., <strong>21.77 ± 3.60 μm</strong> vs <strong>13.85 ± 1.92 μm</strong>), illustrating how CheA activity integrates environmental stress sensing into motility behavior. (he2025coordinatedregulationof pages 11-13)</p>
+<h3 id="4-recent-developments-20232024-relevant-to-chea2-annotation">4) Recent developments (2023–2024) relevant to CheA2 annotation</h3>
+<h4 id="41-structural-biology-of-arrays-and-csus-20232024">4.1 Structural biology of arrays and CSUs (2023–2024)</h4>
+<p>Recent authoritative work emphasizes that mechanistic understanding of CheA regulation requires treating CheA as part of a <strong>supramolecular array</strong>, not an isolated kinase.<br />
+- A 2024 Annual Review synthesizes evidence that the CSU architecture (CheA dimer, CheW, and receptor trimers-of-dimers) is the fundamental signaling unit and highlights alternative/expanded architectures across bacteria. (muok2024unpackingalternativefeatures pages 2-4)<br />
+- 2023 studies further advanced CSU structural models of native arrays and interactions among CheA domains within these assemblies, helping explain long-range coupling between ligand binding and CheA kinase activity. (tran2023bacterialchemoreceptorsignaling pages 12-15)</p>
+<p>These developments support annotation of KT2440 CheA2 as a <strong>multi-domain kinase whose activity is controlled by array assembly and receptor state</strong>, and whose localization is expected to be array-associated. (muok2024unpackingalternativefeatures pages 2-4, tran2023bacterialchemoreceptorsignaling pages 12-15)</p>
+<h4 id="42-diversity-of-chea-architectures-20232024">4.2 Diversity of CheA architectures (2023–2024)</h4>
+<p>Comparative analyses show that although CheA is often described as five-domain, <strong>noncanonical architectures</strong> (e.g., loss of P2, acquisition of receiver domains, split proteins) are widespread across bacteria, which is important when interpreting paralogs (like cheA1–3) and predicting functional specialization. (berry2023diversityandevolution pages 34-41)</p>
+<h3 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h3>
+<h4 id="51-plant-root-colonization-kt2440">5.1 Plant-root colonization (KT2440)</h4>
+<p>Chemotaxis toward root exudates is a key determinant of rhizosphere performance. In KT2440, signaling through both a chemotaxis-associated pathway (involving cheA2) and a wsp-like pathway (involving cheA1) was reported as important for efficient <strong>maize root colonization</strong>, indicating that CheA paralogs contribute to ecologically relevant host-association outcomes. (lopezfarfan2019concentrationdependenteffect pages 1-2, lopezfarfan2019concentrationdependenteffect pages 10-11)</p>
+<h4 id="52-bioremediation-and-pollutant-degradation-p-putida-strain-example">5.2 Bioremediation and pollutant degradation (P. putida strain example)</h4>
+<p>A soil microcosm study on a different <em>P. putida</em> strain (DLL-1) compared mutants and found that a <strong>cheA non-chemotaxis mutant (DAK)</strong> lost directed chemotaxis and showed reduced <strong>in-situ</strong> degradation performance for the hydrophobic pesticide methyl parathion (MP) relative to wild type, despite similar degradation in well-mixed liquid. For example, the cheA mutant degraded <strong>~64.3–85.7%</strong> of MP in soil microcosms (reported 5-day endpoints), while both wild type and cheA mutant could degrade MP to nondetectable levels in <strong>~18 h</strong> in shaken liquid medium, supporting the practical principle that chemotaxis enhances contact with poorly soluble substrates in heterogeneous environments. (guo2009comparisonofinsitu pages 1-2, guo2009comparisonofinsitu pages 4-5)</p>
+<h3 id="6-statistics-and-data-highlights-from-available-text">6) Statistics and data highlights (from available text)</h3>
+<ul>
+<li><strong>KT2440 cheA2 identity:</strong> PP_4338 is explicitly designated <strong>cheA2</strong> in mutant construction and strain definitions. (lopezfarfan2019concentrationdependenteffect pages 5-6, lopezfarfan2019concentrationdependenteffect pages 3-5)</li>
+<li><strong>Chemotaxis assay counts (KT2440):</strong> capillary assay CFU counts reported around <strong>1960 ± 339 to 2133 ± 280</strong> (means ± SD; biological replicates; triplicate technical replicates), illustrating quantitative chemotaxis readouts used in the KT2440 root-exudate study. (lopezfarfan2019concentrationdependenteffect pages 11-12)</li>
+<li><strong>Copper chemorepellent response metrics (<em>P. putida</em>):</strong> RI values such as <strong>0.428 ± 0.015</strong>, <strong>0.373 ± 0.021</strong>, and <strong>0.324 ± 0.013</strong>, and center-of-mass changes (e.g., <strong>13.85 ± 1.92 μm</strong> vs <strong>21.77 ± 3.60 μm</strong>) under CsoR perturbation, linking CheA regulation to motility outputs. (he2025coordinatedregulationof pages 11-13)</li>
+<li><strong>Soil biodegradation endpoints:</strong> cheA mutant soil MP degradation <strong>~64.3–85.7%</strong> (study endpoints) vs rapid removal in mixed liquid (~18 h). (guo2009comparisonofinsitu pages 1-2, guo2009comparisonofinsitu pages 4-5)</li>
+</ul>
+<h3 id="7-expert-synthesis-for-functional-annotation-of-q88ew4">7) Expert synthesis for functional annotation of Q88EW4</h3>
+<h4 id="primary-molecular-function-recommended-go-style-statement">Primary molecular function (recommended GO-style statement)</h4>
+<p><strong>CheA2 (PP_4338; Q88EW4)</strong> is an <strong>ATP-dependent protein histidine kinase</strong> that autophosphorylates and transfers phosphoryl groups to chemotaxis response regulators (e.g., CheY), thereby controlling chemotactic motility in <em>P. putida</em> KT2440; genetically, CheA2 is essential for chemotaxis toward maize root exudates. (he2025coordinatedregulationof pages 3-5, lopezfarfan2019concentrationdependenteffect pages 1-2)</p>
+<h4 id="biological-processpathway">Biological process/pathway</h4>
+<p><strong>Chemotaxis signaling pathway (chemosensory array → CheA2 → CheY/CheB → flagellar motor/adaptation)</strong>, contributing to environmental navigation and plant-root colonization. (muok2024unpackingalternativefeatures pages 2-4, lopezfarfan2019concentrationdependenteffect pages 1-2)</p>
+<h4 id="cellular-componentlocalization">Cellular component/localization</h4>
+<p>CheA2 is expected to localize to <strong>chemosensory receptor arrays/core signaling units</strong> (often polar, membrane-associated supramolecular assemblies) through interactions mediated by its P5/CheW-like region and CheW; this is strongly supported for bacterial chemotaxis systems generally, but direct imaging for KT2440 CheA2 was not captured in the retrieved KT2440-specific sources. (muok2024unpackingalternativefeatures pages 2-4, muok2024unpackingalternativefeatures media cd438e27)</p>
+<h4 id="notes-on-paralogy-to-avoid-annotation-confusion">Notes on paralogy (to avoid annotation confusion)</h4>
+<p>KT2440 encodes <strong>three CheA paralogs</strong>. Functional attribution for <strong>PP_4338/Q88EW4</strong> should be limited to <strong>cheA2</strong> (chemotaxis-associated), not cheA1 (wsp-like, c-di-GMP/biofilm) or cheA3 (unclear/condition-dependent). (lopezfarfan2019concentrationdependenteffect pages 1-2, lopezfarfan2019concentrationdependenteffect pages 3-5)</p>
+<h3 id="evidence-summary-table">Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key finding</th>
+<th>Evidence/assay type</th>
+<th>Organism/strain</th>
+<th>Publication (authors/year)</th>
+<th>URL/DOI</th>
+<th>Citation context ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>UniProt Q88EW4 matches <strong>cheA2 / PP_4338</strong> in <em>Pseudomonas putida</em> KT2440; the 2019 mutant construction paper explicitly states that PP_4338 is <strong>cheA2</strong>, distinguishing it from <strong>cheA1/PP_1492</strong> and <strong>cheA3/PP_4988</strong>.</td>
+<td>Targeted mutant construction by homologous recombination; strain table/genetic mapping</td>
+<td><em>P. putida</em> KT2440</td>
+<td>López-Farfán et al. 2019</td>
+<td>https://doi.org/10.3389/fmicb.2019.00078</td>
+<td>(lopezfarfan2019concentrationdependenteffect pages 5-6, lopezfarfan2019concentrationdependenteffect pages 3-5)</td>
+</tr>
+<tr>
+<td>Reaction</td>
+<td>CheA is the central chemotaxis histidine kinase that <strong>autophosphorylates using ATP</strong> and transfers phosphate to <strong>CheY</strong>; in vitro radiolabel assays showed strong CheA autophosphorylation and CheY labeling with reduced CheA label after CheY addition.</td>
+<td>Purified-protein phosphotransfer assay with <strong>[32P]ATPγP</strong>, SDS-PAGE/autoradiography</td>
+<td><em>P. putida</em> KT2440</td>
+<td>He et al. 2025</td>
+<td>https://doi.org/10.7554/elife.100914.2</td>
+<td>(he2025coordinatedregulationof pages 3-5, he2025coordinatedregulationof pages 5-8)</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>CheA has the canonical <strong>five-domain architecture (P1–P5)</strong>: P1/HPT phosphoacceptor, P2 CheY/CheB docking, P3 dimerization, P4 HATPase catalytic ATP-binding domain, P5 CheW-like receptor/CheW interaction domain; this matches UniProt and InterPro annotations for Q88EW4.</td>
+<td>Domain mapping from reviews and truncation/interactor mapping in <em>P. putida</em></td>
+<td><em>P. putida</em> KT2440; comparative bacterial systems</td>
+<td>Berry et al. 2024; Muok et al. 2024; He et al. 2025</td>
+<td>https://doi.org/10.1128/spectrum.03464-23 ; https://doi.org/10.1146/annurev-micro-032421-110850 ; https://doi.org/10.7554/elife.100914.2</td>
+<td>(he2025coordinatedregulationof pages 1-2, he2025coordinatedregulationof pages 5-8, muok2024unpackingalternativefeatures pages 2-4, berry2024diversedomainarchitectures pages 12-13)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>By current understanding, CheA localizes to <strong>chemosensory receptor arrays/core signaling units</strong> at the cell pole or membrane-proximal chemosensory arrays, where one CheA dimer associates with CheW and receptor trimers-of-dimers. Direct localization was not shown specifically for KT2440 PP_4338 in the retrieved KT2440 papers, so localization is inferred from conserved chemosensory architecture.</td>
+<td>Structural reviews; cryo-ET/core signaling unit model</td>
+<td>Comparative bacterial systems; inference for KT2440 CheA2</td>
+<td>Muok et al. 2024; Cassidy et al. 2023</td>
+<td>https://doi.org/10.1146/annurev-micro-032421-110850 ; https://doi.org/10.1128/mbio.00793-23</td>
+<td>(muok2024unpackingalternativefeatures media cd438e27, muok2024unpackingalternativefeatures pages 2-4, tran2023bacterialchemoreceptorsignaling pages 12-15)</td>
+</tr>
+<tr>
+<td>Pathway context</td>
+<td>KT2440 encodes <strong>three CheA paralogs</strong> with distinct pathway roles: <strong>cheA1</strong> belongs to a <strong>wsp-like</strong> signaling cluster affecting c-di-GMP/biofilm, whereas <strong>cheA2 (PP_4338)</strong> belongs to the <strong>che/chemotaxis pathway</strong> and is required for maize root exudate chemotaxis; <strong>cheA3</strong> remains less clearly assigned.</td>
+<td>Mutant phenotyping; pathway inference from paralog-specific phenotypes</td>
+<td><em>P. putida</em> KT2440</td>
+<td>López-Farfán et al. 2019</td>
+<td>https://doi.org/10.3389/fmicb.2019.00078</td>
+<td>(lopezfarfan2019concentrationdependenteffect pages 1-2, lopezfarfan2019concentrationdependenteffect pages 10-11)</td>
+</tr>
+<tr>
+<td>Genomic context</td>
+<td>A KT2440 motility/chemotaxis region places <strong>cheA in a cheYZA operon</strong>, indicating transcriptional linkage with <strong>cheY</strong> and <strong>cheZ</strong> in at least one chemotaxis-associated cluster.</td>
+<td>RT-PCR transcriptional organization; transcriptomics</td>
+<td><em>P. putida</em> KT2440</td>
+<td>Navarro-Avilés &amp; van Dillewijn 2010</td>
+<td>https://doi.org/10.1111/j.1758-2229.2009.00084</td>
+<td>(navarro‐aviles2010physiologicalandtranscriptomic pages 1-2)</td>
+</tr>
+<tr>
+<td>Mutant phenotypes</td>
+<td><strong>cheA2/PP_4338 mutants abolish chemotaxis</strong> to maize root exudates, whereas <strong>cheA1</strong> mutants show reduced c-di-GMP, increased swimming, and early biofilm defects; <strong>cheA3</strong> is similar to wild type in the tested chemotaxis assay.</td>
+<td>Quantitative capillary chemotaxis assays, c-di-GMP biosensor, swimming plates, biofilm assays</td>
+<td><em>P. putida</em> KT2440</td>
+<td>López-Farfán et al. 2019</td>
+<td>https://doi.org/10.3389/fmicb.2019.00078</td>
+<td>(lopezfarfan2019concentrationdependenteffect pages 1-2, lopezfarfan2019concentrationdependenteffect pages 10-11)</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>CsoR and PhaD interact with CheA and <strong>inhibit CheA autophosphorylation</strong>; interaction mapping implicated the <strong>P1, P3, and P4</strong> regions, with P3 contributing strongly. Copper weakens the CsoR–CheA interaction, relieving inhibition and altering chemotaxis behavior.</td>
+<td>Pull-down/MS, bacterial two-hybrid, BiFC, MST, truncation analysis, autoradiography, semisolid chemotaxis assays</td>
+<td><em>P. putida</em> KT2440</td>
+<td>He et al. 2025</td>
+<td>https://doi.org/10.7554/elife.100914.2</td>
+<td>(he2025coordinatedregulationof pages 5-8, he2025coordinatedregulationof pages 3-5, he2025coordinatedregulationof pages 11-13, he2025coordinatedregulationof pages 1-2)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>Chemotaxis signaling through CheA-like proteins contributes to <strong>root colonization</strong> in KT2440 and, in another <em>P. putida</em> strain, <strong>cheA-dependent chemotaxis improves in-situ pollutant biodegradation in soil</strong> even when degradation kinetics in well-mixed liquid are unchanged.</td>
+<td>Competitive maize root colonization assays; soil microcosm biodegradation comparisons</td>
+<td><em>P. putida</em> KT2440; <em>P. putida</em> DLL-1/DAK</td>
+<td>López-Farfán et al. 2019; Guo et al. 2009</td>
+<td>https://doi.org/10.3389/fmicb.2019.00078 ; https://doi.org/10.1016/j.ibiod.2009.01.008</td>
+<td>(lopezfarfan2019concentrationdependenteffect pages 10-11, lopezfarfan2019concentrationdependenteffect pages 11-12, guo2009comparisonofinsitu pages 1-2, guo2009comparisonofinsitu pages 4-5)</td>
+</tr>
+<tr>
+<td>Quantitative notes</td>
+<td>Reported quantitative values include root colonization inoculum starting at <strong>50 ± 3%</strong> WT vs mutant, chemotaxis assay counts around <strong>1960 ± 339 to 2133 ± 280</strong> in the cited panel, and copper-repellent response indices such as <strong>0.428 ± 0.015</strong> vs <strong>0.373 ± 0.021</strong> under CsoR perturbation; many KT2440 effect sizes were figure-based rather than fully tabulated in text.</td>
+<td>Replicated chemotaxis, colonization, and Cu-response measurements with statistics</td>
+<td><em>P. putida</em> KT2440</td>
+<td>López-Farfán et al. 2019; He et al. 2025</td>
+<td>https://doi.org/10.3389/fmicb.2019.00078 ; https://doi.org/10.7554/elife.100914.2</td>
+<td>(lopezfarfan2019concentrationdependenteffect pages 11-12, he2025coordinatedregulationof pages 11-13)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes organism-specific and comparative evidence supporting the functional annotation of </em>Pseudomonas putida<em> KT2440 CheA2 (PP_4338; UniProt Q88EW4). It highlights identity verification, catalytic activity, domains, pathway assignment, mutant phenotypes, regulatory interactions, and application-relevant phenotypes with traceable context IDs.</em></p>
+<h3 id="visual-evidence-core-signaling-unit-and-chea-domains">Visual evidence: core signaling unit and CheA domains</h3>
+<p>The following retrieved figure crops illustrate (i) the <strong>chemotaxis core signaling unit</strong> and (ii) the <strong>CheA P1–P5 domain architecture</strong> used throughout this report. (muok2024unpackingalternativefeatures media cd438e27, muok2024unpackingalternativefeatures media 770fbb22)</p>
+<h3 id="limitations-of-this-synthesis">Limitations of this synthesis</h3>
+<p>Some KT2440 phenotype effect sizes (e.g., exact fold-changes in c-di-GMP fluorescence, swim halo diameters, biofilm biomass, and competitive colonization ratios) were reported primarily in figures/supplements and were not fully extractable from the provided text excerpts; the qualitative genotype-to-function mapping remains strongly supported. (lopezfarfan2019concentrationdependenteffect pages 10-11, lopezfarfan2019concentrationdependenteffect pages 11-12)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(lopezfarfan2019concentrationdependenteffect pages 5-6): Diana López-Farfán, José A. Reyes-Darias, Miguel A. Matilla, and Tino Krell. Concentration dependent effect of plant root exudates on the chemosensory systems of pseudomonas putida kt2440. Frontiers in Microbiology, Jan 2019. URL: https://doi.org/10.3389/fmicb.2019.00078, doi:10.3389/fmicb.2019.00078. This article has 76 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lopezfarfan2019concentrationdependenteffect pages 3-5): Diana López-Farfán, José A. Reyes-Darias, Miguel A. Matilla, and Tino Krell. Concentration dependent effect of plant root exudates on the chemosensory systems of pseudomonas putida kt2440. Frontiers in Microbiology, Jan 2019. URL: https://doi.org/10.3389/fmicb.2019.00078, doi:10.3389/fmicb.2019.00078. This article has 76 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lopezfarfan2019concentrationdependenteffect pages 1-2): Diana López-Farfán, José A. Reyes-Darias, Miguel A. Matilla, and Tino Krell. Concentration dependent effect of plant root exudates on the chemosensory systems of pseudomonas putida kt2440. Frontiers in Microbiology, Jan 2019. URL: https://doi.org/10.3389/fmicb.2019.00078, doi:10.3389/fmicb.2019.00078. This article has 76 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lopezfarfan2019concentrationdependenteffect pages 10-11): Diana López-Farfán, José A. Reyes-Darias, Miguel A. Matilla, and Tino Krell. Concentration dependent effect of plant root exudates on the chemosensory systems of pseudomonas putida kt2440. Frontiers in Microbiology, Jan 2019. URL: https://doi.org/10.3389/fmicb.2019.00078, doi:10.3389/fmicb.2019.00078. This article has 76 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(muok2024unpackingalternativefeatures pages 2-4): A.R. Muok, F.A. Olsthoorn, and A. Briegel. Unpacking alternative features of the bacterial chemotaxis system. Nov 2024. URL: https://doi.org/10.1146/annurev-micro-032421-110850, doi:10.1146/annurev-micro-032421-110850. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vass2023analysisofchew‐like pages 1-3): Luke R. Vass, Robert B. Bourret, and Clay A. Foster. Analysis of <scp>chew</scp>‐like domains provides insights into organization of prokaryotic chemotaxis systems. Oct 2023. URL: https://doi.org/10.1002/prot.26430, doi:10.1002/prot.26430. This article has 11 citations.</p>
+</li>
+<li>
+<p>(he2025coordinatedregulationof pages 3-5): Meina He, Yongxin Tao, Kexin Mu, Haoqi Feng, Ying Fan, Tong Liu, Qiaoyun Huang, Yujie Xiao, and Wenli Chen. Coordinated regulation of chemotaxis and resistance to copper by csor in pseudomonas putida. Jan 2025. URL: https://doi.org/10.7554/elife.100914.2, doi:10.7554/elife.100914.2. This article has 4 citations.</p>
+</li>
+<li>
+<p>(he2025coordinatedregulationof pages 1-2): Meina He, Yongxin Tao, Kexin Mu, Haoqi Feng, Ying Fan, Tong Liu, Qiaoyun Huang, Yujie Xiao, and Wenli Chen. Coordinated regulation of chemotaxis and resistance to copper by csor in pseudomonas putida. Jan 2025. URL: https://doi.org/10.7554/elife.100914.2, doi:10.7554/elife.100914.2. This article has 4 citations.</p>
+</li>
+<li>
+<p>(lopezfarfan2019concentrationdependenteffect pages 11-12): Diana López-Farfán, José A. Reyes-Darias, Miguel A. Matilla, and Tino Krell. Concentration dependent effect of plant root exudates on the chemosensory systems of pseudomonas putida kt2440. Frontiers in Microbiology, Jan 2019. URL: https://doi.org/10.3389/fmicb.2019.00078, doi:10.3389/fmicb.2019.00078. This article has 76 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(navarro‐aviles2010physiologicalandtranscriptomic pages 1-2): G Navarro‐Avilés and P Van Dillewijn. Physiological and transcriptomic characterization of a flia mutant of pseudomonas putida kt2440. Unknown journal, 2010. URL: https://doi.org/10.1111/j.1758-2229.2009.00084, doi:10.1111/j.1758-2229.2009.00084.</p>
+</li>
+<li>
+<p>(he2025coordinatedregulationof pages 5-8): Meina He, Yongxin Tao, Kexin Mu, Haoqi Feng, Ying Fan, Tong Liu, Qiaoyun Huang, Yujie Xiao, and Wenli Chen. Coordinated regulation of chemotaxis and resistance to copper by csor in pseudomonas putida. Jan 2025. URL: https://doi.org/10.7554/elife.100914.2, doi:10.7554/elife.100914.2. This article has 4 citations.</p>
+</li>
+<li>
+<p>(he2025coordinatedregulationof pages 11-13): Meina He, Yongxin Tao, Kexin Mu, Haoqi Feng, Ying Fan, Tong Liu, Qiaoyun Huang, Yujie Xiao, and Wenli Chen. Coordinated regulation of chemotaxis and resistance to copper by csor in pseudomonas putida. Jan 2025. URL: https://doi.org/10.7554/elife.100914.2, doi:10.7554/elife.100914.2. This article has 4 citations.</p>
+</li>
+<li>
+<p>(tran2023bacterialchemoreceptorsignaling pages 12-15): Thomas Tran, Aruni P. K. K. Karunanayake Mudiyanselage, Stephen J. Eyles, and Lynmarie K. Thompson. Bacterial chemoreceptor signaling complexes control kinase activity by stabilizing the catalytic domain of chea. Proceedings of the National Academy of Sciences of the United States of America, Apr 2023. URL: https://doi.org/10.1101/2022.10.28.514197, doi:10.1101/2022.10.28.514197. This article has 0 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(berry2023diversityandevolution pages 34-41): MA Berry. Diversity and evolution of chemosensory systems. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(guo2009comparisonofinsitu pages 1-2): Xinqiang Guo, Kai Chen, Yang Wen, Rong Li, Shunpeng Li, and Jiandong Jiang. Comparison of in-situ biodegrading abilities of pseudomonas putida mutants: leub― auxotroph, flic― non-motility, and chea― non-chemotaxis. International Biodeterioration &amp; Biodegradation, 63:576-581, Jul 2009. URL: https://doi.org/10.1016/j.ibiod.2009.01.008, doi:10.1016/j.ibiod.2009.01.008. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guo2009comparisonofinsitu pages 4-5): Xinqiang Guo, Kai Chen, Yang Wen, Rong Li, Shunpeng Li, and Jiandong Jiang. Comparison of in-situ biodegrading abilities of pseudomonas putida mutants: leub― auxotroph, flic― non-motility, and chea― non-chemotaxis. International Biodeterioration &amp; Biodegradation, 63:576-581, Jul 2009. URL: https://doi.org/10.1016/j.ibiod.2009.01.008, doi:10.1016/j.ibiod.2009.01.008. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(muok2024unpackingalternativefeatures media cd438e27): A.R. Muok, F.A. Olsthoorn, and A. Briegel. Unpacking alternative features of the bacterial chemotaxis system. Nov 2024. URL: https://doi.org/10.1146/annurev-micro-032421-110850, doi:10.1146/annurev-micro-032421-110850. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(berry2024diversedomainarchitectures pages 12-13): Marissa A. Berry, Ekaterina P. Andrianova, and Igor B. Zhulin. Diverse domain architectures of chea histidine kinase, a central component of bacterial and archaeal chemosensory systems. Jan 2024. URL: https://doi.org/10.1128/spectrum.03464-23, doi:10.1128/spectrum.03464-23. This article has 8 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(muok2024unpackingalternativefeatures media 770fbb22): A.R. Muok, F.A. Olsthoorn, and A. Briegel. Unpacking alternative features of the bacterial chemotaxis system. Nov 2024. URL: https://doi.org/10.1146/annurev-micro-032421-110850, doi:10.1146/annurev-micro-032421-110850. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>he2025coordinatedregulationof pages 3-5</li>
+<li>muok2024unpackingalternativefeatures pages 2-4</li>
+<li>lopezfarfan2019concentrationdependenteffect pages 11-12</li>
+<li>he2025coordinatedregulationof pages 11-13</li>
+<li>tran2023bacterialchemoreceptorsignaling pages 12-15</li>
+<li>berry2023diversityandevolution pages 34-41</li>
+<li>lopezfarfan2019concentrationdependenteffect pages 5-6</li>
+<li>lopezfarfan2019concentrationdependenteffect pages 3-5</li>
+<li>lopezfarfan2019concentrationdependenteffect pages 1-2</li>
+<li>lopezfarfan2019concentrationdependenteffect pages 10-11</li>
+<li>he2025coordinatedregulationof pages 1-2</li>
+<li>he2025coordinatedregulationof pages 5-8</li>
+<li>guo2009comparisonofinsitu pages 1-2</li>
+<li>guo2009comparisonofinsitu pages 4-5</li>
+<li>berry2024diversedomainarchitectures pages 12-13</li>
+<li>32P</li>
+<li>https://doi.org/10.3389/fmicb.2019.00078</li>
+<li>https://doi.org/10.7554/elife.100914.2</li>
+<li>https://doi.org/10.1128/spectrum.03464-23</li>
+<li>https://doi.org/10.1146/annurev-micro-032421-110850</li>
+<li>https://doi.org/10.1128/mbio.00793-23</li>
+<li>https://doi.org/10.1111/j.1758-2229.2009.00084</li>
+<li>https://doi.org/10.1016/j.ibiod.2009.01.008</li>
+<li>https://doi.org/10.3389/fmicb.2019.00078,</li>
+<li>https://doi.org/10.1146/annurev-micro-032421-110850,</li>
+<li>https://doi.org/10.1002/prot.26430,</li>
+<li>https://doi.org/10.7554/elife.100914.2,</li>
+<li>https://doi.org/10.1111/j.1758-2229.2009.00084,</li>
+<li>https://doi.org/10.1101/2022.10.28.514197,</li>
+<li>https://doi.org/10.1016/j.ibiod.2009.01.008,</li>
+<li>https://doi.org/10.1128/spectrum.03464-23,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cheA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88EW4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="chea-notes">cheA Notes</h1>
+<ul>
+<li>Q88EW4 is the KT2440 chemotaxis histidine kinase locus <code>PP_4338</code>; the KT2440<br />
+  literature calls this paralog <code>cheA2</code> [UniProt:Q88EW4 "OrderedLocusNames=PP_4338"]<br />
+  [DOI:10.3389/fmicb.2019.00078 "PP_4338 (cheA2)"].</li>
+<li>UniProt gives the canonical CheA mechanism: transmission of receptor input to<br />
+  the flagellar pathway through autophosphorylation and phosphotransfer to CheB<br />
+  or CheY [UniProt:Q88EW4 "CheA is autophosphorylated; it can transfer its phosphate group to either CheB or CheY."].</li>
+<li>The conserved phosphohistidine is His49 in the HPt domain, consistent with a<br />
+  phosphorelay histidine kinase [UniProt:Q88EW4 "MOD_RES         49 /note=\"Phosphohistidine\""]<br />
+  [UniProt:Q88EW4 "DOMAIN          2..106 /note=\"HPt\""].</li>
+<li>The strongest KT2440 phenotype is in chemotaxis rather than generic signaling:<br />
+  Lopez-Farfan et al. report that <code>a cheA2 mutant was entirely deficient in MRE
+  chemotaxis</code> [DOI:10.3389/fmicb.2019.00078 "a cheA2 mutant was entirely deficient in MRE chemotaxis"].</li>
+<li>The same paper separates paralog function: <code>cheA1</code> affected c-di-GMP and<br />
+  biofilm formation, whereas <code>cheA2</code> mapped to the classical chemotaxis pathway<br />
+  [DOI:10.3389/fmicb.2019.00078 "a mutant in cheA1 showed reduced c-di-GMP levels and impaired biofilm formation"]<br />
+  [DOI:10.3389/fmicb.2019.00078 "indicating the existence of homologs of the P. aeruginosa wsp and che (chemotaxis) pathways"].</li>
+<li>Annotation consequences:<br />
+  keep <code>protein histidine kinase activity</code>, <code>phosphorelay signal transduction
+  system</code>, and <code>chemotaxis</code>; demote or remove broader parent terms like<br />
+<code>phosphorelay sensor kinase activity</code>, <code>transferase activity, transferring
+  phosphorus-containing groups</code>, and <code>signal transduction</code>.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88EW4
+gene_symbol: cheA
+product_type: PROTEIN
+aliases:
+- PP_4338
+- cheA2
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: cheA encodes the chemotaxis histidine kinase CheA of Pseudomonas putida
+  KT2440. The protein is a 747 aa phosphorelay kinase with an N-terminal HPt domain,
+  a central histidine kinase ATPase/dimerization region, and a C-terminal CheW-like
+  domain. In KT2440 literature this locus corresponds to PP_4338/cheA2, the CheA paralog
+  assigned to the canonical chemotaxis pathway rather than the Wsp-like c-di-GMP signaling
+  branch. Its core role is to relay chemoreceptor input by autophosphorylating on
+  histidine and transferring phosphate to response regulators such as CheY and CheB,
+  thereby controlling chemotaxis.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: InterPro mappings recover the broad conserved chemotaxis and phosphorelay
+      context for CheA-family histidine kinases, but they also seed very broad parent
+      terms that should be reviewed for redundancy.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Combined automated methods recover the kinase activity of CheA, but
+      the broader phosphorelay sensor kinase term is less specific than protein histidine
+      kinase activity for this gene.
+- id: UniProt:Q88EW4
+  title: UniProt entry Q88EW4 for Pseudomonas putida KT2440 chemotaxis protein CheA
+  findings:
+  - statement: UniProt identifies Q88EW4 as chemotaxis protein CheA and states that
+      it is autophosphorylated and can transfer phosphate to CheB or CheY.
+    supporting_text: &gt;-
+      RecName: Full=Chemotaxis protein CheA...CheA is autophosphorylated; it can
+      transfer its phosphate group to either CheB or CheY.
+  - statement: The sequence carries an HPt domain, a histidine kinase region, and
+      a CheW-like domain, with a phosphohistidine annotated at residue 49.
+- id: DOI:10.3389/fmicb.2019.00078
+  title: Concentration Dependent Effect of Plant Root Exudates on the Chemosensory
+    Systems of Pseudomonas putida KT2440
+  findings:
+  - statement: The KT2440 study identifies PP_4338 as cheA2 and reports that a cheA2
+      mutant is entirely deficient in maize root exudate chemotaxis.
+  - statement: The same study separates cheA paralog roles, with cheA1 affecting c-di-GMP
+      and biofilm formation while cheA2 maps to the canonical chemotaxis pathway.
+- id: file:PSEPK/cheA/cheA-deep-research-falcon.md
+  title: Falcon deep research report for cheA in Pseudomonas putida KT2440
+  findings:
+  - statement: Synthesizes KT2440 cheA2 literature, conserved CheA domain architecture,
+      and recent chemosensory-system reviews into a curation-focused assessment of
+      core versus over-broad GO terms.
+existing_annotations:
+- term:
+    id: GO:0000155
+    label: phosphorelay sensor kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This annotation captures the general CheA-like phosphorelay kinase role,
+      but it is broader than the more specific child term GO:0004673 protein histidine
+      kinase activity, which is also already present for this gene.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Retaining the broader phosphorelay sensor kinase term adds little beyond
+      the specific protein histidine kinase annotation and obscures the more informative
+      catalytic term.
+    supported_by:
+    - reference_id: file:PSEPK/cheA/cheA-deep-research-falcon.md
+      supporting_text: GO:0000155 is broader than GO:0004673 and becomes redundant
+        when the child protein histidine kinase term is already present.
+- term:
+    id: GO:0004673
+    label: protein histidine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;This is the best existing molecular-function term for cheA. UniProt
+      assigns the canonical CheA chemistry: ATP-dependent autophosphorylation on histidine
+      followed by phosphotransfer to downstream response regulators.&#39;
+    action: ACCEPT
+    reason: Protein histidine kinase activity precisely captures the catalytic role
+      of CheA in the chemotaxis phosphorelay and is supported by conserved domain
+      architecture, phosphohistidine annotation, and the established CheA reaction.
+    supported_by:
+    - reference_id: UniProt:Q88EW4
+      supporting_text: CheA is autophosphorylated; it can transfer its phosphate group
+        to either CheB or CheY.
+    - reference_id: UniProt:Q88EW4
+      supporting_text: &gt;-
+        -!- CATALYTIC ACTIVITY: Reaction=ATP + protein L-histidine = ADP +
+        protein N-phospho-L- histidine.; EC=2.7.13.3;
+    - reference_id: file:PSEPK/cheA/cheA-deep-research-falcon.md
+      supporting_text: CheA is the central histidine kinase of the canonical chemotaxis
+        phosphorelay in KT2440.
+- term:
+    id: GO:0016772
+    label: transferase activity, transferring phosphorus-containing groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This annotation is technically true for a histidine kinase, but it is
+      a very broad parent term that adds no information beyond GO:0004673.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The broader transferase term is redundant once the specific protein histidine
+      kinase activity is retained.
+    supported_by:
+    - reference_id: file:PSEPK/cheA/cheA-deep-research-falcon.md
+      supporting_text: GO:0016772 is a very broad parent term and does not add useful
+        specificity beyond protein histidine kinase activity.
+- term:
+    id: GO:0000160
+    label: phosphorelay signal transduction system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This is an appropriate core biological-process term for cheA because
+      the protein is the autophosphorylating histidine kinase that relays sensory
+      input to CheY/CheB response regulators.
+    action: ACCEPT
+    reason: The phosphorelay system is the direct mechanistic context of CheA function,
+      and this term is specific enough to retain as a core process annotation.
+    supported_by:
+    - reference_id: UniProt:Q88EW4
+      supporting_text: CheA is autophosphorylated; it can transfer its phosphate group
+        to either CheB or CheY.
+    - reference_id: file:PSEPK/cheA/cheA-deep-research-falcon.md
+      supporting_text: CheA is the central histidine kinase of the canonical chemotaxis
+        phosphorelay in KT2440.
+- term:
+    id: GO:0006935
+    label: chemotaxis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Chemotaxis is a core process annotation for this locus. The strongest
+      species-specific evidence in KT2440 shows that PP_4338/cheA2 is required for
+      chemotaxis toward maize root exudates.
+    action: ACCEPT
+    reason: The KT2440 cheA2 mutant phenotype directly connects this paralog to the
+      canonical chemotaxis pathway rather than only to generic signaling.
+    supported_by:
+    - reference_id: DOI:10.3389/fmicb.2019.00078
+      supporting_text: a cheA2 mutant was entirely deficient in MRE chemotaxis
+    - reference_id: file:PSEPK/cheA/cheA-deep-research-falcon.md
+      supporting_text: PP_4338/Q88EW4 is the CheA paralog for the flagellar chemotaxis
+        pathway rather than the Wsp-like surface signaling pathway.
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This term is true but too broad. CheA participates specifically in phosphorelay
+      signaling for chemotaxis, which is already captured by more informative child
+      terms.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0007165 is a very high-level parent of the more informative phosphorelay
+      and chemotaxis terms already present for this gene.
+    supported_by:
+    - reference_id: file:PSEPK/cheA/cheA-deep-research-falcon.md
+      supporting_text: GO:0007165 is a broad parent term and does not add useful specificity
+        once phosphorelay signal transduction system and chemotaxis are retained.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Cytoplasm is acceptable as a broad localization because CheA is a soluble
+      signaling kinase rather than a transmembrane receptor. However, this term does
+      not capture the membrane-proximal chemosensory array context in which the protein
+      actually operates.
+    action: KEEP_AS_NON_CORE
+    reason: The annotation is not wrong, but it is too generic to represent the most
+      informative localization context for the chemotaxis machinery.
+    supported_by:
+    - reference_id: UniProt:Q88EW4
+      supporting_text: GO; GO:0005737; C:cytoplasm; IEA:InterPro
+    - reference_id: file:PSEPK/cheA/cheA-deep-research-falcon.md
+      supporting_text: The safest curation decision is to keep cytoplasm as a non-core
+        location rather than assert a more specific cell-pole or membrane-complex
+        term.
+core_functions:
+- description: CheA is the chemotaxis histidine kinase of the KT2440 chemosensory
+    phosphorelay. It autophosphorylates on histidine and transfers phosphate to downstream
+    response regulators such as CheY and CheB to couple chemoreceptor input to chemotactic
+    behavior.
+  molecular_function:
+    id: GO:0004673
+    label: protein histidine kinase activity
+  directly_involved_in:
+  - id: GO:0000160
+    label: phosphorelay signal transduction system
+  - id: GO:0006935
+    label: chemotaxis
+  supported_by:
+  - reference_id: UniProt:Q88EW4
+    supporting_text: Involved in the transmission of sensory signals from the chemoreceptors
+      to the flagellar motors.
+  - reference_id: UniProt:Q88EW4
+    supporting_text: CheA is autophosphorylated; it can transfer its phosphate group
+      to either CheB or CheY.
+  - reference_id: DOI:10.3389/fmicb.2019.00078
+    supporting_text: a cheA2 mutant was entirely deficient in MRE chemotaxis
+proposed_new_terms: []
+suggested_questions:
+- question: Which KT2440 response regulators are the dominant in vivo phospho-acceptors
+    for PP_4338/CheA during chemotaxis under rhizosphere conditions?
+  experts:
+  - Tino Krell
+  - Miguel A Matilla
+  - Jose A Reyes-Darias
+- question: How are signaling duties partitioned among the three KT2440 CheA paralogs
+    across defined attractants and surface-associated states?
+  experts:
+  - Tino Krell
+  - Miguel A Matilla
+- question: Does PP_4338 form stable polar chemosensory arrays with specific MCP and
+    CheW partners in KT2440, and how condition-dependent is that assembly?
+  experts:
+  - Tino Krell
+suggested_experiments:
+- description: Purify PP_4338/CheA and test ATP-dependent autophosphorylation plus
+    phosphotransfer to candidate KT2440 CheY and CheB proteins.
+  hypothesis: PP_4338 is the cognate chemotaxis histidine kinase that directly transfers
+    phosphate to the canonical chemotaxis response regulators.
+  experiment_type: biochemical phosphotransfer assay
+- description: Compare cheA1, cheA2, and cheA3 single and combinatorial mutants across
+    defined attractants, root-exudate mixtures, motility, and root-colonization assays.
+  hypothesis: cheA2 carries the core flagellar chemotaxis pathway, while the other
+    paralogs control distinct surface-sensing or c-di-GMP-linked signaling branches.
+  experiment_type: comparative mutant phenotyping
+- description: Tag PP_4338 with a minimally perturbing fluorescent marker and image
+    its localization relative to chemoreceptor arrays during planktonic and rhizosphere-like
+    growth.
+  hypothesis: The core chemotaxis CheA paralog forms membrane-proximal polar signaling
+    arrays whose abundance changes with environmental context.
+  experiment_type: live-cell localization microscopy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

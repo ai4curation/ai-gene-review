@@ -1,0 +1,2470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pvdA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pvdA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88GC8" target="_blank" class="term-link">
+                        Q88GC8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pvdA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88GC8" data-a="DESCRIPTION: PvdA is the likely KT2440 ortholog of the pyoverdi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PvdA is the likely KT2440 ortholog of the pyoverdine biosynthetic ornithine N5-monooxygenase. By homology to experimentally characterized PvdA proteins, it is an FAD- and NADPH-dependent enzyme that hydroxylates L-ornithine early in pyoverdine assembly, generating a precursor required for hydroxamate formation. In Pseudomonas putida KT2440, pyoverdine is the characterized siderophore produced under iron limitation, so PvdA is best interpreted as a dedicated pyoverdine-biosynthetic enzyme rather than as a general iron homeostasis factor.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006879" target="_blank" class="term-link">
+                                    GO:0006879
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular iron ion homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GC8" data-a="GO:0006879" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TreeGrafter annotation points to the downstream physiological role of pyoverdine in iron acquisition, but it does not capture PvdA&#39;s direct function. PvdA is the dedicated ornithine N5-monooxygenase of the pyoverdine pathway, and KT2440 pyoverdine production under iron limitation is experimentally established at the strain level.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0006879 is too broad and indirect for a pathway enzyme. The more precise direct process term is GO:0002049 pyoverdine biosynthetic process.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002049" target="_blank" class="term-link">
+                                    pyoverdine biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8106324" target="_blank" class="term-link">
+                                        PMID:8106324
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The enzyme L-ornithine N5-oxygenase catalyzes the hydroxylation of L-ornithine (L-Orn), which represents an early step in the biosynthesis of the peptidic moiety of the fluorescent siderophore pyoverdin in Pseudomonas aeruginosa.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19459056" target="_blank" class="term-link">
+                                        PMID:19459056
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine, but different from P. entomophila, and no evidence was found for the production of a second siderophore.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30346656" target="_blank" class="term-link">
+                                        PMID:30346656
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Fluorescent pseudomonads produce and secrete a siderophore termed pyoverdine to capture iron when it becomes scarce.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pvdA/pvdA-deep-research-manual.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The current seeded annotation, `GO:0006879 intracellular iron ion homeostasis`, is biologically related but too broad for PvdA.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002049" target="_blank" class="term-link">
+                                    GO:0002049
+                                </a>
+                            </span>
+                            <span class="term-label">pyoverdine biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8106324" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8106324
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and nucleotide sequence of the pvdA gene encoding th...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GC8" data-a="GO:0002049" data-r="PMID:8106324" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new BP annotation. PvdA catalyzes an early committed reaction in pyoverdine assembly, and loss of pvdA in homologous systems abolishes pyoverdine production unless the hydroxylated precursor is supplied.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the direct biological-process annotation for the enzyme and is more informative than the broad iron-homeostasis term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8106324" target="_blank" class="term-link">
+                                        PMID:8106324
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the pvdA mutant obtained by gene disruption also disclosed no pyoverdin synthesis, lacked L-Orn N5-oxygenase activity, was complemented by the cloned pvdA gene, and produced pyoverdin at wild-type levels when fed with the biosynthetic precursor L-N5-OH-Orn.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19459056" target="_blank" class="term-link">
+                                        PMID:19459056
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine, but different from P. entomophila, and no evidence was found for the production of a second siderophore.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031172" target="_blank" class="term-link">
+                                    GO:0031172
+                                </a>
+                            </span>
+                            <span class="term-label">ornithine N5-monooxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17015659" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17015659
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Heterologous expression, purification, and characterization ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GC8" data-a="GO:0031172" data-r="PMID:17015659" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new MF annotation. PvdA is the dedicated flavin-dependent ornithine N5-monooxygenase that initiates hydroxamate formation during pyoverdine synthesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core catalytic activity of PvdA and the most informative molecular-function term for the KT2440 ortholog.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17015659" target="_blank" class="term-link">
+                                        PMID:17015659
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Formation of the iron-chelating hydroxamate functional group in pyoverdine requires the enzyme PvdA, a flavin-dependent monooxygenase that catalyzes the N(5) hydroxylation of l-ornithine.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21757711" target="_blank" class="term-link">
+                                        PMID:21757711
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The ornithine hydroxylase from Pseudomonas aeruginosa (PvdA) catalyzes the FAD-dependent hydroxylation of the side chain amine of ornithine, which is subsequently formylated to generate the iron-chelating hydroxamates of the siderophore pyoverdin.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pvdA/pvdA-deep-research-manual.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The key missing molecular-function term is `GO:0031172 ornithine N5-monooxygenase activity`, supported by the biochemical and structural literature on characterized PvdA homologs.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22498339" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22498339
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High cellular organization of pyoverdine biosynthesis in Pse...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GC8" data-a="GO:0005737" data-r="PMID:22498339" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new CC annotation. Homolog studies place PvdA among the cytoplasmic enzymes of the pyoverdine pathway, although some membrane association and polar clustering have also been observed.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is the conservative and best-supported location to annotate the KT2440 ortholog. A plasma membrane term would overstate the current evidence for this strain.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22498339" target="_blank" class="term-link">
+                                        PMID:22498339
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">generate P.aeruginosa strains producing fluorescent fusions with PvdA, one of the initial enzymes in the biosynthetic pathway of PVDI in the cytoplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18757814" target="_blank" class="term-link">
+                                        PMID:18757814
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The inferred topological model resembled a eukaryotic reverse signal-anchor (type III) protein, with a single N-terminal domain anchored to the inner membrane, and the bulk of the protein spanning the cytosol.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PvdA is the KT2440 ornithine N5-monooxygenase. It uses FAD and NADPH to hydroxylate L-ornithine, generating a precursor required for pyoverdine hydroxamate formation during siderophore biosynthesis under iron limitation.</h3>
+                <span class="vote-buttons" data-g="Q88GC8" data-a="FUNCTION: PvdA is the KT2440 ornithine N5-monooxygenase. It ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031172" target="_blank" class="term-link">
+                            ornithine N5-monooxygenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002049" target="_blank" class="term-link">
+                                pyoverdine biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17015659" target="_blank" class="term-link">
+                                PMID:17015659
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Formation of the iron-chelating hydroxamate functional group in pyoverdine requires the enzyme PvdA, a flavin-dependent monooxygenase that catalyzes the N(5) hydroxylation of l-ornithine.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8106324" target="_blank" class="term-link">
+                                PMID:8106324
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The enzyme L-ornithine N5-oxygenase catalyzes the hydroxylation of L-ornithine (L-Orn), which represents an early step in the biosynthesis of the peptidic moiety of the fluorescent siderophore pyoverdin in Pseudomonas aeruginosa.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8106324" target="_blank" class="term-link">
+                            PMID:8106324
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cloning and nucleotide sequence of the pvdA gene encoding the pyoverdin biosynthetic enzyme L-ornithine N5-oxygenase in Pseudomonas aeruginosa.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdA catalyzes ornithine hydroxylation early in pyoverdine biosynthesis</div>
+                        
+                        <div class="finding-text">"The enzyme L-ornithine N5-oxygenase catalyzes the hydroxylation of L-ornithine (L-Orn), which represents an early step in the biosynthesis of the peptidic moiety of the fluorescent siderophore pyoverdin in Pseudomonas aeruginosa."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">pvdA loss abolishes pyoverdine synthesis and is rescued by N5-hydroxyornithine</div>
+                        
+                        <div class="finding-text">"the pvdA mutant obtained by gene disruption also disclosed no pyoverdin synthesis, lacked L-Orn N5-oxygenase activity, was complemented by the cloned pvdA gene, and produced pyoverdin at wild-type levels when fed with the biosynthetic precursor L-N5-OH-Orn."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17015659" target="_blank" class="term-link">
+                            PMID:17015659
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Heterologous expression, purification, and characterization of an l-ornithine N(5)-hydroxylase involved in pyoverdine siderophore biosynthesis in Pseudomonas aeruginosa.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdA is a flavin-dependent monooxygenase that hydroxylates ornithine</div>
+                        
+                        <div class="finding-text">"Formation of the iron-chelating hydroxamate functional group in pyoverdine requires the enzyme PvdA, a flavin-dependent monooxygenase that catalyzes the N(5) hydroxylation of l-ornithine."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdA specifically uses NADPH and FAD cofactors</div>
+                        
+                        <div class="finding-text">"The enzyme is specific for NADPH and flavin adenine dinucleotide (FAD(+)) as cofactors, as it cannot utilize NADH and flavin mononucleotide."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21757711" target="_blank" class="term-link">
+                            PMID:21757711
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Two structures of an N-hydroxylating flavoprotein monooxygenase: ornithine hydroxylase from Pseudomonas aeruginosa.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdA is a class B flavoprotein monooxygenase</div>
+                        
+                        <div class="finding-text">"PvdA belongs to the class B flavoprotein monooxygenases, which catalyze the oxidation of substrates using NADPH as the electron donor and molecular oxygen."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdA has Rossmann-like FAD and NADPH binding domains</div>
+                        
+                        <div class="finding-text">"PvdA has the two expected Rossmann-like dinucleotide-binding domains for FAD and NADPH and also a substrate-binding domain, with the active site at the interface between the three domains."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18757814" target="_blank" class="term-link">
+                            PMID:18757814
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Membrane-association determinants of the omega-amino acid monooxygenase PvdA, a pyoverdine biosynthetic enzyme from Pseudomonas aeruginosa.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdA provides an essential enzymic function in pyoverdine biogenesis</div>
+                        
+                        <div class="finding-text">"The L-ornithine N(delta)-oxygenase PvdA catalyses the N(delta)-hydroxylation of L-ornithine in many Pseudomonas spp., and thus provides an essential enzymic function in the biogenesis of the pyoverdine siderophore."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdA has membrane association but its bulk spans the cytosol</div>
+                        
+                        <div class="finding-text">"The inferred topological model resembled a eukaryotic reverse signal-anchor (type III) protein, with a single N-terminal domain anchored to the inner membrane, and the bulk of the protein spanning the cytosol."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22498339" target="_blank" class="term-link">
+                            PMID:22498339
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">High cellular organization of pyoverdine biosynthesis in Pseudomonas aeruginosa: clustering of PvdA at the old cell pole.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdA is one of the initial cytoplasmic enzymes in pyoverdine biosynthesis</div>
+                        
+                        <div class="finding-text">"generate P.aeruginosa strains producing fluorescent fusions with PvdA, one of the initial enzymes in the biosynthetic pathway of PVDI in the cytoplasm"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdA can also be recovered in a membrane fraction</div>
+                        
+                        <div class="finding-text">"Cellular fractionation indicated that a substantial amount of PvdA-YFP was located in the membrane fraction."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19459056" target="_blank" class="term-link">
+                            PMID:19459056
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Siderophore-mediated iron acquisition in the entomopathogenic bacterium Pseudomonas entomophila L48 and its close relative Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 produces a characterized pyoverdine and no second siderophore was detected</div>
+                        
+                        <div class="finding-text">"Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine, but different from P. entomophila, and no evidence was found for the production of a second siderophore."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30346656" target="_blank" class="term-link">
+                            PMID:30346656
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PvdRT-OpmQ and MdtABC-OpmB efflux systems are involved in pyoverdine secretion in Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Pyoverdine secretion genes are stimulated by iron limitation in KT2440</div>
+                        
+                        <div class="finding-text">"Expression from the respective promoters is stimulated by iron limitation albeit to varying degrees."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Reduced pyoverdine secretion decreases growth under iron limitation</div>
+                        
+                        <div class="finding-text">"Deletion of pvdRT-opmQ leads to reduced amounts of pyoverdine in the medium and decreased growth under iron limitation."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31451546" target="_blank" class="term-link">
+                            PMID:31451546
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas putida as Part of the Mechanism of Adaptation to Oxidative Stress.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Defects affecting pyoverdine production increase KT2440 sensitivity to iron limitation</div>
+                        
+                        <div class="finding-text">"Mutants defective in arginine biosynthesis show reduced production and release of the siderophore pyoverdine and altered expression of certain pyoverdine-related genes, resulting in higher sensitivity to iron limitation."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pvdA/pvdA-deep-research-manual.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on pvdA in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88GC8 is the KT2440 ortholog of the pyoverdine biosynthetic ornithine hydroxylase PvdA</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The direct process annotation is pyoverdine biosynthetic process rather than intracellular iron ion homeostasis</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytoplasm is the conservative cellular component call for KT2440 PvdA</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is KT2440 PvdA predominantly soluble-cytoplasmic or does it become membrane-associated and old-pole clustered during active pyoverdine synthesis, as described for the PAO1 homolog?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Ignacio J. Schalk, Holger Jung</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GC8" data-a="Q: Is KT2440 PvdA predominantly soluble-cytoplasmic o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 PvdA show the same strict ornithine specificity and NADPH/FAD coupling behavior reported for the PAO1 enzyme, or are there strain-specific kinetic differences?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Sharon Y. N. Seah, Anne L. Lamb</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GC8" data-a="Q: Does KT2440 PvdA show the same strict ornithine sp..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a clean pvdA deletion or catalytic-site mutant in KT2440, measure pyoverdine fluorescence and LC-MS profiles under iron limitation, and test rescue with plasmid-borne pvdA or exogenous N5-hydroxyornithine.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PP_3796 is the dedicated ornithine N5-monooxygenase required for KT2440 pyoverdine biosynthesis.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetics and metabolite rescue</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GC8" data-a="EXPERIMENT: Construct a clean pvdA deletion or catalytic-site ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Build a chromosomal fluorescent or epitope-tagged PvdA allele, then compare localization and fractionation patterns in iron-replete versus iron-limited growth while quantifying pyoverdine output.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: KT2440 PvdA undergoes regulated membrane association during active pyoverdine production.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: localization and cell biology</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GC8" data-a="EXPERIMENT: Build a chromosomal fluorescent or epitope-tagged ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pvdA-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88GC8" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-chat-export">BioReason Chat Export</h1>
+<p><em>Exported on March 22, 2026 at 02:31 AM</em></p>
+<hr />
+<p><strong>Organism:</strong> Pseudomonas putida</p>
+<p><strong>Sequence:</strong></p>
+<div class="codehilite"><pre><span></span><code>MSQSSQQETIKDMIGVGFGPSNLALAIALEELAESRGHALDALFIDKQQDYHWHGETLATQSELQISFLKDLVSLRTPTSPYSFVNYLHQKQRLADFINLGTFYPCRLEYNDYLRWAAEHFTSQAVYGQEVLRIEPHVHAGRVQHLCVITRDRQGREYSRPTRSVVVGSGGTPKIPENFGAFKDDPRVFHHSQYLSSLTKLPCTAGKPMRIAVIGSGQSAAEAFIDLNDSYPSVKVDMILRGSALKPADDSPFVNEIFSPDYTDLVYNEPADQRSKLLGEYHNTNYSVVDLNLIERIYGILYRQKVAHQHRHNVLCRRQVEAVVATREGLELTLRDLATGQQQTHRYDAVILATGYERRSHRELLAPLADYLEDFSVDRNYRVLASPDLQASVYLQGFCESSHGLSDTLLSVLPTRAAEIGRALYQDLEQLHEKPQAAVALTRA
+</code></pre></div>
+
+<h3 id="thinking-trace">Thinking Trace</h3>
+<p>I begin with the InterPro architecture. The sequence is dominated by IPR025700 (L-lysine 6-monooxygenase/L-ornithine 5-monooxygenase family) spanning residues 3–428, a hallmark of soluble flavin-dependent amine monooxygenases that hydroxylate basic amino acids. This family assignment is reinforced by IPR036188 (FAD/NAD(P)-binding domain superfamily) extending from residues 8–440, indicating a Rossmann-like fold that binds FAD and often exchanges reducing equivalents with NAD(P)H. The near-full-length coverage of both signatures establishes a soluble FAD-enzyme core without transmembrane elements or signal peptides, pointing to a cytosolic enzyme that executes oxidative N-hydroxylation chemistry.</p>
+<p>From this architecture, the molecular function follows. Members of the IPR025700 family catalyze flavin-mediated monooxygenation of primary aliphatic amino groups on lysine or ornithine scaffolds. The FAD/NAD(P)-binding superfamily domain provides the redox relay that activates molecular oxygen at the flavin cofactor. This causes hydroxylation of a bound diamine/trimine substrate—here tuned by the L-lysine 6-monooxygenase chemistry—to yield L-beta-hydroxylysine. The mechanistic hallmarks (FAD-dependent oxygen activation, substrate hydroxylation on an amino acid backbone) align with GO:0016705 oxidoreductase activity, acting on paired donors with incorporation or reduction of molecular oxygen.</p>
+<p>Linking function to process, L-beta-hydroxylysine production in soil bacteria ties into lysine utilization and nitrogen flux. By converting free lysine into a hydroxylated derivative, the enzyme channels carbon and nitrogen through downstream catabolic or salvage routes. This situates the enzyme in lysine-centered metabolism, consistent with the biological process of lysine metabolic process.</p>
+<p>Cellular location is inferred from the soluble, cofactor-binding architecture and the absence of targeting signals. A soluble FAD monooxygenase of this sort operates in the cytoplasm, where amino acid pools and redox cofactors are managed; thus the cellular component is the cytoplasm.</p>
+<p>A coherent mechanistic hypothesis emerges: the enzyme binds FAD in a Rossmann-like core (residues 8–440), receives electrons from NAD(P)H, activates O2, and hydroxylates the epsilon-amino group of L-lysine within a basic-amino-acid pocket shaped by the IPR025700 family scaffold (residues 3–428). In Pseudomonas putida and related Arthrobacter lineages, this chemistry integrates lysine catabolism with broader nitrogen economy in nutrient-rich soils. Likely interaction partners include cytosolic redox and amino-acid-metabolism hubs: NADPH-supplying dehydrogenases (e.g., glucose-6-phosphate dehydrogenase), glutathione-dependent systems that buffer flavin redox states, and lysine-pathway enzymes that hand off L-beta-hydroxylysine. Together these associations would stabilize the monooxygenase cycle and coordinate flux through lysine metabolism in the cytoplasm.</p>
+<h3 id="functional-summary">Functional Summary</h3>
+<p>A soluble flavin-dependent monooxygenase in soil bacteria that uses a Rossmann-like FAD-binding core to hydroxylate the epsilon-amino group of L-lysine, generating L-beta-hydroxylysine in the cytoplasm. By coupling electron transfer from cellular redox systems to oxygen activation, it modifies lysine for downstream utilization, thereby integrating nitrogen and amino-acid metabolism in nutrient-rich environments.</p>
+<h3 id="uniprot-summary">UniProt Summary</h3>
+<p>Catalyzes the formation of L-beta-hydroxylysine from L-lysine.</p>
+<h3 id="interpro-domains">InterPro Domains</h3>
+<ul>
+<li><strong>L-lysine 6-monooxygenase/L-ornithine 5-monooxygenase</strong> (<code>IPR025700</code>, family) — residues 3-428</li>
+<li><strong>FAD/NAD(P)-binding domain superfamily</strong> (<code>IPR036188</code>, homologous_superfamily) — residues 8-440</li>
+</ul>
+<h3 id="go-terms">GO Terms</h3>
+<p><strong>Molecular Function:</strong> molecular_function (<code>GO:0003674</code>), catalytic activity (<code>GO:0003824</code>), oxidoreductase activity (<code>GO:0016491</code>), monooxygenase activity (<code>GO:0004497</code>), oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen (<code>GO:0016705</code>), oxidoreductase activity, acting on single donors with incorporation of molecular oxygen (<code>GO:0016701</code>), oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, NAD(P)H as one donor, and incorporation of one atom of oxygen (<code>GO:0016709</code>)</p>
+<p><strong>Biological Process:</strong> biological_process (<code>GO:0008150</code>), metabolic process (<code>GO:0008152</code>), cellular process (<code>GO:0009987</code>), biosynthetic process (<code>GO:0009058</code>), cellular metabolic process (<code>GO:0044237</code>), secondary metabolic process (<code>GO:0019748</code>), organic substance metabolic process (<code>GO:0071704</code>), nitrogen compound metabolic process (<code>GO:0006807</code>), siderophore metabolic process (<code>GO:0009237</code>), secondary metabolite biosynthetic process (<code>GO:0044550</code>), cellular biosynthetic process (<code>GO:0044249</code>), cellular nitrogen compound metabolic process (<code>GO:0034641</code>), amide metabolic process (<code>GO:0043603</code>), organonitrogen compound metabolic process (<code>GO:1901564</code>), organic substance biosynthetic process (<code>GO:1901576</code>), organonitrogen compound biosynthetic process (<code>GO:1901566</code>), amide biosynthetic process (<code>GO:0043604</code>), cellular nitrogen compound biosynthetic process (<code>GO:0044271</code>), peptide metabolic process (<code>GO:0006518</code>), siderophore biosynthetic process (<code>GO:0019290</code>), peptide biosynthetic process (<code>GO:0043043</code>), nonribosomal peptide biosynthetic process (<code>GO:0019184</code>)</p>
+<p><strong>Cellular Component:</strong> cellular_component (<code>GO:0005575</code>), cellular anatomical entity (<code>GO:0110165</code>), cytoplasm (<code>GO:0005737</code>), intracellular anatomical structure (<code>GO:0005622</code>)</p>
+<hr />
+<p><em>Generated by <a href="https://bioreason.net">BioReason</a></em></p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason Rl</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pvdA-deep-research-bioreason-rl.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88GC8" data-a="DOC: Deep Research Bioreason Rl" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-chat-export">BioReason Chat Export</h1>
+<p><em>Exported on March 22, 2026 at 02:31 AM</em></p>
+<hr />
+<p><strong>Organism:</strong> Pseudomonas putida</p>
+<p><strong>Sequence:</strong></p>
+<div class="codehilite"><pre><span></span><code>MSQSSQQETIKDMIGVGFGPSNLALAIALEELAESRGHALDALFIDKQQDYHWHGETLATQSELQISFLKDLVSLRTPTSPYSFVNYLHQKQRLADFINLGTFYPCRLEYNDYLRWAAEHFTSQAVYGQEVLRIEPHVHAGRVQHLCVITRDRQGREYSRPTRSVVVGSGGTPKIPENFGAFKDDPRVFHHSQYLSSLTKLPCTAGKPMRIAVIGSGQSAAEAFIDLNDSYPSVKVDMILRGSALKPADDSPFVNEIFSPDYTDLVYNEPADQRSKLLGEYHNTNYSVVDLNLIERIYGILYRQKVAHQHRHNVLCRRQVEAVVATREGLELTLRDLATGQQQTHRYDAVILATGYERRSHRELLAPLADYLEDFSVDRNYRVLASPDLQASVYLQGFCESSHGLSDTLLSVLPTRAAEIGRALYQDLEQLHEKPQAAVALTRA
+</code></pre></div>
+
+<h3 id="thinking-trace">Thinking Trace</h3>
+<p>I begin with the InterPro architecture. The sequence is dominated by IPR025700 (L-lysine 6-monooxygenase/L-ornithine 5-monooxygenase family) spanning residues 3–428, a hallmark of soluble flavin-dependent amine monooxygenases that hydroxylate basic amino acids. This family assignment is reinforced by IPR036188 (FAD/NAD(P)-binding domain superfamily) extending from residues 8–440, indicating a Rossmann-like fold that binds FAD and often exchanges reducing equivalents with NAD(P)H. The near-full-length coverage of both signatures establishes a soluble FAD-enzyme core without transmembrane elements or signal peptides, pointing to a cytosolic enzyme that executes oxidative N-hydroxylation chemistry.</p>
+<p>From this architecture, the molecular function follows. Members of the IPR025700 family catalyze flavin-mediated monooxygenation of primary aliphatic amino groups on lysine or ornithine scaffolds. The FAD/NAD(P)-binding superfamily domain provides the redox relay that activates molecular oxygen at the flavin cofactor. This causes hydroxylation of a bound diamine/trimine substrate—here tuned by the L-lysine 6-monooxygenase chemistry—to yield L-beta-hydroxylysine. The mechanistic hallmarks (FAD-dependent oxygen activation, substrate hydroxylation on an amino acid backbone) align with GO:0016705 oxidoreductase activity, acting on paired donors with incorporation or reduction of molecular oxygen.</p>
+<p>Linking function to process, L-beta-hydroxylysine production in soil bacteria ties into lysine utilization and nitrogen flux. By converting free lysine into a hydroxylated derivative, the enzyme channels carbon and nitrogen through downstream catabolic or salvage routes. This situates the enzyme in lysine-centered metabolism, consistent with the biological process of lysine metabolic process.</p>
+<p>Cellular location is inferred from the soluble, cofactor-binding architecture and the absence of targeting signals. A soluble FAD monooxygenase of this sort operates in the cytoplasm, where amino acid pools and redox cofactors are managed; thus the cellular component is the cytoplasm.</p>
+<p>A coherent mechanistic hypothesis emerges: the enzyme binds FAD in a Rossmann-like core (residues 8–440), receives electrons from NAD(P)H, activates O2, and hydroxylates the epsilon-amino group of L-lysine within a basic-amino-acid pocket shaped by the IPR025700 family scaffold (residues 3–428). In Pseudomonas putida and related Arthrobacter lineages, this chemistry integrates lysine catabolism with broader nitrogen economy in nutrient-rich soils. Likely interaction partners include cytosolic redox and amino-acid-metabolism hubs: NADPH-supplying dehydrogenases (e.g., glucose-6-phosphate dehydrogenase), glutathione-dependent systems that buffer flavin redox states, and lysine-pathway enzymes that hand off L-beta-hydroxylysine. Together these associations would stabilize the monooxygenase cycle and coordinate flux through lysine metabolism in the cytoplasm.</p>
+<h3 id="functional-summary">Functional Summary</h3>
+<p>A soluble flavin-dependent monooxygenase in soil bacteria that uses a Rossmann-like FAD-binding core to hydroxylate the epsilon-amino group of L-lysine, generating L-beta-hydroxylysine in the cytoplasm. By coupling electron transfer from cellular redox systems to oxygen activation, it modifies lysine for downstream utilization, thereby integrating nitrogen and amino-acid metabolism in nutrient-rich environments.</p>
+<h3 id="uniprot-summary">UniProt Summary</h3>
+<p>Catalyzes the formation of L-beta-hydroxylysine from L-lysine.</p>
+<h3 id="interpro-domains">InterPro Domains</h3>
+<ul>
+<li><strong>L-lysine 6-monooxygenase/L-ornithine 5-monooxygenase</strong> (<code>IPR025700</code>, family) — residues 3-428</li>
+<li><strong>FAD/NAD(P)-binding domain superfamily</strong> (<code>IPR036188</code>, homologous_superfamily) — residues 8-440</li>
+</ul>
+<h3 id="go-terms">GO Terms</h3>
+<p><strong>Molecular Function:</strong> molecular_function (<code>GO:0003674</code>), catalytic activity (<code>GO:0003824</code>), oxidoreductase activity (<code>GO:0016491</code>), monooxygenase activity (<code>GO:0004497</code>), oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen (<code>GO:0016705</code>), oxidoreductase activity, acting on single donors with incorporation of molecular oxygen (<code>GO:0016701</code>), oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, NAD(P)H as one donor, and incorporation of one atom of oxygen (<code>GO:0016709</code>)</p>
+<p><strong>Biological Process:</strong> biological_process (<code>GO:0008150</code>), metabolic process (<code>GO:0008152</code>), cellular process (<code>GO:0009987</code>), biosynthetic process (<code>GO:0009058</code>), cellular metabolic process (<code>GO:0044237</code>), secondary metabolic process (<code>GO:0019748</code>), organic substance metabolic process (<code>GO:0071704</code>), nitrogen compound metabolic process (<code>GO:0006807</code>), siderophore metabolic process (<code>GO:0009237</code>), secondary metabolite biosynthetic process (<code>GO:0044550</code>), cellular biosynthetic process (<code>GO:0044249</code>), cellular nitrogen compound metabolic process (<code>GO:0034641</code>), amide metabolic process (<code>GO:0043603</code>), organonitrogen compound metabolic process (<code>GO:1901564</code>), organic substance biosynthetic process (<code>GO:1901576</code>), organonitrogen compound biosynthetic process (<code>GO:1901566</code>), amide biosynthetic process (<code>GO:0043604</code>), cellular nitrogen compound biosynthetic process (<code>GO:0044271</code>), peptide metabolic process (<code>GO:0006518</code>), siderophore biosynthetic process (<code>GO:0019290</code>), peptide biosynthetic process (<code>GO:0043043</code>), nonribosomal peptide biosynthetic process (<code>GO:0019184</code>)</p>
+<p><strong>Cellular Component:</strong> cellular_component (<code>GO:0005575</code>), cellular anatomical entity (<code>GO:0110165</code>), cytoplasm (<code>GO:0005737</code>), intracellular anatomical structure (<code>GO:0005622</code>)</p>
+<hr />
+<p><em>Generated by <a href="https://bioreason.net">BioReason</a></em></p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Manual</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pvdA-deep-research-manual.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88GC8" data-a="DOC: Deep Research Manual" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-on-pvda-in-pseudomonas-putida-kt2440">Deep Research on pvdA in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="identity-and-functional-transfer">Identity and Functional Transfer</h2>
+<p><code>pvdA</code> in KT2440 (<code>PP_3796</code>, UniProt <code>Q88GC8</code>) is best interpreted as the KT2440 ortholog of the well-characterized pyoverdine biosynthetic ornithine hydroxylase PvdA. UniProt names the protein <code>L-ornithine 5-monooxygenase</code> and places it in the <code>lysine N(6)-hydroxylase/L-ornithine N(5)-oxygenase family</code> [file:PSEPK/pvdA/pvdA-uniprot.txt "DE   SubName: Full=L-ornithine 5-monooxygenase"; file:PSEPK/pvdA/pvdA-uniprot.txt "CC   -!- SIMILARITY: Belongs to the lysine N(6)-hydroxylase/L-ornithine N(5)-oxygenase family."]. The matched PANTHER subfamily also contains reviewed bacterial <code>pvdA</code> entries from <em>Pseudomonas aeruginosa</em> (<code>Q51548</code>) and <em>Burkholderia cepacia</em> (<code>O51940</code>), which makes orthology-based transfer of the core molecular function conservative rather than speculative [file:interpro/panther/PTHR42802/PTHR42802-entries.csv "Q51548,L-ornithine N(5)-monooxygenase"; file:interpro/panther/PTHR42802/PTHR42802-entries.csv "O51940,L-ornithine N(5)-monooxygenase"].</p>
+<h2 id="biochemical-function">Biochemical Function</h2>
+<p>The central enzymatic role of PvdA is well established in homologous systems. In <em>P. aeruginosa</em>, <code>pvdA</code> encodes the enzyme that hydroxylates ornithine early in pyoverdine assembly <a href="https://pubmed.ncbi.nlm.nih.gov/8106324" title="The enzyme L-ornithine N5-oxygenase catalyzes the hydroxylation of L-ornithine (L-Orn), which represents an early step in the biosynthesis of the peptidic moiety of the fluorescent siderophore pyoverdin in Pseudomonas aeruginosa.">PMID:8106324</a>. Disruption of <code>pvdA</code> abolishes pyoverdine synthesis and is rescued by feeding <code>L-N5-OH-Orn</code>, which is exactly the phenotype expected for a dedicated ornithine hydroxylase in the pyoverdine pathway <a href="https://pubmed.ncbi.nlm.nih.gov/8106324" title="the pvdA mutant obtained by gene disruption also disclosed no pyoverdin synthesis, lacked L-Orn N5-oxygenase activity, was complemented by the cloned pvdA gene, and produced pyoverdin at wild-type levels when fed with the biosynthetic precursor L-N5-OH-Orn.">PMID:8106324</a>.</p>
+<p>Purified PvdA is a flavin-dependent monooxygenase that specifically uses <code>NADPH</code> and <code>FAD</code> [PMID:17015659 "Formation of the iron-chelating hydroxamate functional group in pyoverdine requires the enzyme PvdA, a flavin-dependent monooxygenase that catalyzes the N(5) hydroxylation of l-ornithine."; PMID:17015659 "The enzyme is specific for NADPH and flavin adenine dinucleotide (FAD(+)) as cofactors, as it cannot utilize NADH and flavin mononucleotide."]. Structural work places PvdA among the class B flavoprotein monooxygenases and shows the expected FAD/NADPH-binding architecture plus a substrate-binding domain [PMID:21757711 "PvdA belongs to the class B flavoprotein monooxygenases, which catalyze the oxidation of substrates using NADPH as the electron donor and molecular oxygen."; PMID:21757711 "PvdA has the two expected Rossmann-like dinucleotide-binding domains for FAD and NADPH and also a substrate-binding domain, with the active site at the interface between the three domains."].</p>
+<h2 id="localization-and-cellular-organization">Localization and Cellular Organization</h2>
+<p>The safest cellular component conclusion is that PvdA is a cytoplasmic pyoverdine biosynthetic enzyme with additional membrane association. A fluorescence-localization study explicitly describes PvdA as <code>one of the initial enzymes in the biosynthetic pathway of PVDI in the cytoplasm</code> <a href="https://pubmed.ncbi.nlm.nih.gov/22498339" title="generate P.aeruginosa strains producing fluorescent fusions with PvdA, one of the initial enzymes in the biosynthetic pathway of PVDI in the cytoplasm">PMID:22498339</a>. At the same time, membrane-association studies showed that PvdA has a membrane-bound fraction and that its N-terminal segment has a structural role without behaving as a stable transmembrane anchor [PMID:18757814 "Cell fractionation and proteinase K accessibility experiments in P. aeruginosa confirmed the membrane-bound nature of PvdA, but excluded the transmembrane topology of its N-terminal hydrophobic region."; PMID:22498339 "Cellular fractionation indicated that a substantial amount of PvdA-YFP was located in the membrane fraction."].</p>
+<p>For KT2440, direct localization data for <code>Q88GC8</code> are not in hand, so a conservative curation choice is <code>GO:0005737 cytoplasm</code>, while leaving stronger membrane terms for future strain-specific experiments.</p>
+<h2 id="kt2440-pathway-context">KT2440 Pathway Context</h2>
+<p>Independent KT2440 studies establish that pyoverdine is a real and important siderophore in this strain. Structural analysis showed that KT2440 produces a characterized pyoverdine and that no second siderophore was detected in that work <a href="https://pubmed.ncbi.nlm.nih.gov/19459056" title="Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine, but different from P. entomophila, and no evidence was found for the production of a second siderophore.">PMID:19459056</a>. Pyoverdine secretion is stimulated by iron limitation, and impaired secretion reduces growth under iron limitation [PMID:30346656 "Expression from the respective promoters is stimulated by iron limitation albeit to varying degrees."; PMID:30346656 "Deletion of pvdRT-opmQ leads to reduced amounts of pyoverdine in the medium and decreased growth under iron limitation."]. Pyoverdine production and release are also tied to oxidative-stress adaptation in KT2440 <a href="https://pubmed.ncbi.nlm.nih.gov/31451546" title="Mutants defective in arginine biosynthesis show reduced production and release of the siderophore pyoverdine and altered expression of certain pyoverdine-related genes, resulting in higher sensitivity to iron limitation.">PMID:31451546</a>.</p>
+<p>These KT2440 papers do not directly assay <code>PP_3796</code>, but they establish the organismal context in which a <code>pvdA</code> ortholog should act: pyoverdine biosynthesis and siderophore-mediated iron acquisition under iron limitation.</p>
+<h2 id="go-curation-implications">GO-Curation Implications</h2>
+<p>The current seeded annotation, <code>GO:0006879 intracellular iron ion homeostasis</code>, is biologically related but too broad for PvdA. PvdA is not a general iron-homeostasis regulator; it is a dedicated pathway enzyme whose direct role is in pyoverdine biosynthesis. The better direct biological-process term is therefore <code>GO:0002049 pyoverdine biosynthetic process</code>.</p>
+<p>The key missing molecular-function term is <code>GO:0031172 ornithine N5-monooxygenase activity</code>, supported by the biochemical and structural literature on characterized PvdA homologs. A conservative cellular-component addition is <code>GO:0005737 cytoplasm</code>.</p>
+<h2 id="open-questions">Open Questions</h2>
+<p>The main unresolved points are strain-specific rather than family-level. It remains worth testing whether KT2440 PvdA has the same degree of membrane association and old-pole clustering described in <em>P. aeruginosa</em>, and whether KT2440 PvdA shows the same tight cofactor coupling and substrate specificity documented biochemically for the PAO1 enzyme.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pvdA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88GC8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pvda-gene-review-notes">pvdA Gene Review Notes</h1>
+<h2 id="identity-and-orthology">Identity and Orthology</h2>
+<ul>
+<li><code>pvdA</code> (<code>PP_3796</code>, UniProt <code>Q88GC8</code>) is annotated in UniProt as <code>L-ornithine 5-monooxygenase</code> and belongs to the <code>lysine N(6)-hydroxylase/L-ornithine N(5)-oxygenase family</code> [file:PSEPK/pvdA/pvdA-uniprot.txt "DE   SubName: Full=L-ornithine 5-monooxygenase"; file:PSEPK/pvdA/pvdA-uniprot.txt "CC   -!- SIMILARITY: Belongs to the lysine N(6)-hydroxylase/L-ornithine N(5)-oxygenase family."].</li>
+<li>The matched PANTHER subfamily (<code>PTHR42802:SF1</code>) contains reviewed bacterial <code>pvdA</code> proteins from <em>Pseudomonas aeruginosa</em> (<code>Q51548</code>) and <em>Burkholderia cepacia</em> (<code>O51940</code>), supporting conservative transfer of the core enzyme function to KT2440 [file:interpro/panther/PTHR42802/PTHR42802-entries.csv "Q51548,L-ornithine N(5)-monooxygenase"; file:interpro/panther/PTHR42802/PTHR42802-entries.csv "O51940,L-ornithine N(5)-monooxygenase"].</li>
+</ul>
+<h2 id="enzymatic-function">Enzymatic Function</h2>
+<ul>
+<li>PvdA catalyzes <code>L-ornithine</code> <code>N5</code> hydroxylation, an early committed step in pyoverdine biosynthesis <a href="https://pubmed.ncbi.nlm.nih.gov/8106324" title="The enzyme L-ornithine N5-oxygenase catalyzes the hydroxylation of L-ornithine (L-Orn), which represents an early step in the biosynthesis of the peptidic moiety of the fluorescent siderophore pyoverdin in Pseudomonas aeruginosa.">PMID:8106324</a>.</li>
+<li>Loss of <code>pvdA</code> abolishes pyoverdine synthesis in the homologous <em>P. aeruginosa</em> system and can be rescued by the hydroxylated precursor, directly tying the enzyme to pyoverdine biosynthesis rather than general iron physiology <a href="https://pubmed.ncbi.nlm.nih.gov/8106324" title="the pvdA mutant obtained by gene disruption also disclosed no pyoverdin synthesis, lacked L-Orn N5-oxygenase activity, was complemented by the cloned pvdA gene, and produced pyoverdin at wild-type levels when fed with the biosynthetic precursor L-N5-OH-Orn.">PMID:8106324</a>.</li>
+<li>Purified PvdA is a flavin-dependent monooxygenase that specifically uses <code>NADPH</code> and <code>FAD</code> [PMID:17015659 "Formation of the iron-chelating hydroxamate functional group in pyoverdine requires the enzyme PvdA, a flavin-dependent monooxygenase that catalyzes the N(5) hydroxylation of l-ornithine."; PMID:17015659 "The enzyme is specific for NADPH and flavin adenine dinucleotide (FAD(+)) as cofactors, as it cannot utilize NADH and flavin mononucleotide."; PMID:21757711 "The ornithine hydroxylase from Pseudomonas aeruginosa (PvdA) catalyzes the FAD-dependent hydroxylation of the side chain amine of ornithine, which is subsequently formylated to generate the iron-chelating hydroxamates of the siderophore pyoverdin."].</li>
+</ul>
+<h2 id="localization-and-cell-biology">Localization and Cell Biology</h2>
+<ul>
+<li>The conservative localization call is <code>cytoplasm</code>: PvdA is described as <code>one of the initial enzymes in the biosynthetic pathway of PVDI in the cytoplasm</code> <a href="https://pubmed.ncbi.nlm.nih.gov/22498339" title="generate P.aeruginosa strains producing fluorescent fusions with PvdA, one of the initial enzymes in the biosynthetic pathway of PVDI in the cytoplasm">PMID:22498339</a>.</li>
+<li>There is also evidence for membrane association and spatial organization, so <code>plasma membrane</code> is plausible biology but not the safest core term to transfer directly to KT2440 without gene-specific localization data [PMID:18757814 "Cell fractionation and proteinase K accessibility experiments in P. aeruginosa confirmed the membrane-bound nature of PvdA, but excluded the transmembrane topology of its N-terminal hydrophobic region."; PMID:22498339 "Cellular fractionation indicated that a substantial amount of PvdA-YFP was located in the membrane fraction."].</li>
+</ul>
+<h2 id="kt2440-context">KT2440 Context</h2>
+<ul>
+<li><em>P. putida</em> KT2440 produces a characterized pyoverdine and no second siderophore was detected in the cited structural study <a href="https://pubmed.ncbi.nlm.nih.gov/19459056" title="Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine, but different from P. entomophila, and no evidence was found for the production of a second siderophore.">PMID:19459056</a>.</li>
+<li>Pyoverdine secretion in KT2440 is iron responsive and contributes to growth under iron limitation [PMID:30346656 "Expression from the respective promoters is stimulated by iron limitation albeit to varying degrees."; PMID:30346656 "Deletion of pvdRT-opmQ leads to reduced amounts of pyoverdine in the medium and decreased growth under iron limitation."].</li>
+<li>Pyoverdine turnover is physiologically important in KT2440 and linked to oxidative-stress adaptation <a href="https://pubmed.ncbi.nlm.nih.gov/31451546" title="Mutants defective in arginine biosynthesis show reduced production and release of the siderophore pyoverdine and altered expression of certain pyoverdine-related genes, resulting in higher sensitivity to iron limitation.">PMID:31451546</a>.</li>
+</ul>
+<h2 id="curation-takeaways">Curation Takeaways</h2>
+<ul>
+<li>The seeded TreeGrafter term <code>GO:0006879 intracellular iron ion homeostasis</code> is too broad for a dedicated pathway enzyme. The direct process term should be <code>GO:0002049 pyoverdine biosynthetic process</code> [PMID:8106324 "The enzyme L-ornithine N5-oxygenase catalyzes the hydroxylation of L-ornithine (L-Orn), which represents an early step in the biosynthesis of the peptidic moiety of the fluorescent siderophore pyoverdin in Pseudomonas aeruginosa."; PMID:19459056 "Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine, but different from P. entomophila, and no evidence was found for the production of a second siderophore."].</li>
+<li>The core missing MF term is <code>GO:0031172 ornithine N5-monooxygenase activity</code> [PMID:17015659 "Formation of the iron-chelating hydroxamate functional group in pyoverdine requires the enzyme PvdA, a flavin-dependent monooxygenase that catalyzes the N(5) hydroxylation of l-ornithine."; PMID:21757711 "The ornithine hydroxylase from Pseudomonas aeruginosa (PvdA) catalyzes the FAD-dependent hydroxylation of the side chain amine of ornithine, which is subsequently formylated to generate the iron-chelating hydroxamates of the siderophore pyoverdin."].</li>
+<li>Conservative CC addition is <code>GO:0005737 cytoplasm</code>; I would not make <code>plasma membrane</code> a core KT2440 annotation without direct localization data in this strain [PMID:22498339 "generate P.aeruginosa strains producing fluorescent fusions with PvdA, one of the initial enzymes in the biosynthetic pathway of PVDI in the cytoplasm"; PMID:18757814 "The inferred topological model resembled a eukaryotic reverse signal-anchor (type III) protein, with a single N-terminal domain anchored to the inner membrane, and the bulk of the protein spanning the cytosol."].</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Rl Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pvdA-bioreason-rl-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88GC8" data-a="DOC: Bioreason Rl Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-rl-review-pvda-pseudomonas-putida-kt2440">BioReason-Pro RL Review: pvdA (Pseudomonas putida KT2440)</h1>
+<p>Source: pvdA-deep-research-bioreason-rl.md</p>
+<ul>
+<li><strong>Correctness</strong>: 2/5</li>
+<li><strong>Completeness</strong>: 2/5</li>
+</ul>
+<h2 id="substrate-identity-error-critical">Substrate Identity Error (Critical)</h2>
+<p>The most significant error is that BioReason identifies pvdA as an <strong>L-lysine 6-monooxygenase</strong> that produces "L-beta-hydroxylysine." This is wrong. PvdA is a well-characterized <strong>L-ornithine N5-monooxygenase</strong> (GO:0031172) that hydroxylates the delta-amino group of L-ornithine, not lysine. The curated review, supported by multiple publications (PMID:8106324, PMID:17015659, PMID:21757711), consistently identifies the substrate as ornithine.</p>
+<p>This appears to be a classic <strong>fold-bias error</strong>: the InterPro family IPR025700 covers both L-lysine 6-monooxygenase and L-ornithine 5-monooxygenase, and BioReason defaulted to the lysine variant despite the gene name "pvdA" being a strong indicator of pyoverdine biosynthesis and ornithine as the substrate.</p>
+<h2 id="pathway-context-ignored">Pathway Context Ignored</h2>
+<p>BioReason places pvdA in "lysine-centered metabolism" and "lysine catabolism," describing it as channeling "carbon and nitrogen through downstream catabolic or salvage routes" in soil bacteria. This is entirely wrong. PvdA functions in <strong>pyoverdine siderophore biosynthesis</strong> (GO:0002049), an iron-acquisition pathway that is induced under iron limitation. The curated review correctly identifies pyoverdine biosynthetic process as the direct biological process, supported by strain-level evidence that KT2440 produces pyoverdine (PMID:19459056, PMID:30346656).</p>
+<p>The BioReason GO terms do include siderophore biosynthetic process (GO:0019290) and nonribosomal peptide biosynthetic process (GO:0019184) in the enumerated list, but the narrative reasoning and functional summary are entirely lysine-centric, suggesting these terms were pulled from InterPro2GO mappings without integration into the reasoning.</p>
+<h2 id="what-bioreason-got-right">What BioReason Got Right</h2>
+<ul>
+<li>The general enzyme class is correct: FAD-dependent monooxygenase with a Rossmann-like fold using NADPH as electron donor.</li>
+<li>The domain architecture analysis (IPR025700 + IPR036188) is reasonable.</li>
+<li>Cytoplasmic localization is consistent with the curated review.</li>
+<li>The GO term GO:0016709 (oxidoreductase activity, acting on paired donors, NAD(P)H as one donor) is a correct parent term for the actual activity.</li>
+</ul>
+<h2 id="missing-biology">Missing Biology</h2>
+<ul>
+<li>No mention of <strong>pyoverdine</strong> anywhere in the narrative or functional summary.</li>
+<li>No recognition that pvdA is part of a dedicated siderophore biosynthetic gene cluster.</li>
+<li>No acknowledgment of iron-limitation regulation, which is central to pvdA expression.</li>
+<li>No mention of the hydroxamate functional group that the hydroxylated ornithine contributes to pyoverdine's iron-chelating capacity.</li>
+<li>The membrane association and polar clustering of PvdA (PMID:22498339, PMID:18757814), noted in the curated review, is absent.</li>
+</ul>
+<h2 id="summary">Summary</h2>
+<p>BioReason correctly identified the general enzyme class (FAD-dependent monooxygenase) and cellular location, but made a critical substrate-specificity error by calling this a lysine hydroxylase rather than an ornithine hydroxylase. This cascaded into a completely wrong pathway assignment (lysine catabolism instead of pyoverdine biosynthesis). The gene name "pvdA" (pyoverdine) should have been a strong signal, but appears not to have been considered. This is a clear case where domain-level fold information was insufficient to distinguish between paralogous activities within the same protein family.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88GC8
+gene_symbol: pvdA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PvdA is the likely KT2440 ortholog of the pyoverdine biosynthetic ornithine
+  N5-monooxygenase. By homology to experimentally characterized PvdA proteins,
+  it is an FAD- and NADPH-dependent enzyme that hydroxylates L-ornithine early
+  in pyoverdine assembly, generating a precursor required for hydroxamate
+  formation. In Pseudomonas putida KT2440, pyoverdine is the characterized
+  siderophore produced under iron limitation, so PvdA is best interpreted as a
+  dedicated pyoverdine-biosynthetic enzyme rather than as a general iron
+  homeostasis factor.
+existing_annotations:
+- term:
+    id: GO:0006879
+    label: intracellular iron ion homeostasis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      This TreeGrafter annotation points to the downstream physiological role of
+      pyoverdine in iron acquisition, but it does not capture PvdA&#39;s direct
+      function. PvdA is the dedicated ornithine N5-monooxygenase of the
+      pyoverdine pathway, and KT2440 pyoverdine production under iron limitation
+      is experimentally established at the strain level.
+    action: MODIFY
+    reason: &gt;-
+      GO:0006879 is too broad and indirect for a pathway enzyme. The more
+      precise direct process term is GO:0002049 pyoverdine biosynthetic process.
+    proposed_replacement_terms:
+      - id: GO:0002049
+        label: pyoverdine biosynthetic process
+    additional_reference_ids:
+      - PMID:19459056
+      - PMID:30346656
+      - file:PSEPK/pvdA/pvdA-deep-research-manual.md
+    supported_by:
+      - reference_id: PMID:8106324
+        supporting_text: &#34;The enzyme L-ornithine N5-oxygenase catalyzes the hydroxylation of L-ornithine (L-Orn), which represents an early step in the biosynthesis of the peptidic moiety of the fluorescent siderophore pyoverdin in Pseudomonas aeruginosa.&#34;
+      - reference_id: PMID:19459056
+        supporting_text: &#34;Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine, but different from P. entomophila, and no evidence was found for the production of a second siderophore.&#34;
+      - reference_id: PMID:30346656
+        supporting_text: &#34;Fluorescent pseudomonads produce and secrete a siderophore termed pyoverdine to capture iron when it becomes scarce.&#34;
+      - reference_id: file:PSEPK/pvdA/pvdA-deep-research-manual.md
+        supporting_text: &#34;The current seeded annotation, `GO:0006879 intracellular iron ion homeostasis`, is biologically related but too broad for PvdA.&#34;
+- term:
+    id: GO:0002049
+    label: pyoverdine biosynthetic process
+  evidence_type: ISS
+  original_reference_id: PMID:8106324
+  review:
+    summary: &gt;-
+      Proposed new BP annotation. PvdA catalyzes an early committed reaction in
+      pyoverdine assembly, and loss of pvdA in homologous systems abolishes
+      pyoverdine production unless the hydroxylated precursor is supplied.
+    action: NEW
+    reason: &gt;-
+      This is the direct biological-process annotation for the enzyme and is more
+      informative than the broad iron-homeostasis term.
+    additional_reference_ids:
+      - PMID:19459056
+    supported_by:
+      - reference_id: PMID:8106324
+        supporting_text: &#34;the pvdA mutant obtained by gene disruption also disclosed no pyoverdin synthesis, lacked L-Orn N5-oxygenase activity, was complemented by the cloned pvdA gene, and produced pyoverdin at wild-type levels when fed with the biosynthetic precursor L-N5-OH-Orn.&#34;
+      - reference_id: PMID:19459056
+        supporting_text: &#34;Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine, but different from P. entomophila, and no evidence was found for the production of a second siderophore.&#34;
+- term:
+    id: GO:0031172
+    label: ornithine N5-monooxygenase activity
+  evidence_type: ISS
+  original_reference_id: PMID:17015659
+  review:
+    summary: &gt;-
+      Proposed new MF annotation. PvdA is the dedicated flavin-dependent
+      ornithine N5-monooxygenase that initiates hydroxamate formation during
+      pyoverdine synthesis.
+    action: NEW
+    reason: &gt;-
+      This is the core catalytic activity of PvdA and the most informative
+      molecular-function term for the KT2440 ortholog.
+    additional_reference_ids:
+      - PMID:21757711
+      - file:PSEPK/pvdA/pvdA-deep-research-manual.md
+    supported_by:
+      - reference_id: PMID:17015659
+        supporting_text: &#34;Formation of the iron-chelating hydroxamate functional group in pyoverdine requires the enzyme PvdA, a flavin-dependent monooxygenase that catalyzes the N(5) hydroxylation of l-ornithine.&#34;
+      - reference_id: PMID:21757711
+        supporting_text: &#34;The ornithine hydroxylase from Pseudomonas aeruginosa (PvdA) catalyzes the FAD-dependent hydroxylation of the side chain amine of ornithine, which is subsequently formylated to generate the iron-chelating hydroxamates of the siderophore pyoverdin.&#34;
+      - reference_id: file:PSEPK/pvdA/pvdA-deep-research-manual.md
+        supporting_text: &#34;The key missing molecular-function term is `GO:0031172 ornithine N5-monooxygenase activity`, supported by the biochemical and structural literature on characterized PvdA homologs.&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: PMID:22498339
+  review:
+    summary: &gt;-
+      Proposed new CC annotation. Homolog studies place PvdA among the
+      cytoplasmic enzymes of the pyoverdine pathway, although some membrane
+      association and polar clustering have also been observed.
+    action: NEW
+    reason: &gt;-
+      Cytoplasm is the conservative and best-supported location to annotate the
+      KT2440 ortholog. A plasma membrane term would overstate the current
+      evidence for this strain.
+    additional_reference_ids:
+      - PMID:18757814
+    supported_by:
+      - reference_id: PMID:22498339
+        supporting_text: &#34;generate P.aeruginosa strains producing fluorescent fusions with PvdA, one of the initial enzymes in the biosynthetic pathway of PVDI in the cytoplasm&#34;
+      - reference_id: PMID:18757814
+        supporting_text: &#34;The inferred topological model resembled a eukaryotic reverse signal-anchor (type III) protein, with a single N-terminal domain anchored to the inner membrane, and the bulk of the protein spanning the cytosol.&#34;
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: PMID:8106324
+  title: Cloning and nucleotide sequence of the pvdA gene encoding the pyoverdin
+    biosynthetic enzyme L-ornithine N5-oxygenase in Pseudomonas aeruginosa.
+  full_text_unavailable: true
+  findings:
+    - statement: PvdA catalyzes ornithine hydroxylation early in pyoverdine biosynthesis
+      supporting_text: &#34;The enzyme L-ornithine N5-oxygenase catalyzes the hydroxylation of L-ornithine (L-Orn), which represents an early step in the biosynthesis of the peptidic moiety of the fluorescent siderophore pyoverdin in Pseudomonas aeruginosa.&#34;
+    - statement: pvdA loss abolishes pyoverdine synthesis and is rescued by N5-hydroxyornithine
+      supporting_text: &#34;the pvdA mutant obtained by gene disruption also disclosed no pyoverdin synthesis, lacked L-Orn N5-oxygenase activity, was complemented by the cloned pvdA gene, and produced pyoverdin at wild-type levels when fed with the biosynthetic precursor L-N5-OH-Orn.&#34;
+- id: PMID:17015659
+  title: Heterologous expression, purification, and characterization of an l-ornithine
+    N(5)-hydroxylase involved in pyoverdine siderophore biosynthesis in Pseudomonas
+    aeruginosa.
+  full_text_unavailable: true
+  findings:
+    - statement: PvdA is a flavin-dependent monooxygenase that hydroxylates ornithine
+      supporting_text: &#34;Formation of the iron-chelating hydroxamate functional group in pyoverdine requires the enzyme PvdA, a flavin-dependent monooxygenase that catalyzes the N(5) hydroxylation of l-ornithine.&#34;
+    - statement: PvdA specifically uses NADPH and FAD cofactors
+      supporting_text: &#34;The enzyme is specific for NADPH and flavin adenine dinucleotide (FAD(+)) as cofactors, as it cannot utilize NADH and flavin mononucleotide.&#34;
+- id: PMID:21757711
+  title: &#39;Two structures of an N-hydroxylating flavoprotein monooxygenase: ornithine
+    hydroxylase from Pseudomonas aeruginosa.&#39;
+  full_text_unavailable: true
+  findings:
+    - statement: PvdA is a class B flavoprotein monooxygenase
+      supporting_text: &#34;PvdA belongs to the class B flavoprotein monooxygenases, which catalyze the oxidation of substrates using NADPH as the electron donor and molecular oxygen.&#34;
+    - statement: PvdA has Rossmann-like FAD and NADPH binding domains
+      supporting_text: &#34;PvdA has the two expected Rossmann-like dinucleotide-binding domains for FAD and NADPH and also a substrate-binding domain, with the active site at the interface between the three domains.&#34;
+- id: PMID:18757814
+  title: Membrane-association determinants of the omega-amino acid monooxygenase
+    PvdA, a pyoverdine biosynthetic enzyme from Pseudomonas aeruginosa.
+  full_text_unavailable: true
+  findings:
+    - statement: PvdA provides an essential enzymic function in pyoverdine biogenesis
+      supporting_text: &#34;The L-ornithine N(delta)-oxygenase PvdA catalyses the N(delta)-hydroxylation of L-ornithine in many Pseudomonas spp., and thus provides an essential enzymic function in the biogenesis of the pyoverdine siderophore.&#34;
+    - statement: PvdA has membrane association but its bulk spans the cytosol
+      supporting_text: &#34;The inferred topological model resembled a eukaryotic reverse signal-anchor (type III) protein, with a single N-terminal domain anchored to the inner membrane, and the bulk of the protein spanning the cytosol.&#34;
+- id: PMID:22498339
+  title: &#39;High cellular organization of pyoverdine biosynthesis in Pseudomonas aeruginosa:
+    clustering of PvdA at the old cell pole.&#39;
+  full_text_unavailable: true
+  findings:
+    - statement: PvdA is one of the initial cytoplasmic enzymes in pyoverdine biosynthesis
+      supporting_text: &#34;generate P.aeruginosa strains producing fluorescent fusions with PvdA, one of the initial enzymes in the biosynthetic pathway of PVDI in the cytoplasm&#34;
+    - statement: PvdA can also be recovered in a membrane fraction
+      supporting_text: &#34;Cellular fractionation indicated that a substantial amount of PvdA-YFP was located in the membrane fraction.&#34;
+- id: PMID:19459056
+  title: Siderophore-mediated iron acquisition in the entomopathogenic bacterium Pseudomonas
+    entomophila L48 and its close relative Pseudomonas putida KT2440.
+  full_text_unavailable: true
+  findings:
+    - statement: KT2440 produces a characterized pyoverdine and no second siderophore was detected
+      supporting_text: &#34;Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine, but different from P. entomophila, and no evidence was found for the production of a second siderophore.&#34;
+- id: PMID:30346656
+  title: PvdRT-OpmQ and MdtABC-OpmB efflux systems are involved in pyoverdine secretion
+    in Pseudomonas putida KT2440.
+  full_text_unavailable: true
+  findings:
+    - statement: Pyoverdine secretion genes are stimulated by iron limitation in KT2440
+      supporting_text: &#34;Expression from the respective promoters is stimulated by iron limitation albeit to varying degrees.&#34;
+    - statement: Reduced pyoverdine secretion decreases growth under iron limitation
+      supporting_text: &#34;Deletion of pvdRT-opmQ leads to reduced amounts of pyoverdine in the medium and decreased growth under iron limitation.&#34;
+- id: PMID:31451546
+  title: Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas
+    putida as Part of the Mechanism of Adaptation to Oxidative Stress.
+  full_text_unavailable: true
+  findings:
+    - statement: Defects affecting pyoverdine production increase KT2440 sensitivity to iron limitation
+      supporting_text: &#34;Mutants defective in arginine biosynthesis show reduced production and release of the siderophore pyoverdine and altered expression of certain pyoverdine-related genes, resulting in higher sensitivity to iron limitation.&#34;
+- id: file:PSEPK/pvdA/pvdA-deep-research-manual.md
+  title: Deep research on pvdA in Pseudomonas putida KT2440
+  findings:
+    - statement: Q88GC8 is the KT2440 ortholog of the pyoverdine biosynthetic ornithine hydroxylase PvdA
+    - statement: The direct process annotation is pyoverdine biosynthetic process rather than intracellular iron ion homeostasis
+    - statement: Cytoplasm is the conservative cellular component call for KT2440 PvdA
+
+core_functions:
+  - molecular_function:
+      id: GO:0031172
+      label: ornithine N5-monooxygenase activity
+    directly_involved_in:
+      - id: GO:0002049
+        label: pyoverdine biosynthetic process
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: PMID:17015659
+        supporting_text: &#34;Formation of the iron-chelating hydroxamate functional group in pyoverdine requires the enzyme PvdA, a flavin-dependent monooxygenase that catalyzes the N(5) hydroxylation of l-ornithine.&#34;
+      - reference_id: PMID:8106324
+        supporting_text: &#34;The enzyme L-ornithine N5-oxygenase catalyzes the hydroxylation of L-ornithine (L-Orn), which represents an early step in the biosynthesis of the peptidic moiety of the fluorescent siderophore pyoverdin in Pseudomonas aeruginosa.&#34;
+    description: &gt;-
+      PvdA is the KT2440 ornithine N5-monooxygenase. It uses FAD and NADPH to
+      hydroxylate L-ornithine, generating a precursor required for pyoverdine
+      hydroxamate formation during siderophore biosynthesis under iron
+      limitation.
+
+suggested_questions:
+  - question: &gt;-
+      Is KT2440 PvdA predominantly soluble-cytoplasmic or does it become
+      membrane-associated and old-pole clustered during active pyoverdine
+      synthesis, as described for the PAO1 homolog?
+    experts:
+      - Ignacio J. Schalk
+      - Holger Jung
+  - question: &gt;-
+      Does KT2440 PvdA show the same strict ornithine specificity and NADPH/FAD
+      coupling behavior reported for the PAO1 enzyme, or are there strain-specific
+      kinetic differences?
+    experts:
+      - Sharon Y. N. Seah
+      - Anne L. Lamb
+
+suggested_experiments:
+  - hypothesis: &gt;-
+      PP_3796 is the dedicated ornithine N5-monooxygenase required for KT2440
+      pyoverdine biosynthesis.
+    description: &gt;-
+      Construct a clean pvdA deletion or catalytic-site mutant in KT2440, measure
+      pyoverdine fluorescence and LC-MS profiles under iron limitation, and test
+      rescue with plasmid-borne pvdA or exogenous N5-hydroxyornithine.
+    experiment_type: genetics and metabolite rescue
+  - hypothesis: &gt;-
+      KT2440 PvdA undergoes regulated membrane association during active
+      pyoverdine production.
+    description: &gt;-
+      Build a chromosomal fluorescent or epitope-tagged PvdA allele, then compare
+      localization and fractionation patterns in iron-replete versus iron-limited
+      growth while quantifying pyoverdine output.
+    experiment_type: localization and cell biology
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pede - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pede</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88JH5" target="_blank" class="term-link">
+                        Q88JH5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">qedH-I</span>
+                    
+                    <span class="badge">PP_2674</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pede";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88JH5" data-a="DESCRIPTION: Ca2+-dependent pyrroloquinoline quinone (PQQ)-depe..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Ca2+-dependent pyrroloquinoline quinone (PQQ)-dependent alcohol dehydrogenase (EC 1.1.2.8) that catalyzes the periplasmic oxidation of a broad range of primary and secondary alcohols and aldehydes using cytochrome c as electron acceptor. PedE is the calcium-utilizing counterpart of the lanthanide-dependent PedH (PP_2679), and the two enzymes are inversely regulated by the PedS2/PedR2 two-component system in response to lanthanide availability. PedE is essential for efficient growth on volatile organic compounds (ethanol, 1-butanol, 2-phenylethanol) in the absence of lanthanides. The enzyme has an eight-bladed beta-propeller fold, binds PQQ non-covalently, and requires two Ca2+ ions per subunit (one catalytic in the active site, one structural at the N-terminus). Distinguished from PedH by Ser at position 295 (vs Asp) which coordinates Ca2+ rather than lanthanides. Part of the 2-phenylethanol degradation (Ped) pathway and also contributes to an alternative glycerol metabolic route.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH5" data-a="GO:0005509" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PedE is a Ca2+-dependent enzyme that binds two calcium ions per subunit, one catalytic and one structural. Ca2+ binding is experimentally demonstrated with KD ~64 uM and activity across 10 uM-10 mM CaCl2 (PMID:28655819). UniProt lists multiple Ca2+ binding residues (positions 53, 56, 59, 221, 308, 358). This annotation is well supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Calcium ion binding is a core function of PedE, distinguishing it from the lanthanide-dependent PedH. The enzyme requires Ca2+ for all catalytic activity, and the Ca2+ dissociation constant and functional concentration range have been experimentally determined (PMID:28655819).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">While PedE showed enzyme activity at concentrations of 10 µM to 10 mM CaCl2, with a peak in activity at 1 mM</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we calculated the dissociation constant (Kd) for various metals and the corresponding enzymes and found that PedH has an 850- to 2,500-fold higher binding affinity for lanthanides</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88JH5
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds 2 calcium ions per subunit. One is located in the active- site cavity near PQQ and the second calcium binds at the N-terminus and contributes to the stability of the native enzyme.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH5" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect annotation. PedE is a soluble periplasmic enzyme, not membrane-associated. It has a signal peptide (aa 1-33) for periplasmic export, but the mature protein is soluble. The InterPro family IPR017512 (PQQ_MeOH/EtOH_DH) includes both membrane-bound and soluble members, but PedE is explicitly described as a soluble quinoprotein (PMID:28655819). UniProt lists subcellular location as Periplasm with no membrane association.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PedE is a soluble periplasmic enzyme as stated in UniProt and confirmed by purification as a soluble His-tagged protein from E. coli lysates (PMID:28655819). The membrane annotation is an artifact of the InterPro mapping which does not distinguish soluble from membrane-bound PQQ-ADHs. This is the same conclusion reached for paralog PedH.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PQQ-ADHs can be divided into different subclasses, depending either on their molecular composition (quinoproteins or quinohemoproteins) or whether they are membrane bound or freely soluble within the periplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A one-step affinity chromatography method produced soluble C-terminally His-tagged PedE and PedH to visible purity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88JH5
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Periplasm {ECO:0000305|PubMed:28655819}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH5" data-a="GO:0016491" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Technically correct but far too general and uninformative. The more specific term GO:0052934 (alcohol dehydrogenase, cytochrome c activity) is already present and captures the actual function precisely. This generic term adds no information beyond what is already conveyed by the specific term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While too general to be informative on its own, this is a valid parent term of GO:0052934 which is also annotated. As an IEA from ARBA it is not wrong, just redundant with the more specific annotation. Keeping it as a broader IEA is acceptable.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the specific activities of purified PedE with a variety of substrates were determined</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016614" target="_blank" class="term-link">
+                                    GO:0016614
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on CH-OH group of donors</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH5" data-a="GO:0016614" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and captures the CH-OH oxidation specificity of PedE. This is an intermediate-specificity term between GO:0016491 and GO:0052934. PedE oxidizes alcohols (CH-OH groups) to aldehydes/ketones, well supported by substrate profiling (PMID:28655819).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This accurately describes the chemical group acted upon by PedE. It is less specific than GO:0052934 but correctly captures the CH-OH donor specificity, which is a valid intermediate annotation from InterPro domain mapping.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">For all linear primary alcohols and aldehydes, comparably high enzyme activities ranging from 1.9 ± 0.2 to 6.7 ± 0.9 U mg−1 were found</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH5" data-a="GO:0020037" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect annotation. PedE does not bind heme. It is a quinoprotein that uses PQQ as cofactor and transfers electrons to an external cytochrome c550 electron acceptor. PedE itself contains no heme group. UniProt lists only PQQ and Ca2+ as cofactors with no mention of heme. The ARBA model likely confused the interaction with cytochrome c (heme-containing) with PedE itself binding heme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PedE is a quinoprotein, not a quinohemoprotein. It does not contain heme. The UniProt entry lists only PQQ and Ca2+ cofactors. The electron acceptor cytochrome c550 is a separate protein encoded by an adjacent gene. This is the same erroneous annotation and same conclusion as for paralog PedH.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PedE is a homolog of ExaA from Pseudomonas aeruginosa, which is the most intensively studied member of the class of soluble ethanol dehydrogenases</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88JH5
+                                    
+                                </span>
+                                
+                                <div class="support-text">Name=pyrroloquinoline quinone; Xref=ChEBI:CHEBI:58442;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH5" data-a="GO:0030288" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PedE is periplasmic, so the general periplasmic localization is correct. However, this term implies specific association with the outer membrane boundary of the periplasm. PedE is a soluble periplasmic enzyme without evidence for specific outer membrane association. GO:0042597 (periplasmic space) is already annotated and is more appropriate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While PedE is indeed in the periplasm, the more specific outer-membrane-bounded qualifier is not supported by evidence. PedE is a freely soluble enzyme in the periplasmic space, not specifically localized to the outer membrane boundary. The correct annotation GO:0042597 (periplasmic space) is already present. Same conclusion as for PedH.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    periplasmic space
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">by using a periplasmic oxidation system, the organism is able to rapidly detoxify the often harmful chemicals without prior transport into the cytoplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88JH5
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Periplasm {ECO:0000305|PubMed:28655819}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    GO:0042597
+                                </a>
+                            </span>
+                            <span class="term-label">periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH5" data-a="GO:0042597" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and well-supported. PedE has a signal peptide (aa 1-33) directing export to the periplasm. UniProt explicitly states periplasmic localization. The enzyme functions as part of a periplasmic oxidation system for volatile alcohols (PMID:28655819). PedE is soluble in the periplasm, not membrane-associated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core cellular component annotation. PedE is a soluble periplasmic enzyme with a cleavable signal peptide, confirmed by UniProt subcellular location annotation and consistent with its role in periplasmic alcohol oxidation (PMID:28655819).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">by using a periplasmic oxidation system, the organism is able to rapidly detoxify the often harmful chemicals without prior transport into the cytoplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88JH5
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Periplasm {ECO:0000305|PubMed:28655819}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052934" target="_blank" class="term-link">
+                                    GO:0052934
+                                </a>
+                            </span>
+                            <span class="term-label">alcohol dehydrogenase (cytochrome c) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH5" data-a="GO:0052934" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Excellent and highly specific annotation that precisely describes PedE&#39;s core molecular function. PedE is classified as EC 1.1.2.8 (alcohol dehydrogenase, cytochrome c). It oxidizes a broad range of alcohols with cytochrome c550 as electron acceptor. Kinetic parameters are well characterized with ethanol (Vmax 6.1 U/mg, KM 85 uM), 2-phenylethanol (KM 115 uM), and acetaldehyde (KM 899 uM) (PMID:28655819).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most precise and informative molecular function term for PedE. The EC number 1.1.2.8 maps directly to this GO term, and the enzyme has been biochemically characterized with purified protein, detailed kinetics, and substrate profiling (PMID:28655819).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the specific activities of purified PedE with a variety of substrates were determined (Table 1). For all linear primary alcohols and aldehydes, comparably high enzyme activities ranging from 1.9 ± 0.2 to 6.7 ± 0.9 U mg−1 were found</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the maximal velocity (Vmax) of PedH was approximately 1.7-fold higher than that of PedE (10.6 versus 6.1 U mg−1; Fig. 3). However, the corresponding binding constant (KM) of PedE was 2-fold lower than that of PedH (85 versus 177 µM)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88JH5
+                                    
+                                </span>
+                                
+                                <div class="support-text">EC=1.1.2.8 {ECO:0000305|PubMed:28655819}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070968" target="_blank" class="term-link">
+                                    GO:0070968
+                                </a>
+                            </span>
+                            <span class="term-label">pyrroloquinoline quinone binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH5" data-a="GO:0070968" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and essential annotation. PedE is a PQQ-dependent quinoprotein that binds 1 PQQ group non-covalently per subunit. UniProt lists 7 PQQ-binding residues (positions 103, 153, 197, 215-217, 221, 386, 531, 595). The PQQ KD for PedE is 3.5 uM (PMID:28655819).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PQQ binding is fundamental to PedE&#39;s catalytic mechanism. The cofactor requirement is confirmed by enzymatic assays requiring exogenous PQQ, by KD determination, and by multiple binding site residues identified by homology modeling (PMID:28655819, UniProt:Q88JH5).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the reaction mechanism of PQQ-ADHs is still not completely resolved but most likely proceeds via an ion-assisted direct hydride transfer from the substrate to C-5 of the noncovalently bound cofactor PQQ</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88JH5
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds 1 PQQ group non-covalently per subunit.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006066" target="_blank" class="term-link">
+                                    GO:0006066
+                                </a>
+                            </span>
+                            <span class="term-label">alcohol metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH5" data-a="GO:0006066" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PedE catalyzes the periplasmic oxidation of a broad range of alcohols including ethanol, 1-butanol, 2-phenylethanol, cinnamyl alcohol, and farnesol. Deletion of pedE eliminates growth on these alcohols in the absence of lanthanides (PMID:28655819). This is the primary biological process in which PedE participates.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No biological process terms are present in the existing GOA annotations for PedE. Alcohol metabolic process is the most direct and well-supported BP term, as PedE&#39;s primary role is the periplasmic oxidation of volatile alcohols enabling their catabolism as carbon and energy sources.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">efficient growth with all of the alcohols tested, except the microbial fermentation product 2,3-butanediol, was dependent on the functional expression of PedE or PedH</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A ΔpedE strain displayed no growth under this condition</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pede/pede-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PedE is experimentally characterized as a PQQ-dependent alcohol dehydrogenase/ethanol dehydrogenase that oxidizes alcohols (and some aldehydes) in the periplasm of P. putida KT2440</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042537" target="_blank" class="term-link">
+                                    GO:0042537
+                                </a>
+                            </span>
+                            <span class="term-label">benzene-containing compound metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH5" data-a="GO:0042537" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PedE is part of the 2-phenylethanol degradation (Ped) pathway, catalyzing oxidation of 2-phenylethanol to phenylacetaldehyde. Growth experiments confirm PedE is essential for 2-phenylethanol catabolism in the absence of lanthanides (PMID:28655819). PedE also shows activity on cinnamyl alcohol.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PedE is named for the 2-phenylethanol degradation pathway and shows high specific activity on 2-phenylethanol (6.7 U/mg). This aromatic compound catabolism role is central to its biological function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">2-phenylethanol, the secondary alcohol 2-butanol, cinnamyl alcohol, and the acyclic sesquiterpene farnesol were efficiently converted, with specific activities ranging from 6.7 ± 1.1 to 2.0 ± 0.3 U mg−1</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                        PMID:28655819
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">growth experiments with 2-phenylethanol in liquid M9 medium</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pede/pede-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PedE and PedH are described as part of a periplasmic oxidation system enabling rapid oxidation of volatile alcohols/aldehydes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Ca2+-dependent alcohol dehydrogenase activity in the periplasm, oxidizing primary and secondary alcohols and aldehydes using PQQ as cofactor and cytochrome c as electron acceptor</h3>
+                <span class="vote-buttons" data-g="Q88JH5" data-a="FUNCTION: Ca2+-dependent alcohol dehydrogenase activity in t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052934" target="_blank" class="term-link">
+                            alcohol dehydrogenase (cytochrome c) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006066" target="_blank" class="term-link">
+                                alcohol metabolic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042537" target="_blank" class="term-link">
+                                benzene-containing compound metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                PMID:28655819
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the specific activities of purified PedE with a variety of substrates were determined (Table 1). For all linear primary alcohols and aldehydes, comparably high enzyme activities</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                PMID:28655819
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">efficient growth with all of the alcohols tested, except the microbial fermentation product 2,3-butanediol, was dependent on the functional expression of PedE or PedH</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Calcium ion binding essential for catalytic activity, distinguishing PedE from the lanthanide-dependent PedH</h3>
+                <span class="vote-buttons" data-g="Q88JH5" data-a="FUNCTION: Calcium ion binding essential for catalytic activi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                            calcium ion binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                PMID:28655819
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">While PedE showed enzyme activity at concentrations of 10 µM to 10 mM CaCl2, with a peak in activity at 1 mM</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q88JH5
+                            
+                        </span>
+                        
+                        <div class="finding-text">Binds 2 calcium ions per subunit. One is located in the active- site cavity near PQQ and the second calcium binds at the N-terminus and contributes to the stability of the native enzyme.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Pyrroloquinoline quinone cofactor binding for catalytic activity</h3>
+                <span class="vote-buttons" data-g="Q88JH5" data-a="FUNCTION: Pyrroloquinoline quinone cofactor binding for cata..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070968" target="_blank" class="term-link">
+                            pyrroloquinoline quinone binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q88JH5
+                            
+                        </span>
+                        
+                        <div class="finding-text">Binds 1 PQQ group non-covalently per subunit.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                                PMID:28655819
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the reaction mechanism of PQQ-ADHs is still not completely resolved but most likely proceeds via an ion-assisted direct hydride transfer from the substrate to C-5 of the noncovalently bound cofactor PQQ</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28655819" target="_blank" class="term-link">
+                            PMID:28655819
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional Role of Lanthanides in Enzymatic Activity and Transcriptional Regulation of Pyrroloquinoline Quinone-Dependent Alcohol Dehydrogenases in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedE is a Ca2+-dependent PQQ-ADH with broad substrate specificity</div>
+                        
+                        <div class="finding-text">"Under optimized reaction conditions, which include the presence of 1 mM Ca2+, the specific activities of purified PedE with a variety of substrates were determined"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedE has Ser at position 295 for Ca2+ coordination</div>
+                        
+                        <div class="finding-text">"the PedE protein harbors a serine residue at amino acid position 295 that is involved in the coordination of the Ca2+ ion"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedE is essential for growth on volatile alcohols without lanthanides</div>
+                        
+                        <div class="finding-text">"A ΔpedE strain displayed no growth under this condition. Even more interestingly, the addition of 20 µM La3+ to the agar medium not only resulted in growth of the ΔpedE strain but also restricted the growth of the ΔpedH strain"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedE and PedH are inversely regulated in response to lanthanide availability</div>
+                        
+                        <div class="finding-text">"KT2440 responds to lanthanide availability with the inverse transcriptional regulation of the two PQQ-ADHs to optimize growth with volatile alcoholic and aldehyde substrates"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedE Ca2+ binding affinity KD 64 uM, active 10 uM-10 mM</div>
+                        
+                        <div class="finding-text">"While PedE showed enzyme activity at concentrations of 10 µM to 10 mM CaCl2, with a peak in activity at 1 mM"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedE kinetic parameters determined for multiple substrates</div>
+                        
+                        <div class="finding-text">"the maximal velocity (Vmax) of PedH was approximately 1.7-fold higher than that of PedE (10.6 versus 6.1 U mg−1; Fig. 3). However, the corresponding binding constant (KM) of PedE was 2-fold lower than that of PedH (85 versus 177 µM)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30158283" target="_blank" class="term-link">
+                            PMID:30158283
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The PedS2/PedR2 Two-Component System Is Crucial for the Rare Earth Element Switch in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedS2/PedR2 TCS controls inverse regulation of pedE and pedH</div>
+                        
+                        <div class="finding-text">"the PedS2/PedR2 (PP_2671/PP_2672) two-component system (TCS) plays a central role in the observed REE-mediated switch of PQQ-EDHs in P. putida"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedR2 activates pedE transcription in absence of lanthanides</div>
+                        
+                        <div class="finding-text">"in the absence of lanthanum (La3+), the sensor histidine kinase PedS2 phosphorylates its cognate LuxR-type response regulator PedR2, which in turn not only activates pedE gene transcription but is also involved in repression of pedH"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:Q88JH5
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for PedE - Quinoprotein alcohol dehydrogenase</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedE is a periplasmic Ca2+-dependent PQQ-ADH</div>
+                        
+                        <div class="finding-text">"Ca(2+)-dependent pyrroloquinoline quinone-dependent alcohol dehydrogenase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedE binds 2 Ca2+ and 1 PQQ per subunit with defined binding residues</div>
+                        
+                        <div class="finding-text">"Binds 2 calcium ions per subunit. One is located in the active- site cavity near PQQ and the second calcium binds at the N-terminus and contributes to the stability of the native enzyme."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pede/pede-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research analysis of PedE function, regulation, and biochemistry</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedE is the Ca2+-dependent counterpart of PedH in the periplasmic oxidation system</div>
+                        
+                        <div class="finding-text">"PedE (PP_2674; UniProt Q88JH5) in Pseudomonas putida KT2440 encodes PedE, a periplasmic, Ca2+-dependent pyrroloquinoline quinone (PQQ)-dependent alcohol dehydrogenase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedE contributes to a novel glycerol utilization route</div>
+                        
+                        <div class="finding-text">"Proteomics and mutant analysis identified a novel glycerol utilization route initiated by PedE/PedH oxidation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Ln switch is a graded fine-tuning system per 2024 transcriptomics</div>
+                        
+                        <div class="finding-text">"pedE expression varied by &gt;2 orders of magnitude across conditions"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What structural features of PedE at position 295 (Ser vs Asp in PedH) determine selective binding of Ca2+ over lanthanide ions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JH5" data-a="Q: What structural features of PedE at position 295 (..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PedE have any residual activity with lanthanides or is it strictly Ca2+-dependent?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JH5" data-a="Q: Does PedE have any residual activity with lanthani..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the physiological significance of the alternative glycerol metabolism route initiated by PedE?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JH5" data-a="Q: What is the physiological significance of the alte..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Crystal structure determination of PedE to confirm the Ca2+ binding geometry and compare with lanthanide-bound PedH</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JH5" data-a="EXPERIMENT: Crystal structure determination of PedE to confirm..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Site-directed mutagenesis of S295D in PedE to test whether this single substitution is sufficient to switch metal preference from Ca2+ to lanthanides</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JH5" data-a="EXPERIMENT: Site-directed mutagenesis of S295D in PedE to test..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vivo isotope tracing to quantify flux through the PedE-initiated glycerol metabolic route vs the canonical glpFKRD pathway</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JH5" data-a="EXPERIMENT: In vivo isotope tracing to quantify flux through t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pede-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88JH5" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-20T20:55:12.864923'<br />
+end_time: '2026-03-20T21:04:37.599280'<br />
+duration_seconds: 564.73<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: pede<br />
+  gene_symbol: pedE<br />
+  uniprot_accession: Q88JH5<br />
+  protein_description: 'RecName: Full=Quinoprotein alcohol dehydrogenase PedE {ECO:0000303|PubMed:28655819};<br />
+    EC=1.1.2.8 {ECO:0000305|PubMed:28655819}; AltName: Full=Ca(2+)-dependent pyrroloquinoline<br />
+    quinone-dependent alcohol dehydrogenase {ECO:0000303|PubMed:28655819}; Short=Ca(2+)-dependent<br />
+    PQQ-ADH {ECO:0000303|PubMed:28655819}; Flags: Precursor;'<br />
+  gene_info: Name=pedE {ECO:0000303|PubMed:28655819}; Synonyms=qedH-I {ECO:0000312|EMBL:AAN68282.1};<br />
+    OrderedLocusNames=PP_2674 {ECO:0000312|EMBL:AAN68282.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Belongs to the bacterial PQQ dehydrogenase family.<br />
+  protein_domains: ADHI. (IPR034119); PQQ_b-propeller_rpt. (IPR018391); PQQ_MeOH/EtOH_DH.<br />
+    (IPR017512); PQQ_rpt_dom. (IPR002372); Quinoprotein_ADH-like_sf. (IPR011047)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 33</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88JH5</li>
+<li><strong>Protein Description:</strong> RecName: Full=Quinoprotein alcohol dehydrogenase PedE {ECO:0000303|PubMed:28655819}; EC=1.1.2.8 {ECO:0000305|PubMed:28655819}; AltName: Full=Ca(2+)-dependent pyrroloquinoline quinone-dependent alcohol dehydrogenase {ECO:0000303|PubMed:28655819}; Short=Ca(2+)-dependent PQQ-ADH {ECO:0000303|PubMed:28655819}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=pedE {ECO:0000303|PubMed:28655819}; Synonyms=qedH-I {ECO:0000312|EMBL:AAN68282.1}; OrderedLocusNames=PP_2674 {ECO:0000312|EMBL:AAN68282.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the bacterial PQQ dehydrogenase family.</li>
+<li><strong>Key Domains:</strong> ADHI. (IPR034119); PQQ_b-propeller_rpt. (IPR018391); PQQ_MeOH/EtOH_DH. (IPR017512); PQQ_rpt_dom. (IPR002372); Quinoprotein_ADH-like_sf. (IPR011047)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pedE" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pedE' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pedE</strong> (gene ID: pede, UniProt: Q88JH5) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88JH5</li>
+<li><strong>Protein Description:</strong> RecName: Full=Quinoprotein alcohol dehydrogenase PedE {ECO:0000303|PubMed:28655819}; EC=1.1.2.8 {ECO:0000305|PubMed:28655819}; AltName: Full=Ca(2+)-dependent pyrroloquinoline quinone-dependent alcohol dehydrogenase {ECO:0000303|PubMed:28655819}; Short=Ca(2+)-dependent PQQ-ADH {ECO:0000303|PubMed:28655819}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=pedE {ECO:0000303|PubMed:28655819}; Synonyms=qedH-I {ECO:0000312|EMBL:AAN68282.1}; OrderedLocusNames=PP_2674 {ECO:0000312|EMBL:AAN68282.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the bacterial PQQ dehydrogenase family.</li>
+<li><strong>Key Domains:</strong> ADHI. (IPR034119); PQQ_b-propeller_rpt. (IPR018391); PQQ_MeOH/EtOH_DH. (IPR017512); PQQ_rpt_dom. (IPR002372); Quinoprotein_ADH-like_sf. (IPR011047)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pedE" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pedE' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pedE</strong> (gene ID: pede, UniProt: Q88JH5) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-pede-pp_2674-uniprot-q88jh5-in-pseudomonas-putidapseudomonas-alloputida-kt2440">Research report: <em>pedE</em> (PP_2674; UniProt Q88JH5) in <em>Pseudomonas putida</em>/<em>Pseudomonas alloputida</em> KT2440</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>The <em>pedE</em> gene (PP_2674; UniProt Q88JH5) in <em>Pseudomonas putida</em> KT2440 encodes PedE, a <strong>periplasmic, Ca2+-dependent pyrroloquinoline quinone (PQQ)-dependent alcohol dehydrogenase (PQQ-ADH; EC 1.1.2.8)</strong> that oxidizes a broad range of primary/secondary alcohols and some aldehydes, supporting growth and detoxification of volatile alcohol substrates. (wehrmann2017functionalroleofa pages 1-2, wehrmann2017functionalroleofa pages 2-4)<br />
+PedE is functionally redundant with the lanthanide-dependent PedH (PP_2679), and the two enzymes are controlled by a <strong>lanthanide/rare earth element (REE) switch</strong> mediated by the <strong>PedS2/PedR2 two-component system</strong>, tuning expression and oxidation capacity according to Ln availability. (wehrmann2018thepeds2pedr2twocomponent pages 1-2, wehrmann2017functionalroleof pages 10-14)<br />
+Recent 2024 transcriptomics and single-cell elemental analyses show that this REE switch is <strong>not a simple on/off toggle</strong>, but rather a <strong>fine-tuning response</strong> that depends on whether lanthanides are utilizable (light Ln such as La, Nd) or non-utilizable (heavy Ln such as Er), with large (up to ~126-fold) shifts in <em>pedE</em> transcript abundance across conditions. (gorniak2024changesingrowth pages 9-11)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1. Key concepts and definitions (current understanding)</h2>
+<h3 id="11-quinoprotein-alcohol-dehydrogenases-pqq-adhs">1.1 Quinoprotein alcohol dehydrogenases (PQQ-ADHs)</h3>
+<p>PedE belongs to the bacterial PQQ-dependent alcohol dehydrogenase family, a class of <strong>quinoproteins</strong> that use <strong>PQQ as a redox cofactor</strong> to oxidize alcohols (and in some cases aldehydes) in the bacterial periplasm. In KT2440, PedE and PedH are described as part of a <strong>periplasmic oxidation system</strong> enabling rapid oxidation of volatile alcohols/aldehydes. (wehrmann2017functionalroleofa pages 1-2, wehrmann2017functionalroleof pages 1-6)</p>
+<h3 id="12-metal-dependence-ca2-enzymes-vs-lanthanide-enzymes">1.2 Metal dependence: Ca2+ enzymes vs lanthanide enzymes</h3>
+<p>KT2440 encodes two homologous PQQ-ADHs with different active-site metals:<br />
+- <strong>PedE</strong> is <strong>Ca2+-dependent</strong> (Ca2+ plus PQQ required for activity). (wehrmann2018thepeds2pedr2twocomponent pages 1-2, wehrmann2017functionalroleofa pages 2-4)<br />
+- <strong>PedH</strong> is <strong>lanthanide (Ln3+)-dependent</strong> (requires La3+/Ce3+/Pr3+/Nd3+/Sm3+/Gd3+/Tb3+; inactive with several heavy Ln under tested conditions). (wehrmann2017functionalroleofa pages 2-4, wehrmann2017functionalroleof pages 6-10)<br />
+A key sequence feature distinguishing Ln-dependent PQQ-ADHs is an active-site <strong>Asp</strong> ligand (PedH) replacing a <strong>Ser</strong> in Ca-dependent enzymes (PedE). (wehrmann2017functionalroleofa pages 2-4, wehrmann2017functionalroleof pages 6-10)</p>
+<h3 id="13-the-lanthanideree-switch">1.3 The lanthanide/REE “switch”</h3>
+<p>The “REE switch” (or Ln switch) refers to <strong>inverse regulation of <em>pedE<em> and </em>pedH</em></strong> depending on Ln availability, coordinating oxidation capacity with metal availability. Mechanistically, it is mediated by the <strong>PedS2/PedR2 two-component system</strong> and additional regulatory modules (some not fully identified). (wehrmann2018thepeds2pedr2twocomponent pages 1-2, wehrmann2018thepeds2pedr2twocomponent pages 8-9)</p>
+<h2 id="2-functional-annotation-of-pede-reaction-substrate-scope-kinetics-and-localization">2. Functional annotation of PedE: reaction, substrate scope, kinetics, and localization</h2>
+<h3 id="21-primary-molecular-function-and-reaction-catalyzed">2.1 Primary molecular function and reaction catalyzed</h3>
+<p>PedE is experimentally characterized as a <strong>PQQ-dependent alcohol dehydrogenase/ethanol dehydrogenase</strong> that oxidizes alcohols (and some aldehydes) in the periplasm of <em>P. putida</em> KT2440. (wehrmann2017functionalroleofa pages 2-4, wehrmann2017functionalroleofa pages 1-2)<br />
+Most biochemical characterization has used a dye-linked assay (PMS/DCPIP), consistent with PedE functioning as a dehydrogenase transferring electrons to periplasmic acceptors in vivo. (wehrmann2017functionalroleofa pages 11-12)</p>
+<h3 id="22-substrate-scope-and-example-activities">2.2 Substrate scope and example activities</h3>
+<p>Purified PedE shows activity on multiple linear and aromatic alcohols and aldehydes. Examples (specific activities): ethanol <strong>6.7 ± 0.9 U mg−1</strong>, 1-butanol <strong>5.8 ± 0.1 U mg−1</strong>, 2-phenylethanol <strong>6.7 ± 1.1 U mg−1</strong>, while methanol is a poorer substrate (<strong>0.61 ± 0.10 U mg−1</strong>). (wehrmann2017functionalroleofa pages 2-4)<br />
+Across a larger substrate panel, PedE showed substantial activity on many linear primary alcohols/aldehydes (reported range <strong>~1.9 ± 0.2 to 6.7 ± 0.9 U mg−1</strong>), while methanol, 2,3-butanediol and ethanolamine were ~10-fold poorer; cinnamyl aldehyde had no detectable activity in one dataset. (wehrmann2017functionalroleof pages 6-10, wehrmann2017functionalroleofa pages 2-4)</p>
+<h3 id="23-enzyme-kinetics-ethanol">2.3 Enzyme kinetics (ethanol)</h3>
+<p>A direct comparison of PedE and PedH using ethanol indicates:<br />
+- PedE: Vmax <strong>~6.1 U mg−1</strong>, KM <strong>~85 µM</strong><br />
+- PedH: Vmax <strong>~10.6 U mg−1</strong>, KM <strong>~177 µM</strong><br />
+Thus, PedH has higher Vmax under the tested conditions, while PedE shows lower KM for ethanol. (wehrmann2017functionalroleof pages 6-10)</p>
+<h3 id="24-cofactors-and-metal-dependence">2.4 Cofactors and metal dependence</h3>
+<p>PedE activity depends on Ca2+ and PQQ; it is active across <strong>10 µM–10 mM CaCl2</strong> with an optimum around <strong>1 mM</strong>, and a reported Ca2+ affinity <strong>KD ~64 µM</strong>. (wehrmann2017functionalroleof pages 6-10)<br />
+Assay conditions used to quantify PedE activity include 100 mM Tris-HCl pH 8, mediators PMS/DCPIP, and imidazole, with added CaCl2 and PQQ. (wehrmann2017functionalroleofa pages 11-12)</p>
+<h3 id="25-cellular-localization">2.5 Cellular localization</h3>
+<p>PedE and PedH are repeatedly described as part of a <strong>periplasmic oxidation system</strong> in <em>P. putida</em> KT2440 that enables rapid oxidation/detoxification of volatile alcohols and aldehydes. (wehrmann2017functionalroleofa pages 1-2, wehrmann2018thepeds2pedr2twocomponent pages 1-2)</p>
+<h2 id="3-biological-roles-and-pathways">3. Biological roles and pathways</h2>
+<h3 id="31-growth-on-volatile-alcohols-and-functional-redundancy-with-pedh">3.1 Growth on volatile alcohols and functional redundancy with PedH</h3>
+<p>Genetic evidence indicates that <strong>at least one</strong> of PedE or PedH must be functional to support efficient growth on alcohol substrates such as 2-phenylethanol. For example, deletion of both (<em>ΔpedEΔpedH</em>) blocks growth on 2-phenylethanol, while single deletions show metal-dependent growth behavior consistent with the REE switch. (wehrmann2017functionalroleof pages 10-14, wehrmann2017functionalroleof pages 6-10)</p>
+<h3 id="32-glycerol-a-pedepedh-initiated-alternative-catabolic-route">3.2 Glycerol: a PedE/PedH-initiated alternative catabolic route</h3>
+<p>Proteomics and mutant analysis identified a <strong>novel glycerol utilization route</strong> initiated by PedE/PedH oxidation (glycerol → glyceraldehyde → glycerate → glycerate-2-phosphate via GarK), operating alongside the canonical glpFKRD pathway and affecting growth parameters. (wehrmann2020thecellularresponse pages 1-2)<br />
+Quantitatively (batch growth on glycerol), La3+ shortened lag phase (<strong>10.2 ± 0.2 h vs 17.3 ± 0.2 h</strong> without La3+) but reduced growth rate (<strong>µmax 0.201 ± 0.004 h−1 vs 0.341 ± 0.010 h−1</strong>) and final OD600 (<strong>0.680 ± 0.014 vs 0.884 ± 0.004</strong>); the La-dependent phenotype disappeared in <em>ΔpedEΔpedH</em>, supporting PedE/H causality. (wehrmann2019thecellularresponse pages 12-15)</p>
+<h3 id="33-regulatory-pathway-peds2pedr2-and-the-ree-switch">3.3 Regulatory pathway: PedS2/PedR2 and the REE switch</h3>
+<p>Mechanistic evidence supports the following model:<br />
+- In the <strong>absence of lanthanum</strong>, sensor kinase <strong>PedS2</strong> phosphorylates response regulator <strong>PedR2</strong>, which <strong>activates <em>pedE</em></strong> transcription and contributes to <strong><em>pedH</em> repression</strong>.<br />
+- In the <strong>presence of lanthanum</strong>, PedS2 kinase activity decreases, lowering PedR2 phosphorylation, decreasing <em>pedE</em> expression and relieving <em>pedH</em> repression (with additional activation of <em>pedH</em> via other module[s]). (wehrmann2018thepeds2pedr2twocomponent pages 1-2)<br />
+Evidence also indicates PedS2 is primary but not the only input into PedR2 phosphorylation (additional kinase activity suggested by mutant phenotypes). (wehrmann2018thepeds2pedr2twocomponent pages 8-9)</p>
+<h3 id="34-sensitivity-and-media-dependence">3.4 Sensitivity and media dependence</h3>
+<p>Promoter assays and growth experiments demonstrate that transcriptional and physiological responses can occur at very low La3+ concentrations and are medium-dependent. In one dataset (M9), <em>pedE</em> promoter activity decreased between <strong>100 nM and 100 µM La3+</strong> while <em>pedH</em> induction began at <strong>≥100 nM</strong> and peaked near <strong>10 µM</strong>; in MP medium, effective concentrations were reported as low as <strong>1–10 nM</strong>. (wehrmann2017functionalroleof pages 10-14)<br />
+With <strong>10 nM La3+</strong>, one study reported <em>pedE</em> promoter reductions of <strong>~21-fold</strong> in WT and <em>pedH</em> induction of <strong>~37-fold</strong> in WT. (wehrmann2017functionalroleof pages 10-14)</p>
+<h2 id="4-recent-developments-and-latest-research-prioritizing-20232024">4. Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="41-2024-transcriptome-wide-evidence-that-the-ln-switch-is-fine-tuning">4.1 2024: transcriptome-wide evidence that the Ln switch is “fine-tuning”</h3>
+<p>A 2024 mSphere study of <em>Pseudomonas alloputida</em> KT2440 (a taxonomic re-assignment of KT2440 used in some recent work) quantified Ln-dependent growth, single-cell Ln association, and transcriptome responses during growth on 2-phenylethanol. (gorniak2024changesingrowth pages 1-2, gorniak2024changesingrowth pages 9-11)<br />
+Key transcriptomic findings include:<br />
+- The <strong>ped cluster</strong> (including <em>pedE</em>, <em>pedH</em>, <em>pedS2/pedR2</em>) was broadly downregulated upon Ln supplementation (except Er), with log2FC values <strong>−1.29 to −6.98</strong> for the cluster. (gorniak2024changesingrowth pages 9-11)<br />
+- <em>pedE</em> expression varied by <strong>&gt;2 orders of magnitude</strong> across conditions (up to <strong>~126-fold</strong>), with RPKM <strong>410.28 ± 56.55</strong> (no Ln), <strong>210.45 ± 27.53</strong> (Er), and very low values with light Ln (e.g., Nd <strong>4.45 ± 0.29</strong>, La <strong>3.25 ± 0.57</strong>). (gorniak2024changesingrowth pages 9-11)<br />
+- The <em>pedE:pedH</em> expression ratio shifted from <strong>~6</strong> (no Ln) to <strong>~2</strong> (Er) and toward <strong>pedH dominance</strong> with La/Nd/mix; RT-qPCR showed <em>pedH</em> was <strong>~2.4-fold</strong> higher with La. (gorniak2024changesingrowth pages 9-11)<br />
+These data support an updated view that Ln sensing in KT2440 adjusts the pool of Ca- and Ln-dependent ADHs in a graded, element-dependent manner rather than a binary switch. (gorniak2024changesingrowth pages 11-13)</p>
+<h3 id="42-2024-quantitative-growth-effects-of-light-vs-heavy-lanthanides">4.2 2024: quantitative growth effects of light vs heavy lanthanides</h3>
+<p>In 2024 experiments on 2-phenylethanol, low-nanomolar La (10–50 nM) produced the shortest lag phase and the highest reported growth rate (<strong>r = 1.64 ± 0.13 h−1</strong>, doubling time <strong>~0.42 ± 0.03 h</strong>), compared to no-Ln (<strong>r = 0.88 ± 0.06 h−1</strong>, td <strong>~0.79 ± 0.05 h</strong>). (gorniak2024changesingrowth pages 2-5)<br />
+Heavy lanthanides (Dy/Ho/Er/Yb) caused fitness costs, interpreted as mismetallation and interference with Ln sensing/signaling. (gorniak2024changesingrowth pages 1-2)<br />
+Single-cell ICP-MS quantified cell-associated Ln, for example La <strong>0.058 ± 0.055 fg cell−1</strong> vs Er <strong>0.152 ± 0.106 fg cell−1</strong> after exposures, illustrating element-dependent association/binding. (gorniak2024changesingrowth pages 2-5)</p>
+<h3 id="43-2023-systems-level-view-of-c1-detoxification-implicating-pedeh">4.3 2023: systems-level view of C1 detoxification implicating PedEH</h3>
+<p>A 2023 mSystems study on <em>P. putida</em> one-carbon (C1) responses states that the <strong>ped cluster encodes PedE and PedH</strong>, broad-substrate PQQ-ADHs implicated in methanol oxidation to formaldehyde and detoxification, and reports that methanol exposure induces a formaldehyde detoxification response including strongly overexpressed aldehyde dehydrogenase <strong>aldB-II/pedI (PP_2680)</strong> (log2FC <strong>9.6</strong>) and other functions, highlighting a physiological context where PedE/H can contribute to methanol/formaldehyde handling. (turlin2023coreandauxiliary pages 12-15)</p>
+<h2 id="5-current-applications-and-real-world-implementations">5. Current applications and real-world implementations</h2>
+<h3 id="51-biocatalysis-and-whole-cell-oxidation-of-alcohols">5.1 Biocatalysis and whole-cell oxidation of alcohols</h3>
+<p>PedE is of interest as a biocatalyst for oxidation of alcohols (including aromatic alcohols such as 2-phenylethanol), and whole-cell systems expressing PedE have been used for small-scale biotransformations. (wehrmann2018engineeringthermalstability pages 10-10)</p>
+<h3 id="52-electrochemical-and-biosensor-applications-direct-electron-transfer-context">5.2 Electrochemical and biosensor applications (direct electron transfer context)</h3>
+<p>PQQ-dependent dehydrogenases are discussed as attractive for electrochemical systems (e.g., bioanodes and biosensors), leveraging their periplasmic localization and electron-transfer properties; PedE/PedH are explicitly framed as a class of biocatalysts suitable for such applications. (wehrmann2018engineeringthermalstability pages 9-10)</p>
+<h3 id="53-protein-engineering-for-process-robustness-thermal-stability-and-solvent-tolerance">5.3 Protein engineering for process robustness (thermal stability and solvent tolerance)</h3>
+<p>A 2018 Microbial Biotechnology study developed a heterologous <strong>whole-cell screen</strong> in <em>E. coli</em> to engineer PedE stability and solvent tolerance, producing the triple mutant <strong>R91D/E408P/N410K</strong>. Quantitative outcomes:<br />
+- In purified-enzyme assays, the triple mutant increased PedE stability by <strong>~9.3-fold</strong> relative to WT after heat challenge, and increased <strong>T50 (60 min)</strong> by <strong>~7°C</strong> (<strong>58°C → 65°C</strong>). (wehrmann2018engineeringthermalstability pages 3-5, wehrmann2018engineeringthermalstability pages 5-7)<br />
+- In whole-cell assays, single mutants increased residual activity after 1 h at 45°C (WT ~23% vs E408P ~69%), and combined variants showed additive improvement (triple ~4× in the whole-cell stability metric). (wehrmann2018engineeringthermalstability pages 3-5)<br />
+- The triple mutant showed <strong>~2× higher residual activity</strong> after 1 h incubation in <strong>20–50% DMSO</strong> (though no activity for WT or mutant above 60% DMSO). (wehrmann2018engineeringthermalstability pages 3-5)<br />
+- Reconstitution with PQQ/Ca2+ markedly stabilizes the enzyme (reported residual activity at 45°C: <strong>87 ± 6%</strong> for reconstituted enzyme vs <strong>23 ± 2%</strong> in the whole-cell assay context), emphasizing the importance of cofactor incorporation for application performance. (wehrmann2018engineeringthermalstability pages 5-7)<br />
+These results directly support PedE engineering for bioprocess conditions involving elevated temperature and organic solvents. (wehrmann2018engineeringthermalstability pages 5-7)</p>
+<h2 id="6-expert-interpretation-and-synthesis-authoritative-analysis-grounded-in-the-literature">6. Expert interpretation and synthesis (authoritative analysis grounded in the literature)</h2>
+<p>1) <strong>PedE as a periplasmic “front-end” oxidation enzyme for volatile alcohols.</strong> The consistent description of PedE/PedH as periplasmic quinoprotein dehydrogenases, coupled with growth defects in deletion mutants on volatile alcohols, supports a model where PedE provides rapid periplasmic oxidation that aids both detoxification and catabolic entry. (wehrmann2017functionalroleofa pages 1-2, wehrmann2017functionalroleof pages 10-14)</p>
+<p>2) <strong>Ecological and physiological logic of redundancy.</strong> Quantitative metal-binding and activity ranges show PedE is tuned for Ca2+-rich settings (micromolar–millimolar Ca2+), while PedH is tuned for Ln at nano- to micromolar concentrations (KD in the tens of nM range), explaining why organisms maintain both in fluctuating metal landscapes. (wehrmann2017functionalroleof pages 6-10)</p>
+<p>3) <strong>A revised view (2024) of “switching”: graded, element-dependent tuning.</strong> Transcriptomics demonstrate that light vs heavy lanthanides produce distinct expression states (including downregulation of both <em>pedE</em> and <em>pedH</em> yet with ratios favoring <em>pedH</em> under utilizable Ln), consistent with the idea that bacteria discriminate among lanthanides and that growth outcomes can reflect mismetallation or sensing interference with heavy Ln. (gorniak2024changesingrowth pages 9-11, gorniak2024changesingrowth pages 11-13)</p>
+<h2 id="7-key-statistics-and-data-selected">7. Key statistics and data (selected)</h2>
+<ul>
+<li>PedE specific activity examples: ethanol <strong>6.7 ± 0.9 U mg−1</strong>, 2-phenylethanol <strong>6.7 ± 1.1</strong>, methanol <strong>0.61 ± 0.10</strong>. (wehrmann2017functionalroleofa pages 2-4)</li>
+<li>Ethanol kinetics: PedE Vmax <strong>6.1 U mg−1</strong>, KM <strong>85 µM</strong>; PedH Vmax <strong>10.6 U mg−1</strong>, KM <strong>177 µM</strong>. (wehrmann2017functionalroleof pages 6-10)</li>
+<li>Metal affinity/range: PedE KD(Ca2+) <strong>~64 µM</strong>; active <strong>10 µM–10 mM Ca2+</strong>; PedH KD(Ln3+) <strong>~25–75 nM</strong>; active <strong>~10 nM–100 µM Ln3+</strong>. (wehrmann2017functionalroleof pages 6-10)</li>
+<li>2024 growth on 2-phenylethanol: with 10–50 nM La, growth rate <strong>1.64 ± 0.13 h−1</strong> vs <strong>0.88 ± 0.06 h−1</strong> without Ln. (gorniak2024changesingrowth pages 2-5)</li>
+<li>2024 RNA-seq (2-phenylethanol): <em>pedE</em> RPKM <strong>410.28 ± 56.55</strong> (no Ln) vs <strong>3.25 ± 0.57</strong> (La); <em>pedE</em> varied up to <strong>~126-fold</strong>; <em>pedH</em> up to <strong>4.2-fold</strong> higher (La). (gorniak2024changesingrowth pages 9-11)</li>
+<li>Glycerol growth phenotype (La vs none): lag <strong>10.2 ± 0.2 h vs 17.3 ± 0.2 h</strong>; µmax <strong>0.201 ± 0.004 vs 0.341 ± 0.010 h−1</strong>; OD600max <strong>0.680 ± 0.014 vs 0.884 ± 0.004</strong>. (wehrmann2019thecellularresponse pages 12-15)</li>
+</ul>
+<h2 id="visual-evidence-from-recent-work">Visual evidence from recent work</h2>
+<p>The following figures (cropped) provide visual support for key quantitative claims:<br />
+- Growth rate versus La concentration and Ln element comparisons (Figure 1B). (gorniak2024changesingrowth media 2fe605bd)<br />
+- Gene expression analysis of lanthanome-related genes and <em>pedE:pedH</em> ratios (Figure 6). (gorniak2024changesingrowth media aeeeea13)</p>
+<h2 id="evidence-map-table">Evidence map table</h2>
+<table>
+<thead>
+<tr>
+<th>Annotation aspect</th>
+<th>Experimentally supported finding</th>
+<th>Key quantitative details</th>
+<th>Key sources (PaperQA IDs)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enzyme type / cofactors / localization</td>
+<td>PedE (PP_2674; UniProt Q88JH5) is the <strong>Ca2+-dependent</strong> counterpart of PedH, a <strong>PQQ-dependent quinoprotein alcohol dehydrogenase</strong> in the <strong>periplasm</strong> of <em>Pseudomonas putida/alloputida</em> KT2440; PedE is ExaA-like and functions in a periplasmic oxidation system for volatile alcohols/al­dehydes.</td>
+<td>Requires <strong>PQQ + Ca2+</strong>; PedH instead requires Ln3+; periplasmic location repeatedly stated.</td>
+<td>(wehrmann2018thepeds2pedr2twocomponent pages 1-2, wehrmann2017functionalroleof pages 1-6, wehrmann2017functionalroleofa pages 1-2)</td>
+</tr>
+<tr>
+<td>Reaction &amp; electron acceptor assay used</td>
+<td>PedE oxidizes alcohols/al­dehydes in dye-linked enzyme assays used to characterize activity; physiological role is periplasmic oxidation of alcoholic VOCs.</td>
+<td>Standard assay: <strong>100 mM Tris-HCl pH 8, 500 uM PMS, 150 uM DCPIP, 25 mM imidazole</strong>, added <strong>CaCl2</strong> for PedE plus <strong>PQQ</strong>; rates followed by DCPIP reduction at 600 nm.</td>
+<td>(wehrmann2017functionalroleofa pages 11-12)</td>
+</tr>
+<tr>
+<td>Substrate scope with example specific activities</td>
+<td>Broad substrate range including <strong>linear and aromatic primary alcohols, secondary alcohols, and aldehydes</strong>; methanol, 2,3-butanediol, and ethanolamine are poorer substrates.</td>
+<td>PedE specific activities (examples): <strong>ethanol 6.7 +- 0.9 U mg-1; 1-butanol 5.8 +- 0.1; 2-phenylethanol 6.7 +- 1.1; methanol 0.61 +- 0.10</strong>. Reported overall high activities for many linear primary alcohols/al­dehydes <strong>~1.9 +- 0.2 to 6.7 +- 0.9 U mg-1</strong>; no activity with cinnamyl aldehyde in one dataset.</td>
+<td>(wehrmann2017functionalroleof pages 6-10, wehrmann2017functionalroleofa pages 2-4)</td>
+</tr>
+<tr>
+<td>Kinetic parameters for ethanol: PedE vs PedH</td>
+<td>PedH and PedE have similar catalytic efficiencies overall, but PedH shows higher Vmax in ethanol assays while PedE has lower Km for ethanol.</td>
+<td><strong>PedE:</strong> Vmax <strong>6.1 U mg-1</strong>, Km <strong>85 uM</strong>. <strong>PedH:</strong> Vmax <strong>10.6 U mg-1</strong>, Km <strong>177 uM</strong>.</td>
+<td>(wehrmann2017functionalroleof pages 6-10)</td>
+</tr>
+<tr>
+<td>Metal dependence / affinity ranges / KD values</td>
+<td>PedE is active across micromolar-millimolar <strong>Ca2+</strong>; PedH is active across nanomolar-micromolar <strong>lanthanides</strong> and has much higher metal affinity.</td>
+<td><strong>PedE:</strong> active from <strong>10 uM-10 mM CaCl2</strong>, optimum ~<strong>1 mM</strong>, <strong>KD(Ca2+) ~64 uM</strong>. <strong>PedH:</strong> active from <strong>~10 nM-100 uM Ln3+</strong>, optimum ~<strong>1 uM</strong>, <strong>KD(Ln3+) ~25-75 nM</strong>; active with <strong>La, Ce, Pr, Nd, Sm, Gd, Tb</strong>, not with <strong>Er, Sc, Y, Yb</strong> in tested assays.</td>
+<td>(wehrmann2017functionalroleof pages 6-10, wehrmann2017functionalroleofa pages 2-4)</td>
+</tr>
+<tr>
+<td>Lanthanide switch regulation (PedS2/PedR2) &amp; sensitivity thresholds</td>
+<td>In the <strong>absence of La3+</strong>, sensor kinase <strong>PedS2</strong> phosphorylates <strong>PedR2</strong>, which <strong>activates pedE</strong> and contributes to <strong>pedH repression</strong>. In the presence of La3+, PedS2 kinase activity drops, lowering PedR2-P and shifting expression toward PedH-dependent oxidation.</td>
+<td>Promoter/growth responses observed at very low La: network responsive to <strong>~1-10 nM La</strong> in some media; in M9, pedE unchanged up to <strong>10 nM La</strong> then reduced from <strong>100 nM-100 uM</strong>, while pedH induced at <strong>&gt;=100 nM</strong> with peak around <strong>10 uM</strong>. With <strong>10 nM La</strong>, pedE promoter decreased <strong>21-fold (WT)</strong> and pedH increased <strong>37-fold (WT)</strong> in one study.</td>
+<td>(wehrmann2018thepeds2pedr2twocomponent pages 1-2, wehrmann2017functionalroleof pages 10-14, wehrmann2018thepeds2pedr2twocomponent pages 8-9)</td>
+</tr>
+<tr>
+<td>2024 transcriptomics: pedE / pedH RPKM and ratios</td>
+<td>2024 RNA-seq showed the Ln switch acts as a <strong>fine-tuning system</strong>, not a simple binary switch; pedE remains highest without Ln and much lower with light Ln, while pedE:pedH ratios reverse toward pedH under utilizable Ln.</td>
+<td><strong>pedE RPKM:</strong> no Ln <strong>410.28 +- 56.55</strong>; <strong>Er 210.45 +- 27.53</strong>; <strong>Nd 4.45 +- 0.29</strong>; <strong>La 3.25 +- 0.57</strong>. <strong>pedE:pedH ratio:</strong> ~<strong>6</strong> without Ln, ~<strong>2</strong> with Er, shifted toward <strong>pedH dominance</strong> with La/Nd/mix. <strong>pedH</strong> was <strong>1.9-fold (Nd) to 4.2-fold (La)</strong> higher; RT-qPCR found <strong>2.4-fold</strong> higher pedH with La.</td>
+<td>(gorniak2024changesingrowth pages 5-9, gorniak2024changesingrowth pages 9-11)</td>
+</tr>
+<tr>
+<td>2024 growth rate statistics vs La concentration</td>
+<td>Light lanthanides improved growth on <strong>2-phenylethanol</strong>; best performance occurred at low-nanomolar La, while heavy Ln imposed fitness costs.</td>
+<td>La series <strong>10 nM-10 uM</strong>: shortest lag at <strong>10-50 nM La</strong>; maximum growth rate <strong>r = 1.64 +- 0.13 h-1</strong> at <strong>10-50 nM La</strong> vs <strong>0.88 +- 0.06 h-1</strong> without added Ln; shortest doubling time <strong>~0.42 +- 0.03 h</strong>. Single-cell Ln loads at <strong>1 uM</strong> exposures: <strong>La 0.058 +- 0.055 fg cell-1; Nd 0.125 +- 0.086; Er 0.152 +- 0.106</strong>.</td>
+<td>(gorniak2024changesingrowth pages 1-2, gorniak2024changesingrowth pages 2-5, gorniak2024changesingrowth media 2fe605bd)</td>
+</tr>
+<tr>
+<td>2019/2020 glycerol phenotype numbers</td>
+<td>PedE/PedH initiate an alternative glycerol route in parallel with <strong>glpFKRD</strong>; PedH is more active on glycerol and La changes growth parameters in a PedE/PedH-dependent manner.</td>
+<td>Specific activity on glycerol: <strong>PedH 0.9 +- 0.1 U mg-1</strong> vs <strong>PedE 0.3 +- 0.1 U mg-1</strong>. With La3+ on glycerol: lag phase <strong>10.2 +- 0.2 h</strong> vs <strong>17.3 +- 0.2 h</strong> without La; <strong>umax 0.201 +- 0.004 h-1</strong> vs <strong>0.341 +- 0.010 h-1</strong>; <strong>OD600max 0.680 +- 0.014</strong> vs <strong>0.884 +- 0.004</strong>. Double <strong>ΔpedE ΔpedH</strong> mutant lost the La-dependent phenotype.</td>
+<td>(wehrmann2020thecellularresponse pages 1-2, wehrmann2019thecellularresponse pages 12-15)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main experimentally supported properties of PedE in </em>Pseudomonas putida/alloputida<em> KT2440, including enzymology, regulation, and recent 2024 transcriptomic and growth data. It is useful as a compact evidence map for functional annotation tied directly to available PaperQA context IDs.</em></p>
+<h2 id="references-evidence-used-in-this-report-with-urls-and-publication-dates">References (evidence used in this report; with URLs and publication dates)</h2>
+<ul>
+<li>Wehrmann M. et al. <em>mBio</em> (July 2017). “Functional Role of Lanthanides in Enzymatic Activity and Transcriptional Regulation of PQQ-Dependent Alcohol Dehydrogenases in <em>Pseudomonas putida</em> KT2440.” https://doi.org/10.1128/mbio.00570-17 (wehrmann2017functionalroleofa pages 2-4, wehrmann2017functionalroleofa pages 1-2)</li>
+<li>Wehrmann M. et al. <em>mSphere</em> (Aug 2018). “The PedS2/PedR2 Two-Component System Is Crucial for the Rare Earth Element Switch in <em>Pseudomonas putida</em> KT2440.” https://doi.org/10.1128/msphere.00376-18 (wehrmann2018thepeds2pedr2twocomponent pages 1-2, wehrmann2018thepeds2pedr2twocomponent pages 8-9)</li>
+<li>Wehrmann M. &amp; Klebensberger J. <em>Microbial Biotechnology</em> (Dec 2018). “Engineering thermal stability and solvent tolerance of the soluble quinoprotein PedE …” https://doi.org/10.1111/1751-7915.13036 (wehrmann2018engineeringthermalstability pages 3-5, wehrmann2018engineeringthermalstability pages 5-7)</li>
+<li>Wehrmann M. et al. <em>mBio</em> (Apr 2020). “The Cellular Response to Lanthanum Is Substrate Specific and Reveals a Novel Route for Glycerol Metabolism in <em>Pseudomonas putida</em> KT2440.” https://doi.org/10.1128/mbio.00516-20 (wehrmann2020thecellularresponse pages 1-2)</li>
+<li>Turlin J. et al. <em>mSystems</em> (May/June 2023). “Core and auxiliary functions of one-carbon metabolism in <em>Pseudomonas putida</em> …” https://doi.org/10.1128/msystems.00004-23 (turlin2023coreandauxiliary pages 12-15)</li>
+<li>Gorniak L. et al. <em>mSphere</em> (Oct 2024). “Changes in growth, lanthanide binding, and gene expression in <em>Pseudomonas alloputida</em> KT2440 in response to light and heavy lanthanides.” https://doi.org/10.1128/msphere.00685-24 (gorniak2024changesingrowth pages 1-2, gorniak2024changesingrowth pages 2-5, gorniak2024changesingrowth pages 9-11)</li>
+</ul>
+<h2 id="notes-on-scope-and-naming">Notes on scope and naming</h2>
+<p>Some recent literature refers to the KT2440 strain as <em>Pseudomonas alloputida</em> KT2440 (taxonomic update). The <em>pedE</em> locus, gene identifier PP_2674, and PedE functional context are consistent across the cited KT2440 studies used here. (gorniak2024changesingrowth pages 1-2, wehrmann2017functionalroleofa pages 2-4)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(wehrmann2017functionalroleofa pages 1-2): Matthias Wehrmann, Patrick Billard, Audrey Martin-Meriadec, Asfaw Zegeye, and Janosch Klebensberger. Functional role of lanthanides in enzymatic activity and transcriptional regulation of pyrroloquinoline quinone-dependent alcohol dehydrogenases in <i>pseudomonas putida</i> kt2440. mBio, Jul 2017. URL: https://doi.org/10.1128/mbio.00570-17, doi:10.1128/mbio.00570-17. This article has 212 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wehrmann2017functionalroleofa pages 2-4): Matthias Wehrmann, Patrick Billard, Audrey Martin-Meriadec, Asfaw Zegeye, and Janosch Klebensberger. Functional role of lanthanides in enzymatic activity and transcriptional regulation of pyrroloquinoline quinone-dependent alcohol dehydrogenases in <i>pseudomonas putida</i> kt2440. mBio, Jul 2017. URL: https://doi.org/10.1128/mbio.00570-17, doi:10.1128/mbio.00570-17. This article has 212 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wehrmann2018thepeds2pedr2twocomponent pages 1-2): Matthias Wehrmann, Charlotte Berthelot, Patrick Billard, and Janosch Klebensberger. The peds2/pedr2 two-component system is crucial for the rare earth element switch in pseudomonas putida kt2440. mSphere, Aug 2018. URL: https://doi.org/10.1128/msphere.00376-18, doi:10.1128/msphere.00376-18. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wehrmann2017functionalroleof pages 10-14): Matthias Wehrmann, Patrick Billard, Audrey Martin Meriadec, Asfaw Zegeye, and Janosch Klebensberger. Functional role of lanthanides in enzymatic activity and transcriptional regulation of pqq-dependent alcohol dehydrogenases in pseudomonas putida kt2440. bioRxiv, May 2017. URL: https://doi.org/10.1101/140046, doi:10.1101/140046. This article has 1 citations.</p>
+</li>
+<li>
+<p>(gorniak2024changesingrowth pages 9-11): Linda Gorniak, Sarah Luise Bucka, Bayan Nasr, Jialan Cao, Steffen Hellmann, Thorsten Schäfer, Martin Westermann, Julia Bechwar, and Carl-Eric Wegner. Changes in growth, lanthanide binding, and gene expression in <i>pseudomonas alloputida</i> kt2440 in response to light and heavy lanthanides. Oct 2024. URL: https://doi.org/10.1128/msphere.00685-24, doi:10.1128/msphere.00685-24. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wehrmann2017functionalroleof pages 1-6): Matthias Wehrmann, Patrick Billard, Audrey Martin Meriadec, Asfaw Zegeye, and Janosch Klebensberger. Functional role of lanthanides in enzymatic activity and transcriptional regulation of pqq-dependent alcohol dehydrogenases in pseudomonas putida kt2440. bioRxiv, May 2017. URL: https://doi.org/10.1101/140046, doi:10.1101/140046. This article has 1 citations.</p>
+</li>
+<li>
+<p>(wehrmann2017functionalroleof pages 6-10): Matthias Wehrmann, Patrick Billard, Audrey Martin Meriadec, Asfaw Zegeye, and Janosch Klebensberger. Functional role of lanthanides in enzymatic activity and transcriptional regulation of pqq-dependent alcohol dehydrogenases in pseudomonas putida kt2440. bioRxiv, May 2017. URL: https://doi.org/10.1101/140046, doi:10.1101/140046. This article has 1 citations.</p>
+</li>
+<li>
+<p>(wehrmann2018thepeds2pedr2twocomponent pages 8-9): Matthias Wehrmann, Charlotte Berthelot, Patrick Billard, and Janosch Klebensberger. The peds2/pedr2 two-component system is crucial for the rare earth element switch in pseudomonas putida kt2440. mSphere, Aug 2018. URL: https://doi.org/10.1128/msphere.00376-18, doi:10.1128/msphere.00376-18. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wehrmann2017functionalroleofa pages 11-12): Matthias Wehrmann, Patrick Billard, Audrey Martin-Meriadec, Asfaw Zegeye, and Janosch Klebensberger. Functional role of lanthanides in enzymatic activity and transcriptional regulation of pyrroloquinoline quinone-dependent alcohol dehydrogenases in <i>pseudomonas putida</i> kt2440. mBio, Jul 2017. URL: https://doi.org/10.1128/mbio.00570-17, doi:10.1128/mbio.00570-17. This article has 212 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wehrmann2020thecellularresponse pages 1-2): Matthias Wehrmann, Maxime Toussaint, Jens Pfannstiel, Patrick Billard, and Janosch Klebensberger. The cellular response to lanthanum is substrate specific and reveals a novel route for glycerol metabolism in pseudomonas putida kt2440. mBio, Apr 2020. URL: https://doi.org/10.1128/mbio.00516-20, doi:10.1128/mbio.00516-20. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wehrmann2019thecellularresponse pages 12-15): Matthias Wehrmann, Maxime Toussaint, Jens Pfannstiel, Patrick Billard, and Janosch Klebensberger. The cellular response towards lanthanum is substrate specific and reveals a novel route for glycerol metabolism in pseudomonas putida kt2440. bioRxiv, Mar 2019. URL: https://doi.org/10.1101/567529, doi:10.1101/567529. This article has 4 citations.</p>
+</li>
+<li>
+<p>(gorniak2024changesingrowth pages 1-2): Linda Gorniak, Sarah Luise Bucka, Bayan Nasr, Jialan Cao, Steffen Hellmann, Thorsten Schäfer, Martin Westermann, Julia Bechwar, and Carl-Eric Wegner. Changes in growth, lanthanide binding, and gene expression in <i>pseudomonas alloputida</i> kt2440 in response to light and heavy lanthanides. Oct 2024. URL: https://doi.org/10.1128/msphere.00685-24, doi:10.1128/msphere.00685-24. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gorniak2024changesingrowth pages 11-13): Linda Gorniak, Sarah Luise Bucka, Bayan Nasr, Jialan Cao, Steffen Hellmann, Thorsten Schäfer, Martin Westermann, Julia Bechwar, and Carl-Eric Wegner. Changes in growth, lanthanide binding, and gene expression in <i>pseudomonas alloputida</i> kt2440 in response to light and heavy lanthanides. Oct 2024. URL: https://doi.org/10.1128/msphere.00685-24, doi:10.1128/msphere.00685-24. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gorniak2024changesingrowth pages 2-5): Linda Gorniak, Sarah Luise Bucka, Bayan Nasr, Jialan Cao, Steffen Hellmann, Thorsten Schäfer, Martin Westermann, Julia Bechwar, and Carl-Eric Wegner. Changes in growth, lanthanide binding, and gene expression in <i>pseudomonas alloputida</i> kt2440 in response to light and heavy lanthanides. Oct 2024. URL: https://doi.org/10.1128/msphere.00685-24, doi:10.1128/msphere.00685-24. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(turlin2023coreandauxiliary pages 12-15): Justine Turlin, Òscar Puiggené, Stefano Donati, Nicolas T. Wirth, and Pablo I. Nikel. Core and auxiliary functions of one-carbon metabolism in <i>pseudomonas putida</i> exposed by a systems-level analysis of transcriptional and physiological responses. Jun 2023. URL: https://doi.org/10.1128/msystems.00004-23, doi:10.1128/msystems.00004-23. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wehrmann2018engineeringthermalstability pages 10-10): Matthias Wehrmann and Janosch Klebensberger. Engineering thermal stability and solvent tolerance of the soluble quinoprotein pede from pseudomonas putida kt2440 with a heterologous whole‐cell screening approach. Microbial Biotechnology, 11:399-408, Dec 2018. URL: https://doi.org/10.1111/1751-7915.13036, doi:10.1111/1751-7915.13036. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wehrmann2018engineeringthermalstability pages 9-10): Matthias Wehrmann and Janosch Klebensberger. Engineering thermal stability and solvent tolerance of the soluble quinoprotein pede from pseudomonas putida kt2440 with a heterologous whole‐cell screening approach. Microbial Biotechnology, 11:399-408, Dec 2018. URL: https://doi.org/10.1111/1751-7915.13036, doi:10.1111/1751-7915.13036. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wehrmann2018engineeringthermalstability pages 3-5): Matthias Wehrmann and Janosch Klebensberger. Engineering thermal stability and solvent tolerance of the soluble quinoprotein pede from pseudomonas putida kt2440 with a heterologous whole‐cell screening approach. Microbial Biotechnology, 11:399-408, Dec 2018. URL: https://doi.org/10.1111/1751-7915.13036, doi:10.1111/1751-7915.13036. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wehrmann2018engineeringthermalstability pages 5-7): Matthias Wehrmann and Janosch Klebensberger. Engineering thermal stability and solvent tolerance of the soluble quinoprotein pede from pseudomonas putida kt2440 with a heterologous whole‐cell screening approach. Microbial Biotechnology, 11:399-408, Dec 2018. URL: https://doi.org/10.1111/1751-7915.13036, doi:10.1111/1751-7915.13036. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gorniak2024changesingrowth media 2fe605bd): Linda Gorniak, Sarah Luise Bucka, Bayan Nasr, Jialan Cao, Steffen Hellmann, Thorsten Schäfer, Martin Westermann, Julia Bechwar, and Carl-Eric Wegner. Changes in growth, lanthanide binding, and gene expression in <i>pseudomonas alloputida</i> kt2440 in response to light and heavy lanthanides. Oct 2024. URL: https://doi.org/10.1128/msphere.00685-24, doi:10.1128/msphere.00685-24. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gorniak2024changesingrowth media aeeeea13): Linda Gorniak, Sarah Luise Bucka, Bayan Nasr, Jialan Cao, Steffen Hellmann, Thorsten Schäfer, Martin Westermann, Julia Bechwar, and Carl-Eric Wegner. Changes in growth, lanthanide binding, and gene expression in <i>pseudomonas alloputida</i> kt2440 in response to light and heavy lanthanides. Oct 2024. URL: https://doi.org/10.1128/msphere.00685-24, doi:10.1128/msphere.00685-24. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gorniak2024changesingrowth pages 5-9): Linda Gorniak, Sarah Luise Bucka, Bayan Nasr, Jialan Cao, Steffen Hellmann, Thorsten Schäfer, Martin Westermann, Julia Bechwar, and Carl-Eric Wegner. Changes in growth, lanthanide binding, and gene expression in <i>pseudomonas alloputida</i> kt2440 in response to light and heavy lanthanides. Oct 2024. URL: https://doi.org/10.1128/msphere.00685-24, doi:10.1128/msphere.00685-24. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>gorniak2024changesingrowth pages 9-11</li>
+<li>wehrmann2017functionalroleofa pages 11-12</li>
+<li>wehrmann2017functionalroleofa pages 2-4</li>
+<li>wehrmann2017functionalroleof pages 6-10</li>
+<li>wehrmann2020thecellularresponse pages 1-2</li>
+<li>wehrmann2019thecellularresponse pages 12-15</li>
+<li>wehrmann2017functionalroleof pages 10-14</li>
+<li>gorniak2024changesingrowth pages 11-13</li>
+<li>gorniak2024changesingrowth pages 2-5</li>
+<li>gorniak2024changesingrowth pages 1-2</li>
+<li>turlin2023coreandauxiliary pages 12-15</li>
+<li>wehrmann2018engineeringthermalstability pages 10-10</li>
+<li>wehrmann2018engineeringthermalstability pages 9-10</li>
+<li>wehrmann2018engineeringthermalstability pages 3-5</li>
+<li>wehrmann2018engineeringthermalstability pages 5-7</li>
+<li>wehrmann2017functionalroleofa pages 1-2</li>
+<li>wehrmann2017functionalroleof pages 1-6</li>
+<li>gorniak2024changesingrowth pages 5-9</li>
+<li>s</li>
+<li>https://doi.org/10.1128/mbio.00570-17</li>
+<li>https://doi.org/10.1128/msphere.00376-18</li>
+<li>https://doi.org/10.1111/1751-7915.13036</li>
+<li>https://doi.org/10.1128/mbio.00516-20</li>
+<li>https://doi.org/10.1128/msystems.00004-23</li>
+<li>https://doi.org/10.1128/msphere.00685-24</li>
+<li>https://doi.org/10.1128/mbio.00570-17,</li>
+<li>https://doi.org/10.1128/msphere.00376-18,</li>
+<li>https://doi.org/10.1101/140046,</li>
+<li>https://doi.org/10.1128/msphere.00685-24,</li>
+<li>https://doi.org/10.1128/mbio.00516-20,</li>
+<li>https://doi.org/10.1101/567529,</li>
+<li>https://doi.org/10.1128/msystems.00004-23,</li>
+<li>https://doi.org/10.1111/1751-7915.13036,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88JH5
+gene_symbol: pede
+aliases:
+- qedH-I
+- PP_2674
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: Ca2+-dependent pyrroloquinoline quinone (PQQ)-dependent alcohol dehydrogenase
+  (EC 1.1.2.8) that catalyzes the periplasmic oxidation of a broad range of primary
+  and secondary alcohols and aldehydes using cytochrome c as electron acceptor. PedE
+  is the calcium-utilizing counterpart of the lanthanide-dependent PedH (PP_2679),
+  and the two enzymes are inversely regulated by the PedS2/PedR2 two-component system
+  in response to lanthanide availability. PedE is essential for efficient growth on
+  volatile organic compounds (ethanol, 1-butanol, 2-phenylethanol) in the absence
+  of lanthanides. The enzyme has an eight-bladed beta-propeller fold, binds PQQ non-covalently,
+  and requires two Ca2+ ions per subunit (one catalytic in the active site, one structural
+  at the N-terminus). Distinguished from PedH by Ser at position 295 (vs Asp) which
+  coordinates Ca2+ rather than lanthanides. Part of the 2-phenylethanol degradation
+  (Ped) pathway and also contributes to an alternative glycerol metabolic route.
+existing_annotations:
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: PedE is a Ca2+-dependent enzyme that binds two calcium ions per subunit,
+      one catalytic and one structural. Ca2+ binding is experimentally demonstrated
+      with KD ~64 uM and activity across 10 uM-10 mM CaCl2 (PMID:28655819). UniProt
+      lists multiple Ca2+ binding residues (positions 53, 56, 59, 221, 308, 358).
+      This annotation is well supported.
+    action: ACCEPT
+    reason: Calcium ion binding is a core function of PedE, distinguishing it from
+      the lanthanide-dependent PedH. The enzyme requires Ca2+ for all catalytic activity,
+      and the Ca2+ dissociation constant and functional concentration range have been
+      experimentally determined (PMID:28655819).
+    supported_by:
+    - reference_id: PMID:28655819
+      supporting_text: While PedE showed enzyme activity at concentrations of 10 µM
+        to 10 mM CaCl2, with a peak in activity at 1 mM
+    - reference_id: PMID:28655819
+      supporting_text: we calculated the dissociation constant (Kd) for various metals
+        and the corresponding enzymes and found that PedH has an 850- to 2,500-fold
+        higher binding affinity for lanthanides
+    - reference_id: UniProt:Q88JH5
+      supporting_text: Binds 2 calcium ions per subunit. One is located in the active-
+        site cavity near PQQ and the second calcium binds at the N-terminus and
+        contributes to the stability of the native enzyme.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Incorrect annotation. PedE is a soluble periplasmic enzyme, not membrane-associated.
+      It has a signal peptide (aa 1-33) for periplasmic export, but the mature protein
+      is soluble. The InterPro family IPR017512 (PQQ_MeOH/EtOH_DH) includes both
+      membrane-bound and soluble members, but PedE is explicitly described as a soluble
+      quinoprotein (PMID:28655819). UniProt lists subcellular location as Periplasm
+      with no membrane association.
+    action: REMOVE
+    reason: PedE is a soluble periplasmic enzyme as stated in UniProt and confirmed
+      by purification as a soluble His-tagged protein from E. coli lysates (PMID:28655819).
+      The membrane annotation is an artifact of the InterPro mapping which does not
+      distinguish soluble from membrane-bound PQQ-ADHs. This is the same conclusion
+      reached for paralog PedH.
+    supported_by:
+    - reference_id: PMID:28655819
+      supporting_text: PQQ-ADHs can be divided into different subclasses, depending
+        either on their molecular composition (quinoproteins or quinohemoproteins)
+        or whether they are membrane bound or freely soluble within the periplasm
+    - reference_id: PMID:28655819
+      supporting_text: A one-step affinity chromatography method produced soluble C-terminally
+        His-tagged PedE and PedH to visible purity
+    - reference_id: UniProt:Q88JH5
+      supporting_text: &#34;SUBCELLULAR LOCATION: Periplasm {ECO:0000305|PubMed:28655819}.&#34;
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Technically correct but far too general and uninformative. The more specific
+      term GO:0052934 (alcohol dehydrogenase, cytochrome c activity) is already present
+      and captures the actual function precisely. This generic term adds no information
+      beyond what is already conveyed by the specific term.
+    action: ACCEPT
+    reason: While too general to be informative on its own, this is a valid parent
+      term of GO:0052934 which is also annotated. As an IEA from ARBA it is not wrong,
+      just redundant with the more specific annotation. Keeping it as a broader IEA
+      is acceptable.
+    supported_by:
+    - reference_id: PMID:28655819
+      supporting_text: the specific activities of purified PedE with a variety of substrates
+        were determined
+- term:
+    id: GO:0016614
+    label: oxidoreductase activity, acting on CH-OH group of donors
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct and captures the CH-OH oxidation specificity of PedE. This is
+      an intermediate-specificity term between GO:0016491 and GO:0052934. PedE oxidizes
+      alcohols (CH-OH groups) to aldehydes/ketones, well supported by substrate profiling
+      (PMID:28655819).
+    action: ACCEPT
+    reason: This accurately describes the chemical group acted upon by PedE. It is
+      less specific than GO:0052934 but correctly captures the CH-OH donor specificity,
+      which is a valid intermediate annotation from InterPro domain mapping.
+    supported_by:
+    - reference_id: PMID:28655819
+      supporting_text: For all linear primary alcohols and aldehydes, comparably high
+        enzyme activities ranging from 1.9 ± 0.2 to 6.7 ± 0.9 U mg−1 were found
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Incorrect annotation. PedE does not bind heme. It is a quinoprotein that
+      uses PQQ as cofactor and transfers electrons to an external cytochrome c550 electron
+      acceptor. PedE itself contains no heme group. UniProt lists only PQQ and Ca2+
+      as cofactors with no mention of heme. The ARBA model likely confused the interaction
+      with cytochrome c (heme-containing) with PedE itself binding heme.
+    action: REMOVE
+    reason: PedE is a quinoprotein, not a quinohemoprotein. It does not contain heme.
+      The UniProt entry lists only PQQ and Ca2+ cofactors. The electron acceptor cytochrome
+      c550 is a separate protein encoded by an adjacent gene. This is the same erroneous
+      annotation and same conclusion as for paralog PedH.
+    supported_by:
+    - reference_id: PMID:28655819
+      supporting_text: PedE is a homolog of ExaA from Pseudomonas aeruginosa, which
+        is the most intensively studied member of the class of soluble ethanol dehydrogenases
+    - reference_id: UniProt:Q88JH5
+      supporting_text: &#34;Name=pyrroloquinoline quinone; Xref=ChEBI:CHEBI:58442;&#34;
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: PedE is periplasmic, so the general periplasmic localization is correct.
+      However, this term implies specific association with the outer membrane boundary
+      of the periplasm. PedE is a soluble periplasmic enzyme without evidence for specific
+      outer membrane association. GO:0042597 (periplasmic space) is already annotated
+      and is more appropriate.
+    action: REMOVE
+    reason: While PedE is indeed in the periplasm, the more specific outer-membrane-bounded
+      qualifier is not supported by evidence. PedE is a freely soluble enzyme in the
+      periplasmic space, not specifically localized to the outer membrane boundary.
+      The correct annotation GO:0042597 (periplasmic space) is already present. Same
+      conclusion as for PedH.
+    proposed_replacement_terms:
+    - id: GO:0042597
+      label: periplasmic space
+    supported_by:
+    - reference_id: PMID:28655819
+      supporting_text: by using a periplasmic oxidation system, the organism is able
+        to rapidly detoxify the often harmful chemicals without prior transport into
+        the cytoplasm
+    - reference_id: UniProt:Q88JH5
+      supporting_text: &#34;SUBCELLULAR LOCATION: Periplasm {ECO:0000305|PubMed:28655819}.&#34;
+- term:
+    id: GO:0042597
+    label: periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Correct and well-supported. PedE has a signal peptide (aa 1-33) directing
+      export to the periplasm. UniProt explicitly states periplasmic localization.
+      The enzyme functions as part of a periplasmic oxidation system for volatile alcohols
+      (PMID:28655819). PedE is soluble in the periplasm, not membrane-associated.
+    action: ACCEPT
+    reason: Core cellular component annotation. PedE is a soluble periplasmic enzyme
+      with a cleavable signal peptide, confirmed by UniProt subcellular location annotation
+      and consistent with its role in periplasmic alcohol oxidation (PMID:28655819).
+    supported_by:
+    - reference_id: PMID:28655819
+      supporting_text: by using a periplasmic oxidation system, the organism is able
+        to rapidly detoxify the often harmful chemicals without prior transport into
+        the cytoplasm
+    - reference_id: UniProt:Q88JH5
+      supporting_text: &#34;SUBCELLULAR LOCATION: Periplasm {ECO:0000305|PubMed:28655819}.&#34;
+- term:
+    id: GO:0052934
+    label: alcohol dehydrogenase (cytochrome c) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Excellent and highly specific annotation that precisely describes PedE&#39;s
+      core molecular function. PedE is classified as EC 1.1.2.8 (alcohol dehydrogenase,
+      cytochrome c). It oxidizes a broad range of alcohols with cytochrome c550 as
+      electron acceptor. Kinetic parameters are well characterized with ethanol (Vmax
+      6.1 U/mg, KM 85 uM), 2-phenylethanol (KM 115 uM), and acetaldehyde (KM 899
+      uM) (PMID:28655819).
+    action: ACCEPT
+    reason: This is the most precise and informative molecular function term for PedE.
+      The EC number 1.1.2.8 maps directly to this GO term, and the enzyme has been
+      biochemically characterized with purified protein, detailed kinetics, and substrate
+      profiling (PMID:28655819).
+    supported_by:
+    - reference_id: PMID:28655819
+      supporting_text: the specific activities of purified PedE with a variety of substrates
+        were determined (Table 1). For all linear primary alcohols and aldehydes, comparably
+        high enzyme activities ranging from 1.9 ± 0.2 to 6.7 ± 0.9 U mg−1 were found
+    - reference_id: PMID:28655819
+      supporting_text: the maximal velocity (Vmax) of PedH was approximately 1.7-fold
+        higher than that of PedE (10.6 versus 6.1 U mg−1; Fig. 3). However, the corresponding
+        binding constant (KM) of PedE was 2-fold lower than that of PedH (85 versus
+        177 µM)
+    - reference_id: UniProt:Q88JH5
+      supporting_text: EC=1.1.2.8 {ECO:0000305|PubMed:28655819}
+- term:
+    id: GO:0070968
+    label: pyrroloquinoline quinone binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Correct and essential annotation. PedE is a PQQ-dependent quinoprotein
+      that binds 1 PQQ group non-covalently per subunit. UniProt lists 7 PQQ-binding
+      residues (positions 103, 153, 197, 215-217, 221, 386, 531, 595). The PQQ KD
+      for PedE is 3.5 uM (PMID:28655819).
+    action: ACCEPT
+    reason: PQQ binding is fundamental to PedE&#39;s catalytic mechanism. The cofactor
+      requirement is confirmed by enzymatic assays requiring exogenous PQQ, by KD determination,
+      and by multiple binding site residues identified by homology modeling (PMID:28655819,
+      UniProt:Q88JH5).
+    supported_by:
+    - reference_id: PMID:28655819
+      supporting_text: the reaction mechanism of PQQ-ADHs is still not completely resolved
+        but most likely proceeds via an ion-assisted direct hydride transfer from the
+        substrate to C-5 of the noncovalently bound cofactor PQQ
+    - reference_id: UniProt:Q88JH5
+      supporting_text: Binds 1 PQQ group non-covalently per subunit.
+- term:
+    id: GO:0006066
+    label: alcohol metabolic process
+  evidence_type: IEA
+  review:
+    summary: PedE catalyzes the periplasmic oxidation of a broad range of alcohols
+      including ethanol, 1-butanol, 2-phenylethanol, cinnamyl alcohol, and farnesol.
+      Deletion of pedE eliminates growth on these alcohols in the absence of lanthanides
+      (PMID:28655819). This is the primary biological process in which PedE participates.
+    action: NEW
+    reason: No biological process terms are present in the existing GOA annotations
+      for PedE. Alcohol metabolic process is the most direct and well-supported BP
+      term, as PedE&#39;s primary role is the periplasmic oxidation of volatile alcohols
+      enabling their catabolism as carbon and energy sources.
+    supported_by:
+    - reference_id: PMID:28655819
+      supporting_text: efficient growth with all of the alcohols tested, except the
+        microbial fermentation product 2,3-butanediol, was dependent on the functional
+        expression of PedE or PedH
+    - reference_id: PMID:28655819
+      supporting_text: A ΔpedE strain displayed no growth under this condition
+    - reference_id: file:PSEPK/pede/pede-deep-research-falcon.md
+      supporting_text: PedE is experimentally characterized as a PQQ-dependent alcohol
+        dehydrogenase/ethanol dehydrogenase that oxidizes alcohols (and some aldehydes)
+        in the periplasm of P. putida KT2440
+- term:
+    id: GO:0042537
+    label: benzene-containing compound metabolic process
+  evidence_type: IEA
+  review:
+    summary: PedE is part of the 2-phenylethanol degradation (Ped) pathway, catalyzing
+      oxidation of 2-phenylethanol to phenylacetaldehyde. Growth experiments confirm
+      PedE is essential for 2-phenylethanol catabolism in the absence of lanthanides
+      (PMID:28655819). PedE also shows activity on cinnamyl alcohol.
+    action: NEW
+    reason: PedE is named for the 2-phenylethanol degradation pathway and shows high
+      specific activity on 2-phenylethanol (6.7 U/mg). This aromatic compound catabolism
+      role is central to its biological function.
+    supported_by:
+    - reference_id: PMID:28655819
+      supporting_text: 2-phenylethanol, the secondary alcohol 2-butanol, cinnamyl alcohol,
+        and the acyclic sesquiterpene farnesol were efficiently converted, with specific
+        activities ranging from 6.7 ± 1.1 to 2.0 ± 0.3 U mg−1
+    - reference_id: PMID:28655819
+      supporting_text: growth experiments with 2-phenylethanol in liquid M9 medium
+    - reference_id: file:PSEPK/pede/pede-deep-research-falcon.md
+      supporting_text: PedE and PedH are described as part of a periplasmic oxidation
+        system enabling rapid oxidation of volatile alcohols/aldehydes
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:28655819
+  title: Functional Role of Lanthanides in Enzymatic Activity and Transcriptional
+    Regulation of Pyrroloquinoline Quinone-Dependent Alcohol Dehydrogenases in Pseudomonas
+    putida KT2440
+  full_text_unavailable: false
+  findings:
+  - statement: PedE is a Ca2+-dependent PQQ-ADH with broad substrate specificity
+    supporting_text: Under optimized reaction conditions, which include the presence
+      of 1 mM Ca2+, the specific activities of purified PedE with a variety of substrates
+      were determined
+    reference_section_type: RESULTS
+  - statement: PedE has Ser at position 295 for Ca2+ coordination
+    supporting_text: the PedE protein harbors a serine residue at amino acid position
+      295 that is involved in the coordination of the Ca2+ ion
+    reference_section_type: RESULTS
+  - statement: PedE is essential for growth on volatile alcohols without lanthanides
+    supporting_text: A ΔpedE strain displayed no growth under this condition. Even more
+      interestingly, the addition of 20 µM La3+ to the agar medium not only resulted
+      in growth of the ΔpedE strain but also restricted the growth of the ΔpedH strain
+    reference_section_type: RESULTS
+  - statement: PedE and PedH are inversely regulated in response to lanthanide availability
+    supporting_text: KT2440 responds to lanthanide availability with the inverse transcriptional
+      regulation of the two PQQ-ADHs to optimize growth with volatile alcoholic and
+      aldehyde substrates
+    reference_section_type: DISCUSSION
+  - statement: PedE Ca2+ binding affinity KD 64 uM, active 10 uM-10 mM
+    supporting_text: While PedE showed enzyme activity at concentrations of 10 µM
+      to 10 mM CaCl2, with a peak in activity at 1 mM
+    reference_section_type: RESULTS
+  - statement: PedE kinetic parameters determined for multiple substrates
+    supporting_text: the maximal velocity (Vmax) of PedH was approximately 1.7-fold
+      higher than that of PedE (10.6 versus 6.1 U mg−1; Fig. 3). However, the corresponding
+      binding constant (KM) of PedE was 2-fold lower than that of PedH (85 versus
+      177 µM)
+    reference_section_type: RESULTS
+- id: PMID:30158283
+  title: The PedS2/PedR2 Two-Component System Is Crucial for the Rare Earth Element
+    Switch in Pseudomonas putida KT2440
+  full_text_unavailable: false
+  findings:
+  - statement: PedS2/PedR2 TCS controls inverse regulation of pedE and pedH
+    supporting_text: the PedS2/PedR2 (PP_2671/PP_2672) two-component system (TCS)
+      plays a central role in the observed REE-mediated switch of PQQ-EDHs in P. putida
+    reference_section_type: RESULTS
+  - statement: PedR2 activates pedE transcription in absence of lanthanides
+    supporting_text: in the absence of lanthanum (La3+), the sensor histidine kinase
+      PedS2 phosphorylates its cognate LuxR-type response regulator PedR2, which in
+      turn not only activates pedE gene transcription but is also involved in repression
+      of pedH
+    reference_section_type: RESULTS
+- id: UniProt:Q88JH5
+  title: UniProt entry for PedE - Quinoprotein alcohol dehydrogenase
+  full_text_unavailable: false
+  findings:
+  - statement: PedE is a periplasmic Ca2+-dependent PQQ-ADH
+    supporting_text: Ca(2+)-dependent pyrroloquinoline quinone-dependent alcohol dehydrogenase
+    reference_section_type: DATABASE_ENTRY
+  - statement: PedE binds 2 Ca2+ and 1 PQQ per subunit with defined binding residues
+    supporting_text: Binds 2 calcium ions per subunit. One is located in the active-
+      site cavity near PQQ and the second calcium binds at the N-terminus and
+      contributes to the stability of the native enzyme.
+    reference_section_type: DATABASE_ENTRY
+- id: file:PSEPK/pede/pede-deep-research-falcon.md
+  title: Deep research analysis of PedE function, regulation, and biochemistry
+  full_text_unavailable: false
+  findings:
+  - statement: PedE is the Ca2+-dependent counterpart of PedH in the periplasmic oxidation
+      system
+    supporting_text: PedE (PP_2674; UniProt Q88JH5) in Pseudomonas putida KT2440 encodes
+      PedE, a periplasmic, Ca2+-dependent pyrroloquinoline quinone (PQQ)-dependent
+      alcohol dehydrogenase
+    reference_section_type: LITERATURE_REVIEW
+  - statement: PedE contributes to a novel glycerol utilization route
+    supporting_text: Proteomics and mutant analysis identified a novel glycerol utilization
+      route initiated by PedE/PedH oxidation
+    reference_section_type: LITERATURE_REVIEW
+  - statement: The Ln switch is a graded fine-tuning system per 2024 transcriptomics
+    supporting_text: pedE expression varied by &gt;2 orders of magnitude across conditions
+    reference_section_type: LITERATURE_REVIEW
+core_functions:
+- description: Ca2+-dependent alcohol dehydrogenase activity in the periplasm, oxidizing
+    primary and secondary alcohols and aldehydes using PQQ as cofactor and cytochrome
+    c as electron acceptor
+  molecular_function:
+    id: GO:0052934
+    label: alcohol dehydrogenase (cytochrome c) activity
+  directly_involved_in:
+  - id: GO:0006066
+    label: alcohol metabolic process
+  - id: GO:0042537
+    label: benzene-containing compound metabolic process
+  supported_by:
+  - reference_id: PMID:28655819
+    supporting_text: the specific activities of purified PedE with a variety of substrates
+      were determined (Table 1). For all linear primary alcohols and aldehydes, comparably
+      high enzyme activities
+    reference_section_type: RESULTS
+  - reference_id: PMID:28655819
+    supporting_text: efficient growth with all of the alcohols tested, except the
+      microbial fermentation product 2,3-butanediol, was dependent on the functional
+      expression of PedE or PedH
+    reference_section_type: RESULTS
+- description: Calcium ion binding essential for catalytic activity, distinguishing
+    PedE from the lanthanide-dependent PedH
+  molecular_function:
+    id: GO:0005509
+    label: calcium ion binding
+  supported_by:
+  - reference_id: PMID:28655819
+    supporting_text: While PedE showed enzyme activity at concentrations of 10 µM
+      to 10 mM CaCl2, with a peak in activity at 1 mM
+    reference_section_type: RESULTS
+  - reference_id: UniProt:Q88JH5
+    supporting_text: Binds 2 calcium ions per subunit. One is located in the active-
+      site cavity near PQQ and the second calcium binds at the N-terminus and
+      contributes to the stability of the native enzyme.
+    reference_section_type: DATABASE_ENTRY
+- description: Pyrroloquinoline quinone cofactor binding for catalytic activity
+  molecular_function:
+    id: GO:0070968
+    label: pyrroloquinoline quinone binding
+  supported_by:
+  - reference_id: UniProt:Q88JH5
+    supporting_text: Binds 1 PQQ group non-covalently per subunit.
+    reference_section_type: DATABASE_ENTRY
+  - reference_id: PMID:28655819
+    supporting_text: the reaction mechanism of PQQ-ADHs is still not completely resolved
+      but most likely proceeds via an ion-assisted direct hydride transfer from the
+      substrate to C-5 of the noncovalently bound cofactor PQQ
+    reference_section_type: INTRODUCTION
+proposed_new_terms: []
+suggested_questions:
+- question: What structural features of PedE at position 295 (Ser vs Asp in PedH)
+    determine selective binding of Ca2+ over lanthanide ions?
+- question: Does PedE have any residual activity with lanthanides or is it strictly
+    Ca2+-dependent?
+- question: What is the physiological significance of the alternative glycerol metabolism
+    route initiated by PedE?
+suggested_experiments:
+- description: Crystal structure determination of PedE to confirm the Ca2+ binding
+    geometry and compare with lanthanide-bound PedH
+- description: Site-directed mutagenesis of S295D in PedE to test whether this single
+    substitution is sufficient to switch metal preference from Ca2+ to lanthanides
+- description: In vivo isotope tracing to quantify flux through the PedE-initiated
+    glycerol metabolic route vs the canonical glpFKRD pathway
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

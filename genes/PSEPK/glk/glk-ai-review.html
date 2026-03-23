@@ -1,0 +1,2974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>glk - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>glk</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88P42" target="_blank" class="term-link">
+                        Q88P42
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida KT2440</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_1011</span>
+                    
+                    <span class="badge">Glucokinase</span>
+                    
+                    <span class="badge">Glucose kinase</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "glk";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88P42" data-a="DESCRIPTION: Glk is the cytosolic glucokinase of Pseudomonas pu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Glk is the cytosolic glucokinase of Pseudomonas putida KT2440. It phosphorylates imported glucose to glucose-6-phosphate using ATP and feeds the phosphorylative branch of glucose assimilation into the Entner-Doudoroff-centered carbohydrate catabolic network. In KT2440, glk is part of the edd-glk operon and mutant and flux analyses indicate that the glucokinase branch is quantitatively important for growth on glucose even though P. putida can also oxidize glucose through periplasmic gluconate and 2-ketogluconate routes.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004340" target="_blank" class="term-link">
+                                    GO:0004340
+                                </a>
+                            </span>
+                            <span class="term-label">glucokinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P42" data-a="GO:0004340" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function of glk. UniProt assigns the protein as glucokinase (EC 2.7.1.2), and pathway work in KT2440 places Glk at the ATP-dependent phosphorylation step that converts cytoplasmic glucose to glucose-6-phosphate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is specific, mechanistically correct, and central to the gene&#39;s function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Glucokinase</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=D-glucose + ATP = D-glucose 6-phosphate + ADP + H(+);</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In KT2440, glucose imported into the cytoplasm is phosphorylated by glucokinase to glucose-6-phosphate before conversion to 6-phosphogluconate.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The UniProt target **Q88P42** corresponds to **glk** in *Pseudomonas putida* KT2440 (ordered locus **PP_1011**) encoding the cytosolic enzyme **glucokinase (Glk)**, which phosphorylates imported glucose to **glucose‑6‑phosphate (G6P)** as the entry step of the phosphorylative branch of glucose catabolism.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P42" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP binding is mechanistically true for a kinase, but it is much less informative than the specific catalytic term glucokinase activity and is redundant for describing the core function of this enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The catalytic activity term already captures the biologically informative function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">/ligand=&#34;ATP&#34;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATP binding and D-glucose binding are mechanistically true but substantially less informative than the specific catalytic term glucokinase activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005536" target="_blank" class="term-link">
+                                    GO:0005536
+                                </a>
+                            </span>
+                            <span class="term-label">D-glucose binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P42" data-a="GO:0005536" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Substrate recognition is implicit in glucokinase activity, so this term is not wrong but is less informative than the specific catalytic annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This binding term adds little beyond the core enzymatic activity term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In KT2440, glucose imported into the cytoplasm is phosphorylated by glucokinase to glucose-6-phosphate before conversion to 6-phosphogluconate.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATP binding and D-glucose binding are mechanistically true but substantially less informative than the specific catalytic term glucokinase activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P42" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glk is a soluble intracellular enzyme and cytoplasmic localization is correct, but the more precise term in this context is cytosol.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is broader than needed for a soluble bacterial enzyme.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    cytosol
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">For cellular component, cytosol is the more specific GO term for a soluble bacterial cytoplasmic enzyme, while cytoplasm is acceptable but broader.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P42" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the preferred cellular component term for a soluble cytoplasmic enzyme such as Glk and is more precise than the broader term cytoplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Specific and biologically appropriate localization term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">For cellular component, cytosol is the more specific GO term for a soluble bacterial cytoplasmic enzyme, while cytoplasm is acceptable but broader.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P42" data-a="GO:0006096" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glk participates in glucose catabolism to pyruvate, but in P. putida KT2440 that process is routed through the Entner-Doudoroff-centered network rather than a generic undifferentiated glycolysis term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A more pathway-specific biological process term is available.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061688" target="_blank" class="term-link">
+                                    glycolytic process via Entner-Doudoroff Pathway
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">glk is physically linked to the Entner-Doudoroff pathway because edd and glk form one operon in KT2440.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Because of this genomic organization, the glucokinase pathway is co-induced with Entner-Doudoroff genes and is expressed even during growth on gluconate or 2-ketogluconate.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">This physical linkage is consistent with functional coupling: the **glucokinase entry step (Glk)** and the subsequent ED processing step (Edd) are transcriptionally coordinated.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051156" target="_blank" class="term-link">
+                                    GO:0051156
+                                </a>
+                            </span>
+                            <span class="term-label">glucose 6-phosphate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P42" data-a="GO:0051156" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term accurately reflects the immediate pathway context of Glk, which generates glucose-6-phosphate from glucose and ATP.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly describes the metabolic process in which the enzymatic reaction participates.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=D-glucose + ATP = D-glucose 6-phosphate + ADP + H(+);</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/glk/glk-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In KT2440, glucose imported into the cytoplasm is phosphorylated by glucokinase to glucose-6-phosphate before conversion to 6-phosphogluconate.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Glk is a soluble cytosolic glucokinase that uses ATP to phosphorylate imported glucose to glucose-6-phosphate, thereby feeding the phosphorylative arm of glucose assimilation into the Entner-Doudoroff-centered glycolytic network of Pseudomonas putida KT2440.</h3>
+                <span class="vote-buttons" data-g="Q88P42" data-a="FUNCTION: Glk is a soluble cytosolic glucokinase that uses A..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004340" target="_blank" class="term-link">
+                            glucokinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051156" target="_blank" class="term-link">
+                                glucose 6-phosphate metabolic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061688" target="_blank" class="term-link">
+                                glycolytic process via Entner-Doudoroff Pathway
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/glk/glk-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Reaction=D-glucose + ATP = D-glucose 6-phosphate + ADP + H(+);</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/glk/glk-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">In KT2440, glucose imported into the cytoplasm is phosphorylated by glucokinase to glucose-6-phosphate before conversion to 6-phosphogluconate.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/glk/glk-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">glk is physically linked to the Entner-Doudoroff pathway because edd and glk form one operon in KT2440.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/glk/glk-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">The UniProt target **Q88P42** corresponds to **glk** in *Pseudomonas putida* KT2440 (ordered locus **PP_1011**) encoding the cytosolic enzyme **glucokinase (Glk)**, which phosphorylates imported glucose to **glucose‑6‑phosphate (G6P)** as the entry step of the phosphorylative branch of glucose catabolism.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro-based annotation captures the conserved glucokinase family assignment and related substrate-level inferences.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TreeGrafter provides a phylogeny-based cellular component inference for this conserved bacterial glucokinase family.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Automated UniProt and rule-based methods recover the core glucokinase activity and broad glucose catabolic process assignments for glk.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17483213" target="_blank" class="term-link">
+                            PMID:17483213
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Convergent peripheral pathways catalyze initial glucose catabolism in Pseudomonas putida: genomic and flux analysis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Glucose catabolism in P. putida occurs through three simultaneous pathways converging at 6-phosphogluconate.</div>
+                        
+                        <div class="finding-text">"glucose catabolism in Pseudomonas putida occurs through the simultaneous operation of three pathways that converge at the level of 6-phosphogluconate"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Glucose imported into the cytoplasm is phosphorylated by glucokinase to glucose-6-phosphate.</div>
+                        
+                        <div class="finding-text">"Glucose is transported to the cytoplasm in a process mediated by an ABC uptake system encoded by open reading frames PP1015 to PP1018 and is then phosphorylated by glucokinase (encoded by the glk gene) and converted by glucose-6-phosphate dehydrogenase (encoded by the zwf genes) to 6-phosphogluconate."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The glucokinase pathway and 2-ketogluconate loop are quantitatively more important than direct gluconate phosphorylation.</div>
+                        
+                        <div class="finding-text">"although all three functioned simultaneously, the glucokinase pathway and the 2-ketogluconate loop were quantitatively more important than the direct phosphorylation of gluconate."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The glucokinase pathway is required for growth on glucose in KT2440.</div>
+                        
+                        <div class="finding-text">"It can therefore be concluded that the glucokinase pathway is a sine qua non condition for P. putida to grow with glucose."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19506074" target="_blank" class="term-link">
+                            PMID:19506074
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Regulation of Glucose Metabolism in Pseudomonas: The Phosphorylative Branch and Entner-Doudoroff Enzymes Are Regulated by a Repressor Containing a Sugar Isomerase Domain.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The glucose phosphorylative pathway and Entner-Doudoroff pathway are organized into operons that include an edd-glk-gltR2-gltS operon.</div>
+                        
+                        <div class="finding-text">"In Pseudomonas putida, genes for the glucose phosphorylative pathway and the Entner-Doudoroff pathway are organized in two operons; one made up of the zwf, pgl, and eda genes and another consisting of the edd, glk, gltR2, and gltS genes."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression from P(zwf), P(edd), and P(gap) is modulated by HexR in response to glucose availability.</div>
+                        
+                        <div class="finding-text">"Expression from P(zwf), P(edd), and P(gap) is modulated by HexR in response to the availability of glucose in the medium."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Binding of KDPG to HexR releases the repressor, whereas glucose, glucose 6-phosphate, and 6-phosphogluconate do not.</div>
+                        
+                        <div class="finding-text">"Binding of the Entner-Doudoroff pathway intermediate 2-keto-3-deoxy-6-phosphogluconate to HexR released the repressor from its target operators, whereas other chemicals such as glucose, glucose 6-phosphate, and 6-phosphogluconate did not induce complex dissociation."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/glk/glk-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q88P42</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">glk corresponds to PP_1011 in Pseudomonas putida KT2440.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates the protein as glucokinase EC 2.7.1.2.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The catalytic reaction is D-glucose plus ATP to D-glucose 6-phosphate plus ADP and H+.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places the protein in the cytoplasm and in the bacterial glucokinase family.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/glk/glk-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curator notes for glk in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The core role of glk is ATP-dependent phosphorylation of glucose to glucose-6-phosphate.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">glk is physically and transcriptionally linked to the Entner-Doudoroff pathway.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Generic binding terms are less informative than glucokinase activity for this enzyme.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/glk/glk-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report for glk generated with Falcon</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88P42 corresponds to glk/PP_1011 and encodes the cytosolic glucokinase of Pseudomonas putida KT2440.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon research links glk to the phosphorylative branch of glucose catabolism and the edd-glk operon.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon research summarizes inducible glucokinase activity and mutant phenotypes supporting pathway relevance in KT2440.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does flux through the glucokinase branch versus the periplasmic gluconate and 2-ketogluconate branches change across different glucose concentrations and oxygen or redox conditions in KT2440?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P42" data-a="Q: How does flux through the glucokinase branch versu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Glk have kinetic or regulatory specialization that distinguishes it from glucokinases in other pseudomonads that use different balances of oxidative and phosphorylative glucose uptake?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P42" data-a="Q: Does Glk have kinetic or regulatory specialization..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How strongly does HexR-mediated control of the edd-glk operon constrain mixed-substrate utilization when glucose and gluconate are simultaneously available?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P42" data-a="Q: How strongly does HexR-mediated control of the edd..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify PP_1011 and measure steady-state kinetics for glucose and ATP, substrate specificity, and cofactor dependence under physiologically relevant ionic conditions.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Enzyme biochemistry</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P42" data-a="EXPERIMENT: Purify PP_1011 and measure steady-state kinetics f..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a clean glk deletion and complemented strain, then quantify growth and intracellular carbon flux on glucose, gluconate, and mixed carbon sources using isotopic tracer experiments.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Genetic perturbation and flux analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P42" data-a="EXPERIMENT: Construct a clean glk deletion and complemented st..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use promoter reporters or RNA-seq in wild type and hexR backgrounds to quantify how glucose, gluconate, 2-ketogluconate, and KDPG-related perturbations regulate the edd-glk-gltR2-gltS operon.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Operon regulation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88P42" data-a="EXPERIMENT: Use promoter reporters or RNA-seq in wild type and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(glk-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P42" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: true<br />
+start_time: '2026-03-21T14:35:39.764337'<br />
+end_time: '2026-03-21T14:35:39.766687'<br />
+duration_seconds: 0.0<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: glk<br />
+  gene_symbol: glk<br />
+  uniprot_accession: Q88P42<br />
+  protein_description: 'RecName: Full=Glucokinase {ECO:0000256|HAMAP-Rule:MF_00524};<br />
+    EC=2.7.1.2 {ECO:0000256|HAMAP-Rule:MF_00524}; AltName: Full=Glucose kinase {ECO:0000256|HAMAP-Rule:MF_00524};'<br />
+  gene_info: Name=glk {ECO:0000256|HAMAP-Rule:MF_00524, ECO:0000313|EMBL:AAN66636.1};<br />
+    OrderedLocusNames=PP_1011 {ECO:0000313|EMBL:AAN66636.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Belongs to the bacterial glucokinase family.<br />
+  protein_domains: ATPase_NBD. (IPR043129); Bacterial_glucokinase. (IPR050201); Glucokinase.<br />
+    (IPR003836); Glucokinase (PF02685)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 28</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88P42</li>
+<li><strong>Protein Description:</strong> RecName: Full=Glucokinase {ECO:0000256|HAMAP-Rule:MF_00524}; EC=2.7.1.2 {ECO:0000256|HAMAP-Rule:MF_00524}; AltName: Full=Glucose kinase {ECO:0000256|HAMAP-Rule:MF_00524};</li>
+<li><strong>Gene Information:</strong> Name=glk {ECO:0000256|HAMAP-Rule:MF_00524, ECO:0000313|EMBL:AAN66636.1}; OrderedLocusNames=PP_1011 {ECO:0000313|EMBL:AAN66636.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the bacterial glucokinase family.</li>
+<li><strong>Key Domains:</strong> ATPase_NBD. (IPR043129); Bacterial_glucokinase. (IPR050201); Glucokinase. (IPR003836); Glucokinase (PF02685)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "glk" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'glk' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>glk</strong> (gene ID: glk, UniProt: Q88P42) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88P42</li>
+<li><strong>Protein Description:</strong> RecName: Full=Glucokinase {ECO:0000256|HAMAP-Rule:MF_00524}; EC=2.7.1.2 {ECO:0000256|HAMAP-Rule:MF_00524}; AltName: Full=Glucose kinase {ECO:0000256|HAMAP-Rule:MF_00524};</li>
+<li><strong>Gene Information:</strong> Name=glk {ECO:0000256|HAMAP-Rule:MF_00524, ECO:0000313|EMBL:AAN66636.1}; OrderedLocusNames=PP_1011 {ECO:0000313|EMBL:AAN66636.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the bacterial glucokinase family.</li>
+<li><strong>Key Domains:</strong> ATPase_NBD. (IPR043129); Bacterial_glucokinase. (IPR050201); Glucokinase. (IPR003836); Glucokinase (PF02685)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "glk" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'glk' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>glk</strong> (gene ID: glk, UniProt: Q88P42) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-glk-uniprot-q88p42-locus-pp_1011-in-pseudomonas-putida-kt2440">Research report: functional annotation of <strong>glk</strong> (UniProt Q88P42; locus <strong>PP_1011</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="executive-summary-verified-target-identity">Executive summary (verified target identity)</h3>
+<p>The UniProt target <strong>Q88P42</strong> corresponds to <strong>glk</strong> in <em>Pseudomonas putida</em> KT2440 (ordered locus <strong>PP_1011</strong>) encoding the cytosolic enzyme <strong>glucokinase (Glk)</strong>, which phosphorylates imported glucose to <strong>glucose‑6‑phosphate (G6P)</strong> as the entry step of the phosphorylative branch of glucose catabolism. This identity is directly supported by KT2440-focused studies that name <strong>glk (PP_1011)</strong> as glucokinase and place it in the <strong>edd–glk</strong> operon/cluster and broader glucose-catabolism gene neighborhood. (castillo2007convergentperipheralpathways pages 5-6, castillo2008asetof pages 1-2, daddaoua2009regulationofglucose pages 1-2, nguyen2024investigatinganaerobicmetabolism pages 27-30)</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-gene-product-and-enzymatic-function">1.1 Gene product and enzymatic function</h4>
+<p><strong>Glucokinase (Glk)</strong> is a sugar kinase that catalyzes phosphorylation of <strong>D-glucose</strong> to <strong>D-glucose‑6‑phosphate</strong>, coupling this to cellular energy metabolism (ATP consumption). In KT2440, glucose that is transported into the cytosol via an ABC transporter is then phosphorylated by Glk to G6P, which is further converted toward <strong>6‑phosphogluconate</strong> by <strong>glucose‑6‑phosphate dehydrogenase (Zwf)</strong> and <strong>6‑phosphogluconolactonase (Pgl)</strong>. (chen2024gnurrepressesthe pages 1-3, daddaoua2009regulationofglucose pages 1-2)</p>
+<p><strong>Functional reaction (as used in KT2440 glucose assimilation):</strong><br />
+- D‑glucose + ATP → D‑glucose‑6‑phosphate + ADP (commonly annotated as EC 2.7.1.2; EC number is not explicitly stated in the retrieved excerpts, but the enzyme is explicitly called “glucokinase” and described as catalyzing glucose→G6P). (chen2024gnurrepressesthe pages 1-3, daddaoua2009regulationofglucose pages 1-2)</p>
+<h4 id="12-kt2440-glucose-metabolism-context-convergent-peripheral-routes">1.2 KT2440 glucose metabolism context: convergent “peripheral” routes</h4>
+<p>A defining feature of <em>Pseudomonas</em> glucose metabolism is the <strong>co-existence of multiple peripheral routes</strong> that converge at <strong>6‑phosphogluconate</strong>. In KT2440, glucose may enter central metabolism via:<br />
+1) a <strong>cytosolic phosphorylative route</strong>: glucose import → <strong>Glk</strong> → G6P → Zwf/Pgl → 6‑phosphogluconate; and<br />
+2) <strong>periplasmic oxidative routes</strong> producing gluconate and 2‑ketogluconate that are subsequently imported and metabolized to 6‑phosphogluconate. (castillo2007convergentperipheralpathways pages 1-2, nikel2015pseudomonasputidakt2440 pages 1-2)</p>
+<h4 id="13-edemp-cycle-integration-of-ed-pp-and-upperemp-reactions">1.3 EDEMP cycle: integration of ED, PP and upper‑EMP reactions</h4>
+<p>KT2440 does not run a canonical linear Embden–Meyerhof–Parnas (EMP) glycolysis due to missing 6‑phosphofructo‑1‑kinase activity; instead, glucose is processed through an integrated cyclic architecture often described as an <strong>EDEMP cycle</strong>, combining <strong>Entner–Doudoroff (ED)</strong> reactions with upper‑EMP/gluconeogenic steps and pentose‑phosphate (PP) reactions. In this framework, Glk supplies G6P that can feed these interconnected modules, and carbon can be recycled from triose phosphates back to hexose phosphates. (nikel2015pseudomonasputidakt2440 pages 1-2, nikel2015pseudomonasputidakt2440 media d74e2f18)</p>
+<hr />
+<h3 id="2-kt2440-specific-functional-evidence-for-glk-pp_1011">2) KT2440-specific functional evidence for <strong>glk (PP_1011)</strong></h3>
+<h4 id="21-genomic-context-and-operon-organization">2.1 Genomic context and operon organization</h4>
+<p>Multiple sources report that <strong>glk is co-transcribed with edd</strong> (encoding 6‑phosphogluconate dehydratase), i.e. an <strong>edd–glk operon</strong>. The operon/cluster extends to include <strong>gltR2/gltS</strong> (transport-associated regulation), and edd is divergently transcribed relative to <strong>gap‑1</strong> in the region. (castillo2007convergentperipheralpathways pages 5-6, daddaoua2009regulationofglucose pages 1-2)</p>
+<p>This physical linkage is consistent with functional coupling: the <strong>glucokinase entry step (Glk)</strong> and the subsequent ED processing step (Edd) are transcriptionally coordinated. (castillo2007convergentperipheralpathways pages 5-6, castillo2008asetof pages 1-2)</p>
+<h4 id="22-direct-biochemicalphysiological-evidence-inducible-glk-activity">2.2 Direct biochemical/physiological evidence: inducible Glk activity</h4>
+<p>In KT2440, enzymatic assays from cell extracts showed that <strong>glucokinase activity is inducible by growth on glucose</strong>. Specifically, glucokinase (and gluconokinase) activities were low during growth on citrate but <strong>increased ~10‑fold</strong> during growth on glucose, supporting that Glk is expressed and catalytically active under glucose conditions (and not only inferred from sequence annotation). (castillo2007convergentperipheralpathways pages 5-6)</p>
+<h4 id="23-quantitative-physiology-and-flux-relative-importance-of-the-glk-branch">2.3 Quantitative physiology and flux: relative importance of the Glk branch</h4>
+<p><strong>13C flux analysis and physiology</strong> in KT2440 indicate that glucose catabolism strongly favors periplasmic oxidation under tested conditions: approximately <strong>90% of consumed glucose</strong> was reported to proceed through the oxidative route (via gluconate) into central metabolism as 6‑phosphogluconate, while the remaining fraction enters via other routes, including the cytosolic phosphorylation route that depends on Glk. (nikel2015pseudomonasputidakt2440 pages 1-2)</p>
+<p>A complementary flux/physiology study reported a <strong>glucose uptake rate ~6 mmol·g⁻¹·h⁻¹</strong>, growth rate <strong>0.58 h⁻¹</strong>, and biomass yield <strong>0.44 g biomass per g carbon</strong> for the wild type under the studied condition set. (castillo2007convergentperipheralpathways pages 1-2)</p>
+<h4 id="24-mutant-phenotype-impact-of-perturbing-the-glucokinase-pathway">2.4 Mutant phenotype: impact of perturbing the glucokinase pathway</h4>
+<p>A KT2440 <strong>glk mutant</strong> exhibited measurable impairments in carbon consumption and biomass yield in the referenced physiological analyses; one excerpted dataset reports total carbon consumption of <strong>~5.44 mmol·g⁻¹·h⁻¹</strong> and biomass yield of <strong>~0.35 g biomass per g carbon consumed</strong> for the glk mutant. (castillo2007convergentperipheralpathways pages 5-6)</p>
+<p>Separate work on catabolite repression and pathway integration explicitly used a <strong>glk mutant</strong> strain to interrogate growth and regulation on mixed substrates (glucose + toluene), further emphasizing that glk is a tractable genetic node with measurable phenotypic consequences. (castillo2007convergentperipheralpathways pages 6-8)</p>
+<hr />
+<h3 id="3-cellular-localization-and-where-the-reaction-occurs">3) Cellular localization and where the reaction occurs</h3>
+<p>Glk functions in the <strong>cytoplasm</strong>, acting on glucose that has been transported into the cytosol. This is explicitly described as glucose being transported into the cytoplasm and “subsequently phosphorylated by glucokinase (Glk) to glucose‑6‑phosphate.” (chen2024gnurrepressesthe pages 1-3)</p>
+<p>This contrasts with the periplasmic oxidative route (glucose→gluconate/2‑ketogluconate) which is initiated outside the cytosol and later converges internally at phosphorylated intermediates. (nikel2015pseudomonasputidakt2440 pages 1-2)</p>
+<hr />
+<h3 id="4-regulation-and-pathway-control-expert-level-synthesis">4) Regulation and pathway control (expert-level synthesis)</h3>
+<h4 id="41-hexr-centered-control-of-ed-and-glucose-assimilation-nodes">4.1 HexR-centered control of ED and glucose assimilation nodes</h4>
+<p>Mechanistic regulatory work in <em>Pseudomonas</em> identifies <strong>HexR</strong> as a central transcriptional regulator controlling expression of promoters including those for ED/glucose catabolism (e.g., Pedd and Pzwf/Pgap). HexR binds target promoters with <strong>nanomolar-range affinity</strong> and is released by the ED intermediate <strong>KDPG (2‑keto‑3‑deoxy‑6‑phosphogluconate)</strong>, linking metabolic state to gene expression. This regulatory logic couples expression of the <strong>edd–glk</strong> operon to ED pathway flux. (daddaoua2009regulationofglucose pages 1-2)</p>
+<p>Consistently, systems-level analysis describing peripheral glucose control reports that HexR controls genes encoding glucokinase and glucose‑6‑phosphate dehydrogenase, integrating the Glk entry step with downstream conversion of G6P toward 6‑phosphogluconate. (castillo2008asetof pages 1-2)</p>
+<h4 id="42-multi-regulator-architecture-controlling-glucosegluconate-catabolism">4.2 Multi-regulator architecture controlling glucose/gluconate catabolism</h4>
+<p>Beyond HexR, the KT2440 glucose catabolic region is described as being under multiple transcriptional regulators, including transport-associated regulation (e.g., GltR/GltS) and regulators of gluconate/2‑ketogluconate utilization (e.g., PtxS, GnuR in related frameworks). (castillo2008asetof pages 1-2, daddaoua2009regulationofglucose pages 1-2)</p>
+<p><strong>Recent 2024 development (high priority):</strong> A KT2440 study used multi‑omics to define the <strong>GnuR regulon</strong>, showing that GnuR directly represses catabolic genes involved in the <strong>Entner–Doudoroff</strong> and <strong>peripheral glucose/gluconate metabolism pathways</strong>, and that expression of the glucose catabolism genes is induced by both glucose and gluconate. This work modernizes the regulatory map around glucose utilization while maintaining Glk’s core biochemical assignment as the glucose→G6P phosphorylation step. (Publication date: Nov 2024; URL: https://doi.org/10.1111/1751-7915.70059) (chen2024gnurrepressesthe pages 1-3)</p>
+<hr />
+<h3 id="5-recent-developments-20232024-prioritized">5) Recent developments (2023–2024 prioritized)</h3>
+<h4 id="51-2024-systems-level-regulatory-dissection-gnur">5.1 2024: Systems-level regulatory dissection (GnuR)</h4>
+<p>The 2024 study on GnuR provides a KT2440-focused, contemporary update: it reports that glucose and gluconate induce expression of glucose catabolism genes and identifies direct repression targets of GnuR within ED/peripheral metabolism, improving the mechanistic basis for engineering glucose catabolism. (Nov 2024; https://doi.org/10.1111/1751-7915.70059) (chen2024gnurrepressesthe pages 1-3)</p>
+<h4 id="52-2024-bioelectrochemical-electro-fermentation-conditions-and-uptake-route-testing">5.2 2024: Bioelectrochemical / electro-fermentation conditions and uptake-route testing</h4>
+<p>A 2024 study of anaerobic glucose uptake in a bioelectrochemical system explicitly frames energy accounting around “sugar phosphorylation in the upper part of metabolism (at the level of glucokinase…)” and tests uptake-route mutants to determine whether uptake stoichiometry limits electro-fermentation performance. In the studied setup, deletion of uptake routes affected sugar consumption/current output, but secreted acetate levels were not significantly altered among strains—suggesting other constraints (e.g., energy limitation or regulation) rather than the glucokinase stoichiometry per se. (Publication date: Nov 2024; URL: https://doi.org/10.1111/1751-7915.14375) (nguyen2024investigatinganaerobicmetabolism pages 27-30)</p>
+<h4 id="53-2024-metabolic-engineering-of-glucose-routing-for-improved-mclpha-production">5.3 2024: Metabolic engineering of glucose routing for improved mcl‑PHA production</h4>
+<p>A 2024 metabolic engineering study in <em>P. putida</em> reported that modifying glucose metabolism and regulatory nodes can markedly improve medium-chain-length PHA titers (e.g., increases in titer reported for combined knockouts and regulatory modifications), reflecting ongoing real-world implementation of glucose catabolism rewiring in <em>Pseudomonas</em> production strains. (Publication date: Nov 2024; URL: https://doi.org/10.3390/cimb46110761) (chen2024gnurrepressesthe pages 1-3)</p>
+<p><em>Note on limitations:</em> Using the provided tool-accessible corpus, I could not retrieve 2023–2024 sources specifically focused on structural mechanism or family-wide biochemical kinetics for PF02685 bacterial glucokinases; therefore, mechanistic/structural claims beyond the demonstrated pathway role are not made here. (nikel2015pseudomonasputidakt2440 pages 1-2, chen2024gnurrepressesthe pages 1-3)</p>
+<hr />
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-glk-as-an-engineering-control-point-for-sugar-metabolism-wiring">6.1 Glk as an engineering control point for sugar metabolism “wiring”</h4>
+<p>The edd–glk node is repeatedly leveraged as a defined genetic “handle” to rewire upper sugar metabolism. For example, refactoring/expanding sugar utilization (e.g., cellobiose/xylose modules) relies on intracellular glucose being phosphorylated and routed into central metabolism via the native upper network in KT2440 derivatives. (https://doi.org/10.1016/j.ymben.2018.05.019; 2018) (bujdos2021inženýrstvípseudomonasputida pages 40-43)</p>
+<h4 id="62-glk-in-modular-glycolysis-implantation-frameworks">6.2 Glk in modular glycolysis implantation frameworks</h4>
+<p>A synthetic biology strategy (“GlucoBricks”) reported measurable glucokinase specific activities in engineered strains and evaluated portability of glycolytic modules to Gram-negative hosts including <em>Pseudomonas</em>. While the excerpted kinetic data are reported for engineered <em>E. coli</em> backgrounds, this work frames Glk as the first committed step enabling engineered glycolytic flux. (https://doi.org/10.1021/acssynbio.6b00230; Feb 2017) (sanchezpascuala2017refactoringtheembden–meyerhof–parnas pages 4-6)</p>
+<h4 id="63-bioelectrochemical-systems-and-redoxenergy-aware-bioprocessing">6.3 Bioelectrochemical systems and redox/energy-aware bioprocessing</h4>
+<p>Under electro-fermentative conditions, selection/engineering of glucose uptake routes (including those requiring cytosolic phosphorylation via glucokinase) is being studied to improve carbon turnover and product formation; route mutants were used to evaluate whether the energetic/redox demands of uptake and phosphorylation are limiting. (https://doi.org/10.1111/1751-7915.14375; Nov 2024) (nguyen2024investigatinganaerobicmetabolism pages 27-30)</p>
+<hr />
+<h3 id="7-relevant-statistics-and-quantitative-data-from-cited-studies">7) Relevant statistics and quantitative data (from cited studies)</h3>
+<ul>
+<li><strong>~10-fold induction</strong> of glucokinase activity in glucose-grown vs citrate-grown KT2440 cells (enzyme assays in cell extracts). (https://doi.org/10.1128/JB.00203-07; Jul 2007) (castillo2007convergentperipheralpathways pages 5-6)</li>
+<li>Wild-type KT2440 physiology under studied conditions: <strong>glucose uptake ~6 mmol·g⁻¹·h⁻¹</strong>, <strong>growth rate 0.58 h⁻¹</strong>, <strong>biomass yield 0.44 g biomass/g carbon</strong>. (https://doi.org/10.1128/JB.00203-07; Jul 2007) (castillo2007convergentperipheralpathways pages 1-2)</li>
+<li><strong>glk mutant</strong> example physiology: <strong>total carbon consumption ~5.44 mmol·g⁻¹·h⁻¹</strong>, <strong>biomass yield ~0.35 g/g carbon consumed</strong>. (https://doi.org/10.1128/JB.00203-07; Jul 2007) (castillo2007convergentperipheralpathways pages 5-6)</li>
+<li><strong>Flux partitioning</strong>: ~<strong>90%</strong> of glucose consumed routed through the <strong>periplasmic oxidative pathway</strong> (gluconate route) in KT2440 under the studied conditions; EDEMP cycling includes recycling of triose phosphates to hexose phosphates (~10% reported in the described framework). (https://doi.org/10.1074/jbc.M115.687749; Oct 2015) (nikel2015pseudomonasputidakt2440 pages 1-2)</li>
+</ul>
+<p><em>Unavailable in retrieved excerpts:</em> explicit Glk kinetic constants (Km, kcat) and direct substrate-specificity panels for purified P. putida Glk were not accessible from the available text snippets. (nikel2015pseudomonasputidakt2440 pages 17-19)</p>
+<hr />
+<h3 id="8-visual-evidence-pathway-architecture-supporting-glk-functional-context">8) Visual evidence: pathway architecture supporting Glk functional context</h3>
+<p>The schematic depiction of the <strong>EDEMP cycle</strong> in KT2440 provides a concise visual explanation of how ED, PP and upper‑EMP reactions integrate in KT2440 glucose metabolism, contextualizing where the Glk-dependent G6P entry step can feed into the broader network. (nikel2015pseudomonasputidakt2440 media d74e2f18)</p>
+<hr />
+<h3 id="9-evidence-backed-functional-annotation-recommended">9) Evidence-backed functional annotation (recommended)</h3>
+<p><strong>Gene:</strong> glk (PP_1011) </p>
+<p><strong>Protein:</strong> Glucokinase (Glk) </p>
+<p><strong>Cellular location:</strong> Cytosol; acts on cytosolic glucose after import. (chen2024gnurrepressesthe pages 1-3)</p>
+<p><strong>Primary biochemical function:</strong> Phosphorylates glucose to glucose‑6‑phosphate to initiate the cytosolic phosphorylative glucose assimilation route in KT2440; downstream routing proceeds via Zwf/Pgl to 6‑phosphogluconate and ED/EDEMP-associated metabolism. (chen2024gnurrepressesthe pages 1-3, daddaoua2009regulationofglucose pages 1-2, nikel2015pseudomonasputidakt2440 pages 1-2)</p>
+<p><strong>Genomic/pathway context:</strong> Part of an <strong>edd–glk</strong> operon/cluster linked to ED entry, co-regulated with glucose transport and ED genes (including gltR2/gltS), embedded within the multi-route peripheral glucose utilization architecture of <em>Pseudomonas</em>. (castillo2007convergentperipheralpathways pages 5-6, daddaoua2009regulationofglucose pages 1-2)</p>
+<p><strong>Regulatory context (high confidence):</strong> Expression of edd/glk-linked functions is controlled by <strong>HexR</strong>, with effector KDPG modulating promoter binding; additional regulators (e.g., GnuR) shape global glucose/gluconate catabolism responses in KT2440. (daddaoua2009regulationofglucose pages 1-2, chen2024gnurrepressesthe pages 1-3)</p>
+<hr />
+<h2 id="evidence-summary-table">Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Claim / topic</th>
+<th>Evidence-backed summary</th>
+<th>Quantitative findings</th>
+<th>Example application / implementation (year; DOI/URL)</th>
+<th>Key sources (context IDs)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene/protein identity</td>
+<td><strong>glk</strong> in <em>Pseudomonas putida</em> KT2440 encodes the cytosolic <strong>glucokinase</strong> <strong>Glk</strong>; locus <strong>PP_1011</strong>; this matches UniProt <strong>Q88P42</strong> and the glucose-phosphorylation branch of sugar catabolism.</td>
+<td>PP_1011 explicitly linked to Glk in KT2440 pathway/genome context.</td>
+<td>Used as a defined engineering target in KT2440 derivatives lacking <strong>glk</strong> to block glucose assimilation (2025; https://doi.org/10.1093/synbio/ysaf012).</td>
+<td>(nguyen2024investigatinganaerobicmetabolism pages 27-30, escapa2013theroleof pages 37-41, chen2024gnurrepressesthe pages 1-3)</td>
+</tr>
+<tr>
+<td>Enzymatic reaction</td>
+<td>Glk catalyzes ATP-dependent phosphorylation of <strong>glucose → glucose-6-phosphate (G6P)</strong>, feeding upper central metabolism; downstream G6P is oxidized by Zwf/Pgl toward 6-phosphogluconate.</td>
+<td>Reaction is described qualitatively; no Glk-specific Km/kcat retrieved in the available evidence.</td>
+<td>Central step in glucose entry retained or rewired in KT2440 metabolic engineering for mixed-sugar use (2018; https://doi.org/10.1016/j.ymben.2018.05.019).</td>
+<td>(chen2024gnurrepressesthe pages 1-3, daddaoua2009regulationofglucose pages 1-2, nikel2015pseudomonasputidakt2440 pages 1-2)</td>
+</tr>
+<tr>
+<td>Pathway role in KT2440</td>
+<td>In KT2440, glucose can enter metabolism either by direct cytosolic phosphorylation via <strong>Glk</strong> or by periplasmic oxidation to gluconate/2-ketogluconate before convergence at 6-phosphogluconate; Glk is part of the phosphorylative branch.</td>
+<td>Approx. <strong>90%</strong> of consumed glucose was reported to proceed through the <strong>periplasmic oxidative route</strong>, implying a minority enters via direct phosphorylation under tested conditions.</td>
+<td>Important for quantitative physiology and flux-guided redesign of KT2440 glucose metabolism (2015; https://doi.org/10.1074/jbc.M115.687749).</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 1-2, castillo2007convergentperipheralpathways pages 1-2)</td>
+</tr>
+<tr>
+<td>Operon / genomic context</td>
+<td><strong>glk</strong> is physically and transcriptionally linked with <strong>edd</strong> (6-phosphogluconate dehydratase), i.e. an <strong>edd-glk</strong> operon/cluster; broader local context includes <strong>gltR2/gltS</strong> and nearby glucose-uptake genes.</td>
+<td>glk and edd were reported to <strong>overlap</strong> and be <strong>transcriptionally coupled</strong>.</td>
+<td>This native organization motivated “GlucoBrick”/upper-glycolysis refactoring efforts in Gram-negative hosts including <em>P. putida</em> (2017; https://doi.org/10.1021/acssynbio.6b00230).</td>
+<td>(castillo2007convergentperipheralpathways pages 5-6, castillo2008asetof pages 1-2, daddaoua2009regulationofglucose pages 1-2)</td>
+</tr>
+<tr>
+<td>Regulation by HexR</td>
+<td><strong>HexR</strong> controls expression of glucose-catabolic genes including the <strong>edd-glk</strong> branch and the <strong>zwf/pgl/eda</strong> branch; induction links glucose sensing to ED-pathway entry.</td>
+<td>HexR binds target promoters with <strong>nanomolar-range affinity</strong> and is released by the ED intermediate <strong>KDPG</strong>.</td>
+<td>Regulatory understanding is used for pathway rewiring and control of carbon flux in KT2440 chassis engineering (2024; https://doi.org/10.3390/cimb46110761).</td>
+<td>(castillo2008asetof pages 1-2, daddaoua2009regulationofglucose pages 1-2)</td>
+</tr>
+<tr>
+<td>Regulation by GnuR / peripheral glucose control</td>
+<td>Recent multi-omics work shows <strong>GnuR</strong> directly represses genes of peripheral glucose/gluconate catabolism and ED-pathway functions in KT2440; Glk participates in the induced glucose-response program.</td>
+<td>Expression of catabolic/TF genes was <strong>significantly induced</strong> by glucose and gluconate; exact fold change not stated in retrieved excerpt.</td>
+<td>Provides a modern regulatory framework for improving glucose utilization in KT2440 (2024; https://doi.org/10.1111/1751-7915.70059).</td>
+<td>(chen2024gnurrepressesthe pages 1-3)</td>
+</tr>
+<tr>
+<td>Additional regulatory systems</td>
+<td>Glucose-catabolic gene expression around <strong>glk/edd</strong> is integrated with other regulators including <strong>GltR/GltS</strong> (transport-associated regulation) and <strong>PtxS</strong> / the kgu branch for 2-ketogluconate metabolism.</td>
+<td>No Glk-specific kinetic constants provided, but regulatory coupling to transporter/peripheral oxidation branches is well supported.</td>
+<td>Relevant for engineering strains that favor specific uptake routes under aerobic or electro-fermentative conditions (2024; https://doi.org/10.1111/1751-7915.14375).</td>
+<td>(castillo2007convergentperipheralpathways pages 6-8, castillo2008asetof pages 1-2, daddaoua2009regulationofglucose pages 1-2)</td>
+</tr>
+<tr>
+<td>Enzyme induction / activity evidence</td>
+<td>Glucokinase activity in KT2440 cell extracts is inducible by glucose, supporting Glk as an active enzyme rather than a purely inferred annotation.</td>
+<td><strong>~10-fold</strong> increase in glucokinase and gluconokinase activities in glucose-grown cells versus citrate-grown cells.</td>
+<td>Biochemical activity evidence underpins strain-design choices when redirecting sugar catabolism (2007; https://doi.org/10.1128/JB.00203-07).</td>
+<td>(castillo2007convergentperipheralpathways pages 5-6)</td>
+</tr>
+<tr>
+<td>Mutant phenotype</td>
+<td>Disrupting the glucokinase branch impairs efficient glucose assimilation; foundational studies concluded the glucokinase pathway is functionally important and in some tested genetic backgrounds essential for growth on glucose.</td>
+<td>Example values reported for a <strong>glk mutant</strong>: total carbon consumption about <strong>5.44 mmol g⁻¹ h⁻¹</strong> and biomass yield about <strong>0.35 g biomass/g carbon consumed</strong>.</td>
+<td><strong>Δglk</strong> strains are deliberately used as chassis components to eliminate glucose growth in synthetic consortia or substrate-partitioning designs (2025; https://doi.org/10.1093/synbio/ysaf012).</td>
+<td>(castillo2007convergentperipheralpathways pages 5-6, castillo2007convergentperipheralpathways pages 1-2)</td>
+</tr>
+<tr>
+<td>Flux architecture / EDEMP cycle</td>
+<td>Glk supplies G6P to the unusual <strong>EDEMP cycle</strong> of KT2440, where ED, upper EMP/gluconeogenic reactions, and PP-pathway enzymes are integrated to support NADPH generation and flexible carbon redistribution.</td>
+<td>About <strong>10%</strong> of triose phosphates were estimated to recycle back to hexose phosphates in the EDEMP architecture.</td>
+<td>Core concept for systems biology, modeling, and redox-aware chassis engineering in KT2440 (2015; https://doi.org/10.1074/jbc.M115.687749).</td>
+<td>(nikel2015pseudomonasputidakt2440 pages 1-2, nikel2015pseudomonasputidakt2440 media d74e2f18, nikel2015pseudomonasputidakt2440 media d533aa4f)</td>
+</tr>
+<tr>
+<td>Engineering for sugar co-utilization</td>
+<td>Native <strong>glk (PP_1011)</strong> is exploited in refactoring upper sugar metabolism so intracellular glucose released from cellobiose or imported sugars can be funneled into central metabolism.</td>
+<td>Engineering studies identify PP_1011 as the native glucokinase node supporting growth on glucose-containing mixtures.</td>
+<td>Co-utilization of cellobiose, xylose, and glucose in engineered KT2440/EM42 (2018; https://doi.org/10.1016/j.ymben.2018.05.019).</td>
+<td>(bujdos2021inženýrstvípseudomonasputida pages 40-43, sanchezpascuala2017refactoringtheembden–meyerhof–parnas pages 4-6)</td>
+</tr>
+<tr>
+<td>Engineering for product formation</td>
+<td>Manipulating glucose catabolic routing upstream/downstream of Glk improves production phenotypes such as <strong>medium-chain-length PHA</strong> in <em>P. putida</em>.</td>
+<td>One 2024 study reported <strong>33.7%</strong> higher mcl-PHA titer in a ΔgcdΔgltA mutant and up to <strong>117.5%</strong> increase in an additional regulatory mutant background, illustrating the leverage of glucose-routing interventions around the Glk branch.</td>
+<td>Glucose-pathway modification for enhanced PHA synthesis (2024; https://doi.org/10.3390/cimb46110761).</td>
+<td>(chen2024gnurrepressesthe pages 1-3)</td>
+</tr>
+<tr>
+<td>Bioelectrochemical / anaerobic relevance</td>
+<td>Under electro-fermentative conditions, the Glk-dependent phosphorylation route remains part of the energetic accounting for glucose use, and route-specific mutants helped test whether uptake stoichiometry limits anaerobic turnover.</td>
+<td>Deletion of individual sugar-uptake routes altered sugar consumption/current output, but secreted acetate concentrations were <strong>not significantly different</strong> among strains in the reported setup.</td>
+<td>Anaerobic glucose uptake in a bioelectrochemical system (2024; https://doi.org/10.1111/1751-7915.14375).</td>
+<td>(nguyen2024investigatinganaerobicmetabolism pages 27-30)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes evidence-backed functional annotation for </em>Pseudomonas putida<em> KT2440 glucokinase Glk (PP_1011; UniProt Q88P42), including reaction, pathway role, regulation, quantitative findings, and representative engineering applications. It is useful as a compact reference for assigning function and pathway context to the gene.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(castillo2007convergentperipheralpathways pages 5-6): Teresa del Castillo, Juan L. Ramos, José J. Rodríguez-Herva, Tobias Fuhrer, Uwe Sauer, and Estrella Duque. Convergent peripheral pathways catalyze initial glucose catabolism in<i>pseudomonas putida</i>: genomic and flux analysis. Jul 2007. URL: https://doi.org/10.1128/jb.00203-07, doi:10.1128/jb.00203-07. This article has 310 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(castillo2008asetof pages 1-2): Teresa del Castillo, Estrella Duque, and Juan L. Ramos. A set of activators and repressors control peripheral glucose pathways in <i>pseudomonas putida</i> to yield a common central intermediate. Journal of Bacteriology, 190:2331-2339, Apr 2008. URL: https://doi.org/10.1128/jb.01726-07, doi:10.1128/jb.01726-07. This article has 128 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(daddaoua2009regulationofglucose pages 1-2): A. Daddaoua, T. Krell, and J. Ramos. Regulation of glucose metabolism in pseudomonas. The Journal of Biological Chemistry, 284:21360-21368, Jun 2009. URL: https://doi.org/10.1074/jbc.m109.014555, doi:10.1074/jbc.m109.014555. This article has 106 citations.</p>
+</li>
+<li>
+<p>(nguyen2024investigatinganaerobicmetabolism pages 27-30): HAV Nguyen. Investigating anaerobic metabolism of pseudomonas putida using bioelectrochemical cultivation. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(chen2024gnurrepressesthe pages 1-3): Wenbo Chen, Rao Ma, Yong Feng, Yunzhu Xiao, Agnieszka Sekowska, Antoine Danchin, and Conghui You. Gnur represses the expression of glucose and gluconate catabolism in pseudomonas putida kt2440. Microbial Biotechnology, Nov 2024. URL: https://doi.org/10.1111/1751-7915.70059, doi:10.1111/1751-7915.70059. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(castillo2007convergentperipheralpathways pages 1-2): Teresa del Castillo, Juan L. Ramos, José J. Rodríguez-Herva, Tobias Fuhrer, Uwe Sauer, and Estrella Duque. Convergent peripheral pathways catalyze initial glucose catabolism in<i>pseudomonas putida</i>: genomic and flux analysis. Jul 2007. URL: https://doi.org/10.1128/jb.00203-07, doi:10.1128/jb.00203-07. This article has 310 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 1-2): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 427 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 media d74e2f18): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 427 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(castillo2007convergentperipheralpathways pages 6-8): Teresa del Castillo, Juan L. Ramos, José J. Rodríguez-Herva, Tobias Fuhrer, Uwe Sauer, and Estrella Duque. Convergent peripheral pathways catalyze initial glucose catabolism in<i>pseudomonas putida</i>: genomic and flux analysis. Jul 2007. URL: https://doi.org/10.1128/jb.00203-07, doi:10.1128/jb.00203-07. This article has 310 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bujdos2021inženýrstvípseudomonasputida pages 40-43): D Bujdoš. Inženýrství pseudomonas putida pro ko-utilizaci a zužitkování celobiózy s glukózou. Unknown journal, 2021.</p>
+</li>
+<li>
+<p>(sanchezpascuala2017refactoringtheembden–meyerhof–parnas pages 4-6): Alberto Sánchez-Pascuala, Víctor de Lorenzo, and Pablo I. Nikel. Refactoring the embden–meyerhof–parnas pathway as a whole of portable glucobricks for implantation of glycolytic modules in gram-negative bacteria. Feb 2017. URL: https://doi.org/10.1021/acssynbio.6b00230, doi:10.1021/acssynbio.6b00230. This article has 74 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 17-19): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 427 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(escapa2013theroleof pages 37-41): I. F. Escapa, C. del Cerro, J. L. García, and M. A. Prieto. The role of glpr repressor in pseudomonas putida kt2440 growth and pha production from glycerol. Environmental microbiology, 15 1:93-110, May 2013. URL: https://doi.org/10.1111/j.1462-2920.2012.02790.x, doi:10.1111/j.1462-2920.2012.02790.x. This article has 131 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 media d533aa4f): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 427 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>castillo2007convergentperipheralpathways pages 5-6</li>
+<li>castillo2007convergentperipheralpathways pages 1-2</li>
+<li>castillo2007convergentperipheralpathways pages 6-8</li>
+<li>chen2024gnurrepressesthe pages 1-3</li>
+<li>daddaoua2009regulationofglucose pages 1-2</li>
+<li>castillo2008asetof pages 1-2</li>
+<li>nguyen2024investigatinganaerobicmetabolism pages 27-30</li>
+<li>escapa2013theroleof pages 37-41</li>
+<li>https://doi.org/10.1111/1751-7915.70059</li>
+<li>https://doi.org/10.1111/1751-7915.14375</li>
+<li>https://doi.org/10.3390/cimb46110761</li>
+<li>https://doi.org/10.1016/j.ymben.2018.05.019;</li>
+<li>https://doi.org/10.1021/acssynbio.6b00230;</li>
+<li>https://doi.org/10.1111/1751-7915.14375;</li>
+<li>https://doi.org/10.1128/JB.00203-07;</li>
+<li>https://doi.org/10.1074/jbc.M115.687749;</li>
+<li>https://doi.org/10.1093/synbio/ysaf012</li>
+<li>https://doi.org/10.1016/j.ymben.2018.05.019</li>
+<li>https://doi.org/10.1074/jbc.M115.687749</li>
+<li>https://doi.org/10.1021/acssynbio.6b00230</li>
+<li>https://doi.org/10.1128/JB.00203-07</li>
+<li>https://doi.org/10.1128/jb.00203-07,</li>
+<li>https://doi.org/10.1128/jb.01726-07,</li>
+<li>https://doi.org/10.1074/jbc.m109.014555,</li>
+<li>https://doi.org/10.1111/1751-7915.70059,</li>
+<li>https://doi.org/10.1074/jbc.m115.687749,</li>
+<li>https://doi.org/10.1021/acssynbio.6b00230,</li>
+<li>https://doi.org/10.1111/j.1462-2920.2012.02790.x,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(glk-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P42" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="glk-gene-research-notes">glk Gene Research Notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li><code>glk</code> in <em>Pseudomonas putida</em> KT2440 corresponds to UniProt <code>Q88P42</code> and locus <code>PP_1011</code>, and UniProt annotates the protein as glucokinase (EC 2.7.1.2) in the bacterial glucokinase family with cytoplasmic localization. [file:PSEPK/glk/glk-uniprot.txt "RecName: Full=Glucokinase"; "EC=2.7.1.2"; "SUBCELLULAR LOCATION: Cytoplasm"; "Belongs to the bacterial glucokinase family."]</li>
+</ul>
+<h2 id="core-biochemistry">Core Biochemistry</h2>
+<ul>
+<li>
+<p>In KT2440, glucose imported into the cytoplasm is phosphorylated by glucokinase to glucose-6-phosphate before conversion to 6-phosphogluconate. [PMID:17483213 Convergent peripheral pathways catalyze initial glucose catabolism in <em>Pseudomonas putida</em>: genomic and flux analysis, "Glucose is transported to the cytoplasm in a process mediated by an ABC uptake system encoded by open reading frames PP1015 to PP1018 and is then phosphorylated by glucokinase (encoded by the glk gene) and converted by glucose-6-phosphate dehydrogenase (encoded by the zwf genes) to 6-phosphogluconate."]</p>
+</li>
+<li>
+<p><em>P. putida</em> catabolizes glucose through three simultaneous routes that converge at 6-phosphogluconate, and the glucokinase branch is quantitatively important within that network. [PMID:17483213 Convergent peripheral pathways catalyze initial glucose catabolism in <em>Pseudomonas putida</em>: genomic and flux analysis, "glucose catabolism in Pseudomonas putida occurs through the simultaneous operation of three pathways that converge at the level of 6-phosphogluconate"; "although all three functioned simultaneously, the glucokinase pathway and the 2-ketogluconate loop were quantitatively more important than the direct phosphorylation of gluconate."]</p>
+</li>
+<li>
+<p>The 2007 mutant and flux study concluded that the glucokinase pathway is required for growth on glucose in KT2440. [PMID:17483213 Convergent peripheral pathways catalyze initial glucose catabolism in <em>Pseudomonas putida</em>: genomic and flux analysis, "It can therefore be concluded that the glucokinase pathway is a sine qua non condition for P. putida to grow with glucose."]</p>
+</li>
+</ul>
+<h2 id="pathway-context-and-regulation">Pathway Context And Regulation</h2>
+<ul>
+<li>
+<p><code>glk</code> is physically linked to the Entner-Doudoroff pathway because <code>edd</code> and <code>glk</code> form one operon in KT2440. [PMID:19506074 Regulation of Glucose Metabolism in <em>Pseudomonas</em>: The Phosphorylative Branch and Entner-Doudoroff Enzymes Are Regulated by a Repressor Containing a Sugar Isomerase Domain, "The edd and glk genes form another operon that encodes, respectively, 6-phosphogluconate dehydratase (the first enzyme of the Entner-Doudoroff pathway) and glucokinase (an enzyme of the glucose phosphorylative pathway)."]</p>
+</li>
+<li>
+<p>Because of this genomic organization, the glucokinase pathway is co-induced with Entner-Doudoroff genes and is expressed even during growth on gluconate or 2-ketogluconate. [PMID:19506074 Regulation of Glucose Metabolism in <em>Pseudomonas</em>: The Phosphorylative Branch and Entner-Doudoroff Enzymes Are Regulated by a Repressor Containing a Sugar Isomerase Domain, "the glucokinase pathway genes are co-transcribed with Entner-Doudoroff pathway enzymes"; "the glucokinase pathway is induced when bacteria are exposed to gluconate and 2-ketogluconate."]</p>
+</li>
+<li>
+<p>HexR controls the relevant promoters through sensing KDPG rather than glucose or glucose-6-phosphate, placing <code>glk</code> in a broader glucose-responsive Entner-Doudoroff regulatory module. [PMID:19506074 Regulation of Glucose Metabolism in <em>Pseudomonas</em>: The Phosphorylative Branch and Entner-Doudoroff Enzymes Are Regulated by a Repressor Containing a Sugar Isomerase Domain, "Binding of the Entner-Doudoroff pathway intermediate 2-keto-3-deoxy-6-phosphogluconate to HexR released the repressor from its target operators, whereas other chemicals such as glucose, glucose 6-phosphate, and 6-phosphogluconate did not induce complex dissociation."]</p>
+</li>
+</ul>
+<h2 id="annotation-implications">Annotation Implications</h2>
+<ul>
+<li>
+<p>The strongest core annotation for <code>glk</code> is glucokinase activity coupled to glucose catabolism through the Entner-Doudoroff-centered network.</p>
+</li>
+<li>
+<p><code>ATP binding</code> and <code>D-glucose binding</code> are mechanistically true but substantially less informative than the specific catalytic term <code>glucokinase activity</code>.</p>
+</li>
+<li>
+<p>For cellular component, <code>cytosol</code> is the more specific GO term for a soluble bacterial cytoplasmic enzyme, while <code>cytoplasm</code> is acceptable but broader.</p>
+</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88P42
+gene_symbol: glk
+product_type: PROTEIN
+status: COMPLETE
+aliases:
+- PP_1011
+- Glucokinase
+- Glucose kinase
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida KT2440
+description: Glk is the cytosolic glucokinase of Pseudomonas putida KT2440. It
+  phosphorylates imported glucose to glucose-6-phosphate using ATP and feeds the
+  phosphorylative branch of glucose assimilation into the Entner-Doudoroff-centered
+  carbohydrate catabolic network. In KT2440, glk is part of the edd-glk operon and
+  mutant and flux analyses indicate that the glucokinase branch is quantitatively
+  important for growth on glucose even though P. putida can also oxidize glucose
+  through periplasmic gluconate and 2-ketogluconate routes.
+existing_annotations:
+- term:
+    id: GO:0004340
+    label: glucokinase activity
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the core molecular function of glk. UniProt assigns the protein
+      as glucokinase (EC 2.7.1.2), and pathway work in KT2440 places Glk at the
+      ATP-dependent phosphorylation step that converts cytoplasmic glucose to glucose-6-phosphate.
+    action: ACCEPT
+    reason: This term is specific, mechanistically correct, and central to the gene&#39;s
+      function.
+    supported_by:
+    - reference_id: file:PSEPK/glk/glk-uniprot.txt
+      supporting_text: &#39;RecName: Full=Glucokinase&#39;
+    - reference_id: file:PSEPK/glk/glk-uniprot.txt
+      supporting_text: &#39;Reaction=D-glucose + ATP = D-glucose 6-phosphate + ADP + H(+);&#39;
+    - reference_id: file:PSEPK/glk/glk-notes.md
+      supporting_text: In KT2440, glucose imported into the cytoplasm is phosphorylated
+        by glucokinase to glucose-6-phosphate before conversion to 6-phosphogluconate.
+    - reference_id: file:PSEPK/glk/glk-deep-research-falcon.md
+      supporting_text: The UniProt target **Q88P42** corresponds to **glk** in *Pseudomonas
+        putida* KT2440 (ordered locus **PP_1011**) encoding the cytosolic enzyme
+        **glucokinase (Glk)**, which phosphorylates imported glucose to **glucose‑6‑phosphate
+        (G6P)** as the entry step of the phosphorylative branch of glucose catabolism.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: ATP binding is mechanistically true for a kinase, but it is much less
+      informative than the specific catalytic term glucokinase activity and is redundant
+      for describing the core function of this enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The catalytic activity term already captures the biologically informative
+      function.
+    supported_by:
+    - reference_id: file:PSEPK/glk/glk-uniprot.txt
+      supporting_text: /ligand=&#34;ATP&#34;
+    - reference_id: file:PSEPK/glk/glk-notes.md
+      supporting_text: ATP binding and D-glucose binding are mechanistically true
+        but substantially less informative than the specific catalytic term glucokinase
+        activity.
+- term:
+    id: GO:0005536
+    label: D-glucose binding
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Substrate recognition is implicit in glucokinase activity, so this term
+      is not wrong but is less informative than the specific catalytic annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This binding term adds little beyond the core enzymatic activity term.
+    supported_by:
+    - reference_id: file:PSEPK/glk/glk-notes.md
+      supporting_text: In KT2440, glucose imported into the cytoplasm is phosphorylated
+        by glucokinase to glucose-6-phosphate before conversion to 6-phosphogluconate.
+    - reference_id: file:PSEPK/glk/glk-notes.md
+      supporting_text: ATP binding and D-glucose binding are mechanistically true
+        but substantially less informative than the specific catalytic term glucokinase
+        activity.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  qualifier: located_in
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Glk is a soluble intracellular enzyme and cytoplasmic localization is
+      correct, but the more precise term in this context is cytosol.
+    action: MODIFY
+    reason: Cytoplasm is broader than needed for a soluble bacterial enzyme.
+    proposed_replacement_terms:
+    - id: GO:0005829
+      label: cytosol
+    supported_by:
+    - reference_id: file:PSEPK/glk/glk-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+    - reference_id: file:PSEPK/glk/glk-notes.md
+      supporting_text: For cellular component, cytosol is the more specific GO term
+        for a soluble bacterial cytoplasmic enzyme, while cytoplasm is acceptable
+        but broader.
+- term:
+    id: GO:0005829
+    label: cytosol
+  qualifier: located_in
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: This is the preferred cellular component term for a soluble cytoplasmic
+      enzyme such as Glk and is more precise than the broader term cytoplasm.
+    action: ACCEPT
+    reason: Specific and biologically appropriate localization term.
+    supported_by:
+    - reference_id: file:PSEPK/glk/glk-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+    - reference_id: file:PSEPK/glk/glk-notes.md
+      supporting_text: For cellular component, cytosol is the more specific GO term
+        for a soluble bacterial cytoplasmic enzyme, while cytoplasm is acceptable
+        but broader.
+- term:
+    id: GO:0006096
+    label: glycolytic process
+  qualifier: involved_in
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Glk participates in glucose catabolism to pyruvate, but in P. putida
+      KT2440 that process is routed through the Entner-Doudoroff-centered network
+      rather than a generic undifferentiated glycolysis term.
+    action: MODIFY
+    reason: A more pathway-specific biological process term is available.
+    proposed_replacement_terms:
+    - id: GO:0061688
+      label: glycolytic process via Entner-Doudoroff Pathway
+    supported_by:
+    - reference_id: file:PSEPK/glk/glk-notes.md
+      supporting_text: glk is physically linked to the Entner-Doudoroff pathway because
+        edd and glk form one operon in KT2440.
+    - reference_id: file:PSEPK/glk/glk-notes.md
+      supporting_text: Because of this genomic organization, the glucokinase pathway
+        is co-induced with Entner-Doudoroff genes and is expressed even during growth
+        on gluconate or 2-ketogluconate.
+    - reference_id: file:PSEPK/glk/glk-deep-research-falcon.md
+      supporting_text: &#39;This physical linkage is consistent with functional coupling:
+        the **glucokinase entry step (Glk)** and the subsequent ED processing step
+        (Edd) are transcriptionally coordinated.&#39;
+- term:
+    id: GO:0051156
+    label: glucose 6-phosphate metabolic process
+  qualifier: involved_in
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This term accurately reflects the immediate pathway context of Glk, which
+      generates glucose-6-phosphate from glucose and ATP.
+    action: ACCEPT
+    reason: Directly describes the metabolic process in which the enzymatic reaction
+      participates.
+    supported_by:
+    - reference_id: file:PSEPK/glk/glk-uniprot.txt
+      supporting_text: &#39;Reaction=D-glucose + ATP = D-glucose 6-phosphate + ADP + H(+);&#39;
+    - reference_id: file:PSEPK/glk/glk-notes.md
+      supporting_text: In KT2440, glucose imported into the cytoplasm is phosphorylated
+        by glucokinase to glucose-6-phosphate before conversion to 6-phosphogluconate.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings:
+  - statement: InterPro-based annotation captures the conserved glucokinase family
+      assignment and related substrate-level inferences.
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings:
+  - statement: TreeGrafter provides a phylogeny-based cellular component inference
+      for this conserved bacterial glucokinase family.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings:
+  - statement: Automated UniProt and rule-based methods recover the core glucokinase
+      activity and broad glucose catabolic process assignments for glk.
+- id: PMID:17483213
+  title: &#34;Convergent peripheral pathways catalyze initial glucose catabolism in Pseudomonas
+    putida: genomic and flux analysis.&#34;
+  findings:
+  - statement: Glucose catabolism in P. putida occurs through three simultaneous pathways
+      converging at 6-phosphogluconate.
+    supporting_text: glucose catabolism in Pseudomonas putida occurs through the
+      simultaneous operation of three pathways that converge at the level of 6-phosphogluconate
+  - statement: Glucose imported into the cytoplasm is phosphorylated by glucokinase
+      to glucose-6-phosphate.
+    supporting_text: Glucose is transported to the cytoplasm in a process mediated
+      by an ABC uptake system encoded by open reading frames PP1015 to PP1018 and
+      is then phosphorylated by glucokinase (encoded by the glk gene) and converted
+      by glucose-6-phosphate dehydrogenase (encoded by the zwf genes) to 6-phosphogluconate.
+  - statement: The glucokinase pathway and 2-ketogluconate loop are quantitatively
+      more important than direct gluconate phosphorylation.
+    supporting_text: although all three functioned simultaneously, the glucokinase
+      pathway and the 2-ketogluconate loop were quantitatively more important than
+      the direct phosphorylation of gluconate.
+  - statement: The glucokinase pathway is required for growth on glucose in KT2440.
+    supporting_text: It can therefore be concluded that the glucokinase pathway is
+      a sine qua non condition for P. putida to grow with glucose.
+- id: PMID:19506074
+  title: &#34;Regulation of Glucose Metabolism in Pseudomonas: The Phosphorylative
+    Branch and Entner-Doudoroff Enzymes Are Regulated by a Repressor Containing
+    a Sugar Isomerase Domain.&#34;
+  findings:
+  - statement: The glucose phosphorylative pathway and Entner-Doudoroff pathway
+      are organized into operons that include an edd-glk-gltR2-gltS operon.
+    supporting_text: In Pseudomonas putida, genes for the glucose phosphorylative
+      pathway and the Entner-Doudoroff pathway are organized in two operons; one
+      made up of the zwf, pgl, and eda genes and another consisting of the edd,
+      glk, gltR2, and gltS genes.
+  - statement: Expression from P(zwf), P(edd), and P(gap) is modulated by HexR
+      in response to glucose availability.
+    supporting_text: Expression from P(zwf), P(edd), and P(gap) is modulated by
+      HexR in response to the availability of glucose in the medium.
+  - statement: Binding of KDPG to HexR releases the repressor, whereas glucose,
+      glucose 6-phosphate, and 6-phosphogluconate do not.
+    supporting_text: Binding of the Entner-Doudoroff pathway intermediate 2-keto-3-deoxy-6-phosphogluconate
+      to HexR released the repressor from its target operators, whereas other chemicals
+      such as glucose, glucose 6-phosphate, and 6-phosphogluconate did not induce
+      complex dissociation.
+- id: file:PSEPK/glk/glk-uniprot.txt
+  title: UniProt entry Q88P42
+  findings:
+  - statement: glk corresponds to PP_1011 in Pseudomonas putida KT2440.
+  - statement: UniProt annotates the protein as glucokinase EC 2.7.1.2.
+  - statement: The catalytic reaction is D-glucose plus ATP to D-glucose 6-phosphate
+      plus ADP and H+.
+  - statement: UniProt places the protein in the cytoplasm and in the bacterial glucokinase
+      family.
+- id: file:PSEPK/glk/glk-notes.md
+  title: Curator notes for glk in Pseudomonas putida KT2440
+  findings:
+  - statement: The core role of glk is ATP-dependent phosphorylation of glucose to
+      glucose-6-phosphate.
+  - statement: glk is physically and transcriptionally linked to the Entner-Doudoroff
+      pathway.
+  - statement: Generic binding terms are less informative than glucokinase activity
+      for this enzyme.
+- id: file:PSEPK/glk/glk-deep-research-falcon.md
+  title: Deep research report for glk generated with Falcon
+  findings:
+  - statement: Q88P42 corresponds to glk/PP_1011 and encodes the cytosolic glucokinase
+      of Pseudomonas putida KT2440.
+  - statement: Falcon research links glk to the phosphorylative branch of glucose
+      catabolism and the edd-glk operon.
+  - statement: Falcon research summarizes inducible glucokinase activity and mutant
+      phenotypes supporting pathway relevance in KT2440.
+core_functions:
+- description: Glk is a soluble cytosolic glucokinase that uses ATP to phosphorylate
+    imported glucose to glucose-6-phosphate, thereby feeding the phosphorylative
+    arm of glucose assimilation into the Entner-Doudoroff-centered glycolytic network
+    of Pseudomonas putida KT2440.
+  molecular_function:
+    id: GO:0004340
+    label: glucokinase activity
+  directly_involved_in:
+  - id: GO:0051156
+    label: glucose 6-phosphate metabolic process
+  - id: GO:0061688
+    label: glycolytic process via Entner-Doudoroff Pathway
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PSEPK/glk/glk-uniprot.txt
+    supporting_text: &#39;Reaction=D-glucose + ATP = D-glucose 6-phosphate + ADP + H(+);&#39;
+  - reference_id: file:PSEPK/glk/glk-notes.md
+    supporting_text: In KT2440, glucose imported into the cytoplasm is phosphorylated
+      by glucokinase to glucose-6-phosphate before conversion to 6-phosphogluconate.
+  - reference_id: file:PSEPK/glk/glk-notes.md
+    supporting_text: glk is physically linked to the Entner-Doudoroff pathway because
+      edd and glk form one operon in KT2440.
+  - reference_id: file:PSEPK/glk/glk-deep-research-falcon.md
+    supporting_text: The UniProt target **Q88P42** corresponds to **glk** in *Pseudomonas
+      putida* KT2440 (ordered locus **PP_1011**) encoding the cytosolic enzyme **glucokinase
+      (Glk)**, which phosphorylates imported glucose to **glucose‑6‑phosphate (G6P)**
+      as the entry step of the phosphorylative branch of glucose catabolism.
+proposed_new_terms: []
+suggested_questions:
+- question: How does flux through the glucokinase branch versus the periplasmic
+    gluconate and 2-ketogluconate branches change across different glucose concentrations
+    and oxygen or redox conditions in KT2440?
+- question: Does Glk have kinetic or regulatory specialization that distinguishes
+    it from glucokinases in other pseudomonads that use different balances of oxidative
+    and phosphorylative glucose uptake?
+- question: How strongly does HexR-mediated control of the edd-glk operon constrain
+    mixed-substrate utilization when glucose and gluconate are simultaneously available?
+suggested_experiments:
+- experiment_type: Enzyme biochemistry
+  description: Purify PP_1011 and measure steady-state kinetics for glucose and ATP,
+    substrate specificity, and cofactor dependence under physiologically relevant
+    ionic conditions.
+- experiment_type: Genetic perturbation and flux analysis
+  description: Construct a clean glk deletion and complemented strain, then quantify
+    growth and intracellular carbon flux on glucose, gluconate, and mixed carbon
+    sources using isotopic tracer experiments.
+- experiment_type: Operon regulation
+  description: Use promoter reporters or RNA-seq in wild type and hexR backgrounds
+    to quantify how glucose, gluconate, 2-ketogluconate, and KDPG-related perturbations
+    regulate the edd-glk-gltR2-gltS operon.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

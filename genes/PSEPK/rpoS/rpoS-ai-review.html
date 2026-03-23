@@ -1,0 +1,3058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rpoS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rpoS</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88ME8" target="_blank" class="term-link">
+                        Q88ME8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida KT2440</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_1623</span>
+                    
+                    <span class="badge">Sigma S</span>
+                    
+                    <span class="badge">Sigma-38</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rpoS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88ME8" data-a="DESCRIPTION: Stationary-phase sigma factor that reprograms RNA ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Stationary-phase sigma factor that reprograms RNA polymerase promoter specificity during carbon starvation and general stress adaptation in Pseudomonas putida KT2440. RpoS is a sigma-70 family alternative sigma factor that drives transcription initiation at stationary- and stress-associated promoters, supports starvation survival and cross-protection, and also contributes to condition-specific lifestyle outputs such as biofilm-associated c-di-GMP signaling.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>stationary-phase sigma factor activity</h3>
+                <span class="vote-buttons" data-g="Q88ME8" data-a="stationary-phase sigma factor activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> A sigma factor activity that redirects bacterial RNA polymerase to promoters used during stationary phase and general stress adaptation.</p>
+            
+
+            
+            <p><strong>Justification:</strong> GO:0016987 captures sigma factor activity broadly, but does not distinguish RpoS-like alternative sigma factors dedicated to stationary-phase and general stress transcriptional programs.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                    sigma factor activity
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    file:PSEPK/rpoS/rpoS-deep-research-codex.md
+                    
+                    
+                    : The core GO curation should center on sigma factor activity and transcription initiation rather than generic DNA-binding transcription factor terms.
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME8" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term is not entirely wrong because RpoS contributes promoter recognition within RNA polymerase holoenzyme, but it is too generic and potentially misleading as a standalone molecular function. The specific core activity is sigma factor activity, which already captures promoter-specific DNA recognition more accurately.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0003677 DNA binding is too generic for a sigma factor whose core activity is promoter specificity within RNA polymerase holoenzyme rather than a standalone DNA-binding regulator.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME8" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The overall idea that RpoS is a transcriptional regulatory factor is sound, but this GO term is too generic for a bacterial sigma factor. GO:0016987 sigma factor activity is the precise molecular function for the promoter-specificity subunit of RNA polymerase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sigma factor activity is the exact and more informative child term for RpoS.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    sigma factor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0016987 sigma factor activity is the precise molecular function term for RpoS and is more informative than the generic GO:0003700 DNA-binding transcription factor activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME8" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is appropriate. RpoS is a bacterial sigma factor that associates with the cytoplasmic RNA polymerase core enzyme and UniProt places the protein in the cytoplasm.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                    GO:0006352
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME8" data-a="GO:0006352" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a core process annotation for RpoS. Sigma factors function by redirecting RNA polymerase to specific promoters at transcription initiation, and the KT2440 mutant phenotype is consistent with a broad defect in stationary-phase transcriptional reprogramming.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-deep-research-codex.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Accept GO:0006352 DNA-templated transcription initiation as the direct process executed by RpoS-containing holoenzyme.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">CC   -!- FUNCTION: Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME8" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RpoS certainly regulates transcription, but this term is broader than necessary. The more specific BP term already present in the GOA set is regulation of DNA-templated transcription initiation, which better reflects how sigma factors act.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Replace the broad regulation term with the initiation-specific child term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    regulation of DNA-templated transcription initiation
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0006352 DNA-templated transcription initiation and GO:2000142 regulation of DNA-templated transcription initiation capture the direct process-level role better than GO:0006355 regulation of DNA-templated transcription or GO:0010468 regulation of gene expression.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                    GO:0010468
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME8" data-a="GO:0010468" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is directionally correct but far too general. For RpoS, the relevant direct process is regulation of transcription initiation by alternative sigma factor-dependent promoter selection.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:2000142 gives the correct level of specificity for RpoS.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    regulation of DNA-templated transcription initiation
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0006352 DNA-templated transcription initiation and GO:2000142 regulation of DNA-templated transcription initiation capture the direct process-level role better than GO:0006355 regulation of DNA-templated transcription or GO:0010468 regulation of gene expression.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    GO:0016987
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME8" data-a="GO:0016987" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most precise core molecular function for RpoS. It captures the promoter-specificity role of the alternative sigma subunit within RNA polymerase holoenzyme and is directly supported by UniProt and the experimental literature on stationary-phase regulation.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0016987 sigma factor activity is the precise molecular function term for RpoS and is more informative than the generic GO:0003700 DNA-binding transcription factor activity.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">CC   -!- SIMILARITY: Belongs to the sigma-70 factor family. RpoS subfamily.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    GO:2000142
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME8" data-a="GO:2000142" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the best specific biological-process term among the seeded GOA set. RpoS changes promoter recognition by RNA polymerase and thereby regulates transcription specifically at the initiation step.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-deep-research-codex.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Accept GO:2000142 regulation of DNA-templated transcription initiation as the best specific regulatory BP term already present.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042594" target="_blank" class="term-link">
+                                    GO:0042594
+                                </a>
+                            </span>
+                            <span class="term-label">response to starvation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:PSEPK/rpoS/rpoS-notes.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME8" data-a="GO:0042594" data-r="file:PSEPK/rpoS/rpoS-notes.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The original KT2440 rpoS mutant phenotype directly supports involvement in starvation response. Loss of rpoS reduced survival during carbon starvation, making this a well-supported downstream biological process for the gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term captures the hallmark stationary-phase and starvation phenotype that is not represented in the seeded GOA set.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In KT2440, the rpoS mutant showed reduced survival of carbon starvation and reduced cross-protection against other types of stress in cells starved for carbon, and RpoS controlled expression of more than 50 peptides after short carbon starvation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042710" target="_blank" class="term-link">
+                                    GO:0042710
+                                </a>
+                            </span>
+                            <span class="term-label">biofilm formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:PSEPK/rpoS/rpoS-notes.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ME8" data-a="GO:0042710" data-r="file:PSEPK/rpoS/rpoS-notes.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Multiple studies place RpoS upstream of biofilm-associated pathways in P. putida, and one recent paper showed direct binding of RpoS to the major wspA promoter with a requirement for tetracycline-induced biofilm formation. This is a justified new annotation, but it should be viewed as a conditional, non-core output of the broader RpoS regulon.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The seeded GOA set misses a recurrent and directly supported RpoS-dependent lifestyle phenotype.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">RpoS directly bound the major wspA promoter and was required for tetracycline to induce wspA activity and promote biofilm formation.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/rpoS/rpoS-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Expression of cfcR is transcriptionally regulated by RpoS, and cfcR provides most free c-di-GMP during stationary phase in static conditions.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RpoS acts as the alternative sigma subunit that redirects RNA polymerase to stationary-phase and stress-associated promoters, thereby driving promoter-specific transcription initiation and transcription-initiation control during carbon starvation adaptation.</h3>
+                <span class="vote-buttons" data-g="Q88ME8" data-a="FUNCTION: RpoS acts as the alternative sigma subunit that re..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                DNA-templated transcription initiation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                regulation of DNA-templated transcription initiation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042594" target="_blank" class="term-link">
+                                response to starvation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/rpoS/rpoS-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">In KT2440, the rpoS mutant showed reduced survival of carbon starvation and reduced cross-protection against other types of stress in cells starved for carbon, and RpoS controlled expression of more than 50 peptides after short carbon starvation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/rpoS/rpoS-deep-research-codex.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">rpoS encodes the stationary-phase sigma factor RpoS (Sigma S, Sigma-38), an alternative sigma-70 family subunit that redirects RNA polymerase to promoters used during stationary phase and stress adaptation.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RpoS also feeds into condition-specific surface-associated lifestyle programs by activating transcription of biofilm-related targets such as wspA and cfcR, but this should be viewed as a non-core pleiotropic extension of the RpoS regulon rather than the primary evolved function of the protein.</h3>
+                <span class="vote-buttons" data-g="Q88ME8" data-a="FUNCTION: RpoS also feeds into condition-specific surface-as..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042710" target="_blank" class="term-link">
+                                biofilm formation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/rpoS/rpoS-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">RpoS directly bound the major wspA promoter and was required for tetracycline to induce wspA activity and promote biofilm formation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/rpoS/rpoS-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Expression of cfcR is transcriptionally regulated by RpoS, and cfcR provides most free c-di-GMP during stationary phase in static conditions.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9642197" target="_blank" class="term-link">
+                            PMID:9642197
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cloning, sequencing, and phenotypic characterization of the rpoS gene from Pseudomonas putida KT2440.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11371535" target="_blank" class="term-link">
+                            PMID:11371535
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Regulation of rpoS gene expression in Pseudomonas: involvement of a TetR family regulator.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11914368" target="_blank" class="term-link">
+                            PMID:11914368
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TetR family member psrA directly binds the Pseudomonas rpoS and psrA promoters.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24488315" target="_blank" class="term-link">
+                            PMID:24488315
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Roles of cyclic Di-GMP and the Gac system in transcriptional control of the genes coding for the Pseudomonas putida adhesins LapA and LapF.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28677348" target="_blank" class="term-link">
+                            PMID:28677348
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Pseudomonas putida CsrA/RsmA homologues negatively affect c-di-GMP pools and biofilm formation through the GGDEF/EAL response regulator CfcR.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28945818" target="_blank" class="term-link">
+                            PMID:28945818
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The promoter region of lapA and its transcriptional regulation by Fis in Pseudomonas putida.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39589111" target="_blank" class="term-link">
+                            PMID:39589111
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Tetracycline induces wsp operon expression to promote biofilm formation in Pseudomonas putida.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/rpoS/rpoS-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curator notes for rpoS in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RpoS is the stationary-phase sigma factor in KT2440 and its loss impairs starvation survival and starvation-associated cross-protection.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PsrA directly activates rpoS transcription and binds the rpoS promoter.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RpoS participates in biofilm-associated pathways through wspA, cfcR, lapA, and lapF regulation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/rpoS/rpoS-deep-research-codex.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report for rpoS in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The core GO curation should center on sigma factor activity and transcription initiation rather than generic DNA-binding transcription factor terms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Response to starvation is a justified new process annotation from the original KT2440 mutant phenotype.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Biofilm formation is supportable but non-core.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/rpoS/rpoS-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q88ME8</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88ME8 is RNA polymerase sigma factor RpoS, a sigma-70 family RpoS-subfamily protein.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt localizes the protein to the cytoplasm.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which promoters constitute the direct core RpoS regulon in KT2440 during carbon starvation versus antibiotic stress?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ME8" data-a="Q: Which promoters constitute the direct core RpoS re..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How broadly conserved is the direct RpoS control of biofilm genes such as wspA, cfcR, lapA, and lapF across environmental conditions relevant to soil and rhizosphere lifestyles?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ME8" data-a="Q: How broadly conserved is the direct RpoS control o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which post-transcriptional regulators beyond PsrA most strongly tune RpoS abundance and activity in KT2440?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ME8" data-a="Q: Which post-transcriptional regulators beyond PsrA ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform paired RNA-seq and ChIP-seq or ChIP-exo in wild-type and delta-rpoS cells during exponential growth, early carbon starvation, and stationary phase to separate direct promoter targets from indirect downstream effects.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The direct KT2440 RpoS regulon during starvation is smaller than the full set of downstream stationary-phase phenotypes.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: transcriptomics and DNA-binding profiling</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ME8" data-a="EXPERIMENT: Perform paired RNA-seq and ChIP-seq or ChIP-exo in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure biofilm formation, c-di-GMP levels, and promoter activity of wspA, cfcR, lapA, and lapF in wild-type, delta-rpoS, and complemented strains under carbon limitation, tetracycline stress, and rhizosphere-mimicking conditions.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: RpoS-dependent biofilm phenotypes arise from a condition-specific promoter subset rather than a universal biofilm program.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: targeted genetics and reporter assays</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ME8" data-a="EXPERIMENT: Measure biofilm formation, c-di-GMP levels, and pr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Combine translational rpoS reporter fusions with psrA, hfq, and polyphosphate-pathway perturbations to quantify how transcriptional versus post-transcriptional inputs shape RpoS accumulation across the growth curve.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Upstream regulators such as PsrA and post-transcriptional factors control RpoS at distinct stages of growth-phase transition.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: reporter fusion analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ME8" data-a="EXPERIMENT: Combine translational rpoS reporter fusions with p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpoS-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88ME8" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-chat-export">BioReason Chat Export</h1>
+<p><em>Exported on March 22, 2026 at 03:00 AM</em></p>
+<hr />
+<p><strong>Organism:</strong> Pseudomonas putida</p>
+<p><strong>Sequence:</strong></p>
+<div class="codehilite"><pre><span></span><code>MALSKEVPEFDIDDDVLLMETGIVLETDVVSDEPAVSSVRTRAKSGSSLKQHKYIDYSRALDATQLYLNEIGFSPLLSPEEEVHFARLSQKGDPAGRKRMIESNLRLVVKIARRYVNRGLSLLDLIEEGNLGLIRAVEKFDPERGFRFSTYATWWIRQTIERAIMNQTRTIRLPIHVVKELNVYLRAARELTQKLDHEPSPEEIATLLEKPVAEVKRMLGLNERVSSVDVSLGPDSDKTLLDTLTDDRPTDPCELLQDDDLSQSIDQWLGELTDKQREVVVRRFGLRGHESSTLEDVGLEIGLTRERVRQIQVEGLKRLREILEKNGLSSESLFQ
+</code></pre></div>
+
+<h3 id="thinking-trace">Thinking Trace</h3>
+<p>I begin with the InterPro architecture, which is diagnostic for a sigma-70-type initiation factor. The N-terminal half is anchored by IPR012761 (RNA polymerase sigma factor RpoS family, residues 2–334), establishing the overall identity as an RpoS-like sigma factor. Within this scaffold, the early module IPR009042 (RNA polymerase sigma-70 region 1.2, residues 62–95) precedes a well-defined central core comprising IPR013325 (sigma factor, region 2 homologous superfamily, residues 62–170) and IPR007627 (sigma-70 region 2, residues 100–169). This arrangement produces the canonical region 2 fold that grips the non-template strand and stabilizes open-complex formation at promoters. The C-terminal half is dominated by IPR013324 (sigma factor, region 3/4-like homologous superfamily, residues 173–328) and IPR036388 (winged helix-like DNA-binding domain superfamily, residues 173–325), which together form the promoter-recognition and DNA-binding apparatus. This is followed by IPR007624 (sigma-70 region 3, residues 180–254) and IPR007630 (sigma-70 region 4, residues 268–321), completing the assembly that recognizes the −10 and −35 elements and anchors to the RNA polymerase core. The overall sigma-70 architecture is reinforced by broader family signatures IPR050239 (Sigma-70 factor family, residues 96–329) and IPR014284 (RNA polymerase sigma-70-like domain, residues 97–323), with the core catalytic/recognition block IPR000943 (RNA polymerase sigma-70, residues 124–319). The ordered layout—region 1.2 → region 2 → region 3 → region 4—causes selective promoter binding and initiation control rather than catalysis, which is characteristic of sigma factors.</p>
+<p>This domain architecture dictates the molecular function as a transcription initiation factor that confers promoter specificity to the bacterial RNA polymerase holoenzyme. The presence of the winged helix-like superfamily and the discrete region 2/3/4 modules supports DNA engagement and recognition; thus the activity aligns with GO:0003700 sigma factor activity. The absence of enzymatic motifs and the presence of multiple promoter-recognition domains emphasize a role in assembly and regulation of the initiation complex.</p>
+<p>From this molecular function, the biological process follows: sigma-70-type factors nucleate open-complex formation and trigger transcript start-site selection, which is the essence of transcription initiation. Therefore, the process is transcription initiation within the bacterial-type RNA polymerase system; this maps to DNA-templated transcription initiation and, more specifically for bacteria, the initiation arm of transcription.</p>
+<p>The cellular context is bacterial and soluble. Sigma factors operate with the cytosolic RNA polymerase and diffuse to promoter sites on the nucleoid. The soluble, non-membranous architecture and lack of transmembrane segments place the protein in the cytoplasm, consistent with assembly and action of transcription complexes.</p>
+<p>Mechanistically, region 1.2 primes holoenzyme assembly and promoter escape, region 2 stabilizes DNA melting at −10 elements, region 3 recognizes the −10/−35 platform and modulates start-site fidelity, and region 4 binds the -35 element and interfaces with the polymerase clamp/funnel. This architecture causes selective initiation at stress- and stationary-phase–type promoters, consistent with an RpoS-like program. I hypothesize preferential interaction with the core RNA polymerase subunits (RpoA, RpoB, RpoC), the primary sigma partner (RpoZ/stable A200) in holoenzyme formation, and transient contacts with nucleoid-associated factors that modulate promoter accessibility. Together, these interactions would tune initiation pathways toward adaptive transcriptional regimes in Pseudomonas putida.</p>
+<h3 id="functional-summary">Functional Summary</h3>
+<p>A soluble bacterial transcription initiation factor that confers promoter specificity to the core RNA polymerase. It uses a modular sigma-70 architecture to bind and recognize −10 and −35 promoter elements, assemble the holoenzyme, and trigger open-complex formation that commits RNA polymerase to productive transcription initiation. Operating with cytosolic polymerase and engaging DNA within the nucleoid, it likely biases initiation toward adaptive gene programs characteristic of stress-responsive and stationary-phase regulation.</p>
+<h3 id="uniprot-summary">UniProt Summary</h3>
+<p>Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released.</p>
+<h3 id="interpro-domains">InterPro Domains</h3>
+<ul>
+<li><strong>RNA polymerase sigma factor RpoS</strong> (<code>IPR012761</code>, family) — residues 2-334</li>
+<li><strong>RNA polymerase sigma-70 region 1.2</strong> (<code>IPR009042</code>, domain) — residues 62-95</li>
+<li><strong>RNA polymerase sigma factor, region 2</strong> (<code>IPR013325</code>, homologous_superfamily) — residues 62-170</li>
+<li><strong>Sigma-70 factor family, RNA polymerase initiation factors</strong> (<code>IPR050239</code>, family) — residues 96-329</li>
+<li><strong>RNA polymerase sigma-70-like domain</strong> (<code>IPR014284</code>, domain) — residues 97-323</li>
+<li><strong>RNA polymerase sigma-70 region 2</strong> (<code>IPR007627</code>, domain) — residues 100-169</li>
+<li><strong>RNA polymerase sigma-70</strong> (<code>IPR000943</code>, domain) — residues 124-319</li>
+<li><strong>RNA polymerase sigma factor, region 3/4-like</strong> (<code>IPR013324</code>, homologous_superfamily) — residues 173-328</li>
+<li><strong>Winged helix-like DNA-binding domain superfamily</strong> (<code>IPR036388</code>, homologous_superfamily) — residues 173-325</li>
+<li><strong>RNA polymerase sigma-70 region 3</strong> (<code>IPR007624</code>, domain) — residues 180-254</li>
+<li><strong>RNA polymerase sigma-70 region 4</strong> (<code>IPR007630</code>, domain) — residues 268-321</li>
+</ul>
+<h3 id="go-terms">GO Terms</h3>
+<p><strong>Molecular Function:</strong> molecular_function (<code>GO:0003674</code>), binding (<code>GO:0005488</code>), transcription regulator activity (<code>GO:0140110</code>), organic cyclic compound binding (<code>GO:0097159</code>), heterocyclic compound binding (<code>GO:1901363</code>), sigma factor activity (<code>GO:0003700</code>), nucleic acid binding (<code>GO:0003676</code>), DNA-binding transcription activator activity (<code>GO:0001216</code>), DNA binding (<code>GO:0003677</code>), transcription regulatory region nucleic acid binding (<code>GO:0001067</code>), double-stranded DNA binding (<code>GO:0003690</code>), sequence-specific DNA binding (<code>GO:0043565</code>), transcription cis-regulatory region binding (<code>GO:0000976</code>), sequence-specific double-stranded DNA binding (<code>GO:1990837</code>)</p>
+<p><strong>Biological Process:</strong> biological_process (<code>GO:0008150</code>), biological regulation (<code>GO:0065007</code>), positive regulation of biological process (<code>GO:0048518</code>), regulation of biological process (<code>GO:0050789</code>), negative regulation of biological process (<code>GO:0048519</code>), positive regulation of response to stimulus (<code>GO:0048584</code>), regulation of metabolic process (<code>GO:0019222</code>), positive regulation of locomotion (<code>GO:0040017</code>), regulation of cellular process (<code>GO:0050794</code>), regulation of response to stimulus (<code>GO:0048583</code>), regulation of locomotion (<code>GO:0040012</code>), negative regulation of metabolic process (<code>GO:0009892</code>), positive regulation of cellular process (<code>GO:0048522</code>), positive regulation of response to external stimulus (<code>GO:0032103</code>), regulation of cell motility (<code>GO:2000145</code>), regulation of chemotaxis (<code>GO:0050920</code>), regulation of response to stress (<code>GO:0080134</code>), regulation of biosynthetic process (<code>GO:0009889</code>), regulation of nitrogen compound metabolic process (<code>GO:0051171</code>), regulation of macromolecule metabolic process (<code>GO:0060255</code>), regulation of response to external stimulus (<code>GO:0032101</code>), regulation of cellular metabolic process (<code>GO:0031323</code>), negative regulation of biosynthetic process (<code>GO:0009890</code>), regulation of primary metabolic process (<code>GO:0080090</code>), positive regulation of chemotaxis (<code>GO:0050921</code>), positive regulation of cell motility (<code>GO:2000147</code>), regulation of defense response (<code>GO:0031347</code>), regulation of inflammatory response (<code>GO:0050727</code>), regulation of macromolecule biosynthetic process (<code>GO:0010556</code>), regulation of cellular biosynthetic process (<code>GO:0031326</code>), regulation of nucleobase-containing compound metabolic process (<code>GO:0019219</code>), positive regulation of cell migration (<code>GO:0030335</code>), negative regulation of macromolecule biosynthetic process (<code>GO:0010558</code>), negative regulation of cellular biosynthetic process (<code>GO:0031327</code>), regulation of RNA metabolic process (<code>GO:0051252</code>), regulation of cell migration (<code>GO:0030334</code>), negative regulation of RNA metabolic process (<code>GO:0051253</code>), negative regulation of nucleobase-containing compound metabolic process (<code>GO:0045934</code>), regulation of gene expression (<code>GO:0010468</code>), regulation of RNA biosynthetic process (<code>GO:2001141</code>), negative regulation of RNA biosynthetic process (<code>GO:1902679</code>), regulation of DNA-templated transcription (<code>GO:0006355</code>), negative regulation of nucleic acid-templated transcription (<code>GO:1903507</code>), regulation of nucleic acid-templated transcription (<code>GO:1903506</code>), negative regulation of DNA-templated transcription (<code>GO:0045892</code>)</p>
+<p><strong>Cellular Component:</strong> cellular_component (<code>GO:0005575</code>), protein-containing complex (<code>GO:0032991</code>), transcription regulator complex (<code>GO:0005667</code>)</p>
+<hr />
+<p><em>Generated by <a href="https://bioreason.net">BioReason</a></em></p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason Rl</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpoS-deep-research-bioreason-rl.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88ME8" data-a="DOC: Deep Research Bioreason Rl" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-chat-export">BioReason Chat Export</h1>
+<p><em>Exported on March 22, 2026 at 03:00 AM</em></p>
+<hr />
+<p><strong>Organism:</strong> Pseudomonas putida</p>
+<p><strong>Sequence:</strong></p>
+<div class="codehilite"><pre><span></span><code>MALSKEVPEFDIDDDVLLMETGIVLETDVVSDEPAVSSVRTRAKSGSSLKQHKYIDYSRALDATQLYLNEIGFSPLLSPEEEVHFARLSQKGDPAGRKRMIESNLRLVVKIARRYVNRGLSLLDLIEEGNLGLIRAVEKFDPERGFRFSTYATWWIRQTIERAIMNQTRTIRLPIHVVKELNVYLRAARELTQKLDHEPSPEEIATLLEKPVAEVKRMLGLNERVSSVDVSLGPDSDKTLLDTLTDDRPTDPCELLQDDDLSQSIDQWLGELTDKQREVVVRRFGLRGHESSTLEDVGLEIGLTRERVRQIQVEGLKRLREILEKNGLSSESLFQ
+</code></pre></div>
+
+<h3 id="thinking-trace">Thinking Trace</h3>
+<p>I begin with the InterPro architecture, which is diagnostic for a sigma-70-type initiation factor. The N-terminal half is anchored by IPR012761 (RNA polymerase sigma factor RpoS family, residues 2–334), establishing the overall identity as an RpoS-like sigma factor. Within this scaffold, the early module IPR009042 (RNA polymerase sigma-70 region 1.2, residues 62–95) precedes a well-defined central core comprising IPR013325 (sigma factor, region 2 homologous superfamily, residues 62–170) and IPR007627 (sigma-70 region 2, residues 100–169). This arrangement produces the canonical region 2 fold that grips the non-template strand and stabilizes open-complex formation at promoters. The C-terminal half is dominated by IPR013324 (sigma factor, region 3/4-like homologous superfamily, residues 173–328) and IPR036388 (winged helix-like DNA-binding domain superfamily, residues 173–325), which together form the promoter-recognition and DNA-binding apparatus. This is followed by IPR007624 (sigma-70 region 3, residues 180–254) and IPR007630 (sigma-70 region 4, residues 268–321), completing the assembly that recognizes the −10 and −35 elements and anchors to the RNA polymerase core. The overall sigma-70 architecture is reinforced by broader family signatures IPR050239 (Sigma-70 factor family, residues 96–329) and IPR014284 (RNA polymerase sigma-70-like domain, residues 97–323), with the core catalytic/recognition block IPR000943 (RNA polymerase sigma-70, residues 124–319). The ordered layout—region 1.2 → region 2 → region 3 → region 4—causes selective promoter binding and initiation control rather than catalysis, which is characteristic of sigma factors.</p>
+<p>This domain architecture dictates the molecular function as a transcription initiation factor that confers promoter specificity to the bacterial RNA polymerase holoenzyme. The presence of the winged helix-like superfamily and the discrete region 2/3/4 modules supports DNA engagement and recognition; thus the activity aligns with GO:0003700 sigma factor activity. The absence of enzymatic motifs and the presence of multiple promoter-recognition domains emphasize a role in assembly and regulation of the initiation complex.</p>
+<p>From this molecular function, the biological process follows: sigma-70-type factors nucleate open-complex formation and trigger transcript start-site selection, which is the essence of transcription initiation. Therefore, the process is transcription initiation within the bacterial-type RNA polymerase system; this maps to DNA-templated transcription initiation and, more specifically for bacteria, the initiation arm of transcription.</p>
+<p>The cellular context is bacterial and soluble. Sigma factors operate with the cytosolic RNA polymerase and diffuse to promoter sites on the nucleoid. The soluble, non-membranous architecture and lack of transmembrane segments place the protein in the cytoplasm, consistent with assembly and action of transcription complexes.</p>
+<p>Mechanistically, region 1.2 primes holoenzyme assembly and promoter escape, region 2 stabilizes DNA melting at −10 elements, region 3 recognizes the −10/−35 platform and modulates start-site fidelity, and region 4 binds the -35 element and interfaces with the polymerase clamp/funnel. This architecture causes selective initiation at stress- and stationary-phase–type promoters, consistent with an RpoS-like program. I hypothesize preferential interaction with the core RNA polymerase subunits (RpoA, RpoB, RpoC), the primary sigma partner (RpoZ/stable A200) in holoenzyme formation, and transient contacts with nucleoid-associated factors that modulate promoter accessibility. Together, these interactions would tune initiation pathways toward adaptive transcriptional regimes in Pseudomonas putida.</p>
+<h3 id="functional-summary">Functional Summary</h3>
+<p>A soluble bacterial transcription initiation factor that confers promoter specificity to the core RNA polymerase. It uses a modular sigma-70 architecture to bind and recognize −10 and −35 promoter elements, assemble the holoenzyme, and trigger open-complex formation that commits RNA polymerase to productive transcription initiation. Operating with cytosolic polymerase and engaging DNA within the nucleoid, it likely biases initiation toward adaptive gene programs characteristic of stress-responsive and stationary-phase regulation.</p>
+<h3 id="uniprot-summary">UniProt Summary</h3>
+<p>Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released.</p>
+<h3 id="interpro-domains">InterPro Domains</h3>
+<ul>
+<li><strong>RNA polymerase sigma factor RpoS</strong> (<code>IPR012761</code>, family) — residues 2-334</li>
+<li><strong>RNA polymerase sigma-70 region 1.2</strong> (<code>IPR009042</code>, domain) — residues 62-95</li>
+<li><strong>RNA polymerase sigma factor, region 2</strong> (<code>IPR013325</code>, homologous_superfamily) — residues 62-170</li>
+<li><strong>Sigma-70 factor family, RNA polymerase initiation factors</strong> (<code>IPR050239</code>, family) — residues 96-329</li>
+<li><strong>RNA polymerase sigma-70-like domain</strong> (<code>IPR014284</code>, domain) — residues 97-323</li>
+<li><strong>RNA polymerase sigma-70 region 2</strong> (<code>IPR007627</code>, domain) — residues 100-169</li>
+<li><strong>RNA polymerase sigma-70</strong> (<code>IPR000943</code>, domain) — residues 124-319</li>
+<li><strong>RNA polymerase sigma factor, region 3/4-like</strong> (<code>IPR013324</code>, homologous_superfamily) — residues 173-328</li>
+<li><strong>Winged helix-like DNA-binding domain superfamily</strong> (<code>IPR036388</code>, homologous_superfamily) — residues 173-325</li>
+<li><strong>RNA polymerase sigma-70 region 3</strong> (<code>IPR007624</code>, domain) — residues 180-254</li>
+<li><strong>RNA polymerase sigma-70 region 4</strong> (<code>IPR007630</code>, domain) — residues 268-321</li>
+</ul>
+<h3 id="go-terms">GO Terms</h3>
+<p><strong>Molecular Function:</strong> molecular_function (<code>GO:0003674</code>), binding (<code>GO:0005488</code>), transcription regulator activity (<code>GO:0140110</code>), organic cyclic compound binding (<code>GO:0097159</code>), heterocyclic compound binding (<code>GO:1901363</code>), sigma factor activity (<code>GO:0003700</code>), nucleic acid binding (<code>GO:0003676</code>), DNA-binding transcription activator activity (<code>GO:0001216</code>), DNA binding (<code>GO:0003677</code>), transcription regulatory region nucleic acid binding (<code>GO:0001067</code>), double-stranded DNA binding (<code>GO:0003690</code>), sequence-specific DNA binding (<code>GO:0043565</code>), transcription cis-regulatory region binding (<code>GO:0000976</code>), sequence-specific double-stranded DNA binding (<code>GO:1990837</code>)</p>
+<p><strong>Biological Process:</strong> biological_process (<code>GO:0008150</code>), biological regulation (<code>GO:0065007</code>), positive regulation of biological process (<code>GO:0048518</code>), regulation of biological process (<code>GO:0050789</code>), negative regulation of biological process (<code>GO:0048519</code>), positive regulation of response to stimulus (<code>GO:0048584</code>), regulation of metabolic process (<code>GO:0019222</code>), positive regulation of locomotion (<code>GO:0040017</code>), regulation of cellular process (<code>GO:0050794</code>), regulation of response to stimulus (<code>GO:0048583</code>), regulation of locomotion (<code>GO:0040012</code>), negative regulation of metabolic process (<code>GO:0009892</code>), positive regulation of cellular process (<code>GO:0048522</code>), positive regulation of response to external stimulus (<code>GO:0032103</code>), regulation of cell motility (<code>GO:2000145</code>), regulation of chemotaxis (<code>GO:0050920</code>), regulation of response to stress (<code>GO:0080134</code>), regulation of biosynthetic process (<code>GO:0009889</code>), regulation of nitrogen compound metabolic process (<code>GO:0051171</code>), regulation of macromolecule metabolic process (<code>GO:0060255</code>), regulation of response to external stimulus (<code>GO:0032101</code>), regulation of cellular metabolic process (<code>GO:0031323</code>), negative regulation of biosynthetic process (<code>GO:0009890</code>), regulation of primary metabolic process (<code>GO:0080090</code>), positive regulation of chemotaxis (<code>GO:0050921</code>), positive regulation of cell motility (<code>GO:2000147</code>), regulation of defense response (<code>GO:0031347</code>), regulation of inflammatory response (<code>GO:0050727</code>), regulation of macromolecule biosynthetic process (<code>GO:0010556</code>), regulation of cellular biosynthetic process (<code>GO:0031326</code>), regulation of nucleobase-containing compound metabolic process (<code>GO:0019219</code>), positive regulation of cell migration (<code>GO:0030335</code>), negative regulation of macromolecule biosynthetic process (<code>GO:0010558</code>), negative regulation of cellular biosynthetic process (<code>GO:0031327</code>), regulation of RNA metabolic process (<code>GO:0051252</code>), regulation of cell migration (<code>GO:0030334</code>), negative regulation of RNA metabolic process (<code>GO:0051253</code>), negative regulation of nucleobase-containing compound metabolic process (<code>GO:0045934</code>), regulation of gene expression (<code>GO:0010468</code>), regulation of RNA biosynthetic process (<code>GO:2001141</code>), negative regulation of RNA biosynthetic process (<code>GO:1902679</code>), regulation of DNA-templated transcription (<code>GO:0006355</code>), negative regulation of nucleic acid-templated transcription (<code>GO:1903507</code>), regulation of nucleic acid-templated transcription (<code>GO:1903506</code>), negative regulation of DNA-templated transcription (<code>GO:0045892</code>)</p>
+<p><strong>Cellular Component:</strong> cellular_component (<code>GO:0005575</code>), protein-containing complex (<code>GO:0032991</code>), transcription regulator complex (<code>GO:0005667</code>)</p>
+<hr />
+<p><em>Generated by <a href="https://bioreason.net">BioReason</a></em></p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Codex</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpoS-deep-research-codex.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88ME8" data-a="DOC: Deep Research Codex" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-rpos-in-pseudomonas-putida-kt2440">Deep research: rpoS in Pseudomonas putida KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>rpoS encodes the stationary-phase sigma factor RpoS (Sigma S, Sigma-38), an alternative sigma-70 family subunit that redirects RNA polymerase to promoters used during stationary phase and stress adaptation. In P. putida KT2440, the direct experimental core is not an enzymatic stress-defense activity, but promoter-specific transcription initiation and global transcriptional reprogramming during carbon starvation and related stress conditions. [PMID:9642197 Cloning, sequencing, and phenotypic characterization of the rpoS gene from Pseudomonas putida KT2440., "reduced survival of carbon starvation" and "controls the expression of more than 50 peptides"] [file:PSEPK/rpoS/rpoS-uniprot.txt]</p>
+<h2 id="direct-evidence-for-core-function">Direct evidence for core function</h2>
+<p>The defining KT2440 paper showed that loss of rpoS reduced survival during carbon starvation, weakened starvation-associated cross-protection, and altered the stationary/starvation proteome. This supports the view that the core GO curation should center on sigma factor activity, DNA-templated transcription initiation, and regulation of transcription initiation during starvation-associated stress adaptation. [PMID:9642197 Cloning, sequencing, and phenotypic characterization of the rpoS gene from Pseudomonas putida KT2440., "reduced survival of carbon starvation and reduced cross-protection against other types of stress in cells starved for carbon" and "controls the expression of more than 50 peptides"]</p>
+<p>UniProt is consistent with this assignment, describing Q88ME8 as RNA polymerase sigma factor RpoS, placing it in the sigma-70 family RpoS subfamily, and localizing it to the cytoplasm. [file:PSEPK/rpoS/rpoS-uniprot.txt]</p>
+<h2 id="regulation-of-rpos-itself">Regulation of rpoS itself</h2>
+<p>Two early Pseudomonas studies established PsrA as a direct upstream regulator. First, psrA mutants showed a 90% decrease in rpoS promoter activity and lost stationary-phase induction of rpoS. Second, PsrA was shown to bind directly to the rpoS promoter from positions -59 to -35. These papers matter for review because they confirm that rpoS is embedded in a dedicated regulatory cascade rather than acting as a constitutive housekeeping sigma factor. [PMID:11371535 Regulation of rpoS gene expression in Pseudomonas: involvement of a TetR family regulator., "showed a 90% decrease in rpoS promoter activity" and "lost the ability to induce rpoS expression at stationary phase"] [PMID:11914368 TetR family member psrA directly binds the Pseudomonas rpoS and psrA promoters., "PsrA binds from positions -59 to -35 in the rpoS promoter"]</p>
+<h2 id="downstream-outputs-and-non-core-biology">Downstream outputs and non-core biology</h2>
+<p>Recent work expands the downstream RpoS regulon into surface-associated lifestyles. Under tetracycline stress, RpoS directly bound the major wspA promoter and was required for tetracycline-induced biofilm formation. Independent studies also place RpoS upstream of cfcR and parts of the lapA/lapF adhesin program, linking RpoS to c-di-GMP signaling and biofilm maturation. These are biologically real functions, but they are best treated as conditional or pleiotropic outputs rather than the single core function of RpoS. [PMID:39589111 Tetracycline induces wsp operon expression to promote biofilm formation in Pseudomonas putida., "RpoS directly bound to PwspA" and "RpoS was required for tetracycline to induce PwspA activity and promote biofilm formation"] [PMID:28677348 The Pseudomonas putida CsrA/RsmA homologues negatively affect c-di-GMP pools and biofilm formation through the GGDEF/EAL response regulator CfcR., "Expression of cfcR ... is transcriptionally regulated by RpoS"] [PMID:28945818 The promoter region of lapA and its transcriptional regulation by Fis in Pseudomonas putida., "three of which display moderate RpoS-dependence"] [PMID:24488315 Roles of cyclic Di-GMP and the Gac system in transcriptional control of the genes coding for the Pseudomonas putida adhesins LapA and LapF., "lapF transcription was previously shown to take place at late times of growth and to respond to the stationary-phase sigma factor RpoS"]</p>
+<h2 id="go-curation-implications">GO curation implications</h2>
+<ul>
+<li>Accept GO:0016987 sigma factor activity as the best core molecular function.</li>
+<li>Accept GO:0006352 DNA-templated transcription initiation as the direct process executed by RpoS-containing holoenzyme.</li>
+<li>Accept GO:2000142 regulation of DNA-templated transcription initiation as the best specific regulatory BP term already present.</li>
+<li>Treat GO:0003700 DNA-binding transcription factor activity as too generic and better replaced by sigma factor activity.</li>
+<li>Treat GO:0006355 regulation of DNA-templated transcription and GO:0010468 regulation of gene expression as overly broad relative to GO:2000142.</li>
+<li>Add response to starvation as a justified new BP term supported by the KT2440 mutant phenotype.</li>
+<li>Biofilm formation is supportable but non-core.</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpoS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88ME8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rpos-notes">rpoS notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt Q88ME8 encodes RNA polymerase sigma factor RpoS, also called Sigma S or Sigma-38, a cytoplasmic sigma-70 family protein in the RpoS subfamily. [file:PSEPK/rpoS/rpoS-uniprot.txt]</li>
+</ul>
+<h2 id="core-role-in-kt2440">Core role in KT2440</h2>
+<ul>
+<li>In KT2440, the rpoS mutant showed reduced survival of carbon starvation and reduced cross-protection against other types of stress in cells starved for carbon, and RpoS controlled expression of more than 50 peptides after short carbon starvation. [PMID:9642197 Cloning, sequencing, and phenotypic characterization of the rpoS gene from Pseudomonas putida KT2440., "showed reduced survival of carbon starvation and reduced cross-protection against other types of stress in cells starved for carbon" and "controls the expression of more than 50 peptides"]</li>
+<li>This supports treating sigma factor activity and DNA-templated transcription initiation as the core GO-level functions, with response to starvation as a justified downstream biological process. [PMID:9642197 Cloning, sequencing, and phenotypic characterization of the rpoS gene from Pseudomonas putida KT2440., "reduced survival of carbon starvation"]</li>
+</ul>
+<h2 id="upstream-regulation">Upstream regulation</h2>
+<ul>
+<li>PsrA activates rpoS expression: psrA mutants showed a 90% decrease in rpoS promoter activity and lost the ability to induce rpoS expression at stationary phase. [PMID:11371535 Regulation of rpoS gene expression in Pseudomonas: involvement of a TetR family regulator., "showed a 90% decrease in rpoS promoter activity" and "lost the ability to induce rpoS expression at stationary phase"]</li>
+<li>PsrA binds directly to the rpoS promoter from positions -59 to -35 relative to the transcription start site. [PMID:11914368 TetR family member psrA directly binds the Pseudomonas rpoS and psrA promoters., "PsrA binds from positions -59 to -35 in the rpoS promoter"]</li>
+</ul>
+<h2 id="biofilm-and-lifestyle-outputs">Biofilm and lifestyle outputs</h2>
+<ul>
+<li>RpoS directly bound the major wspA promoter and was required for tetracycline to induce wspA activity and promote biofilm formation. [PMID:39589111 Tetracycline induces wsp operon expression to promote biofilm formation in Pseudomonas putida., "RpoS directly bound to PwspA and positively regulated its activity under tetracycline stress" and "RpoS was required for tetracycline to induce PwspA activity and promote biofilm formation"]</li>
+<li>Expression of cfcR is transcriptionally regulated by RpoS, and cfcR provides most free c-di-GMP during stationary phase in static conditions. [PMID:28677348 The Pseudomonas putida CsrA/RsmA homologues negatively affect c-di-GMP pools and biofilm formation through the GGDEF/EAL response regulator CfcR., "Expression of cfcR ... is transcriptionally regulated by RpoS" and "cfcR ... is responsible for most of the free c-di-GMP during stationary phase in static conditions"]</li>
+<li>lapA transcription is initiated from six promoters, three of which show moderate RpoS dependence, while lapF transcription responds to the stationary-phase sigma factor RpoS. [PMID:28945818 The promoter region of lapA and its transcriptional regulation by Fis in Pseudomonas putida., "transcription of lapA ... is initiated from six promoters, three of which display moderate RpoS-dependence"] [PMID:24488315 Roles of cyclic Di-GMP and the Gac system in transcriptional control of the genes coding for the Pseudomonas putida adhesins LapA and LapF., "lapF transcription was previously shown to take place at late times of growth and to respond to the stationary-phase sigma factor RpoS"]</li>
+</ul>
+<h2 id="curation-take">Curation take</h2>
+<ul>
+<li>GO:0016987 sigma factor activity is the precise molecular function term for RpoS and is more informative than the generic GO:0003700 DNA-binding transcription factor activity.</li>
+<li>GO:0006352 DNA-templated transcription initiation and GO:2000142 regulation of DNA-templated transcription initiation capture the direct process-level role better than GO:0006355 regulation of DNA-templated transcription or GO:0010468 regulation of gene expression.</li>
+<li>GO:0003677 DNA binding is too generic for a sigma factor whose core activity is promoter specificity within RNA polymerase holoenzyme rather than a standalone DNA-binding regulator.</li>
+<li>Biofilm formation is well supported but should be treated as a non-core pleiotropic output of the RpoS regulon rather than the main evolved function of the protein.</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Rl Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpoS-bioreason-rl-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88ME8" data-a="DOC: Bioreason Rl Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-rl-review-rpos-pseudomonas-putida-kt2440">BioReason-Pro RL Review: rpoS (Pseudomonas putida KT2440)</h1>
+<p>Source: rpoS-deep-research-bioreason-rl.md</p>
+<ul>
+<li><strong>Correctness</strong>: 4/5</li>
+<li><strong>Completeness</strong>: 3/5</li>
+</ul>
+<h2 id="core-identity-correct">Core Identity: Correct</h2>
+<p>BioReason correctly identifies rpoS as an RpoS-family sigma-70-type transcription initiation factor. The domain architecture analysis is thorough and accurate, walking through regions 1.2, 2, 3, and 4 with appropriate functional assignments (non-template strand binding, open-complex formation, -10 and -35 element recognition). The identification of IPR012761 (RNA polymerase sigma factor RpoS family) immediately establishes the correct protein identity.</p>
+<h2 id="molecular-function-mostly-correct">Molecular Function: Mostly Correct</h2>
+<p>BioReason assigns sigma factor activity (GO:0003700 in the text, though the enumerated GO terms list it correctly as GO:0003700). However, the curated review notes an important distinction: the precise term should be GO:0016987 (sigma factor activity), not the more generic GO:0003700 (DNA-binding transcription factor activity). The BioReason narrative describes sigma factor activity accurately in the text, and the enumerated GO terms do include GO:0003700 "sigma factor activity" -- though confusingly, GO:0003700 in the current GO is actually "DNA-binding transcription factor activity," not sigma factor activity. The correct sigma factor term GO:0016987 does not appear in BioReason's output. This is a minor but meaningful precision issue.</p>
+<p>The enumerated MF terms also include some questionable entries: GO:0001216 (DNA-binding transcription activator activity) implies a classical transcription factor role that is misleading for a sigma factor. The curated review specifically flags the generic "DNA-binding transcription factor" terms as over-annotations that should be replaced with sigma factor activity.</p>
+<h2 id="biological-process-partially-correct-but-unfocused">Biological Process: Partially Correct but Unfocused</h2>
+<p>The narrative correctly links rpoS to transcription initiation and mentions "stress-responsive and stationary-phase regulation." However, the enumerated GO BP terms are an enormous, unfocused list of ~50 terms spanning chemotaxis, locomotion, inflammatory response, cell migration, and defense response. Many of these (e.g., GO:0050727 regulation of inflammatory response, GO:0030335 positive regulation of cell migration, GO:0040017 positive regulation of locomotion) are clearly inappropriate for a Pseudomonas protein and appear to come from uncritical InterPro2GO or family-level mappings that include eukaryotic sigma-70 family members.</p>
+<p>The curated review is far more focused, centering on:<br />
+- DNA-templated transcription initiation (GO:0006352) -- accepted<br />
+- Regulation of DNA-templated transcription initiation (GO:2000142) -- accepted<br />
+- Response to starvation (GO:0042594) -- new, based on KT2440 mutant phenotype<br />
+- Biofilm formation (GO:0042710) -- new, supported but flagged as non-core</p>
+<p>None of the organism-specific downstream phenotypes (starvation survival, biofilm formation via wspA/cfcR pathways) appear in BioReason's output.</p>
+<h2 id="cellular-component-minor-issue">Cellular Component: Minor Issue</h2>
+<p>BioReason assigns "transcription regulator complex" (GO:0005667) and cytoplasm. The curated review accepts cytoplasm (GO:0005737) but does not include transcription regulator complex. GO:0005667 is not wrong per se (sigma factors do associate with the RNAP holoenzyme complex), but it is not standard GO annotation practice for sigma factors.</p>
+<h2 id="what-bioreason-got-right">What BioReason Got Right</h2>
+<ul>
+<li>Correct protein family identification (RpoS subfamily of sigma-70).</li>
+<li>Accurate domain architecture walkthrough with functional interpretation.</li>
+<li>Correct core mechanistic description of how sigma factors work (promoter recognition, open-complex formation, holoenzyme assembly).</li>
+<li>Appropriate mention of stress-responsive and stationary-phase regulation in the narrative.</li>
+<li>Cytoplasmic localization.</li>
+</ul>
+<h2 id="missing-biology">Missing Biology</h2>
+<ul>
+<li>No mention of the KT2440-specific starvation survival phenotype (PMID:9642197), which is the hallmark experimental evidence for rpoS in this strain.</li>
+<li>No mention of biofilm formation or the specific regulon targets (wspA, cfcR, lapA, lapF).</li>
+<li>No mention of the PsrA transcriptional regulator that directly controls rpoS expression.</li>
+<li>No mention of c-di-GMP signaling as a downstream output of the RpoS regulon.</li>
+<li>The carbon-starvation cross-protection phenotype, which is central to understanding RpoS function in environmental pseudomonads, is absent.</li>
+</ul>
+<h2 id="summary">Summary</h2>
+<p>BioReason performs well on the structural and mechanistic characterization of rpoS as a sigma factor, correctly identifying the protein family, domain architecture, and general mode of action. The narrative reasoning is sound. However, the enumerated GO terms include many inappropriate eukaryotic-biased terms (inflammatory response, cell migration, locomotion) that are clearly wrong for a Pseudomonas protein. The analysis lacks organism-specific biology: the starvation phenotype, biofilm connections, and regulatory network that make KT2440 rpoS biologically interesting are entirely absent. This reflects a limitation of domain-architecture-only reasoning for well-conserved transcription factors where the important biology lies in the organism-specific regulon rather than the protein fold.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88ME8
+gene_symbol: rpoS
+product_type: PROTEIN
+aliases:
+- PP_1623
+- Sigma S
+- Sigma-38
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida KT2440
+description: Stationary-phase sigma factor that reprograms RNA polymerase promoter
+  specificity during carbon starvation and general stress adaptation in Pseudomonas
+  putida KT2440. RpoS is a sigma-70 family alternative sigma factor that drives
+  transcription initiation at stationary- and stress-associated promoters, supports
+  starvation survival and cross-protection, and also contributes to condition-specific
+  lifestyle outputs such as biofilm-associated c-di-GMP signaling.
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This term is not entirely wrong because RpoS contributes promoter recognition
+      within RNA polymerase holoenzyme, but it is too generic and potentially misleading
+      as a standalone molecular function. The specific core activity is sigma factor
+      activity, which already captures promoter-specific DNA recognition more accurately.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:PSEPK/rpoS/rpoS-notes.md
+      supporting_text: GO:0003677 DNA binding is too generic for a sigma factor whose
+        core activity is promoter specificity within RNA polymerase holoenzyme rather
+        than a standalone DNA-binding regulator.
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: The overall idea that RpoS is a transcriptional regulatory factor is
+      sound, but this GO term is too generic for a bacterial sigma factor. GO:0016987
+      sigma factor activity is the precise molecular function for the promoter-specificity
+      subunit of RNA polymerase.
+    action: MODIFY
+    reason: Sigma factor activity is the exact and more informative child term for
+      RpoS.
+    proposed_replacement_terms:
+    - id: GO:0016987
+      label: sigma factor activity
+    supported_by:
+    - reference_id: file:PSEPK/rpoS/rpoS-notes.md
+      supporting_text: GO:0016987 sigma factor activity is the precise molecular
+        function term for RpoS and is more informative than the generic GO:0003700
+        DNA-binding transcription factor activity.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This annotation is appropriate. RpoS is a bacterial sigma factor that
+      associates with the cytoplasmic RNA polymerase core enzyme and UniProt places
+      the protein in the cytoplasm.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/rpoS/rpoS-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0006352
+    label: DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is a core process annotation for RpoS. Sigma factors function by
+      redirecting RNA polymerase to specific promoters at transcription initiation,
+      and the KT2440 mutant phenotype is consistent with a broad defect in stationary-phase
+      transcriptional reprogramming.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/rpoS/rpoS-deep-research-codex.md
+      supporting_text: Accept GO:0006352 DNA-templated transcription initiation as
+        the direct process executed by RpoS-containing holoenzyme.
+    - reference_id: file:PSEPK/rpoS/rpoS-uniprot.txt
+      supporting_text: &#39;CC   -!- FUNCTION: Sigma factors are initiation factors that
+        promote the attachment of RNA polymerase to specific initiation sites and
+        are then released.&#39;
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: RpoS certainly regulates transcription, but this term is broader than
+      necessary. The more specific BP term already present in the GOA set is regulation
+      of DNA-templated transcription initiation, which better reflects how sigma factors
+      act.
+    action: MODIFY
+    reason: Replace the broad regulation term with the initiation-specific child term.
+    proposed_replacement_terms:
+    - id: GO:2000142
+      label: regulation of DNA-templated transcription initiation
+    supported_by:
+    - reference_id: file:PSEPK/rpoS/rpoS-notes.md
+      supporting_text: GO:0006352 DNA-templated transcription initiation and GO:2000142
+        regulation of DNA-templated transcription initiation capture the direct process-level
+        role better than GO:0006355 regulation of DNA-templated transcription or GO:0010468
+        regulation of gene expression.
+- term:
+    id: GO:0010468
+    label: regulation of gene expression
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: This annotation is directionally correct but far too general. For RpoS,
+      the relevant direct process is regulation of transcription initiation by alternative
+      sigma factor-dependent promoter selection.
+    action: MODIFY
+    reason: GO:2000142 gives the correct level of specificity for RpoS.
+    proposed_replacement_terms:
+    - id: GO:2000142
+      label: regulation of DNA-templated transcription initiation
+    supported_by:
+    - reference_id: file:PSEPK/rpoS/rpoS-notes.md
+      supporting_text: GO:0006352 DNA-templated transcription initiation and GO:2000142
+        regulation of DNA-templated transcription initiation capture the direct process-level
+        role better than GO:0006355 regulation of DNA-templated transcription or GO:0010468
+        regulation of gene expression.
+- term:
+    id: GO:0016987
+    label: sigma factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the most precise core molecular function for RpoS. It captures
+      the promoter-specificity role of the alternative sigma subunit within RNA polymerase
+      holoenzyme and is directly supported by UniProt and the experimental literature
+      on stationary-phase regulation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/rpoS/rpoS-notes.md
+      supporting_text: GO:0016987 sigma factor activity is the precise molecular
+        function term for RpoS and is more informative than the generic GO:0003700
+        DNA-binding transcription factor activity.
+    - reference_id: file:PSEPK/rpoS/rpoS-uniprot.txt
+      supporting_text: &#39;CC   -!- SIMILARITY: Belongs to the sigma-70 factor family.
+        RpoS subfamily.&#39;
+- term:
+    id: GO:2000142
+    label: regulation of DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: This is the best specific biological-process term among the seeded GOA
+      set. RpoS changes promoter recognition by RNA polymerase and thereby regulates
+      transcription specifically at the initiation step.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/rpoS/rpoS-deep-research-codex.md
+      supporting_text: Accept GO:2000142 regulation of DNA-templated transcription
+        initiation as the best specific regulatory BP term already present.
+- term:
+    id: GO:0042594
+    label: response to starvation
+  evidence_type: IMP
+  original_reference_id: file:PSEPK/rpoS/rpoS-notes.md
+  review:
+    summary: The original KT2440 rpoS mutant phenotype directly supports involvement
+      in starvation response. Loss of rpoS reduced survival during carbon starvation,
+      making this a well-supported downstream biological process for the gene.
+    action: NEW
+    reason: This term captures the hallmark stationary-phase and starvation phenotype
+      that is not represented in the seeded GOA set.
+    supported_by:
+    - reference_id: file:PSEPK/rpoS/rpoS-notes.md
+      supporting_text: In KT2440, the rpoS mutant showed reduced survival of carbon
+        starvation and reduced cross-protection against other types of stress in
+        cells starved for carbon, and RpoS controlled expression of more than 50
+        peptides after short carbon starvation.
+- term:
+    id: GO:0042710
+    label: biofilm formation
+  evidence_type: IMP
+  original_reference_id: file:PSEPK/rpoS/rpoS-notes.md
+  review:
+    summary: Multiple studies place RpoS upstream of biofilm-associated pathways in
+      P. putida, and one recent paper showed direct binding of RpoS to the major wspA
+      promoter with a requirement for tetracycline-induced biofilm formation. This
+      is a justified new annotation, but it should be viewed as a conditional, non-core
+      output of the broader RpoS regulon.
+    action: NEW
+    reason: The seeded GOA set misses a recurrent and directly supported RpoS-dependent
+      lifestyle phenotype.
+    supported_by:
+    - reference_id: file:PSEPK/rpoS/rpoS-notes.md
+      supporting_text: RpoS directly bound the major wspA promoter and was required
+        for tetracycline to induce wspA activity and promote biofilm formation.
+    - reference_id: file:PSEPK/rpoS/rpoS-notes.md
+      supporting_text: Expression of cfcR is transcriptionally regulated by RpoS,
+        and cfcR provides most free c-di-GMP during stationary phase in static conditions.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:9642197
+  title: Cloning, sequencing, and phenotypic characterization of the rpoS gene from
+    Pseudomonas putida KT2440.
+- id: PMID:11371535
+  title: &#39;Regulation of rpoS gene expression in Pseudomonas: involvement of a TetR
+    family regulator.&#39;
+- id: PMID:11914368
+  title: TetR family member psrA directly binds the Pseudomonas rpoS and psrA promoters.
+- id: PMID:24488315
+  title: Roles of cyclic Di-GMP and the Gac system in transcriptional control of
+    the genes coding for the Pseudomonas putida adhesins LapA and LapF.
+- id: PMID:28677348
+  title: The Pseudomonas putida CsrA/RsmA homologues negatively affect c-di-GMP pools
+    and biofilm formation through the GGDEF/EAL response regulator CfcR.
+- id: PMID:28945818
+  title: The promoter region of lapA and its transcriptional regulation by Fis in
+    Pseudomonas putida.
+- id: PMID:39589111
+  title: Tetracycline induces wsp operon expression to promote biofilm formation in
+    Pseudomonas putida.
+- id: file:PSEPK/rpoS/rpoS-notes.md
+  title: Curator notes for rpoS in Pseudomonas putida KT2440
+  findings:
+  - statement: RpoS is the stationary-phase sigma factor in KT2440 and its loss impairs
+      starvation survival and starvation-associated cross-protection.
+  - statement: PsrA directly activates rpoS transcription and binds the rpoS promoter.
+  - statement: RpoS participates in biofilm-associated pathways through wspA, cfcR,
+      lapA, and lapF regulation.
+- id: file:PSEPK/rpoS/rpoS-deep-research-codex.md
+  title: Deep research report for rpoS in Pseudomonas putida KT2440
+  findings:
+  - statement: The core GO curation should center on sigma factor activity and transcription
+      initiation rather than generic DNA-binding transcription factor terms.
+  - statement: Response to starvation is a justified new process annotation from the
+      original KT2440 mutant phenotype.
+  - statement: Biofilm formation is supportable but non-core.
+- id: file:PSEPK/rpoS/rpoS-uniprot.txt
+  title: UniProt entry Q88ME8
+  findings:
+  - statement: Q88ME8 is RNA polymerase sigma factor RpoS, a sigma-70 family RpoS-subfamily
+      protein.
+  - statement: UniProt localizes the protein to the cytoplasm.
+core_functions:
+- description: RpoS acts as the alternative sigma subunit that redirects RNA polymerase
+    to stationary-phase and stress-associated promoters, thereby driving promoter-specific
+    transcription initiation and transcription-initiation control during carbon starvation
+    adaptation.
+  molecular_function:
+    id: GO:0016987
+    label: sigma factor activity
+  directly_involved_in:
+  - id: GO:0006352
+    label: DNA-templated transcription initiation
+  - id: GO:2000142
+    label: regulation of DNA-templated transcription initiation
+  - id: GO:0042594
+    label: response to starvation
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/rpoS/rpoS-notes.md
+    supporting_text: In KT2440, the rpoS mutant showed reduced survival of carbon
+      starvation and reduced cross-protection against other types of stress in cells
+      starved for carbon, and RpoS controlled expression of more than 50 peptides
+      after short carbon starvation.
+  - reference_id: file:PSEPK/rpoS/rpoS-deep-research-codex.md
+    supporting_text: rpoS encodes the stationary-phase sigma factor RpoS (Sigma S,
+      Sigma-38), an alternative sigma-70 family subunit that redirects RNA polymerase
+      to promoters used during stationary phase and stress adaptation.
+- description: RpoS also feeds into condition-specific surface-associated lifestyle
+    programs by activating transcription of biofilm-related targets such as wspA and
+    cfcR, but this should be viewed as a non-core pleiotropic extension of the RpoS
+    regulon rather than the primary evolved function of the protein.
+  molecular_function:
+    id: GO:0016987
+    label: sigma factor activity
+  directly_involved_in:
+  - id: GO:0042710
+    label: biofilm formation
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/rpoS/rpoS-notes.md
+    supporting_text: RpoS directly bound the major wspA promoter and was required
+      for tetracycline to induce wspA activity and promote biofilm formation.
+  - reference_id: file:PSEPK/rpoS/rpoS-notes.md
+    supporting_text: Expression of cfcR is transcriptionally regulated by RpoS, and
+      cfcR provides most free c-di-GMP during stationary phase in static conditions.
+proposed_new_terms:
+- proposed_name: stationary-phase sigma factor activity
+  proposed_definition: A sigma factor activity that redirects bacterial RNA polymerase
+    to promoters used during stationary phase and general stress adaptation.
+  justification: GO:0016987 captures sigma factor activity broadly, but does not
+    distinguish RpoS-like alternative sigma factors dedicated to stationary-phase
+    and general stress transcriptional programs.
+  proposed_parent:
+    id: GO:0016987
+    label: sigma factor activity
+  supported_by:
+  - reference_id: file:PSEPK/rpoS/rpoS-deep-research-codex.md
+    supporting_text: The core GO curation should center on sigma factor activity and
+      transcription initiation rather than generic DNA-binding transcription factor
+      terms.
+suggested_questions:
+- question: Which promoters constitute the direct core RpoS regulon in KT2440 during
+    carbon starvation versus antibiotic stress?
+- question: How broadly conserved is the direct RpoS control of biofilm genes such
+    as wspA, cfcR, lapA, and lapF across environmental conditions relevant to soil
+    and rhizosphere lifestyles?
+- question: Which post-transcriptional regulators beyond PsrA most strongly tune
+    RpoS abundance and activity in KT2440?
+suggested_experiments:
+- hypothesis: The direct KT2440 RpoS regulon during starvation is smaller than the
+    full set of downstream stationary-phase phenotypes.
+  description: Perform paired RNA-seq and ChIP-seq or ChIP-exo in wild-type and delta-rpoS
+    cells during exponential growth, early carbon starvation, and stationary phase
+    to separate direct promoter targets from indirect downstream effects.
+  experiment_type: transcriptomics and DNA-binding profiling
+- hypothesis: RpoS-dependent biofilm phenotypes arise from a condition-specific promoter
+    subset rather than a universal biofilm program.
+  description: Measure biofilm formation, c-di-GMP levels, and promoter activity of
+    wspA, cfcR, lapA, and lapF in wild-type, delta-rpoS, and complemented strains
+    under carbon limitation, tetracycline stress, and rhizosphere-mimicking conditions.
+  experiment_type: targeted genetics and reporter assays
+- hypothesis: Upstream regulators such as PsrA and post-transcriptional factors control
+    RpoS at distinct stages of growth-phase transition.
+  description: Combine translational rpoS reporter fusions with psrA, hfq, and polyphosphate-pathway
+    perturbations to quantify how transcriptional versus post-transcriptional inputs
+    shape RpoS accumulation across the growth curve.
+  experiment_type: reporter fusion analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
