@@ -244,16 +244,35 @@ other computational method that produces GO or EC predictions.
 - `TRAINING_DATA_CONTAMINATION` - Prediction already in training data
 - See schema for full list
 
-## Project pages
+## Page rendering and deployment
 
-Project docs live in `projects/*.md`. To render a project as HTML:
+The site is deployed from `main` branch at root via GitHub Pages to https://ai4curation.io/ai-gene-review/.
 
+### Gene review HTML
+```bash
+just render <organism> <gene>    # render one gene
+just render-all                  # render all genes (~1200 files)
+```
+Output: `genes/<org>/<gene>/<gene>-ai-review.html`
+
+### Project pages
+Project docs live in `projects/*.md`. Render with:
 ```bash
 just render-projects                          # render all
 ai-gene-review render-projects projects/FOO.md -o pages/projects  # render one
 ```
+Output: `pages/projects/<NAME>.html`
 
 **Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
+
+### Browser app
+```bash
+just deploy-browser    # update data.js + index.html for the interactive browser
+```
+Output: `app/`
+
+### CI automation
+The `generate-pages` workflow runs on push to main when gene YAMLs, schema, templates, or project markdown change. It renders everything and creates a PR. Pages deploy directly from main — no gh-pages branch needed for the static content.
 
 ## General guidelines
 
