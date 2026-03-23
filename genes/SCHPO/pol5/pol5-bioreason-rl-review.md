@@ -1,18 +1,36 @@
-# BioReason-Pro RL Review: pol5 (SCHPO)
+# BioReason-Pro RL Review: pol5 (S. pombe)
 
 Source: pol5-deep-research-bioreason-rl.md
 
 - **Correctness**: 1/5
 - **Completeness**: 1/5
 
-BioReason fundamentally misidentifies the function of pol5. The curated review, supported by multiple publications (PMID:16816948, PMID:31745560), establishes that pol5 is a **nucleolar rDNA transcriptional regulator** essential for ribosome biogenesis. It binds rDNA promoter sequences, regulates rRNA transcription by RNA polymerase I, and is required for rRNA processing and 60S subunit assembly. Despite its name, pol5 has no DNA polymerase activity -- critical catalytic residues are absent or divergent.
+## Functional Summary Review
 
-BioReason instead describes pol5 as "a soluble scaffold... that uses an armadillo-repeat solenoid to organize macromolecular assemblies essential for cell division" with a primary role in **cytokinesis** (GO:0000910). This is entirely wrong. The UniProt summary that BioReason itself cites says "Involved in cytokinesis" -- but this appears to be an outdated or incorrect UniProt annotation, as the literature clearly establishes rRNA transcription and ribosome biogenesis as the core function. BioReason uncritically adopts this UniProt blurb rather than reasoning from the domain architecture and literature.
+The BioReason functional summary is fundamentally wrong about pol5's function:
 
-The molecular function assignment of GO:0005515 (protein binding) misses the experimentally demonstrated rDNA binding (GO:0000182) and RNA polymerase I transcription regulatory region binding (GO:0001163), both supported by IDA evidence. BioReason's description of a "vestigial family-B motif" is partially correct in that pol5 lacks polymerase activity, but it then pivots to a completely wrong biological process.
+> A soluble scaffold in fission yeast that uses an armadillo-repeat solenoid to organize macromolecular assemblies essential for cell division. Although bearing a polymerase-V-related framework and a vestigial motif from a broader polymerase family, it functions primarily as a non-enzymatic insertase-like organizer that stabilizes and remodels protein complexes during cytokinesis.
 
-The localization assignment of cytoplasm (GO:0005737) is incorrect -- pol5 is a nuclear/nucleolar protein (GO:0005634, GO:0005730), as demonstrated by multiple experimental studies. The InterPro-derived GO terms listed by BioReason actually include nucleolus (GO:0005730) and rDNA binding (GO:0000182), but the model's reasoning narrative ignores these entirely.
+Pol5 has nothing to do with cytokinesis, scaffolding, or cell division. It is an **essential nucleolar protein that regulates rRNA transcription by RNA polymerase I** and plays critical roles in **ribosome biogenesis**, particularly for 60S subunit formation. The curated review, supported by PMID:16816948 and PMID:31745560, shows that:
 
-BioReason misses: rDNA binding, rRNA transcription regulation, rRNA processing, ribosome biogenesis, nucleolar localization, the Cdc10 interaction, and the NOT annotation for nucleolar large rRNA transcription by RNA polymerase I.
+- Pol5 localizes to the nucleolus (not cytoplasm)
+- Pol5 binds rDNA promoter fragments (IDA evidence)
+- Reducing Pol5 levels inhibits rRNA production
+- Pol5 is required for pre-rRNA processing at A2 and C2 cleavage sites
+- Pol5 has a NOT annotation for nucleolar large rRNA transcription (ISO), clarifying it acts in ribosome biogenesis rather than as a Pol I transcription factor per se
 
-Key failure modes: **wrong biological process** (cytokinesis vs. ribosome biogenesis); uncritical reliance on a brief UniProt summary over domain-derived GO terms; complete failure to identify nuclear/nucleolar localization despite it being present in the listed GO terms.
+BioReason claims:
+
+> By providing high-capacity protein-binding surfaces, it coordinates soluble assemblies that drive membrane remodeling and furrow formation in the cytoplasm.
+
+This is entirely fabricated. There is no evidence for membrane remodeling, furrow formation, or cytoplasmic function. The UniProt summary itself says "Involved in cytokinesis," but the curated review and literature firmly establish the rRNA transcription/ribosome biogenesis function based on direct experimental evidence (PMID:16816948, PMID:31745560). The UniProt summary appears to be outdated or reflects an earlier, less accurate annotation.
+
+The localization is wrong: BioReason assigns cytoplasm (GO:0005737), but pol5 is nuclear/nucleolar (confirmed by multiple evidence codes: IBA, IEA, IDA, HDA).
+
+Comparison with interpro2go:
+
+The interpro2go annotations (GO_REF:0000002) for pol5 include nucleic acid binding (GO:0003676), DNA binding (GO:0003677), nucleolus (GO:0005730), and regulation of DNA-templated transcription (GO:0006355). While these are overly general, they at least point toward nucleic acid interaction and nuclear/nucleolar function. BioReason completely ignores these correct signals from interpro2go and instead constructs an entirely fictional cytokinesis narrative from the ARM-repeat fold. BioReason's summary is significantly worse than what interpro2go alone would suggest.
+
+## Notes on thinking trace
+
+The trace correctly identifies the ARM-repeat fold and polymerase-V-related framework, but then makes an unfounded leap to cytokinesis based on generic ARM-repeat biology. The statement "ARM-repeat scaffolds of the MYBBP1A lineage are widely used to regulate cytoskeletal and nuclear assemblies" ignores that MYBBP1A (the human ortholog) is itself a nucleolar protein involved in rRNA transcription -- exactly the function that pol5 actually performs.

@@ -1,52 +1,36 @@
-# BioReason-Pro RL Review: BRI1 (Arabidopsis)
+# BioReason-Pro RL Review: BRI1 (ARATH)
 
 Source: BRI1-deep-research-bioreason-rl.md
 
-- **Correctness**: 4/5
-- **Completeness**: 3/5
+- **Correctness**: 5/5
+- **Completeness**: 4/5
 
-## What It Got Right
+## Functional Summary Review
 
-BioReason-RL correctly identifies BRI1 as a plasma membrane-localized receptor kinase with an extracellular leucine-rich repeat (LRR) array and an intracellular serine/threonine kinase domain. The structural reasoning from InterPro domains is sound: it accurately maps the LRR solenoid, the BRI1 island domain (IPR045381, residues 585-651), and the kinase cassette (IPR000719/IPR001245). It correctly infers:
+The BioReason summary states:
 
-- ATP binding and serine/threonine kinase activity as core molecular functions
-- Plasma membrane localization from the single-pass transmembrane architecture
-- Brassinosteroid perception as the biological trigger
-- Ligand-induced dimerization and trans-autophosphorylation as the mechanistic coupling between extracellular recognition and intracellular catalysis
-- GO terms for steroid binding, protein dimerization activity (homodimerization, heterodimerization), and signal transduction
+> A plasma membrane receptor kinase in Arabidopsis that uses an extracellular leucine-rich repeat sensor and an internal activation island to detect steroid-derived cues and trigger intracellular phosphorylation cascades. Upon ligand-induced clustering, its cytosolic kinase core binds ATP and autophosphorylates, recruiting downstream targets to drive receptor-mediated signaling that regulates growth and development. Its single-pass architecture positions the recognition modules outside the cell and the catalytic engine inside, ensuring tight coupling between extracellular perception and intracellular signal transduction at the cell surface.
 
-The island domain is correctly flagged as "a defining feature that stabilizes ligand-induced receptor dimerization," consistent with the structural evidence that this domain creates the steroid-binding pocket.
+This is an excellent summary that accurately captures BRI1 biology. The curated review confirms BRI1 as a "leucine-rich repeat receptor kinase that serves as the primary receptor for brassinosteroid hormones," with signaling receptor activity (GO:0038023) and protein serine/threonine kinase activity (GO:0004674) as core molecular functions, localized to the plasma membrane.
 
-## What It Got Wrong or Missed
+**Specific strengths**:
+- Correctly identifies the BRI1 island domain as critical for ligand interaction
+- Accurately describes the LRR-kinase architecture with single-pass transmembrane topology
+- Properly identifies plasma membrane localization
+- Mentions "steroid-derived cues" which correctly reflects brassinosteroid perception
 
-**Dual-specificity kinase activity not captured.** The review focuses exclusively on serine/threonine kinase activity but misses that BRI1 is a dual-specificity kinase that also phosphorylates tyrosine residues (Y1052, Y1057, Y956, Y1072). This is a significant functional nuance established experimentally (PMID:19124768) and accepted in the curated review.
+**Minor gap**: The summary does not explicitly name brassinosteroids or brassinolide as the ligand, using the more generic "steroid-derived cues." The curated review specifies that BRI1 "directly binds brassinolide (BL) with highest affinity." This is a mild limitation rather than an error, and the thinking trace does mention "brassinosteroid perception" explicitly.
 
-**Downstream signaling cascade absent.** There is no mention of the downstream effectors: BSK family kinases (BSK1, BSK2, BSK3, BSK5, BSK6, BSK8, BSK11), BSU1 phosphatase, BIN2 kinase, or the transcription factors BZR1/BES1 that execute brassinosteroid-responsive gene expression. The model refers vaguely to "adaptor and effector proteins" without identifying them.
+**Other omissions**:
+- The co-receptor interaction with BAK1/SERK3 and the transphosphorylation mechanism are not mentioned
+- Dual-specificity kinase activity (Ser/Thr and Tyr) documented in the curated review is not captured
+- Downstream signaling to BZR1/BES1 transcription factors is absent
+- Endosomal trafficking and receptor turnover are not discussed
 
-**Co-receptor biology superficial.** BAK1/SERK3, SERK1, and TTL are the primary co-receptors whose heterodimerization with BRI1 is well-established and quantitatively important. BioReason mentions "membrane-proximal receptor kinases that modulate signaling amplitude" without naming them, losing the specificity of this key interaction.
+Comparison with interpro2go:
 
-**Endosomal trafficking missed.** BRI1 undergoes dynamic trafficking between the plasma membrane and endosomal compartments, which is functionally relevant to signal duration and receptor turnover. This is absent from the BioReason summary.
+The ai-review.yaml contains one GO_REF:0000002 annotation: protein kinase activity (GO:0004672). BioReason's summary goes well beyond this interpro2go mapping, correctly inferring the receptor kinase topology, ligand-sensing function, and signaling cascade from the combined LRR + BRI1 island + kinase domain architecture. The identification of the BRI1 island domain (IPR045381) as a brassinosteroid-specific feature is a clear value-add over generic interpro2go reasoning.
 
-**Guanylyl cyclase activity not mentioned.** While still debated, the curated review notes BRI1 may possess guanylyl cyclase activity producing cyclic GMP. BioReason has no awareness of this.
+## Notes on thinking trace
 
-**Abiotic stress and photomorphogenesis roles not mentioned.** BRI1 has documented roles in stress tolerance and light responses (photomorphogenesis). These secondary but well-established functions are absent.
-
-## Comparison Table
-
-| Aspect | BioReason-RL | Curated Review |
-|--------|-------------|----------------|
-| Core function: receptor kinase | Correct | Correct |
-| Steroid (brassinosteroid) binding | Correct | Correct |
-| Island domain for ligand binding | Correct | Correct |
-| Plasma membrane localization | Correct | Correct |
-| Serine/threonine kinase activity | Correct | Correct |
-| Tyrosine kinase / dual-specificity | Missing | Accepted |
-| Co-receptors (BAK1, SERK1, TTL) | Vague | Detailed |
-| Downstream cascade (BSKs, BZR1/BES1) | Missing | Detailed |
-| Endosomal trafficking | Missing | Present |
-| Stress and light response roles | Missing | Present |
-| Guanylyl cyclase activity | Missing | Noted (tentative) |
-
-## Summary
-
-BioReason-RL produces a structurally grounded and mechanistically coherent description of BRI1 at the domain-architecture level. The reasoning from InterPro annotations to molecular function and cellular component is largely correct. The main weaknesses are in completeness: the downstream signal transduction cascade (the whole BSK-BSU1-BIN2-BZR1 relay) is entirely absent, co-receptor identity is not specified, and the dual-specificity kinase activity is missed. For a well-studied receptor, this represents a surface-level description that would not be sufficient for curation without expert supplementation.
+The trace provides an excellent domain-by-domain analysis. The identification of IPR045381 (Brassinosteroid receptor BRI1, island domain) allows organism-specific functional inference that goes beyond generic LRR receptor kinase biology. The mechanistic model of ligand-induced clustering and trans-autophosphorylation is accurate.

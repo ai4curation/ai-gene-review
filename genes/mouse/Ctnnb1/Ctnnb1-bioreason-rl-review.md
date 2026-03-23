@@ -5,41 +5,22 @@ Source: Ctnnb1-deep-research-bioreason-rl.md
 - **Correctness**: 4/5
 - **Completeness**: 3/5
 
-## Analysis
+## Functional Summary Review
 
-BioReason produces a strong analysis of beta-catenin. The thinking trace correctly identifies the armadillo repeat architecture, the dual role in cell adhesion and signaling, and the absence of enzymatic activity. This is one of the better BioReason outputs in this set.
+The BioReason functional summary captures the structural basis well but is incomplete on function:
 
-### What was right
+> A cytoplasmic armadillo-repeat scaffold that concentrates at cell-cell junctions to organize multiprotein assemblies. By using a tandem helical repeat core, it binds cytoplasmic adhesion receptors and junctional adaptors to stabilize adherens junction architecture while dynamically exchanging with soluble pools. This binding-driven mechanism positions it to coordinate adhesion with signal-responsive gene regulation, operating predominantly at junctions within the cytoplasmic compartment.
 
-| Aspect | BioReason claim | Curated review |
-|--------|----------------|----------------|
-| Armadillo repeat scaffold | Correct | Matches 12-repeat architecture |
-| Protein binding hub (GO:0005515) | Correct | Core function |
-| Adherens junction role | Correct | Core function: cadherin binding at adherens junctions |
-| Cytoplasmic/junctional localization | Correct | Matches curated CC annotations |
-| No enzymatic activity | Correct | Consistent with binding/scaffolding role |
-| Transcriptional regulation capacity | Mentioned | Core: transcription coactivator with TCF/LEF |
+The adhesion role is correctly identified -- the curated review confirms beta-catenin "links cadherins to the actin cytoskeleton at adherens junctions to mediate cell-cell adhesion" (GO:0045296, cadherin binding; GO:0098609, cell-cell adhesion; GO:0005912, adherens junction). However, the summary significantly underweights the Wnt signaling / transcriptional co-activator function.
 
-### What was partially right
+The curated review describes Ctnnb1 as having "dual roles in cell adhesion and Wnt signaling" and devotes equal emphasis to its nuclear function: "stabilized beta-catenin translocates to the nucleus where it acts as a transcriptional co-activator with TCF/LEF transcription factors." The BioReason summary only vaguely alludes to this as "signal-responsive gene regulation" without naming Wnt signaling, TCF/LEF, or the nuclear translocation. This is a major omission since the Wnt/beta-catenin transcriptional axis is arguably as important as the adhesion role.
 
-- **Transcriptional role is hedged**: BioReason says the capacity "to assemble regulatory complexes rationalizes participation in signal-responsive gene control" but does not name the Wnt pathway, TCF/LEF, or transcription coactivator activity. The curated review identifies canonical Wnt signaling (GO:0060070) and transcription coactivator activity (GO:0003713) as core functions. This is a significant understatement of one of beta-catenin's two defining roles.
-- **Nuclear localization is implied but not explicitly stated**: The thinking trace mentions "shuttle to nuclear complexes" but the final GO terms for CC do not prominently feature the nucleus, though it appears in the long GO list (GO:0005634). The curated review has nucleus as a core location for the transcriptional function.
+The thinking trace hedges with "although this isoform's detailed roles are not fully resolved," which is incorrect -- Ctnnb1's role in Wnt signaling is extremely well-characterized in mouse. This appears to be a limitation of relying purely on domain architecture without literature context.
 
-### What was wrong
+Comparison with interpro2go:
 
-- **UniProt summary listed as "Not yet known"**: This is factually incorrect. Beta-catenin/Ctnnb1 is one of the most extensively characterized proteins. This appears to be a retrieval failure rather than an inference error.
-- **Missing the destruction complex**: The curated review discusses the beta-catenin destruction complex (GO:0030877) and phosphorylation-dependent degradation as central regulatory mechanisms. BioReason does not mention this at all.
+There are no GO_REF:0000002 annotations for Ctnnb1 in the curated review. BioReason's GO term predictions do include many Wnt-related terms (GO:0016055 Wnt signaling pathway, GO:0198738 cell-cell signaling by wnt) and transcriptional terms, suggesting the GO prediction module captures what the functional summary misses. This disconnect between the narrative summary and the predicted GO terms is notable -- the summary is more conservative than the GO predictions.
 
-### Major omissions
+## Notes on thinking trace
 
-- No mention of canonical Wnt signaling pathway by name
-- No mention of TCF/LEF transcription factors as obligate partners
-- No mention of the N-terminal phosphodegron/destruction complex regulation
-- No mention of E-cadherin specifically (just "cadherin cytoplasmic domains")
-- No mention of alpha-catenin binding (GO:0045294) -- listed in GO output but not discussed
-- Massive biological process list (hundreds of terms) is not prioritized or curated; core vs. peripheral functions are not distinguished
-
-### Failure modes observed
-
-- **Hedging on well-established biology**: The Wnt/beta-catenin signaling axis is among the most studied pathways in biology. BioReason's cautious language ("although this isoform's detailed roles are not fully resolved") is inappropriate for a protein with thousands of publications.
-- **GO term explosion without prioritization**: The BP section lists hundreds of GO terms without distinguishing core from peripheral. This dilutes the signal -- a reader cannot tell which processes are central to beta-catenin function.
+The trace correctly identifies the armadillo-repeat scaffold and cadherin-binding groove. However, it explicitly hedges on the transcriptional role ("this isoform's detailed roles are not fully resolved"), which is a significant error of caution -- Ctnnb1/beta-catenin's transcriptional co-activator function is one of the most studied signaling mechanisms in developmental biology.

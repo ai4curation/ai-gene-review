@@ -1,40 +1,26 @@
-# BioReason-Pro RL Review: Akt1 (Rattus norvegicus)
+# BioReason-Pro RL Review: Akt1 (rat)
 
 Source: Akt1-deep-research-bioreason-rl.md
 
-- **Correctness**: 4/5
-- **Completeness**: 3/5
+- **Correctness**: 5/5
+- **Completeness**: 4/5
 
-## What BioReason got right
+## Functional Summary Review
 
-The core molecular function is accurately identified. BioReason correctly describes Akt1 as a PH-domain-containing AGC-family serine/threonine kinase that is gated by phosphoinositide binding. The domain architecture walkthrough (PH domain -> kinase core -> AGC C-terminal tail) is precise and mechanistically sound. Key GO terms predicted include:
+The functional summary accurately captures Akt1 as:
 
-| Predicted term | Correct? | In curated GOA? |
-|---|---|---|
-| GO:0004674 protein Ser/Thr kinase activity | Yes | Yes (IBA, IEA, TAS) |
-| GO:0005524 ATP binding | Yes | Yes (IEA) |
-| GO:0006468 protein phosphorylation | Yes | Yes (implied by kinase annotations) |
-| GO:0007165 signal transduction | Yes | Yes (IBA: intracellular signal transduction) |
-| GO:0005737 cytoplasm | Yes | Yes (IBA, IEA) |
+> A cytoplasmic serine/threonine kinase that uses an N-terminal lipid-binding module to dock onto phosphoinositide-enriched membranes and become spatially primed for catalysis. Its central kinase engine, stabilized by an AGC-family regulatory tail, transfers phosphate from ATP to diverse substrates, thereby propagating intracellular signaling that governs growth and metabolic control.
 
-The mechanistic narrative about PDK1 priming the activation loop and mTORC2 modifying the hydrophobic motif is accurate and reflects real biology.
+This is well-supported. The PH domain-mediated membrane recruitment, AGC kinase architecture, and role in PI3K/Akt signaling are all accurately described. The curated review confirms protein serine/threonine kinase activity (GO:0004674), ATP binding (GO:0005524), intracellular signal transduction (GO:0035556), cytoplasm (GO:0005737), insulin receptor signaling pathway (GO:0008286), and negative regulation of apoptotic process (GO:0043066) -- all consistent with BioReason's narrative.
 
-## What BioReason missed or got wrong
+The summary correctly emphasizes cytoplasmic localization and membrane-proximal activation. The mention of "survival and biosynthetic pathways" aligns with the curated anti-apoptotic and insulin signaling annotations.
 
-1. **Missing insulin signaling context**: The curated review includes GO:0008286 (insulin receptor signaling pathway) and GO:0032869 (cellular response to insulin stimulus) as key biological processes. BioReason mentions "growth and metabolic control" generically but never names insulin signaling, which is a defining pathway for Akt1.
+One minor gap: the summary does not explicitly mention the anti-apoptotic role (GO:0043066) or insulin signaling (GO:0008286), both of which are IBA-annotated core functions. The summary speaks generically of "growth and metabolic control" which is accurate but less specific than the curated annotations warrant.
 
-2. **Missing anti-apoptotic function**: GO:0043066 (negative regulation of apoptotic process) is a core curated annotation (IBA). BioReason vaguely mentions "survival" but does not call out the anti-apoptotic role explicitly. This is a significant gap for a kinase whose best-known downstream effects include phosphorylation of BAD and inhibition of caspase-9.
+Comparison with interpro2go:
 
-3. **Missing specific downstream biology**: The curated annotations include GO:0043536 (positive regulation of blood vessel endothelial cell migration), GO:0010765 (positive regulation of sodium ion transport), and GO:0042307 (positive regulation of protein import into nucleus). None of these specific process annotations appear in BioReason output.
+The interpro2go (GO_REF:0000002) annotations for Akt1 are protein kinase activity (GO:0004672) and ATP binding (GO:0005524). BioReason's summary directly recapitulates these -- describing the ATP-binding pocket and phosphotransfer chemistry. BioReason goes beyond interpro2go by correctly inferring the PH domain-mediated membrane recruitment, AGC-family regulatory mechanism, and downstream signaling context. No interpro2go errors are recapitulated.
 
-4. **Missing subcellular compartments**: The curated review includes nucleus (GO:0005634), nucleoplasm (GO:0005654), mitochondrial intermembrane space (GO:0005758), and plasma membrane (GO:0005886). BioReason only predicts cytoplasm and vaguely mentions "transient membrane association."
+## Notes on thinking trace
 
-5. **Protein kinase C binding**: GO:0005080 (protein kinase C binding) is in the curated GOA and also in BioReason's predicted GO terms, but BioReason's narrative never discusses this interaction.
-
-6. **Glycogen synthesis**: The curated GOA includes glycogen biosynthetic process annotations via Reactome. BioReason mentions "metabolic control" generically but never discusses glycogen metabolism, which is one of Akt1's most specific and well-validated metabolic outputs (via GSK3 phosphorylation and glycogen synthase activation).
-
-## Failure mode analysis
-
-The primary failure mode is **generic narrative without specific pathway annotation**. BioReason's domain-to-function reasoning correctly identifies the kinase architecture and general signaling role, but it remains at an abstract level ("growth and survival signaling") rather than naming specific pathways (insulin signaling, anti-apoptosis, glycogen synthesis). The tool also shows a **fold-centric bias**: it accurately describes what the protein *is* (an AGC kinase) but underspecifies what it *does* in biological context.
-
-The UniProt summary BioReason includes ("Acts redundantly with PRKCB in T-cell activation and is involved in the regulation of growth and metabolism") is actually quite informative, but the BioReason analysis does not leverage the T-cell activation aspect at all in its own reasoning.
+The trace methodically walks through domain architecture (PH domain, kinase core, AGC tail) and logically derives function from structure. The reasoning about PDPK1-mediated activation loop phosphorylation and mTORC2 hydrophobic motif modification is accurate. The mention of GSK3 and FOXO as substrates is correct. The trace is thorough and well-organized.

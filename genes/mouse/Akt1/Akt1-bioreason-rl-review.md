@@ -2,45 +2,25 @@
 
 Source: Akt1-deep-research-bioreason-rl.md
 
-- **Correctness**: 4/5
-- **Completeness**: 2/5
+- **Correctness**: 5/5
+- **Completeness**: 4/5
 
-## Analysis
+## Functional Summary Review
 
-BioReason-RL correctly identifies Akt1 as a PH domain-containing AGC-type serine/threonine kinase that is recruited to phosphoinositide-rich membranes downstream of PI3K signaling. The domain architecture analysis is thorough and accurate: PH domain for membrane targeting, bilobal catalytic core with ATP-binding and serine/threonine kinase active sites, and AGC C-terminal regulatory tail. The overall functional summary -- a cytoplasmic kinase hub that propagates PI3K signals to coordinate cell growth and survival -- is correct at a high level.
+The BioReason functional summary is accurate and well-constructed:
 
-Note: The curated Akt1 review is still in INITIALIZED status (all annotations marked PENDING), so this comparison is primarily against the GOA annotations and known Akt1 biology.
+> A cytoplasmic AGC-type serine/threonine kinase that uses an N-terminal pleckstrin-homology module to dock onto phosphoinositide-enriched membranes and become activated. Once recruited and switched into its active conformation through its regulatory C-terminal tail, it phosphorylates downstream targets to propagate phosphatidylinositol-driven signaling, thereby coordinating intracellular signaling, cell growth and survival programs from a soluble cytoplasmic hub.
 
-### What it got right
+This correctly identifies all major features: (1) the AGC-type serine/threonine kinase identity, (2) the PH domain-mediated membrane recruitment by PI(3,4,5)P3/PI(3,4)P2, (3) the C-terminal regulatory tail characteristic of AGC kinases, and (4) the downstream roles in growth and survival. The description aligns well with GO:0004674 (protein serine/threonine kinase activity), GO:0005737 (cytoplasm), GO:0006468 (protein phosphorylation), and GO:0035556 (intracellular signal transduction) -- all core curated annotations for Akt1.
 
-- PH domain-mediated membrane recruitment via PIP3/PI(3,4)P2 binding -- correct and well-described
-- AGC-type serine/threonine kinase activity (GO:0004674) -- correct core molecular function
-- PI3K-dependent activation mechanism -- correctly identified
-- Activation loop and hydrophobic motif phosphorylation for activation -- correctly noted
-- Cytoplasmic localization with transient membrane association -- correct
-- 14-3-3 protein interactions -- correctly predicted as stabilizers of phosphorylated states
-- Downstream roles in metabolism, growth, and survival -- correct
+The summary accurately places Akt1 downstream of PI3K signaling and describes the PH-domain-driven membrane translocation mechanism, which is the canonical activation mode. The mention of "cell growth and survival programs" is appropriate and well-supported.
 
-### What it got wrong or overstated
+The only minor gap is that specific well-established downstream targets and pathways (e.g., mTOR signaling, GSK3 phosphorylation, glucose homeostasis, anti-apoptotic signaling via BAD phosphorylation) are not mentioned, though this is understandable for a domain-architecture-driven summary.
 
-- No significant factual errors. The domain architecture of Akt1 is highly diagnostic for AGC kinases, and BioReason interprets it correctly.
+Comparison with interpro2go:
 
-### What it missed
+No GO_REF:0000002 annotations exist for mouse Akt1 in the curated review; IEA annotations come from UniRule (GO_REF:0000120) instead. The BioReason predictions include the same core terms (GO:0004674, GO:0004672, GO:0006468, GO:0005737) that UniRule and IBA annotations provide. BioReason adds narrative value by explaining the mechanistic logic connecting the PH domain to membrane recruitment and kinase activation, which goes beyond what interpro2go-style mappings provide. The functional summary is not merely recapitulating automated annotations but synthesizing them into a coherent mechanistic narrative.
 
-- **Specific upstream activators**: PDK1 (phosphorylates T308 activation loop) and mTORC2 (phosphorylates S473 hydrophobic motif) are the two kinases that activate Akt1. Neither is named.
-- **Specific substrates**: Akt1 has dozens of well-characterized substrates including GSK3 (glycogen metabolism), BAD (apoptosis), FOXO transcription factors (cell cycle, apoptosis), TSC2 (mTOR signaling), MDM2 (p53 regulation), AS160 (glucose transport), and p27 (cell cycle). No substrates are named.
-- **Anti-apoptotic function**: The GOA annotations include GO:0043066 (negative regulation of apoptotic process), a core Akt1 function through phosphorylation of BAD, caspase-9, and FOXO factors. BioReason mentions "survival" generically but does not describe the anti-apoptotic mechanism.
-- **Insulin signaling pathway**: GO:0008286 (insulin receptor signaling pathway) is a core GOA annotation. Akt1 is the central kinase downstream of insulin/IGF-1 receptor signaling mediating metabolic effects including GLUT4 translocation and glycogen synthesis. Not specifically mentioned.
-- **Glucose homeostasis**: Akt1 knockout mice show growth retardation. Akt1's role in glucose metabolism through GSK3 and AS160 phosphorylation is absent.
-- **Myelination**: GOA annotations include roles in Schwann cell differentiation and myelination in peripheral nervous system. This is an important non-canonical Akt1 function in mouse.
-- **Endothelial cell migration**: GO:0043536 (positive regulation of blood vessel endothelial cell migration) is in the GOA. Not mentioned.
-- **Multiple localization sites**: Beyond cytoplasm and membrane, Akt1 localizes to nucleus (where it phosphorylates FOXO and other nuclear substrates), mitochondrial intermembrane space, and ER. BioReason only mentions cytoplasm with transient membrane association.
-- **Negative regulation**: PTEN and PHLPP phosphatases are the key negative regulators of Akt signaling. Not mentioned.
-- **Mouse-specific phenotypes**: Akt1 knockout mice are viable but show ~20% reduction in body size, increased neonatal lethality, and placental defects. This organismal context is absent.
+## Notes on thinking trace
 
-### Failure modes
-
-- **Generic kinase description**: The output describes a generic AGC kinase rather than Akt1 specifically. Most of the description would apply equally to Akt2, Akt3, or other AGC family members. The PH domain specificity for PI(3,4,5)P3 (distinguishing Akt from other PH-domain kinases) is not emphasized.
-- **No substrate identification**: As with other BioReason outputs, the inability to name specific substrates limits the biological utility of the prediction.
-- **No pathway integration**: Akt1 sits at a critical node between PI3K (upstream) and mTOR, GSK3, FOXO (downstream). This pathway context is entirely absent.
-- **Species-specific biology absent**: No mouse-specific phenotypic or functional information despite this being mouse Akt1.
+The thinking trace methodically walks through the InterPro domain architecture from N-terminus to C-terminus, correctly interpreting the PH domain, kinase core, and AGC tail. The reasoning from domain architecture to molecular function to biological process to cellular component is logical and well-ordered. The trace appropriately identifies the lipid-binding specificity of the PH domain and the AGC-family activation mechanism.

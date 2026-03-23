@@ -3,32 +3,24 @@
 Source: BRCA2-deep-research-bioreason-rl.md
 
 - **Correctness**: 4/5
-- **Completeness**: 2/5
+- **Completeness**: 3/5
 
-## Analysis
+## Functional Summary Review
 
-BioReason-Pro RL correctly identifies BRCA2 as a nuclear DNA repair assembly factor involved in homologous recombination. The core inference -- BRC repeats recruit RAD51 for strand exchange -- is the central biological truth about BRCA2. However, the analysis is notably shallow given the protein's complexity.
+The BioReason functional summary states:
 
-### What it got right
+> A nuclear DNA-repair assembly factor that safeguards genome stability by organizing homologous recombination. Its large scaffold organizes a C-terminal repeat array that concentrates recombinase machinery to build strand-exchange filaments, thereby promoting accurate repair and chromosome integrity. It operates within the nucleus, where it assembles and stabilizes recombination complexes to coordinate filament formation and downstream repair steps.
 
-- Correctly identifies BRCA2 as a mediator of homologous recombination.
-- Accurately describes the BRC repeat array as a docking platform for RAD51 recombinase.
-- Correctly assigns nuclear localization (GO:0005634).
-- Properly identifies GO:0006310 (DNA recombination) as the core biological process.
-- Correctly describes BRCA2 as a non-enzymatic assembly factor (protein binding, not catalytic).
-- The mechanistic hypothesis about RAD51 stabilization on ssDNA is accurate.
+This captures the core function of BRCA2 correctly. The identification of BRC repeats as a RAD51-binding platform and the role in homologous recombination (GO:0006310) are well-supported by the curated review, which lists double-strand break repair via homologous recombination (GO:0000724) as a core function. The nuclear localization is accurate.
 
-### What it got wrong or missed
+However, the summary misses several important aspects. BRCA2 has a DNA-binding domain (the OB folds and tower domain at the C-terminus) that directly binds ssDNA -- this is not captured by the "non-enzymatic, repeat-mediated assembly factor" framing. The curated review includes single-stranded DNA binding (GO:0003697) as a function. Additionally, the predicted GO terms include acetyltransferase activities (histone H3/H4 acetyltransferase) which are incorrect for BRCA2 -- these appear to be prediction errors from the model.
 
-- **Limited domain coverage**: BioReason only identifies two InterPro entries (IPR015525 and IPR002093). The curated review describes multiple functional domains: BRC repeats, DNA-binding domain with OB folds and tower domain, and C-terminal recombinase-binding region (CTRB). This likely reflects InterPro annotation depth rather than a BioReason limitation.
-- **Missing ssDNA binding**: The curated review identifies GO:0003697 (single-stranded DNA binding) as a core molecular function -- BRCA2 directly binds ssDNA through its OB folds. BioReason only assigns protein binding.
-- **Replication fork protection completely missed**: The curated review identifies a second core function: protection of stalled/reversed replication forks from MRE11-mediated nucleolytic degradation. This is genetically separable from HR and is a distinct biological role. BioReason does not mention it.
-- **Missing key partner biology**: The curated review names PALB2, BRCA1-BARD1, DSS1, and RPA as key interaction partners. BioReason only generically references "recombinases and mediator complexes."
-- **No disease context**: No mention of breast/ovarian cancer susceptibility, Fanconi anemia (FANCD1), HRD/PARP inhibitor sensitivity, or clinical significance.
-- **Histone acetyltransferase activity in GO terms**: Notably, the BioReason GO term list includes histone acetyltransferase activity (GO:0004402) and related terms. This appears to be an InterPro2GO propagation artifact -- BRCA2 is not known to have intrinsic HAT activity. BioReason does not flag this as questionable.
+The summary also omits BRCA2's role in replication fork protection and its interaction with PALB2, which mediates BRCA1-BRCA2 complex formation. The curated review addresses centrosome biology and gamma-tubulin binding, which BioReason does not capture.
 
-### Failure modes
+Comparison with interpro2go:
 
-- **Shallow domain annotation leads to shallow functional inference**: With only two broad InterPro entries, the functional analysis cannot go beyond "BRC repeats bind RAD51." The OB fold/tower domain/CTRB regions are invisible.
-- **Single-function bias**: BioReason infers one biological role. For BRCA2, the dual role in HR and replication fork protection is biologically important and clinically relevant.
-- **Uncritical GO term propagation**: The GO terms section includes many terms (e.g., HAT activity) that likely come from InterPro2GO or similar automated pipelines. BioReason does not evaluate whether these are plausible.
+The curated review does not list GO_REF:0000002 annotations prominently for BRCA2. BioReason's reasoning closely tracks what interpro2go would derive from IPR015525 (BRCA2 family) and IPR002093 (BRC repeat): protein binding and DNA recombination. The erroneous acetyltransferase predictions in BioReason's GO term list likely stem from model confusion rather than interpro2go mappings.
+
+## Notes on thinking trace
+
+The trace correctly focuses on the BRC repeat array and BRCA2 family scaffold. The mechanistic hypothesis about RAD51 recruitment is accurate. The trace notes the absence of enzymatic domains, which is correct -- BRCA2 is a scaffold rather than a catalyst.

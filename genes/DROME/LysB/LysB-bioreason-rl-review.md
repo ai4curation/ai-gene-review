@@ -1,28 +1,30 @@
-# BioReason-Pro RL Review: LysB (fruit fly)
+# BioReason-Pro RL Review: LysB (DROME)
 
 Source: LysB-deep-research-bioreason-rl.md
 
 - **Correctness**: 3/5
-- **Completeness**: 2/5
+- **Completeness**: 3/5
 
-## What it got right
+## Functional Summary Review
 
-BioReason correctly identifies LysB as a GH22-family lysozyme with lysozyme activity (GO:0003796) and correctly describes the catalytic mechanism: cleavage of beta-1,4 glycosidic bonds in bacterial peptidoglycan via a conserved acid/base catalytic apparatus. The domain annotation (IPR001916, IPR000974, IPR023346) and the prediction of extracellular localization (consistent with secreted protein function) are accurate. The suggestion of cooperation with other innate immune factors is reasonable.
+The BioReason summary states:
 
-The GO terms output is largely correct in terms of molecular function: lysozyme activity, peptidoglycan muralytic activity (GO:0061783), hydrolase activity acting on glycosyl bonds — these are all appropriate.
+> A soluble lysozyme-class glycosidase in fruit fly that hydrolyzes bacterial cell-wall polymers, thereby contributing to innate antibacterial defense and peptidoglycan turnover. Its lysozyme-like fold and catalytic core enable cleavage of beta-1,4-linked glycans, and the enzyme most plausibly operates in extracellular fluids where microbes are encountered, acting in concert with other humoral immune factors to weaken and dismantle bacterial envelopes.
 
-## What it got wrong or missed
+The molecular function identification is correct: LysB is indeed a c-type lysozyme (GH22) with lysozyme activity (GO:0003796). The curated review confirms this.
 
-**The immune defense framing is incorrect for LysB specifically.** BioReason frames LysB primarily as an "innate antibacterial defense" enzyme acting in "hemolymph and epithelial secretions where microbes are encountered." This is the standard lysozyme narrative that applies to immune-function lysozymes, but the primary literature (PMID:8159165, Daffre et al. 1994) explicitly states that LysB is "unlikely to play an active role in the humoral immune defense." LysB is not expressed in fat body or hemocytes — the immune tissues — and is in fact repressed (not induced) upon systemic bacterial infection.
+**Critical error -- immune defense framing**: The summary describes LysB as "contributing to innate antibacterial defense" and "acting in concert with other humoral immune factors." The curated review explicitly contradicts this: LysB is "primarily expressed in the digestive tract (midgut of larvae and adults) where it functions in the digestion of bacteria from food and in shaping gut microbiota composition. LysB is not expressed in fat body or hemocytes and is actually repressed, not induced, upon systemic bacterial infection" (PMID:8159165). The curated review modifies the defense response annotations, proposing replacement with digestion (GO:0007586).
 
-**The digestive/gut function is completely missed.** LysB is expressed in the midgut of larvae and adults, where it functions in the digestion of bacteria from food and in shaping gut microbiota composition. This is the defining functional context that distinguishes LysB from immune lysozymes. BioReason does not mention gut expression at all. The analogy to ruminant stomach lysozymes (which are convergently recruited for digestion of symbiotic bacteria) — a key insight in PMID:8159165 — is absent.
+The summary states it "operates in extracellular fluids where microbes are encountered" -- while technically LysB is secreted and extracellular, the relevant extracellular space is the gut lumen, not the hemolymph. The "humoral immune factors" framing is specifically contradicted by the literature.
 
-**Microbiota regulation is missed.** More recent work (Marra et al. 2021, cited in the curated review) demonstrates that loss of gut lysozymes (LysB-PD deletion) increases stochasticity of gut microbiota community structure, establishing a role in microbiota homeostasis rather than immune killing. BioReason does not address this at all.
+**Missing digestive function context**: The curated core function description places LysB in the midgut (UBERON:0001045) with a primary role in digestion, analogous to ruminant stomach lysozymes that digest symbiotic bacteria. This biological context is entirely absent from the BioReason summary.
 
-**The GO biological process annotations in the output reflect the immune defense error.** The output includes defense response to Gram-negative bacterium (GO:0050829), negative regulation of immune response (GO:0050777), and defense response to bacterium (GO:0042742). The curated review marks GO:0042742 for MODIFY and GO:0050829 for MODIFY specifically because these over-annotate the immune defense function of LysB. BioReason reproduces this over-annotation.
+**Acidic protein character**: The curated review notes all lysozyme genes except LysP "encode acidic proteins, in contrast to the strongly basic 'typical' lysozymes," which is functionally relevant for gut enzyme adaptation. Not mentioned by BioReason.
 
-**Biochemical distinction relevant to function is missed.** PMID:8159165 notes that Drosophila gut lysozymes (including LysB) encode acidic proteins, unlike the strongly basic "typical" lysozymes. This biochemical distinction may relate to optimal activity at gut pH and is relevant to understanding the digestive vs. immune distinction. BioReason does not mention this.
+Comparison with interpro2go:
 
-## Summary
+The ai-review.yaml does not contain GO_REF:0000002 annotations for LysB (lysozyme activity comes via IBA and IEA/GO_REF:0000120). BioReason's reasoning from GH22 domain architecture produces the same functional conclusion as interpro2go-based annotations: lysozyme activity and antibacterial defense. Critically, BioReason makes the **same error** as the IEA annotations from keyword mapping (GO_REF:0000043) -- assigning defense response to bacterium (GO:0042742) and defense response to Gram-negative bacterium (GO:0050829) -- which the curated review flags as inappropriate for a digestive lysozyme. Domain architecture alone cannot distinguish immune from digestive function.
 
-BioReason correctly identifies the enzymatic activity of LysB but applies a generic "immune lysozyme" interpretation that is explicitly contradicted by the primary literature for this specific paralog. This is a textbook fold-bias / frequency-bias error: the model defaults to the dominant narrative for the GH22 family (antibacterial defense) without detecting that this particular Drosophila lysozyme has been specifically studied and found to serve a digestive, not immune, function. The biological context — midgut expression, digestive function, microbiota regulation, repression during infection — is entirely absent.
+## Notes on thinking trace
+
+The trace correctly identifies the GH22 family, catalytic residues, and lysozyme-like fold. The inference about signal peptide and extracellular secretion is reasonable. The hypothesized cooperation with "antimicrobial peptides and peroxidases" reflects an immune defense assumption that is incorrect for LysB.

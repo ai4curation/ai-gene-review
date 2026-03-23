@@ -5,36 +5,24 @@ Source: Slc5a1-deep-research-bioreason-rl.md
 - **Correctness**: 2/5
 - **Completeness**: 2/5
 
-## Summary
+## Functional Summary Review
 
-BioReason fundamentally misidentifies the substrate specificity of Slc5a1 (SGLT1). While correctly recognizing it as a sodium-coupled symporter, the model calls it a "sodium-dependent anion transporter" that transports "steroid sulfates and other circulating metabolites." This is wrong -- SGLT1 is a glucose/galactose transporter, one of the best-characterized sugar transporters in biology. The confusion appears to stem from conflation with SLC10 family members (sodium/bile acid symporters) or SOAT-type transporters.
+The functional summary states:
 
-## What was right
+> A multi-pass membrane transporter in rat that harnesses the inward sodium gradient to cotransport steroid sulfates and other circulating metabolites across cellular membranes. Its transmembrane architecture supports an alternating-access mechanism that couples Na+ binding to solute uptake, thereby contributing to epithelial and entoraceous solute handling and systemic homeostasis.
 
-| Feature | BioReason | Curated Review | Match? |
-|---------|-----------|----------------|--------|
-| Sodium-coupled symporter | Yes | Yes | Yes |
-| Multi-pass membrane topology | Yes | Yes | Yes |
-| Epithelial apical membrane | Implied | GO:0016324 (apical plasma membrane) | Partial |
-| Alternating-access mechanism | Yes | Consistent with known SGLT1 biology | Yes |
-| Brush border localization | Not mentioned | GO:0031526 (brush border membrane) | No |
+This contains a fundamental error. Slc5a1 (SGLT1) is the sodium/glucose cotransporter 1, a high-affinity Na+-coupled symporter that actively transports D-glucose and D-galactose with 2:1 Na+:glucose stoichiometry. The curated review clearly identifies glucose transmembrane transporter activity (GO:0005355), glucose transmembrane transport (GO:1904659), monosaccharide transmembrane transport (GO:0015749), intestinal absorption (GO:0050892), and apical plasma membrane localization (GO:0016324).
 
-## What was wrong
+BioReason incorrectly identifies the substrate as "steroid sulfates and other circulating metabolites." This error appears to stem from the UniProt summary for this entry, which mentions sodium-dependent anion transport of steroid sulfates. However, the UniProt entry for the rat P53790 protein -- which is indeed SGLT1 (Slc5a1) -- apparently describes a broader sodium/solute symporter capacity that is misleading. The core, best-characterized function of SGLT1 is glucose/galactose transport, not steroid sulfate transport. The BioReason system appears to have been misled by the UniProt summary text rather than correctly prioritizing the glucose transport function that is overwhelmingly supported by the curated annotations.
 
-1. **Wrong substrate identity.** BioReason claims the protein transports "steroid sulfates and other circulating metabolites." The curated review and UniProt both confirm SGLT1 transports D-glucose and D-galactose (GO:0005412, GO:0015371). This is the defining function of the protein. Ironically, BioReason's own UniProt summary section mentions glucose/galactose transport but the thinking trace ignores this.
+Furthermore, the term "entoraceous" is not a standard biological term. The correct context is intestinal epithelial cells (enterocytes) in the brush border membrane for dietary sugar absorption, and proximal tubule cells in the kidney for glucose reabsorption.
 
-2. **Wrong biological process.** BioReason assigns GO:0051234 (establishment of localization) -- a nearly root-level term. The curated review identifies intestinal D-glucose absorption (GO:0001951) and renal D-glucose absorption (GO:0035623) as core biological processes.
+The curated review has extensive annotations including solute:sodium symporter activity (GO:0015370), carbohydrate:cation symporter activity (GO:0005402), apical plasma membrane (GO:0016324), brush border membrane (GO:0031526), and specific localization in intestine and kidney -- none of which are accurately captured.
 
-3. **Missing glucose/galactose transport terms.** The core MF terms GO:0005412 (D-glucose:sodium symporter activity) and GO:0015371 (galactose:sodium symporter activity) are completely absent from BioReason's functional analysis.
+Comparison with interpro2go:
 
-4. **Missing water transport.** The curated review identifies water transmembrane transporter activity (GO:0005372) as a core function -- SGLT1 has aquaporin-comparable water conductivity. BioReason does not mention this.
+The interpro2go annotations for Slc5a1 include membrane (GO:0016020), transmembrane transporter activity (GO:0022857), and transmembrane transport (GO:0055085). BioReason recapitulates the membrane localization and transporter activity at this general level. However, BioReason's predicted GO terms (shown at the bottom of the file) actually include glucose transmembrane transporter activity (GO:0005355) and glucose transmembrane transport (GO:1904659), suggesting the model's GO term predictions are more accurate than its functional summary narrative. The functional summary diverges from the model's own GO predictions by emphasizing steroid sulfates over glucose.
 
-5. **Missing tissue-specific biology.** The curated review details intestinal brush border function, kidney S3 proximal tubule localization, and blood-brain barrier expression. BioReason refers only to generic "epithelial and entoraceous solute handling."
+## Notes on thinking trace
 
-6. **"Entoraceous" is not a real word.** BioReason uses "entoraceous" twice, which appears to be a hallucinated adjective.
-
-## Failure modes
-
-- **Substrate misidentification**: Despite having the correct InterPro domains (sodium/solute symporter, sodium/glucose symporter superfamily), BioReason called it a steroid sulfate transporter. The IPR038377 domain is literally named "Sodium/glucose symporter superfamily," yet the model overrode this with an incorrect inference about anion transport.
-- **Self-contradiction**: The UniProt summary in BioReason's own output mentions glucose transport, but the thinking trace ignores this information.
-- **Generic GO terms**: Using near-root biological process terms (GO:0051234) provides no useful functional information.
+The trace correctly identifies the sodium/solute symporter family (IPR001734) and sodium/glucose symporter superfamily (IPR038377) but then inexplicably focuses on steroid sulfates rather than glucose as the primary substrate. This is a clear case where the domain names ("sodium/glucose symporter") should have guided the narrative toward glucose transport. The alternating-access mechanism description is generically correct but applied to the wrong substrate. The mention of "epithelial and entoraceous solute handling" gestures toward the correct tissue context but with wrong substrate specificity.

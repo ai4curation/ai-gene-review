@@ -7,22 +7,40 @@ sidecars:
 
 Systematic evaluation of BioReason-Pro functional summaries and reasoning traces (Fallahpour et al. 2026, [doi:10.64898/2026.03.19.712954](https://doi.org/10.64898/2026.03.19.712954)) against expert-curated AIGR gene reviews.
 
-## Summary
+## Methods
 
-We evaluate **BioReason-Pro functional summaries and reasoning traces** — chain-of-thought analyses that reason from InterPro domains, PPI data, and organism context to predict protein function — against our curated reviews across 139 genes and 16 organisms.
+We downloaded the reports for selected genes from https://app.bioreason.net/ (there is no API yet so this cannot be done in bulk). We assigned an AI agent to review this, and compare them with both existing pipelines (e.g. interpro2go), and also with the complete AI gene review.
 
-Key findings (139 RL reviews):
-- **Correctness: 3.4/5** — decent for core molecular function, unreliable for edge cases
-- **Completeness: 2.4/5** — consistently superficial, stays at InterPro-derivable level
-- **No gene scored 5/5 on both axes** — BioReason never gives a complete picture
-- **Model organisms score higher**: mouse (4.2) > rat (4.1) > bacteria (~2.8)
-- **Critical blind spots**: pseudoenzymes, multi-complex biology, conditional activities, organism-specific context
+## Notes on browsing results
+
+Each individual gene review page, e.g. aprE, SlyD contains BOTH the bioreason results AND the detailed review of the bioreason results. You will need to search in the page for "bioreason" or scroll down to the sections:
+
+- Deep Research Bioreason RL (we treat the bioreason outputs as a kind of preliminary research)
+- Bioreason RL review
+
+
+## Key findings (139 RL reviews)
+
+1. **BioReason largely recapitulates interpro2go in narrative form.** For most genes, the functional summary does not provide biological insight beyond what InterPro domain annotations already capture. Genuine value-add is modest and concentrated in proteins with distinctive, well-annotated domain architectures such as TOR1 (FRB domain enables pathway-level inference), PTEN, NOTCH1, and EGFR. For standard domain families like Src-family kinases, Fyn and Src receive essentially identical generic descriptions.
+
+2. **Systematic localization errors.** BioReason defaults to "cytosolic" or "cytoplasmic" when no transmembrane domains are detected, failing for periplasmic proteins (Skp, CpxP, Spy), vacuolar proteins (cps1), mitochondrial matrix proteins (alo1, HSP60, CAT2), and ER membrane proteins (IRE1, ETR1). Proteins where InterPro domain names explicitly mention the compartment (KAR2, PDI1) are handled correctly.
+
+3. **Pseudo-enzymes are a blind spot.** BioReason assumes catalytic activity from conserved but degenerate domains and cannot detect loss of catalytic residues. Epe1 (pseudo-demethylase), cts2 (pseudo-chitinase missing catalytic glutamate), and pmp20 (peroxiredoxin that has lost resolving cysteine and functions as a chaperone) are all incorrectly assigned the ancestral enzymatic activity.
+
+4. **Paralogs get identical generic descriptions.** Closely related paralogs such as Fyn/Src (mouse), sigF/sigG/sigK (B. subtilis sporulation sigma factors), and Hspa5/Hspa8 (rat Hsp70 family) receive interchangeable summaries with no gene-specific biology.
+
+5. **Organism-specific biology is consistently absent.** Dauer formation and insulin/IGF-1 signaling in C. elegans (daf-16, daf-2), UPRmt master regulation (atfs-1), sporulation compartment specificity in B. subtilis (sigF forespore, sigK mother cell), prion propagation in yeast (HSP104), and cytoophidium biology (ura7) are all missed.
+
+6. **Mammalian genes score highest** (mouse 4.7, rat 4.4, human 4.2 correctness) while S. pombe scores lowest (2.8). This likely reflects richer InterPro annotations and more informative family-level names for well-studied mammalian proteins.
+
+- **Overall correctness: 3.7/5** | **Overall completeness: 2.9/5**
+- Only 1 gene scored 5/5 on both axes (Uggt1)
 
 ## Background
 
 **Architecture:**
-- **GO-GPT**: autoregressive transformer (ESM2 embeddings + organism → GO terms). Upstream predictor.
-- **BioReason-Pro**: Qwen3-based multimodal reasoning LLM. Takes GO-GPT predictions + InterPro + PPI + organism context → chain-of-thought reasoning trace + functional summary. Two variants: **SFT** (richer mechanistic depth) and **RL** (fewer hallucinations).
+- **GO-GPT**: autoregressive transformer (ESM2 embeddings + organism -> GO terms). Upstream predictor.
+- **BioReason-Pro**: Qwen3-based multimodal reasoning LLM. Takes GO-GPT predictions + InterPro + PPI + organism context -> chain-of-thought reasoning trace + functional summary. Two variants: **SFT** (richer mechanistic depth) and **RL** (fewer hallucinations).
 
 The GO term list in web exports is raw GO-GPT output (input to reasoning). BioReason-Pro produces its own GO terms after the reasoning step, but the current web app does not separately expose these.
 
@@ -34,10 +52,10 @@ Per gene, the following files are available (example: [ECOLI/SlyD](https://githu
 
 | File | Description |
 |------|-------------|
-| [`{GENE}-deep-research-bioreason-rl.md`](https://github.com/ai4curation/ai-gene-review/blob/main/genes/ECOLI/SlyD/SlyD-deep-research-bioreason-rl.md) | Raw BioReason-Pro RL web export (reasoning trace, functional summary, InterPro, GO-GPT terms) |
-| [`{GENE}-bioreason-rl-review.md`](https://github.com/ai4curation/ai-gene-review/blob/main/genes/ECOLI/SlyD/SlyD-bioreason-rl-review.md) | Evaluation of reasoning trace vs curated review (correctness/completeness scores + analysis) |
-| [`{GENE}-bioreason-rl-predictions.yaml`](https://github.com/ai4curation/ai-gene-review/blob/main/genes/ECOLI/SlyD/SlyD-bioreason-rl-predictions.yaml) | GO-GPT leaf terms as PredictionReview YAML |
-| [`{GENE}-ai-review.yaml`](https://github.com/ai4curation/ai-gene-review/blob/main/genes/ECOLI/SlyD/SlyD-ai-review.yaml) | Expert-curated AIGR review (ground truth for comparison) |
+| `{GENE}-deep-research-bioreason-rl.md` | Raw BioReason-Pro RL web export (reasoning trace, functional summary, InterPro, GO-GPT terms) |
+| `{GENE}-bioreason-rl-review.md` | Evaluation of reasoning trace vs curated review (correctness/completeness scores + interpro2go comparison) |
+| `{GENE}-bioreason-rl-predictions.yaml` | GO-GPT leaf terms as PredictionReview YAML |
+| `{GENE}-ai-review.yaml` | Expert-curated AIGR review (ground truth for comparison) |
 
 ## Evaluation rubric
 
@@ -51,7 +69,7 @@ Per gene, the following files are available (example: [ECOLI/SlyD](https://githu
 - 3: Gets the basics, misses significant biology
 - 1: Superficial or one-dimensional
 
-One markdown file per gene with scores at top and freeform analysis below.
+Each review includes a comparison with interpro2go (GO_REF:0000002) annotations to assess whether BioReason adds value beyond automated domain-based annotation.
 
 ## Results (139 genes)
 
@@ -59,105 +77,161 @@ One markdown file per gene with scores at top and freeform analysis below.
 
 | Score | Correctness | Completeness |
 |-------|-------------|--------------|
-| 5 | 15 (11%) | 0 (0%) |
-| 4 | 57 (41%) | 5 (4%) |
-| 3 | 37 (27%) | 57 (41%) |
-| 2 | 22 (16%) | 67 (48%) |
-| 1 | 8 (6%) | 10 (7%) |
+| 5 | 38 (27%) | 1 (1%) |
+| 4 | 48 (35%) | 40 (29%) |
+| 3 | 32 (23%) | 51 (37%) |
+| 2 | 15 (11%) | 40 (29%) |
+| 1 | 6 (4%) | 7 (5%) |
 
 ### By organism
 
-| Organism | Correctness | Completeness | n |
-|----------|-------------|--------------|---|
-| mouse | 4.2 | 2.7 | 11 |
-| rat | 4.1 | 2.8 | 12 |
-| human | 3.7 | 2.4 | 19 |
-| yeast | 3.5 | 2.5 | 11 |
-| DROME | 3.5 | 2.2 | 8 |
-| worm | 3.3 | 2.1 | 15 |
-| ECOLI | 3.1 | 2.5 | 13 |
-| SCHPO | 2.9 | 2.5 | 23 |
-| BACSU | 2.8 | 2.2 | 13 |
-| PSEPK | 2.8 | 2.4 | 8 |
+| Organism | n | Correctness | Completeness |
+|----------|---|-------------|--------------|
+| mouse | 11 | 4.7 | 3.6 |
+| rat | 12 | 4.4 | 3.6 |
+| human | 19 | 4.2 | 3.4 |
+| ARATH | 3 | 4.0 | 3.3 |
+| yeast | 11 | 3.9 | 2.6 |
+| BACSU | 13 | 3.8 | 2.9 |
+| DROME | 8 | 3.8 | 2.8 |
+| worm | 15 | 3.5 | 2.3 |
+| PSEPK | 8 | 3.4 | 3.0 |
+| ECOLI | 13 | 3.2 | 3.0 |
+| SCHPO | 23 | 2.8 | 2.3 |
 
-### Critical failures (correctness ≤ 1)
-Epe1 (pseudoenzyme), Spy, Shu1, atg16, pol5, csr-1, pgl-1, pmp20
+### Top performers (correctness 5/5)
 
-### Highlighted reviews
+| Gene | Organism | Completeness | Why it works |
+|------|----------|--------------|--------------|
+| Uggt1 | rat | 5 | ER quality control enzyme with highly informative domain names |
+| TP53 | human | 4 | Distinctive TAD-DBD-tetramerization architecture |
+| PTEN | human | 4 | Dual-specificity phosphatase domains are unambiguous |
+| EGFR | human | 4 | Canonical RTK architecture well-represented in InterPro |
+| NOTCH1 | human | 4 | Proteolytic cascade well-encoded in domain layout |
+| MYC | human | 4 | bHLH-LZ domains directly predict E-box binding |
+| Akt1 | mouse | 4 | PH + AGC kinase architecture is diagnostic |
+| Calm1 | mouse | 4 | EF-hand domains immediately predict calcium sensing |
+| Pten | mouse | 4 | Same as human PTEN |
+| Trp53 | mouse | 4 | Same as human TP53 |
+| TOR1 | yeast | 4 | FRB domain enables pathway-level inference |
+| ftsZ | BACSU | 4 | Tubulin-like GTPase domain is highly specific |
+| spo0A | BACSU | 4 | Response regulator + DNA-binding domains clearly predict phosphorelay TF |
+| GroEL | ECOLI | 4 | Chaperonin domains are unambiguous |
+| lgg-1 | worm | 4 | Atg8/ubiquitin-like fold directly predicts autophagy adaptor |
+| bst1 | SCHPO | 3 | GPI inositol-deacylase function nailed from specific family annotation |
 
-| Gene | Correctness | Completeness | Key finding |
-|------|-------------|--------------|-------------|
-| [Epe1](https://github.com/ai4curation/ai-gene-review/blob/main/genes/SCHPO/Epe1/Epe1-bioreason-rl-review.md) | 1 | 2 | Pseudoenzyme misclassified as active demethylase |
-| [SIR2](https://github.com/ai4curation/ai-gene-review/blob/main/genes/yeast/SIR2/SIR2-bioreason-rl-review.md) | 5 | 3 | Core function correct; misses RENT complex, lifespan biology |
-| [RidA](https://github.com/ai4curation/ai-gene-review/blob/main/genes/ECOLI/RidA/RidA-bioreason-rl-review.md) | 3 | 3 | Describes right chemistry but assigns wrong GO function |
+### Critical failures (correctness 1/5)
 
-## Detailed examples of disagreement
+| Gene | Organism | Completeness | Failure mode |
+|------|----------|--------------|--------------|
+| atg16 | SCHPO | 1 | No InterPro domains available; confabulated carbohydrate metabolism |
+| pmp20 | SCHPO | 2 | Neo-functionalized peroxiredoxin -> chaperone; model assumes ancestral function |
+| pol5 | SCHPO | 1 | Predicted cytokinesis scaffold; actual function is rDNA transcription |
+| Shu1 | SCHPO | 1 | Predicted HECT ubiquitin ligase; actually a GPI-anchored heme receptor |
+| csr-1 | worm | 1 | Wrong input sequence (nhr-47 instead of CSR-1 Argonaute) |
+| pgl-1 | worm | 1 | Described as nuclear TF scaffold; actually cytoplasmic P granule component |
 
-### Pseudoenzyme misclassification: Epe1
+## Failure mode taxonomy
 
-BioReason says: *"JmjC catalytic center dictates a lysine demethylase mechanism that consumes Fe(II) and 2-oxoglutarate."*
+### 1. Pseudo-enzyme blind spot
 
-Our review: Epe1 has **degenerate active site residues** (HVD instead of HXD motif, Tyr307 instead of catalytic His). Mass spectrometry assays show **no detectable demethylase activity**. It functions through protein-protein interactions (HP1/Swi6 binding, SAGA recruitment), not catalysis.
+BioReason assumes catalytic activity from conserved domains without checking whether catalytic residues are intact. This is a systematic failure for proteins that retain an ancestral fold but have lost enzymatic activity.
 
-### Right chemistry, wrong function: RidA
+**Examples:**
+- **Epe1** (SCHPO, 2/5): BioReason claims *"JmjC catalytic center dictates a lysine demethylase mechanism"* but Epe1 has degenerate active site residues (HVD instead of HXD, Tyr307 instead of catalytic His). No detectable demethylase activity in mass spec assays. Functions as anti-silencing factor through HP1/Swi6 binding.
+- **cts2** (SCHPO, 2/5): Called an active chitinase, but the protein lacks the essential catalytic glutamate and is likely catalytically dead.
+- **pmp20** (SCHPO, 1/5): Predicted as a peroxidase, but has lost its resolving cysteine and functions as a molecular chaperone.
 
-BioReason says: *"Non-enzymatic yet catalytic chaperone-like module that binds and dissipates reactive enamine/imine intermediates, accelerating their hydrolysis."*
+Notably, the BioReason paper highlights CFAP61 as a correctly identified pseudoenzyme, but this success does not generalize to our test set.
 
-Our review: The description of the chemistry is **correct** — but RidA IS an enzyme (EC 3.5.99.10, deaminase). BioReason's own words describe the enzymatic activity ("accelerating their hydrolysis") then assigns GO:0005515 (protein binding) instead of GO:0019239 (deaminase activity). The InterPro family name emphasizes the scaffold, biasing the model away from recognizing catalysis.
+### 2. Localization defaults to cytoplasm
 
-### Localization errors: ETR1, CpxP, Skp, Spy
+When InterPro annotations lack transmembrane or signal peptide information, BioReason systematically defaults to cytoplasmic localization. This fails for:
 
-BioReason systematically misassigns **membrane/periplasmic proteins as cytoplasmic** when InterPro annotations lack transmembrane domains:
-- **ETR1** (Arabidopsis ethylene receptor): Called "soluble cytoplasmic signal transducer." Actually an ER membrane integral protein with 3 TM helices forming the ethylene-binding site.
-- **CpxP**: Called cytoplasmic. Actually periplasmic (has signal peptide, confirmed by crystal structure).
-- **Skp**: Reasoning concludes cytoplasmic chaperone while the GO terms listed include periplasmic space — internal contradiction.
-- **Spy**: Misidentified as Cpx signaling adaptor. Actually a periplasmic holdase/foldase chaperone.
+- **Periplasmic proteins**: Skp, CpxP, Spy (all E. coli) are called cytoplasmic despite having signal peptides.
+- **ER membrane proteins**: ETR1 (Arabidopsis ethylene receptor) called "soluble cytoplasmic signal transducer" — actually an ER membrane integral protein with 3 TM helices. IRE1 (yeast) similarly mislocalised.
+- **Mitochondrial proteins**: alo1 (SCHPO), HSP60 (yeast), CAT2 (yeast) all called cytosolic.
+- **Vacuolar proteins**: cps1 (SCHPO) called cytoplasmic.
+- **Secreted proteins**: fibrolase (AGKCO) claimed as "membrane-tethered neural/endocrine" — actually a secreted venom fibrinolytic enzyme.
 
-### Anti-folding chaperone: SecB
+Proteins succeed when InterPro domain names explicitly contain the compartment (KAR2/BiP -> ER, PDI1 -> ER).
 
-BioReason assigns GO:0006457 (protein folding). Our review flags this as **wrong** — SecB is an *anti-folding* holdase that actively prevents stable tertiary contacts. The curated review cites Bechtluft et al. showing SecB "completely prevents stable tertiary contacts." This is a frequency-bias error where chaperone family associations pull in protein folding terms.
+### 3. Paralog indistinguishability
 
-### Cross-kingdom fold bias: aprE (B. subtilis subtilisin)
+Closely related family members receive essentially identical descriptions:
 
-BioReason correctly identifies the serine endopeptidase activity but then predicts **human hemostasis/blood coagulation** biological processes for a B. subtilis enzyme. This fold-bias artifact comes from subtilisin-family annotations dominated by human proteins in the training data.
+- **Fyn vs Src** (mouse): Both get a generic Src-family kinase description. No mention of Fyn-specific T-cell signaling, tau phosphorylation, or myelination. No mention of Src-specific osteoclast biology.
+- **sigF vs sigG vs sigK** (BACSU): All three sporulation sigma factors treated as generic sigma factors. The curated reviews show sigF is forespore-specific with partner-switching (SpoIIAB), sigG is late-forespore with Gin anti-sigma regulation, sigK requires processing from pro-sigK and excision of the skin element.
+- **Hspa5 vs Hspa8** (rat): Both described as generic Hsp70 chaperones. Hspa5 (BiP) is ER-specific with UPR regulation. Hspa8 (Hsc70) has distinctive constitutive functions in clathrin uncoating and chaperone-mediated autophagy.
 
-### Means vs. ends: comK
+### 4. Organism-specific biology absent
 
-BioReason assigns protein homooligomerization (GO:0051260) as the primary biological process. While ComK does tetramerize, that's the **means** — the actual function is competence establishment (GO:0030420). BioReason confuses the structural mechanism with the biological purpose.
+BioReason's domain-to-function reasoning cannot capture biology that is specific to a lineage or organism:
 
-## Failure modes
+- **C. elegans**: daf-16 described as generic forkhead TF (misses IIS pathway, longevity, dauer biology). daf-2 described as generic RTK (misses insulin/IGF-1 receptor identity and aging). atfs-1 described as generic bZIP TF (misses UPRmt master regulator role). hlh-30 described as generic bHLH (misses TFEB ortholog identity and autophagy/lysosome biology).
+- **B. subtilis**: Sporulation compartment specificity is never captured. aprE's role in quorum sensing/Phr peptide processing is missed. comK described via protein binding instead of competence regulation.
+- **S. cerevisiae**: HSP104 misses prion propagation and thermotolerance. RAS2 fundamentally wrong (vesicle trafficking instead of cAMP/PKA signaling). TOR1 is the exception where FRB domain enables pathway identification.
+- **S. pombe**: ura7 misses cytoophidium biology. pol5 completely wrong (cytokinesis scaffold instead of rDNA transcription).
 
-- **Pseudoenzyme blind spot**: Assumes catalytic activity from conserved but degenerate domains
-- **Fold/family name bias**: Defaults to protein binding when InterPro family emphasizes scaffold
-- **Missing multi-complex biology**: Proteins in multiple complexes get only one described
-- **Missing physiological context**: Stays at molecular/structural level, no pathway/organism biology
-- **Conditional activity invisible**: Can't detect PTM-dependent or context-dependent functions
-- **Negative evidence invisible**: No access to "protein X does NOT do Y" findings
-- **Reasoning > term assignment**: Natural language descriptions often more accurate than GO term picks
+### 5. Neo-functionalization and moonlighting
+
+When a protein has acquired a function different from its ancestral domain prediction, BioReason defaults to the ancestral/family-typical function:
+
+- **pmp20** (SCHPO): Peroxiredoxin fold -> predicted peroxidase; actual chaperone
+- **Nmnat** (DROME): NAD+ biosynthesis enzyme fold -> misses moonlighting chaperone/neuroprotection function
+- **LysB** (DROME): Lysozyme fold -> framed as immune defense; actually a digestive enzyme
+- **GAPDH** (human): Correctly identifies glycolytic enzyme but misses all moonlighting functions
+- **Casp3** (rat): Core protease/apoptosis correct but misses differentiation roles in neurons, keratinocytes, erythrocytes
+
+### 6. Narrative-GO prediction disconnect
+
+In multiple cases, the GO term predictions from the upstream ESM model are more accurate than BioReason's narrative functional summary. The two outputs appear to be generated somewhat independently:
+
+- **RidA** (ECOLI): Narrative describes the correct chemistry ("accelerating hydrolysis of reactive intermediates") but calls it "non-enzymatic" and assigns protein binding (GO:0005515) instead of deaminase activity (GO:0019239).
+- **atg2** (SCHPO): GO terms include correct autophagy terms but the narrative describes only scaffolding, missing the primary lipid transfer function.
+- **BenR** (PSEPK): GO term predictions are reasonable but the narrative describes a CO/formate regulator instead of a benzoate pathway activator.
+
+### 7. Cross-kingdom fold bias
+
+Training data skewed toward well-studied organisms can bias predictions:
+
+- **aprE** (BACSU): BioReason predicts human hemostasis/blood coagulation processes for a B. subtilis subtilisin, reflecting mammalian-dominated training data.
+- **PGRPLB** (ANOGA): Called a "fruit fly" protein when it is actually from the mosquito Anopheles gambiae.
+- **NFE2L2** (human): bZIP domain analysis erroneously emphasizes erythroid function (from the NF-E2 family name) over the protein's primary role in antioxidant response.
+
+### 8. Wrong input data
+
+- **csr-1** (worm, 1/5): BioReason received the nhr-47 sequence instead of the CSR-1 Argonaute. All predictions are for the wrong protein.
+
+## Comparison with interpro2go
+
+A central question is whether BioReason provides value beyond the automated interpro2go pipeline (GO_REF:0000002). Our reviews assessed this for each gene.
+
+**In most cases, BioReason is a narrative restatement of interpro2go.** The functional summary translates domain annotations into prose without adding new biological insight. Where interpro2go makes errors (e.g., assigning generic "protein binding" to CnoX, importing eukaryotic flagellar terms for B. subtilis divIVA), BioReason typically recapitulates and sometimes amplifies these errors.
+
+**BioReason adds value in specific cases:**
+- Proteins with distinctive multi-domain architectures where the combination is diagnostic (TOR1, NOTCH1, PTEN, EGFR, spo0A)
+- Proteins where family-level InterPro names are highly informative (Uggt1, bst1, KAR2)
+
+**BioReason inherits interpro2go errors:**
+- KEAP1: interpro2go assigns BTB-Kelch to actin binding; BioReason amplifies this into "actin remodeling" instead of the correct NRF2 regulation
+- Ctnnb1: Armadillo repeat -> cell adhesion dominates; transcriptional co-activator role (Wnt/TCF-LEF) underweighted
+- SecB: Chaperone family -> "protein folding" assigned, but SecB is an anti-folding holdase
 
 ## Paper case study proteins
 
-Full reasoning traces in supplementary C.6–C.15:
+Full reasoning traces in supplementary C.6-C.15:
 
 | Protein | UniProt | Paper section | Key finding |
 |---------|---------|---------------|-------------|
-| eEFSec | P57772 | Fig. 5, §2.6 | De novo predicted SBP2 as binding partner, validated by cryo-EM |
-| CFAP61 | Q8NHU2 | Fig. 6, §2.7 | Correctly identified pseudoenzyme scaffold despite catalytic domains |
-| EvoAcr1 | synthetic | §2.8 | No homology/domains. Predictions varied by organism label. SFT fabricated InterPro. |
-| EvoAcr2 | synthetic | §2.8 | RL predicted phage-encoded host modulator — biologically coherent |
+| eEFSec | P57772 | Fig. 5, S2.6 | De novo predicted SBP2 as binding partner, validated by cryo-EM |
+| CFAP61 | Q8NHU2 | Fig. 6, S2.7 | Correctly identified pseudoenzyme scaffold despite catalytic domains |
+| EvoAcr1 | synthetic | S2.8 | No homology/domains. Predictions varied by organism label. SFT fabricated InterPro. |
+| EvoAcr2 | synthetic | S2.8 | RL predicted phage-encoded host modulator -- biologically coherent |
 
-### CFAP61 vs Epe1 — same class, opposite results
+### CFAP61 vs Epe1: same class, opposite results
 
-Both are pseudoenzymes with catalytic domain signatures. BioReason **correctly** identifies CFAP61 as non-enzymatic (paper's featured result) but **fails** on Epe1, confidently calling it an active demethylase.
-
-### Section 2.8: short proteins and peptides
-
-| Protein | Size | Result |
-|---------|------|--------|
-| HLA-A, p53, BRINP2, IA-2 | full | Accurate |
-| preproinsulin, CCK, GDF15 | ~110 aa | Mixed — correct family, missed key functions |
-| GLP-1 | 30 aa | Failed — conflated with glucagon |
-| GAD65/IA-2 epitopes | short | SFT fabricated InterPro entries; RL did not |
+Both are pseudoenzymes with catalytic domain signatures. BioReason **correctly** identifies CFAP61 as non-enzymatic (paper's featured result) but **fails** on Epe1, confidently calling it an active demethylase. This suggests pseudoenzyme detection is not systematic but case-dependent.
 
 ## SFT vs RL comparison
 
@@ -176,9 +250,5 @@ Both are pseudoenzymes with catalytic domain signatures. BioReason **correctly**
 
 - **Test set**: 8,630 proteins ([HuggingFace](https://huggingface.co/datasets/wanglab/bioreason-pro-test-data)), temporal holdout post-2022
 - **Human eval**: 192 proteins, 162 by external biologists. Protein list not published.
-- **Overlap with AIGR**: 7 of 1,211 genes. Low by design — their test set is newly annotated, ours is deeply characterized.
+- **Overlap with AIGR**: 7 of 1,211 genes. Low by design -- their test set is newly annotated, ours is deeply characterized.
 - 99 additional genes from their test set are being reviewed to expand overlap.
-
-## PR
-
-https://github.com/ai4curation/ai-gene-review/pull/168
