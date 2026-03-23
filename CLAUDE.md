@@ -244,6 +244,17 @@ other computational method that produces GO or EC predictions.
 - `TRAINING_DATA_CONTAMINATION` - Prediction already in training data
 - See schema for full list
 
+## Project pages
+
+Project docs live in `projects/*.md`. To render a project as HTML:
+
+```bash
+just render-projects                          # render all
+ai-gene-review render-projects projects/FOO.md -o pages/projects  # render one
+```
+
+**Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
+
 ## General guidelines
 
 * NEVER guess identifiers for terms, genes, publications. Always use the relevant tools or MCPS, or look them up in derived files.
