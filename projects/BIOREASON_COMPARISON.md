@@ -1,3 +1,6 @@
+---
+species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE]
+---
 # BioReason-Pro Comparison Project
 
 Systematic evaluation of BioReason-Pro reasoning traces and GO-GPT predictions (Fallahpour et al. 2026, doi:10.64898/2026.03.19.712954) against expert-curated AIGR gene reviews.
