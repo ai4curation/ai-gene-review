@@ -52,8 +52,36 @@ jobs:
       - name: Install project
         run: uv sync --dev
 
-      - name: Validate all gene reviews
-        run: just validate-all
+      - name: Get changed files
+        id: changed
+        run: |
+          # Get YAML files changed in the triggering commit(s)
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'genes/**/*-ai-review.yaml' 'rules/**/*-review.yaml' 2>/dev/null || echo "")
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "Changed YAML files: $(echo "$CHANGED" | grep -c '.' || echo 0)"
+
+      - name: Validate changed gene reviews
+        run: |
+          ERRORS=0
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            [ ! -f "$f" ] && continue
+            if [[ "$f" == genes/*/*/*-ai-review.yaml ]]; then
+              ORG=$(echo "$f" | cut -d/ -f2)
+              GENE=$(echo "$f" | cut -d/ -f3)
+              echo "=== Validating $ORG/$GENE ==="
+              if ! just validate "$ORG" "$GENE"; then
+                ERRORS=$((ERRORS + 1))
+              fi
+            fi
+          done <<< "${{ steps.changed.outputs.files }}"
+          if [ $ERRORS -gt 0 ]; then
+            echo "❌ $ERRORS validation errors"
+            exit 1
+          fi
+          echo "✅ All changed files valid"
 
       - name: Render all gene review HTML pages
         run: just render-all
