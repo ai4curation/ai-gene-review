@@ -1,22 +1,10 @@
 """Validation subpackage for ai-gene-review.
 
 This package contains all validation-related modules:
-- Core validation logic
-- Term validation (ontology terms)
-- Publication validation
+- Core validation logic (using LTV plugins for term, reference, and supporting text validation)
 - Validation reporting
 """
 
-from ai_gene_review.validation.publication_validator import (
-    PublicationValidator,
-    PublicationValidationResult,
-    validate_yaml_file_publications,
-)
-from ai_gene_review.validation.term_validator import (
-    TermValidator,
-    TermValidationResult,
-    validate_yaml_file,
-)
 from ai_gene_review.validation.validation_report import (
     BatchValidationReport,
     ValidationIssue,
@@ -38,14 +26,6 @@ __all__ = [
     "get_validation_summary",
     "get_schema_path",
     "load_schema",
-    # Term validation
-    "TermValidator",
-    "TermValidationResult",
-    "validate_yaml_file",
-    # Publication validation
-    "PublicationValidator",
-    "PublicationValidationResult",
-    "validate_yaml_file_publications",
     # Validation reporting
     "ValidationReport",
     "ValidationIssue",
