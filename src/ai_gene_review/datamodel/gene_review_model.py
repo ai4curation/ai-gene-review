@@ -1,6 +1,5 @@
-WARNING:linkml.utils.generator:Duplicate tree_root: PredictionReview with GeneReview
 # Auto generated from gene_review.yaml by pythongen.py version: 0.0.1
-# Generation date: 2026-03-22T08:11:01
+# Generation date: 2026-03-22T20:13:53
 # Schema: gene_review
 #
 # id: https://ai4curation.io/ai-gene-review
