@@ -28,7 +28,7 @@ The GO-GPT raw term lists are overly broad (full GO hierarchy dumps) and add lit
 
 **Key insight:** The GO term list in web exports is raw GO-GPT output (input to reasoning). Per the paper's architecture figure, BioReason-Pro produces its own GO terms as structured output after the `</think>` reasoning step (using Qwen3 backbone with chain-of-thought). However, the current web app export does not separately expose these post-reasoning GO terms — it only includes the GO-GPT input list. We assume this will be fixed before final publication. For now, we evaluate the reasoning traces and functional summaries, not the term lists.
 
-**Web app:** app.bioreason.net (model toggle top-left: SFT / RL)
+**Web app:** [app.bioreason.net](https://app.bioreason.net)
 
 ## Data
 
