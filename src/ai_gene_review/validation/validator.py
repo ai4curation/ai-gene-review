@@ -260,7 +260,10 @@ def check_best_practices_rules(
     ref_config = ReferenceValidationConfig(
         cache_dir=str(project_root / "publications"),
         reference_base_dir=str(project_root / "genes"),
-        skip_prefixes=["GO_REF", "Reactome", "UniProt", "UniProtKB"],
+        skip_prefixes=[
+            "GO_REF", "GO", "Reactome", "UniProt", "UniProtKB",
+            "PDB", "EC", "TEMP", "ISBN", "RHEA", "file",
+        ],
     )
 
     dynamic_enum_plugin = DynamicEnumPlugin(
@@ -1280,7 +1283,10 @@ def validate_rule_review(
 
             ref_config = ReferenceValidationConfig(
                 cache_dir=str(Path("publications")),
-                skip_prefixes=["GO_REF", "Reactome", "UniProt", "UniProtKB"],
+                skip_prefixes=[
+            "GO_REF", "GO", "Reactome", "UniProt", "UniProtKB",
+            "PDB", "EC", "TEMP", "ISBN", "RHEA", "file",
+        ],
             )
             ref_plugin = ReferenceValidationPlugin(config=ref_config)
             ref_validator = LinkMLValidator(
