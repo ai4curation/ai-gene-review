@@ -1,35 +1,34 @@
-# BioReason-Pro RL Review: sigK (Bacillus subtilis)
+# BioReason-Pro RL Review: sigK (B. subtilis)
 
 Source: sigK-deep-research-bioreason-rl.md
 
-- **Correctness**: 2/5
-- **Completeness**: 1/5
+- **Correctness**: 3/5
+- **Completeness**: 2/5
 
-## What It Got Right
+## Functional Summary Review
 
-BioReason correctly identifies the protein as a sigma-70 family transcription initiation factor and correctly maps the domain architecture: region 2 (IPR013325/IPR007627) for -10 recognition, region 3/4 (IPR013324/IPR007630) for -35 recognition, and the HTH element (IPR001387) in region 4. The mechanistic description of sigma-70 factor function (open complex formation, promoter engagement) is accurate. Inferring cytoplasmic localization is correct.
+The BioReason functional summary reads:
 
-## What It Got Wrong
+> A cytosolic bacterial transcription initiation factor that associates with the core RNA polymerase to confer promoter specificity. Its modular architecture binds the polymerase through an N-terminal recognition module and uses a C-terminal helix-turn-helix to engage -35 promoter elements, thereby assembling the initiation-competent holoenzyme, stabilizing the open complex, and launching RNA synthesis from chromosome-embedded promoters in Bacillus subtilis.
 
-The formal GO molecular function output is GO:0005515 (protein binding) — the same systematic failure seen in all other sigma factor reviews. The correct term, GO:0016987 (sigma factor activity), is clearly stated in the prose but absent from the formal GO annotation output.
+This is a generic description of a sigma-70 family sigma factor that could apply to essentially any bacterial sigma factor. While technically correct in describing sigma factor biochemistry (GO:0016987), it fails to capture anything specific about SigK.
 
-More seriously, the cellular component output places SigK in the nucleus (GO:0005634) and associated nuclear compartments (membrane-bounded organelle, intracellular membrane-bounded organelle). This is a prokaryote — there is no nucleus. This is a fundamental biological error. It also lists "endonuclease complex" (GO:1905348) and "catalytic complex" (GO:1902494) as cellular components, which are completely wrong for a sigma factor in a bacterium.
+Key omissions and errors:
 
-The biological process list includes numerous negative regulation terms (negative regulation of DNA-templated transcription, negative regulation of RNA biosynthetic process, etc.), which are not appropriate for SigK. Sigma factors are positive regulators of transcription initiation from their cognate promoters. SigK does not negatively regulate transcription in the sense implied by these terms.
+1. **Missing identity as late mother cell sigma factor**: SigK is specifically the late mother cell-specific sigma factor during sporulation. The curated review emphasizes that SigK activates coat proteins (cotA, cotB, cotD, cotE, cotH), cortex genes, and germination genes. BioReason's summary contains no hint of this.
 
-## What Was Missed
+2. **Missing unique regulatory features**: SigK has a remarkable biogenesis -- the sigK gene is interrupted by a ~48 kb skin element that must be excised by SpoIVCA recombinase before the gene is reconstituted. SigK is synthesized as an inactive pro-sigK precursor with a 20-residue propeptide cleaved by the intramembrane metalloprotease SpoIVFB. This regulated intramembrane proteolysis mechanism, coupled to forespore-derived signals (SpoIVB/CtpB), is entirely absent.
 
-SigK has uniquely complex biology that BioReason entirely misses:
+3. **No sporulation context**: The summary does not mention sporulation at all, despite sporulation (GO:0030435) being a core biological process for SigK.
 
-- The "skin" (skinBs) element: In strain 168, the sigK gene is split by a ~48 kb prophage-like element. The functional sigK ORF is only reconstituted when the SpoIVCA site-specific recombinase excises this element during sporulation. This is one of the most unusual gene activation mechanisms in bacterial biology and is completely absent from the BioReason output.
-- Pro-sigK processing: SigK is synthesized as an inactive precursor (pro-sigK) with a 20-amino-acid N-terminal propeptide. This propeptide must be cleaved by the intramembrane metalloprotease SpoIVFB for activation. BioReason does not mention this.
-- The regulatory cascade controlling SpoIVFB: BofA and SpoIVFA hold SpoIVFB inactive until forespore-secreted proteases SpoIVB and CtpB cleave these inhibitors. This intercellular signaling pathway — forespore signals to mother cell to activate SigK — is the core logic of sigK activation and is completely absent.
-- The sigma factor antagonist complex (GO:1903865) involving pro-sigK, SpoIVFB, BofA, and SpoIVFA is documented by IntAct interaction data (PMID:19805276) and is not mentioned.
-- The SigK regulon: coat proteins (cotA, cotB, cotD, cotE, cotH), cortex genes, and germination genes are not mentioned.
-- The feed-forward network with GerE (which both represses some SigK-activated genes and activates additional late genes) is absent.
-- Mother cell specificity: SigK is the late mother cell sigma factor, not a general sporulation factor. This spatial specificity is not captured.
-- The protein binding interaction with SpoIVFB documented by IPI evidence (PMID:19805276) is not mentioned.
+4. **Erroneous GO predictions**: BioReason predicts negative regulation of transcription terms (GO:0045892, GO:1903507) and nucleus (GO:0005634), host cell cytoplasm (GO:0030430), and endonuclease complex -- all incorrect for this bacterial sigma factor.
 
-## Summary
+5. **Missing feed-forward regulation**: SigK operates in a hierarchical feed-forward network with GerE, which the curated review identifies as important regulatory context.
 
-BioReason provides a generic sigma-70 factor description that would apply to any sporulation sigma, missing the three defining features of SigK biology: (1) gene reconstitution by skin element excision, (2) pro-sigma activation by regulated intramembrane proteolysis, and (3) intercellular signaling via forespore-to-mother-cell communication. The formal GO output contains the egregious eukaryotic cellular component annotations (nucleus, endonuclease complex) and defaults again to uninformative "protein binding" for the molecular function. This is the weakest of the six sigma factor reviews.
+Comparison with interpro2go:
+
+The interpro2go annotations for sigK include DNA-binding transcription factor activity (GO:0003700), which the curated review flags as incorrect for sigma factors. BioReason's GO predictions include negative regulation of transcription terms that are likely inherited from the Bacterial Sigma-70 Factor family IPR050813 mappings. Neither interpro2go nor BioReason captures the mother cell specificity, pro-sigK processing, or sporulation context. BioReason provides a more articulate but equally uninformative narrative compared to interpro2go.
+
+## Notes on thinking trace
+
+The trace identifies the sigma-70 domain architecture correctly but does not leverage the specific family-level signatures to distinguish SigK from other sigma factors. The Bacterial Sigma-70 Factor (IPR050813) and region 2/4 analysis is generic and could apply to any sigma factor in B. subtilis.

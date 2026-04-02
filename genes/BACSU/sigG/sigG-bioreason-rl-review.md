@@ -1,39 +1,34 @@
-# BioReason-Pro RL Review: sigG (Bacillus subtilis)
+# BioReason-Pro RL Review: sigG (B. subtilis)
 
 Source: sigG-deep-research-bioreason-rl.md
 
-- **Correctness**: 3/5
+- **Correctness**: 4/5
 - **Completeness**: 2/5
 
-## What It Got Right
+## Functional Summary Review
 
-BioReason correctly identifies SigG as a sigma-70 family sigma factor and accurately maps the conserved modular architecture: region 2 (IPR013325/IPR007627) for -10 element recognition, region 3 (IPR007624), and region 4 (IPR007630) for -35 recognition. The domain-to-function reasoning is logically sound. Identifying sigma factor activity (GO:0016987) and transcription initiation (GO:0006352) as the relevant molecular function and process is correct. The inference that SigG operates in the cytoplasm is correct.
+The BioReason functional summary reads:
 
-The family-level classification using the sigma-G type InterPro entry (IPR014212) is correct and appropriate — this properly distinguishes SigG from SigF and other family members.
+> A soluble bacterial transcription initiation factor that binds core RNA polymerase to confer promoter specificity during transcription initiation. Its modular architecture organizes the recognition and melting surfaces that select -10 and -35 promoter elements, assemble the open complex, and drive start-site commitment. In Bacillus, this factor likely directs developmental and stress-responsive transcription programs characteristic of sporulation-associated regulons and operates in the cytoplasm where it dynamically associates with the transcription machinery.
 
-## What It Got Wrong
+The core description of sigma factor function is correct: SigG is a sigma-70 family transcription initiation factor that confers promoter specificity (GO:0016987, sigma factor activity) and participates in transcription initiation (GO:0006352). The cytoplasmic localization is reasonable.
 
-The assigned GO molecular function is again GO:0005515 (protein binding), which is the generic, uninformative term. The correct primary term is GO:0016987 (sigma factor activity). The curated review specifically removes GO:0003899 (DNA-directed RNA polymerase activity) from the IBA annotations as an over-annotation, since sigma factors confer promoter specificity but do not catalyze RNA synthesis. BioReason does not make this error explicitly, but the substitution of "protein binding" for "sigma factor activity" in the formal output is a significant quality failure.
+However, the summary is notably vague and generic:
 
-The cellular component output lists GO:0005667 (transcription regulator complex), which while closer to correct than the membrane/cell-wall errors seen in sigF, is still not as specific as what the curated review recommends (GO:0042601, endospore-forming forespore).
+1. **Missing specificity**: SigG is the late forespore-specific sigma factor, the second in the forespore lineage after SigF. BioReason says it "likely directs developmental and stress-responsive transcription programs" -- the hedging "likely" is inappropriate for a well-characterized sigma factor whose function is thoroughly established. The curated review explicitly states SigG is "Active only in the forespore" approximately 2 hours after sporulation starts.
 
-The biological process list includes GO:0043620 (regulation of DNA-templated transcription in response to stress) — again inappropriate for a sporulation-specific developmental sigma factor.
+2. **Missing anti-sigma regulation**: SigG activity is controlled by the anti-sigma-G factor Gin (CsfB), which inhibits SigG via direct binding to its N-terminal region (residues 1-71). The curated review identifies antisigma factor binding (GO:0045152) and sigma factor antagonist complex (GO:1903865) as important annotations. BioReason misses this entirely.
 
-## What Was Missed
+3. **Missing temporal context**: SigG auto-stimulates its own transcription and is regulated by Lon protease. The sequential sigma factor cascade (SigF -> SigG in forespore; SigE -> SigK in mother cell) is not captured.
 
-The most critical missing information is the regulatory context specific to SigG:
+4. **Forespore localization missing**: The curated review proposes endospore-forming forespore (GO:0042601) as the appropriate CC term. BioReason assigns generic cytoplasm.
 
-- No mention of Gin (CsfB), the anti-sigma-G factor encoded by the csfB gene, which inhibits SigG activity via direct N-terminal binding (residues 1-71 of SigG). The curated review includes GO:0045152 (antisigma factor binding) as a new annotation precisely because this is a key regulatory interaction. Gin's mechanism may involve more than simple sequestration (as discussed in PMID:19497328).
-- No mention of Lon protease, which together with Gin prevents premature SigG activation during early forespore development.
-- The timing aspect — SigG becomes active approximately 2 hours into sporulation, following earlier SigF activity — is not described.
-- The autoregulatory loop (SigG stimulates its own transcription) is absent.
-- The cascade logic — SigF activates sigG transcription, then SigG activates the late forespore program — is not described.
-- The functional distinction between "early forespore" (SigF) and "late forespore" (SigG) programs is not captured.
-- The forespore-specific localization (GO:0042601) is recommended as a new annotation in the curated review; BioReason provides no spatial specificity.
-- Premature SigG activity causes slow-germinating spores, a key negative phenotype not mentioned.
+5. **Erroneous GO predictions**: BioReason's GO terms include nucleus (GO:0005634) and endonuclease complex (GO:1905348) -- both completely wrong for a bacterial sigma factor.
 
-The BioReason functional summary describes SigG as a factor that "likely directs developmental and stress-responsive transcription programs characteristic of sporulation-associated regulons" — the "stress-responsive" characterization is misleading for SigG, which is a purely developmental factor with no documented stress-response role.
+Comparison with interpro2go:
 
-## Summary
+The interpro2go annotations for sigG include transcription regulation terms and the sigma-B/F/G type family classification. BioReason adds little beyond interpro2go -- both correctly identify sigma factor function but neither captures forespore specificity, anti-sigma regulation, or the sporulation context. BioReason's narrative is more articulate but the GO term predictions include errors (nucleus, endonuclease complex) that interpro2go would not produce.
 
-Like sigF, BioReason identifies the sigma-70 family membership and the general mechanism correctly, but misses the specific regulatory controls that define SigG's biology. The anti-sigma Gin/CsfB system and the temporal ordering of the SigF -> SigG cascade are completely absent. The formal GO output again defaults to "protein binding" rather than "sigma factor activity." The description conflates developmental and stress-response functions.
+## Notes on thinking trace
+
+The trace identifies the sigma-G type classification (IPR014212) but fails to leverage this specific family assignment to infer the late forespore role. The reasoning about regions 2/3/4 and HTH domain function is standard and correct. The trace mentions "sporulation-associated regulons" but does not commit to the specific forespore identity that the domain classification clearly indicates.

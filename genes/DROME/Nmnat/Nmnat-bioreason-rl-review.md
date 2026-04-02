@@ -1,30 +1,34 @@
-# BioReason-Pro RL Review: Nmnat (fruit fly)
+# BioReason-Pro RL Review: Nmnat (DROME)
 
 Source: Nmnat-deep-research-bioreason-rl.md
 
-- **Correctness**: 3/5
+- **Correctness**: 4/5
 - **Completeness**: 2/5
 
-## What it got right
+## Functional Summary Review
 
-BioReason correctly identifies Nmnat as an NMNAT-class adenylyltransferase with a Rossmann-like fold, and correctly predicts the core enzymatic function: conversion of NMN + ATP to NAD+ (adenylyltransferase activity, GO:0070566; nicotinamide-nucleotide adenylyltransferase activity). The domain architecture analysis is sound (IPR014729, IPR051182, IPR004821). The localization inference (cytoplasmic, soluble oligomer) is partially correct. The connection to NAD biosynthesis (GO:0009435) and salvage pathway (GO:0034355) is accurate.
+The BioReason summary states:
 
-The GO terms output correctly includes adenylyltransferase activity (GO:0070566), nucleotidyltransferase activity (GO:0016779), and biological processes related to NAD metabolism. The presynaptic active zone (GO:0048786) and neuromuscular junction (GO:0031594) cellular component annotations in the output hint at the neuroprotective context.
+> A soluble cytoplasmic adenylyltransferase that builds cellular NAD pools by converting nicotinamide/nicotinate mononucleotides with ATP to form diadenosine phosphate intermediates and ultimately regenerate NAD. Its Rossmann-like catalytic core supports oligomerization and precise phosphate handling, enabling efficient NAD biosynthesis and salvage in the cytoplasm. By sustaining NAD-dependent redox and signaling pathways, it helps maintain energy balance and transcriptional responses.
 
-## What it got wrong or missed
+The core enzymatic function is correctly identified: Nmnat catalyzes the formation of NAD+ from NMN and ATP. The curated review confirms the primary catalytic function as nicotinamide-nucleotide adenylyltransferase activity (GO:0000309) and nicotinate-nucleotide adenylyltransferase activity (GO:0004515), with NAD+ biosynthetic process via the salvage pathway (GO:0034355) as the core biological process.
 
-**The moonlighting chaperone function is absent.** The most distinctive and biologically important feature of Drosophila Nmnat is that it functions as a stress-response chaperone with holdase activity, independent of its NAD+ synthesis activity. This chaperone function prevents toxic aggregation of misfolded proteins and promotes proteasome-mediated degradation. The chaperone activity resides in the C-terminal domain (PMID:18344983). BioReason does not mention this at all, despite this being a major research focus in Drosophila Nmnat biology.
+**Minor inaccuracy**: The mention of "diadenosine phosphate intermediates" is biochemically imprecise. The reaction is a direct adenylyl transfer: NMN + ATP -> NAD+ + PPi, not via a diadenosine intermediate.
 
-**Isoform-specific biology is absent.** The curated review documents that Nmnat produces four isoforms via alternative splicing and alternative initiation, with distinct subcellular localizations and neuroprotective capacities: isoform D (cytoplasmic, strong holdase and refoldase, neuroprotective) and isoform C (nuclear, holdase only, pro-apoptotic under stress). BioReason treats the protein as a single entity with cytoplasmic localization, missing the nuclear isoform (C) and the isoform-specific functional differences.
+**Major omissions**:
 
-**Neuroprotection and axon maintenance are missed.** Nmnat is essential for the maintenance of neuronal integrity including photoreceptor cells, axons, and dendrites (GO:0045494, retina homeostasis). Photoreceptor cell maintenance is a key GO annotation (with strong experimental support). The GO terms output includes photoreceptor cell maintenance (GO:0045494) and retina homeostasis (GO:0001895) but these are not derived from or discussed in BioReason's reasoning — they appear as pre-loaded predictions disconnected from the analysis.
+1. **Chaperone moonlighting function**: The curated review describes Nmnat as "an essential bifunctional protein with dual enzymatic and chaperone activities." Its chaperone function -- holdase activity preventing toxic aggregation of misfolded proteins -- is independent of NAD+ synthesis and resides in the C-terminal domain (PMID:19403820, PMID:26616331). This is a defining feature of Drosophila Nmnat entirely absent from BioReason's summary.
 
-**Synaptic biology is missed.** The GO terms output includes presynaptic active zone (GO:0048786) and neuromuscular junction localization, and negative regulation of synaptic transmission (GO:0050805). These reflect the important role of Nmnat at synapses in regulating neuromuscular junction physiology. BioReason's reasoning does not discuss synapse biology.
+2. **Neuroprotective function**: The curated review extensively documents Nmnat's essential role in neuronal maintenance: "required for the maintenance of neuronal integrity, including photoreceptor cells, axons, and dendrites." Loss causes "rapid and severe neurodegeneration" (PMID:17132048). This is not mentioned.
 
-**The NMN precursor role and neurodegeneration connection are missed.** A key finding in the curated literature is that NMN accumulation (from loss of Nmnat-mediated conversion) is deleterious — NMN-D (a non-hydrolyzable NMN analog) delays neurodegeneration caused by Nmnat loss (PMID:36476387). BioReason's analysis treats NAD biosynthesis as uniformly beneficial without capturing the substrate/product balance and its neurological consequences.
+3. **Isoform-specific biology**: The curated review describes four isoforms with distinct subcellular localizations and functions: isoform D (cytoplasmic, strong holdase and refoldase, neuroprotective) and isoform C (nuclear, holdase only, pro-apoptotic under stress). BioReason only mentions cytoplasmic localization.
 
-**The mechanism description contains a subtle error.** BioReason states the enzyme "builds NAD pools by converting nicotinamide/nicotinate mononucleotides with ATP to form diadenosine phosphate intermediates." Diadenosine phosphate intermediates (ApnA compounds) are not part of the NMNAT reaction mechanism; this is an error or confused analogy. The actual product is NAD+ (not a diadenosine species) via an adenylyl transfer releasing pyrophosphate.
+4. **Synaptic functions**: The curated review documents roles in synapse organization (GO:0050808), photoreceptor cell maintenance (GO:0045494), and neuromuscular junction regulation. These are absent.
 
-## Summary
+Comparison with interpro2go:
 
-BioReason correctly identifies the enzymatic function at a high level but misses both of the features that make Drosophila Nmnat biologically important and scientifically notable: (1) the moonlighting chaperone activity that is independent of NAD synthesis, and (2) the isoform-specific biology including the nuclear pro-apoptotic isoform. The neuroprotection and synaptic roles are visible in the GO term output but entirely absent from the reasoning, suggesting these are pre-loaded labels rather than inferred conclusions. A mechanism error (diadenosine phosphate intermediates) is also present.
+The ai-review.yaml contains one GO_REF:0000002 annotation: catalytic activity (GO:0003824), which the curated review notes is "a very broad parent term" with more specific activities already annotated. BioReason's reasoning closely mirrors interpro2go: domain architecture identifies the NMNAT catalytic core and infers adenylyltransferase activity. BioReason adds biochemical context about NAD biosynthesis beyond what interpro2go provides. However, neither approach can identify the chaperone moonlighting function, which is not encoded in the domain architecture recognized by InterPro but is a key distinguishing feature of Drosophila Nmnat.
+
+## Notes on thinking trace
+
+The trace correctly identifies the NMNAT-family catalytic domains and Rossmann-like fold. The inference about oligomerization and pathway context (coupling with NAMPT, sirtuins, PARPs) is reasonable. The trace cannot detect the chaperone function from domain architecture alone, which is a fundamental limitation of structure-based reasoning for moonlighting proteins.

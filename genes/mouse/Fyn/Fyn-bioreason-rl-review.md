@@ -2,43 +2,25 @@
 
 Source: Fyn-deep-research-bioreason-rl.md
 
-- **Correctness**: 4/5
-- **Completeness**: 2/5
+- **Correctness**: 5/5
+- **Completeness**: 3/5
 
-## Analysis
+## Functional Summary Review
 
-BioReason correctly identifies Fyn as a non-receptor tyrosine kinase with the canonical SH3-SH2-kinase domain architecture of the Src family. The domain analysis is accurate and the mechanistic reasoning is sound. However, the analysis remains generic to any Src-family kinase without capturing what makes Fyn specifically important.
+The BioReason functional summary is accurate but generic:
 
-Note: The curated Fyn review is at INITIALIZED status (all annotations PENDING), so comparison is against GOA annotations and known biology.
+> A cytoplasmic, non-receptor tyrosine kinase that uses SH3- and SH2-mediated docking to assemble on membrane-proximal signaling complexes and phosphorylate tyrosine residues via a conserved catalytic core. By coupling high-affinity substrate targeting with ATP-fueled catalysis, it propagates intracellular signaling pathways that regulate adhesion, cytoskeletal remodeling, and survival decisions in mouse cells.
 
-### What was right
+This correctly identifies the SH3-SH2-kinase domain architecture, the non-receptor tyrosine kinase identity (GO:0004713), and the cytoplasmic localization. The mention of adhesion and cytoskeletal remodeling is appropriate for a Src-family kinase.
 
-| Aspect | BioReason claim | GOA annotations |
-|--------|----------------|-----------------|
-| Non-membrane spanning tyrosine kinase (GO:0004715) | Correct | IBA/IEA-annotated |
-| Protein tyrosine kinase activity (GO:0004713) | Correct | IEA-annotated |
-| ATP binding (GO:0005524) | Correct | IEA-annotated |
-| SH3-SH2-kinase architecture | Correct | Matches known structure |
-| Cytoplasmic enzyme | Correct | Cytoplasm (GO:0005737) annotated |
-| Signal transduction role | Correct | Cell surface RTK signaling (GO:0007169) annotated |
+However, the summary is essentially a generic description that would apply to any Src-family kinase (Src, Fyn, Yes, Lck, Lyn, etc.) without distinguishing Fyn-specific biology. Fyn has well-characterized specific roles in: (1) T-cell receptor signaling (the Fyn-T isoform), (2) myelination and oligodendrocyte development, (3) tau phosphorylation and Alzheimer's disease pathogenesis, (4) NMDA receptor regulation at synapses, and (5) lipid raft-associated signaling. None of these are mentioned. The curated review lists GO:0048156 (tau protein binding) and GO:0043014 (alpha-tubulin binding) as specific MF annotations.
 
-### What was wrong
+The functional summary also omits the N-terminal myristoylation/palmitoylation that targets Fyn to membrane rafts, which is a distinctive feature compared to Src.
 
-- **UniProt summary says "Probable receptor tyrosine kinase"**: This is incorrect. Fyn is definitively a non-receptor tyrosine kinase. The BioReason thinking trace correctly identifies it as non-receptor (via IPR050198), but the UniProt summary field contradicts this. This appears to be a retrieval error from UniProt rather than an inference error.
-- **Plasma membrane localization is understated**: BioReason describes Fyn as "cytoplasmic" with "transient" membrane associations. In reality, Fyn is myristoylated and palmitoylated at the N-terminus and constitutively membrane-associated. The GOA has plasma membrane (GO:0005886) as an IBA annotation. BioReason missed the N-terminal lipid modifications entirely.
+Comparison with interpro2go:
 
-### Major omissions
+The curated review has one GO_REF:0000002 annotation: GO:0005524 (ATP binding). BioReason's summary describes ATP-dependent catalysis consistent with this but provides no additional interpro2go-level insight. The summary largely mirrors what interpro2go would predict from the SH3-SH2-kinase architecture (protein tyrosine kinase activity, ATP binding, intracellular signal transduction) without adding Fyn-specific biology. This is a case where BioReason is essentially recapitulating domain-based predictions dressed up in narrative form.
 
-- **T cell receptor signaling (GO:0050852)**: This is an IBA-annotated core function. Fyn is one of the first kinases activated upon TCR engagement and is essential for T cell development. Not mentioned at all.
-- **Myelination/oligodendrocyte biology**: Fyn is essential for CNS myelination and oligodendrocyte differentiation. The GOA includes myelination (GO:0042552) and ensheathment of neurons (GO:0007272). Not mentioned.
-- **Tau phosphorylation**: Fyn phosphorylates tau and is implicated in Alzheimer's disease pathology. The GO terms include tau protein binding (GO:0048156). Not mentioned.
-- **N-terminal myristoylation/palmitoylation**: Critical for membrane targeting. The BioReason sequence starts with MGC (the myristoylation motif) but this is not discussed.
-- **Two isoforms (Fyn-B and Fyn-T)**: The curated review notes alternative products with distinct tissue distributions (brain vs. T cells). Not mentioned by BioReason.
-- **Signaling receptor binding (GO:0005102)**: IBA-annotated. Fyn binds multiple receptor complexes.
-- **Postsynaptic density, dendrite, synapse biology**: Major Fyn functions in neurons. Not discussed.
+## Notes on thinking trace
 
-### Failure modes observed
-
-- **Src-family generic description**: The entire analysis could describe Src, Yes, Lyn, or any other SFK equally well. Nothing distinguishes Fyn from its paralogs. This is a classic fold-bias failure -- the system describes the protein family rather than the specific protein.
-- **Missing lipid modification biology**: The N-terminal sequence (MGC...) is a strong signal for myristoylation that determines membrane targeting, but BioReason does not analyze the N-terminus beyond the domain annotations.
-- **Missing tissue-specific roles**: Fyn's biology is highly context-dependent (T cells, oligodendrocytes, neurons), and none of these contexts are captured.
+The trace correctly identifies the Fyn/Yrk-specific SH3 and SH2 domain annotations (IPR035750, IPR047924) but does not leverage this family-level specificity in the functional summary. The mechanistic model of SH3/SH2-guided docking followed by kinase catalysis is standard textbook Src-family kinase biology.

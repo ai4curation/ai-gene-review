@@ -5,31 +5,27 @@ Source: csr-1-deep-research-bioreason-rl.md
 - **Correctness**: 1/5
 - **Completeness**: 1/5
 
-## Critical failure: wrong gene
+## Functional Summary Review
 
-BioReason analyzed the sequence for **nhr-47** (Q17370, a nuclear hormone receptor) rather than the actual CSR-1 protein (Q21992, an Argonaute). This is the same gene identity error documented extensively in the curated review, where the GOA file incorrectly mapped csr-1 to nhr-47 because csr-1 was listed as an old synonym for nhr-47 in some databases.
+The BioReason functional summary states:
 
-BioReason's analysis describes:
-- Nuclear hormone receptor with NR2 subfamily membership
-- Paired zinc-finger DNA-binding domain (HNF4-like)
-- Ligand-binding domain with co-regulator switching
-- Nuclear transcriptional regulator
+> A nuclear transcriptional regulator in Caenorhabditis elegans that uses a paired zinc-finger DNA-binding module and a ligand-responsive activation domain to control gene expression in the nucleus. By binding specific genomic sites and switching between co-repressor and co-activator states in response to small hydrophobic ligands, it assembles transcriptional complexes that fine-tune RNA polymerase II-driven programs linked to development and metabolism.
 
-## What CSR-1 actually is
+This summary is **fundamentally wrong**. CSR-1 is not a nuclear hormone receptor. CSR-1 (Chromosome Segregation and RNAi deficient-1) is an Argonaute protein -- the only singly essential Argonaute in C. elegans among 24 family members. Its core functions are:
 
-CSR-1 is the only singly essential Argonaute protein in C. elegans (out of 24 Argonaute family members). Its actual biology:
+- Binding 22G-RNAs (small interfering RNAs) antisense to germline-expressed genes
+- Functioning as part of the RISC complex in P granules
+- Mediating proper holocentric chromosome segregation
+- Protecting germline genes from piRNA-mediated silencing (RNA-induced epigenetic gene activation, RNAa)
 
-| Feature | BioReason (wrong gene) | Actual CSR-1 |
-|---------|----------------------|--------------|
-| Protein type | Nuclear hormone receptor | Argonaute protein |
-| Domains | Zinc fingers + ligand-binding domain | PAZ + PIWI domains |
-| MF | DNA-binding TF activity | siRNA binding (22G-RNAs) |
-| BP | Regulation of transcription | Chromosome segregation, gene silencing regulation |
-| CC | Nucleus | P granules, chromosomes |
-| Key function | Ligand-responsive transcription | Epigenetic gene activation (RNAa), germline protection from piRNA silencing |
+The curated review documents a critical data issue: the original GOA/UniProt files for csr-1 contained data for the wrong gene -- nhr-47 (Q17370), an orphan nuclear hormone receptor. The BioReason system was given the nhr-47 sequence, not the CSR-1 Argonaute sequence (Q21992). Consequently, BioReason produced a perfectly logical but entirely incorrect description of a nuclear hormone receptor when it should have described an RNA-binding Argonaute protein.
 
-## Failure mode analysis
+This is an input data error rather than a reasoning error on BioReason's part. The InterPro domains listed (zinc finger NHR-type, nuclear hormone receptor ligand-binding domain) are those of nhr-47, not csr-1.
 
-**Garbage in, garbage out.** BioReason analyzed the wrong protein sequence entirely. The system has no mechanism to detect that the input sequence does not match the gene name. The NHR-47 analysis itself is technically competent domain-to-function reasoning for a nuclear receptor, but it describes the wrong protein. This is a database curation error that BioReason propagated uncritically.
+Comparison with interpro2go:
 
-This case demonstrates that sequence-only analysis without cross-referencing gene identity databases can lead to completely wrong conclusions. The curated review caught this error and marked all nhr-47-derived annotations for REMOVAL, replacing them with literature-derived CSR-1 Argonaute annotations.
+The interpro2go annotations in the curated review (GO:0000978 DNA binding, GO:0003700 transcription factor activity, GO:0006355 regulation of transcription) are all marked REMOVE because they apply to the wrong gene. BioReason faithfully recapitulates these incorrect interpro2go annotations. The error here originates entirely from the wrong input sequence/identifier.
+
+## Notes on thinking trace
+
+The trace is internally coherent for a nuclear hormone receptor but entirely irrelevant to the actual CSR-1 Argonaute protein. This case illustrates the system's complete dependence on correct input data.

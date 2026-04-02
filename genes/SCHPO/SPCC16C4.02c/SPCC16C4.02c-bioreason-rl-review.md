@@ -2,34 +2,32 @@
 
 Source: SPCC16C4.02c-deep-research-bioreason-rl.md
 
-- **Correctness**: 3/5
+- **Correctness**: 2/5
 - **Completeness**: 2/5
 
-## Analysis
+## Functional Summary Review
 
-BioReason correctly identifies the core domain architecture: Neurochondrin family (IPR008709) and Armadillo-type fold (IPR016024), and accurately describes this as a scaffold/adaptor protein that mediates protein-protein interactions rather than catalysis. The UniProt summary ("May be involved in actin filament dynamics") is faithfully reported.
+BioReason's functional summary states:
 
-### What BioReason got right:
+> A cytoplasmic adaptor that uses an armadillo-type repeat scaffold to organize actin-remodeling assemblies. By mediating multivalent protein interactions rather than catalysis, it recruits and coordinates actin regulators to shape filament nucleation, turnover, and architecture during cortical remodeling and endocytic events.
 
-- **Domain architecture**: Correct identification of ARM-repeat scaffold and Neurochondrin family membership.
-- **General function class**: Correctly predicts this is a binding/scaffolding protein, not an enzyme. The curated review agrees, assigning GO:0060090 (molecular adaptor activity).
-- **Cytoplasmic localization**: Correctly infers cytoplasmic localization based on lack of signal peptide/TM domains. The curated review also favors cytoplasmic localization and removes the nuclear HDA annotation.
-- **Protein binding**: The GO:0005515 prediction is directionally correct, though not very informative (the curated review notes "protein binding" should be avoided in favor of more specific terms).
+The domain architecture identification (Neurochondrin family, IPR008709; Armadillo-type fold, IPR016024) is correct. The inference that the protein functions as a scaffolding/adaptor via ARM repeats is reasonable and aligns with the curated review's proposed molecular adaptor activity (GO:0060090).
 
-### Key failures:
+However, BioReason's specific claim about **actin-remodeling** function is unsupported. The curated review identifies SPCC16C4.02c as orthologous to human neurochondrin (NCDN) and describes it as interacting with:
+- Sfi1 (spindle pole body component)
+- Mcp5/Num1 (cortical dynein anchor for **microtubule** anchoring)
+- Ecl1 (chronological lifespan extender)
 
-1. **Actin-centric narrative is speculative and misleading**: BioReason's thinking trace builds an elaborate story around actin filament dynamics, invoking WASP/Las17, cofilin, profilin, capping/severing systems. While UniProt hints at actin dynamics, the curated review reveals the actual interaction partners are quite different: **Sfi1** (spindle pole body component), **Mcp5/Num1** (cortical dynein anchor for microtubule anchoring), and **Ecl1** (chronological lifespan extender). None of these are actin regulators. The protein's biology appears centered on **microtubule organization and spindle pole body function**, not actin remodeling.
+The interacting partners point toward **microtubule/spindle pole body organization**, not actin dynamics. The HDA annotations from PMID:16823372 place the protein at the mitotic spindle pole body (GO:0044732) and cell division site (GO:0032153), both consistent with microtubule-related functions.
 
-2. **Missed microtubule biology**: Ironically, BioReason's own GO term list includes microtubule-based process (GO:0007017), microtubule cytoskeleton organization (GO:0000226), cytoplasmic microtubule organization (GO:0031122), and spindle pole body (GO:0005816) -- yet the narrative in the thinking trace ignores all of these in favor of the actin story. The curated review retains the spindle pole body and cell division site localizations as non-core annotations based on interaction data with Sfi1.
+BioReason's UniProt summary section says "May be involved in actin filament dynamics," but the curated review's description and interaction partners suggest the function is more related to microtubule organization. The BioReason GO terms section actually includes microtubule-based process (GO:0007017) and spindle pole body (GO:0005816), contradicting its own functional summary about actin.
 
-3. **Missing interaction partner context**: BioReason provides no information about specific interaction partners. The curated review identifies concrete yeast two-hybrid interactions (Sfi1, Mcp5, Ecl1) that are essential for understanding this uncharacterized protein's likely functions.
+The cytoplasmic localization claim partially aligns with the curated review, which suggests cytoplasmic localization based on orthology, though the HDA data places it at nucleus, cell division site, and spindle pole body.
 
-4. **Missing evolutionary context**: BioReason does not note the important detail that this protein is orthologous to human neurochondrin (NCDN), is conserved across eukaryotes, but is absent in S. cerevisiae -- all key context from the curated review.
+Comparison with interpro2go:
 
-5. **Fabricated mechanistic detail**: The thinking trace invents specific mechanistic hypotheses about "nucleation-promoting factors," "coactosin/citron-like kinases," and "transient complexes with actin assembly factors" that have no evidential basis for this protein.
+There are no interpro2go (GO_REF:0000002) annotations for SPCC16C4.02c in the curated review. The only existing annotations are ND (no data) placeholders and HDA localization data. BioReason adds speculative functional inference from the ARM-repeat fold, which goes beyond what interpro2go provides. However, this inference incorrectly defaults to actin biology rather than the microtubule/SPB biology supported by interaction data.
 
-6. **Cellular component over-prediction**: BioReason lists numerous CC terms (microtubule organizing center, spindle pole body, mitotic spindle pole body, nucleus, cytoskeleton, microtubule cytoskeleton) -- some are plausible but the curated review is much more cautious, retaining only cell division site and mitotic SPB as non-core, and actually removing the nucleus annotation.
+## Notes on thinking trace
 
-### Failure mode: Narrative coherence over evidence
-
-BioReason constructs a coherent-sounding narrative from the ARM-repeat domain architecture but anchors it to the wrong cytoskeletal system (actin instead of microtubules), then fills in mechanistic details with generic knowledge about ARM-repeat proteins rather than organism-specific data. The existing GO annotations in its own output actually point toward microtubules, but the model ignores this signal.
+The trace correctly identifies the Neurochondrin family and ARM-repeat fold. However, the claim that "ARM-repeat scaffolds in the Neurochondrin family frequently tune actin assembly and turnover" is poorly supported. Neurochondrin in mammals is involved in signal transduction (mGluR signaling) and has no established actin-remodeling function. The trace appears to conflate generic ARM-repeat biology with Neurochondrin-specific biology.

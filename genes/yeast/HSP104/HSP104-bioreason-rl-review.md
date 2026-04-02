@@ -1,45 +1,37 @@
-# BioReason-Pro RL Review: HSP104 (yeast)
+# BioReason-Pro RL Review: HSP104 (S. cerevisiae)
 
 Source: HSP104-deep-research-bioreason-rl.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5
 
-## Analysis
+## Functional Summary Review
 
-BioReason delivers a strong structural and mechanistic analysis of HSP104 as an AAA+ ClpB-type disaggregase. The domain architecture dissection is thorough and accurate, correctly identifying the Clp N-terminal domain, tandem AAA+ ATPase modules, lid domain, and C-terminal assembly region.
+The BioReason summary states:
 
-### What was right
+> A cytosolic AAA+ chaperone that assembles into a soluble ring to bind and hydrolyze ATP, mechanically extracting and remodeling misfolded polypeptides to promote their disaggregation and refolding.
 
-- Excellent domain architecture analysis identifying all key AAA+ modules
-- Correct identification as a hexameric ring-forming ATPase disaggregase (not a protease)
-- Accurate molecular function: ATP binding, ATPase activity, unfolded protein binding
-- Correct biological process: protein folding/quality control
-- Correct localization to cytoplasm
-- Correct identification of Hsp70/Hsp40 cooperation for substrate refolding
-- Appropriately rejected the UniProt "probable ATP-dependent non-specific protease" summary, correctly arguing the architecture indicates chaperone/unfoldase activity rather than proteolysis
+This is largely accurate. The curated review confirms HSP104 is a hexameric AAA+ ATPase disaggregase with ATP hydrolysis activity (GO:0016887) that performs ATP-dependent protein disaggregation, threading aggregated polypeptides through its central pore. The cytoplasmic localization is correct (confirmed by IDA PMID:10467108).
 
-### What was wrong or missing
+> By coupling an N-terminal recognition module to a tandem ATPase engine and a gated lid, it powers substrate translocation through a central pore, thereby sustaining protein quality control and proteostasis pathways in yeast.
 
-| Aspect | BioReason Prediction | Curated Review |
-|--------|---------------------|----------------|
-| **Core MF** | ATPase activity + unfolded protein binding | GO:0140545 ATP-dependent protein disaggregase activity (the specific term) |
-| **Thermotolerance** | Not mentioned | Cellular heat acclimation (GO:0070370) -- the defining phenotype |
-| **Prion biology** | Not mentioned | Prion fibril fragmentation and propagation of [PSI+], [URE3], [PIN+] |
-| **Stress granules** | Not mentioned | Stress granule disassembly during heat recovery (PMID:24291094) |
-| **Nuclear localization** | Not mentioned | Shuttles between cytoplasm and nucleus (PMID:10467108) |
-| **TA protein targeting** | Not mentioned | Role in TRC complex for tail-anchored protein targeting (PMID:20850366) |
+The structural description (N-terminal Clp repeat domain, tandem AAA+ core, lid domain, C-terminal assembly platform) correctly maps to the InterPro architecture and the known HSP104 mechanism.
 
-### Failure modes
+One notable positive: the thinking trace correctly identifies HSP104 as a chaperone/unfoldase rather than a protease, despite the UniProt summary saying "Probable ATP-dependent non-specific protease." This shows the model can override misleading UniProt descriptions using domain-level reasoning.
 
-1. **Missing the defining biological phenotype**: HSP104 was originally identified through its essential role in induced thermotolerance (PMID:2188365). BioReason discusses "stress" generically but never identifies heat acclimation as the core biological function.
+However, the summary misses several important aspects documented in the curated review:
+- The essential role in induced thermotolerance (GO:0034605 cellular response to heat, GO:0010286 heat acclimation)
+- The requirement for yeast prion propagation ([PSI+], [URE3], [PIN+]) via prion fibril fragmentation (GO:0043335 protein unfolding, in the context of prion maintenance)
+- The cooperation with Hsp70/Hsp40 (Ssa1/Ydj1) system for disaggregation -- mentioned in the thinking trace but absent from the summary
+- Stress granule disassembly during recovery
+- Nuclear localization under stress conditions (PMID:10467108)
 
-2. **Missing specific disaggregase term**: The curated review correctly proposes replacing GO:0051082 (unfolded protein binding) with GO:0140545 (ATP-dependent protein disaggregase activity) as the specific MF term. BioReason describes the disaggregation mechanism accurately but stops at generic terms.
+The process-level description ("protein quality control and proteostasis pathways") is vague compared to the curated terms: protein refolding (GO:0042026), chaperone cofactor-dependent protein refolding (GO:0051085), de novo post-translational protein folding (GO:0051084).
 
-3. **Missing prion biology**: One of HSP104's most distinctive and biologically significant roles is in yeast prion propagation -- it fragments prion fibrils into transmissible seeds. This is entirely absent from the BioReason analysis. This cannot be predicted from domain architecture alone, but represents a major gap in biological completeness.
+Comparison with interpro2go:
 
-4. **Missing stress granule disassembly**: HSP104 drives disassembly of heat stress granules and restoration of translation during recovery. Not captured.
+BioReason's GO term predictions include many terms from the interpro2go pipeline (ATPase activity, ATP binding, protein folding, chaperone binding, unfolded protein binding). The functional summary largely recapitulates the interpro2go-level understanding -- AAA+ ATPase with chaperone function. BioReason adds the mechanistic narrative of pore translocation and disaggregation, which goes beyond interpro2go, but the specific biological roles (thermotolerance, prion propagation) require organism-specific knowledge that neither approach captures.
 
-5. **Protein folding in ER**: BioReason includes GO:0034975 (protein folding in endoplasmic reticulum) in its GO term list. The curated review marks organelle lumen localization as over-annotated since HSP104 is cytosolic/nuclear and any ER effects are indirect.
+## Notes on thinking trace
 
-6. **Overinclusion of generic terms**: The BioReason GO list includes many extremely general terms (GO:0009987 cellular process, GO:0008152 metabolic process, etc.) that add no information.
+The trace demonstrates solid structural reasoning, correctly interpreting the ClpB-type architecture as a disaggregase rather than a protease. The predicted interaction partners (Hsp70/Ssa family, Hsp40 co-chaperones, small heat shock proteins) are accurate. The reasoning stays close to what domain architecture alone can provide.

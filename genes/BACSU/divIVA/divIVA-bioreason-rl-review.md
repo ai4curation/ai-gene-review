@@ -1,34 +1,32 @@
-# BioReason-Pro RL Review: divIVA (Bacillus subtilis)
+# BioReason-Pro RL Review: divIVA (B. subtilis)
 
 Source: divIVA-deep-research-bioreason-rl.md
 
-- **Correctness**: 2/5
+- **Correctness**: 3/5
 - **Completeness**: 2/5
 
-## What It Got Right
+## Functional Summary Review
 
-BioReason correctly identifies DivIVA as a non-enzymatic scaffold protein based on the DivIVA family/domain architecture (IPR007793, IPR019933) and the absence of catalytic motifs. The inference that it drives protein-protein interactions and participates in cell division is directionally correct: cytokinesis (GO:0000910) and cell division are appropriate processes.
+The BioReason functional summary reads:
 
-The observation that the N-terminal DivIVA domain (residues 3-36) is the nucleation/membrane-proximal module and that the full-length protein forms a larger scaffold (residues 1-151) is architecturally sound.
+> A cytoplasmic scaffold that assembles and positions the cytokinetic machinery in Bacillus subtilis. It oligomerizes through an N-terminal assembly core and uses an extended scaffold to form membrane-proximal lattices that concentrate early cell-division components at poles and nascent septa. By organizing these assemblies and coupling them to the membrane and cortical arrays, it promotes maturation of the division apparatus and coordinates the execution of cytokinesis.
 
-The molecular function assignment of protein binding (GO:0005515) and identical protein binding (GO:0042802) are present in the curated annotation set and are correct (DivIVA homo-oligomerizes).
+The summary correctly identifies DivIVA as a scaffold involved in cell division that oligomerizes and localizes to poles and septa. However, several significant errors and omissions reduce accuracy:
 
-## What It Got Wrong or Missed
+1. **Missed core molecular function**: The curated review identifies membrane curvature sensor activity (GO:0140090) as the fundamental molecular function of DivIVA. This is what drives its localization to negatively curved membrane regions at cell poles and division septa. BioReason misses this entirely, defaulting to generic "protein binding" (GO:0005515).
 
-**Membrane curvature sensing — the defining functional mechanism — is absent.** The most important and distinctive molecular function of DivIVA in B. subtilis is membrane curvature sensor activity (GO:0140090). DivIVA preferentially localizes to regions of negative membrane curvature at cell poles and division septa by inserting hydrophobic and positively charged residues into the curved membrane. This is determined by crystal structure (PMID:20502438) and is the mechanistic basis for all downstream DivIVA biology. BioReason does not mention membrane curvature sensing at all. This is the central failure of the analysis.
+2. **Wrong mechanism**: BioReason describes DivIVA as directly promoting "maturation of the division apparatus" and orchestrating "FtsZ-ring maturation." The curated review clarifies that DivIVA's actual role in B. subtilis is division septum site selection (GO:0000918) -- it recruits MinJ/MinCD to prevent inappropriate FtsZ assembly at old division sites, rather than directly promoting FtsZ ring maturation. This is a conceptually different mechanism.
 
-**Cellular localization is wrong.** BioReason assigns cytoplasm (GO:0005737) as the cellular component. DivIVA is a membrane-associated scaffold that specifically localizes to cell poles (GO:0060187) and division septa (GO:0000935). Calling it simply "cytoplasmic" misrepresents its localization and functional context.
+3. **Missing localization specificity**: BioReason assigns cytoplasm (GO:0005737); the curated review specifically notes cell pole (GO:0060187) and division septum (GO:0000935) as more appropriate localizations.
 
-**The generated biological process terms are wrong.** The BioReason-assigned BP terms are dominated by flagellum-related terms: bacterial-type flagellum assembly (GO:0044780), flagellum organization (GO:0044781), flagellum-dependent swarming motility (GO:0071978), and related terms. DivIVA has no role in flagellum biology. This is a serious factual error — an example of fold-bias from training data where the DivIVA family signature is possibly co-occurring with motility-related genes in training corpora. The curated annotation correctly assigns division septum assembly/site selection and cell division terms, not flagellum terms.
+4. **Missing sporulation role**: The curated review describes DivIVA's role during sporulation (asymmetric polar septum localization, SpoIIE association, chromosome anchoring via Spo0J), which BioReason completely omits.
 
-**The Min system connection is absent.** DivIVA's core biological role in vegetative cells is to recruit MinJ, which in turn positions MinCD to prevent aberrant FtsZ assembly at previous division sites. This is the mechanism of septum site selection and is the key reason loss of DivIVA causes minicell formation and filamentous growth. None of this is captured.
+5. **Erroneous GO predictions**: The BioReason GO term predictions include flagellum-related terms (bacterial-type flagellum assembly, swarming motility) which are completely wrong for DivIVA.
 
-**Sporulation role is absent.** DivIVA accumulates asymmetrically at the polar septum during sporulation, interacts with SpoIIE phosphatase for compartment-specific sigma-F activation, and interacts with Spo0J for chromosome anchoring. The curated review retains the sporulation annotation (GO:0030435) as KEEP_AS_NON_CORE. BioReason omits this entirely.
+Comparison with interpro2go:
 
-**ComN recruitment and competence connection is absent.** DivIVA recruits ComN to cell poles for polar localization of comE mRNA during competence development (PMID:22582279). This functional versatility as a pole-differentiation organizer is not captured.
+The interpro2go annotations for divIVA map to protein binding and identical protein binding, plus flagellum-related BP terms. BioReason's GO predictions closely mirror these interpro2go mappings, including the erroneous flagellum terms. The flagellar annotations likely derive from the IPR007793 DivIVA family being associated with some flagellar terms in InterPro2GO through organisms where DivIVA homologs play flagellar roles. BioReason recapitulates these interpro2go errors without correction and adds no insight beyond interpro2go.
 
-**The FtsZ scaffold / cytokinesis framing is slightly off.** BioReason claims DivIVA directly "concentrates and positions the cytokinetic apparatus" and "captures and stabilizes FtsZ polymers." This is not correct for B. subtilis DivIVA — its role in cell division is indirect, through the MinJ-MinCD pathway, not through direct FtsZ stabilization. Direct FtsZ interaction is not established for B. subtilis DivIVA.
+## Notes on thinking trace
 
-## Summary
-
-BioReason fails significantly on DivIVA. The defining molecular function (membrane curvature sensing), the key biological mechanism (MinJ-MinCD recruitment for septum site selection), and the correct subcellular localization (cell poles and division septum, not generic cytoplasm) are all absent. The biological process GO terms generated include flagellum assembly/motility terms that have no basis in DivIVA biology — a clear fold-bias failure. This is a case where the domain-based reasoning leads to a qualitatively incorrect functional picture despite identifying some correct parent-level terms (cell division, protein binding).
+The trace correctly identifies the DivIVA domain architecture and infers an oligomeric scaffold function. However, the inference that DivIVA "captures and stabilizes FtsZ polymers" misrepresents its actual function as a negative spatial regulator of FtsZ via the Min system, rather than a direct FtsZ stabilizer. The assignment of cytokinesis (GO:0000910) as the primary BP, while broadly correct, obscures the more specific septum site selection role.
