@@ -1,0 +1,3301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bcp - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>bcp</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P0AE52" target="_blank" class="term-link">
+                        P0AE52
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Escherichia coli (strain K12)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "bcp";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P0AE52" data-a="DESCRIPTION: Bcp (bacterioferritin comigratory protein) is a mo..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Bcp (bacterioferritin comigratory protein) is a monomeric peroxiredoxin of the BCP/PrxQ subfamily (EC 1.11.1.24) that catalyzes the thioredoxin-dependent reduction of hydrogen peroxide and organic hydroperoxides to water and the corresponding alcohols. It functions as an atypical 2-Cys peroxiredoxin: the peroxidatic cysteine Cys45 is oxidized to sulfenic acid by peroxide, then forms an intramolecular disulfide with the resolving cysteine Cys50, which is subsequently reduced by thioredoxin. Unlike the major E. coli peroxiredoxin AhpC, BCP is unusually versatile -- it can use multiple electron donors (Trx1, Trx2, Grx1, Grx3), has the highest redox potential (-146 mV) of any characterized peroxiredoxin, and shows broad peroxide substrate specificity. These properties suggest BCP may serve as a defense enzyme of last resort, remaining active under highly oxidizing conditions when other antioxidant systems are compromised. The bcp null mutant shows hypersensitivity to H2O2, tert-butyl hydroperoxide, and linoleic acid hydroperoxide, confirming its role in oxidative stress defense.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008379" target="_blank" class="term-link">
+                                    GO:0008379
+                                </a>
+                            </span>
+                            <span class="term-label">thioredoxin peroxidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0008379" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BCP has well-characterized thioredoxin-dependent peroxidase activity. The IBA annotation from phylogenetic inference is strongly supported by direct experimental evidence in the same organism (see IDA annotation below). BCP uses thioredoxin as a primary electron donor to reduce hydroperoxides.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Thioredoxin peroxidase activity is the core molecular function of BCP, demonstrated by Jeong et al. (2000) and characterized in detail by Reeves et al. (2011). The phylogenetic inference is correct and consistent with direct experimental data.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                                        PMID:10644761
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BCP showed a thioredoxin-dependent thiol peroxidase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21910476" target="_blank" class="term-link">
+                                        PMID:21910476
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">thioredoxin (Trx1)-dependent peroxidase assays conducted by stopped-flow spectroscopy</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is correct for BCP. The protein lacks signal peptides and transmembrane domains and is a soluble monomeric enzyme. Two independent proteomics studies confirmed cytosolic localization. The broader cytoplasm annotation subsumes the more specific cytosol IDA annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> BCP is a soluble cytoplasmic enzyme. This is supported by two independent large-scale proteomics studies that identified BCP in the cytosolic fraction of E. coli K-12.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15911532" target="_blank" class="term-link">
+                                        PMID:15911532
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a proteomic analysis of Escherichia coli in which 3,199 protein forms were detected, and of those 2,160 were annotated and assigned to the cytosol, periplasm, inner membrane, and outer membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18304323" target="_blank" class="term-link">
+                                        PMID:18304323
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we identified 1103 proteins from the cytosolic fraction of the Escherichia coli strain MC4100</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034599" target="_blank" class="term-link">
+                                    GO:0034599
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to oxidative stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0034599" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BCP is involved in the cellular response to oxidative stress. The bcp null mutant shows hypersensitivity to multiple oxidants, and bcp expression is induced 3-fold upon shift from anaerobic to aerobic growth. However, GO:0034599 (cellular response to oxidative stress) implies a signaling or regulatory response component beyond simple detoxification. While UniProt states BCP acts &#34;as sensor of hydrogen peroxide-mediated signaling events,&#34; the evidence for a signaling role in E. coli BCP is limited. The more straightforward annotation GO:0006979 (response to oxidative stress, IMP) is already present and better supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is not wrong but the more specific claim of &#34;cellular response&#34; (implying regulation/signaling) is less well-supported than the general oxidative stress response role. The IMP annotation to GO:0006979 below provides stronger direct evidence for the core oxidative stress defense function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                                        PMID:10644761
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BCP was induced 3-fold by the oxidative stress given by changing the growth conditions from the anaerobic to aerobic culture</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045454" target="_blank" class="term-link">
+                                    GO:0045454
+                                </a>
+                            </span>
+                            <span class="term-label">cell redox homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0045454" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BCP participates in maintaining cellular redox balance through its peroxidase activity, cycling between reduced and oxidized states via the thioredoxin system. The unusually high redox potential (-146 mV) and ability to use multiple electron donors (Trx1, Trx2, Grx1, Grx3) suggest BCP integrates with the broader cellular redox network.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While BCP does cycle through the thioredoxin/glutaredoxin redox systems, its primary evolved function is peroxide detoxification rather than general redox homeostasis. This annotation is technically correct but secondary to the core peroxidase function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21910476" target="_blank" class="term-link">
+                                        PMID:21910476
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BCP can utilize a variety of reducing substrates, including Trx1, Trx2, Grx1, and Grx3</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21910476" target="_blank" class="term-link">
+                                        PMID:21910476
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BCP exhibited a high redox potential of -145.9 ± 3.2 mV, the highest to date observed for a Prx</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016209" target="_blank" class="term-link">
+                                    GO:0016209
+                                </a>
+                            </span>
+                            <span class="term-label">antioxidant activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0016209" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BCP is indeed an antioxidant enzyme that detoxifies reactive oxygen species. This IEA annotation from InterPro (IPR000866, AhpC/TSA domain) is correct but very general. The more specific annotations for thioredoxin peroxidase activity (GO:0008379) and thioredoxin-dependent peroxiredoxin activity (GO:0140824) provide better functional resolution.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but too general. The specific peroxidase activity terms (GO:0008379, GO:0140824) are more informative for describing BCP function. Retained as a broad parent annotation from InterPro2GO.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BCP is an oxidoreductase (EC 1.11.1.24). This IEA annotation from InterPro is correct but extremely general. It is fully subsumed by the more specific thioredoxin peroxidase activity annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Technically correct but uninformatively broad. The specific molecular function annotations (GO:0008379, GO:0140824) are far more descriptive of BCP function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098869" target="_blank" class="term-link">
+                                    GO:0098869
+                                </a>
+                            </span>
+                            <span class="term-label">cellular oxidant detoxification</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0098869" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BCP detoxifies cellular oxidants (H2O2 and organic hydroperoxides) by reducing them to water and alcohols. This is a core biological process annotation that accurately describes BCP function. The combined IEA annotation derives from the molecular function annotations (GO:0008379, GO:0016209, GO:0140824).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cellular oxidant detoxification is a core biological function of BCP. The bcp null mutant shows hypersensitivity to H2O2, t-butyl hydroperoxide, and linoleic acid hydroperoxide, directly demonstrating BCP detoxifies these oxidants.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                                        PMID:10644761
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Bcp null mutant grew more slowly than its wild type in aerobic culture and showed the hypersensitivity toward various oxidants such as H(2)O(2), t-butyl hydroperoxide, and linoleic acid hydroperoxide</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140824" target="_blank" class="term-link">
+                                    GO:0140824
+                                </a>
+                            </span>
+                            <span class="term-label">thioredoxin-dependent peroxiredoxin activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0140824" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0140824 corresponds to EC 1.11.1.24 and represents the specific catalytic reaction: hydroperoxide + [thioredoxin]-dithiol = alcohol + [thioredoxin]-disulfide + H2O. This is the most precise molecular function term for BCP and directly matches the experimentally characterized activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most specific and accurate MF term for BCP. EC 1.11.1.24 is assigned to BCP with experimental evidence (PMID:10644761, PMID:21910476). BCP uses the thioredoxin system as its primary electron donor, making this the correct EC-linked GO term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                                        PMID:10644761
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BCP showed a thioredoxin-dependent thiol peroxidase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21910476" target="_blank" class="term-link">
+                                        PMID:21910476
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Kinetic and thermodynamic features reveal that Escherichia coli BCP is an unusually versatile peroxiredoxin</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ECOLI/bcp/bcp-deep-research-bioreason.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">domain logic directly yields the molecular functions formalized as GO:0008379 thioredoxin peroxidase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15911532" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15911532
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Localization, annotation, and comparison of the Escherichia ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0005829" data-r="PMID:15911532" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lopez-Campistrous et al. (2005) identified BCP in the cytosolic fraction of E. coli K-12 by 2D-gel electrophoresis and tandem mass spectrometry after biochemical fractionation. This is direct experimental evidence for cytosolic localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct identification of BCP in the cytosolic fraction by biochemical fractionation followed by 2D-gel/MS/MS. BCP lacks signal peptides and transmembrane domains, consistent with soluble cytosolic localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15911532" target="_blank" class="term-link">
+                                        PMID:15911532
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a proteomic analysis of Escherichia coli in which 3,199 protein forms were detected, and of those 2,160 were annotated and assigned to the cytosol, periplasm, inner membrane, and outer membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18304323" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18304323
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein abundance profiling of the Escherichia coli cytosol.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0005829" data-r="PMID:18304323" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ishihama et al. (2008) independently identified BCP in the cytosolic fraction of E. coli MC4100 by LC-MS/MS. This provides independent confirmation of cytosolic localization from a second proteomics study.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Independent confirmation of cytosolic localization using LC-MS/MS on the cytosolic fraction. Consistent with the other IDA annotation from PMID:15911532 and with the absence of signal peptide or transmembrane domains.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18304323" target="_blank" class="term-link">
+                                        PMID:18304323
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we identified 1103 proteins from the cytosolic fraction of the Escherichia coli strain MC4100</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006979" target="_blank" class="term-link">
+                                    GO:0006979
+                                </a>
+                            </span>
+                            <span class="term-label">response to oxidative stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10644761
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Thioredoxin-dependent hydroperoxide peroxidase activity of b...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0006979" data-r="PMID:10644761" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The bcp null mutant showed clear hypersensitivity to oxidative stress: slower growth in aerobic culture and increased sensitivity to H2O2, t-butyl hydroperoxide, and linoleic acid hydroperoxide. BCP expression was induced 3-fold upon shift from anaerobic to aerobic conditions. Complementation with bcp gene restored resistance. This is strong IMP (mutant phenotype) evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong mutant phenotype evidence. The bcp null mutant has clear oxidative stress hypersensitivity that is complemented by bcp expression, directly demonstrating BCP participates in the response to oxidative stress.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                                        PMID:10644761
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Bcp null mutant grew more slowly than its wild type in aerobic culture and showed the hypersensitivity toward various oxidants such as H(2)O(2), t-butyl hydroperoxide, and linoleic acid hydroperoxide</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                                        PMID:10644761
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The peroxide hypersensitivity of the null mutant could be complemented by the expression of bcp gene</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008379" target="_blank" class="term-link">
+                                    GO:0008379
+                                </a>
+                            </span>
+                            <span class="term-label">thioredoxin peroxidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10644761
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Thioredoxin-dependent hydroperoxide peroxidase activity of b...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0AE52" data-a="GO:0008379" data-r="PMID:10644761" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Jeong et al. (2000) directly demonstrated thioredoxin-dependent peroxidase activity of purified recombinant BCP. BCP reduced H2O2, t-butyl hydroperoxide, and linoleic acid hydroperoxide using thioredoxin as electron donor. The C45S mutation abolished activity, confirming Cys-45 as the catalytic peroxidatic cysteine.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct biochemical demonstration of thioredoxin-dependent peroxidase activity using purified protein and multiple peroxide substrates. This is the primary IDA evidence establishing BCP as a thiol-specific peroxidase and the core molecular function of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                                        PMID:10644761
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BCP showed a thioredoxin-dependent thiol peroxidase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                                        PMID:10644761
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Replacement of Cys-45 with serine resulted in the complete loss of thiol peroxidase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>BCP catalyzes the thioredoxin-dependent reduction of hydrogen peroxide and organic hydroperoxides (including linoleic acid hydroperoxide) to water and the corresponding alcohols. This is its primary evolved molecular function, operating through an atypical 2-Cys peroxiredoxin mechanism (Cys45-SOH intermediate, Cys45-Cys50 intramolecular disulfide, thioredoxin-mediated reduction).</h3>
+                <span class="vote-buttons" data-g="P0AE52" data-a="FUNCTION: BCP catalyzes the thioredoxin-dependent reduction ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140824" target="_blank" class="term-link">
+                            thioredoxin-dependent peroxiredoxin activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098869" target="_blank" class="term-link">
+                                cellular oxidant detoxification
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                                PMID:10644761
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">BCP showed a thioredoxin-dependent thiol peroxidase activity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21910476" target="_blank" class="term-link">
+                                PMID:21910476
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Kinetic and thermodynamic features reveal that Escherichia coli BCP is an unusually versatile peroxiredoxin</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19298085" target="_blank" class="term-link">
+                                PMID:19298085
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">catalysis occurs via an atypical two-cysteine peroxiredoxin pathway</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>BCP protects the cell against oxidative stress by detoxifying peroxides. The bcp null mutant is hypersensitive to H2O2, t-butyl hydroperoxide, and linoleic acid hydroperoxide, and grows more slowly under aerobic conditions. BCP expression is induced 3-fold upon shift from anaerobic to aerobic growth.</h3>
+                <span class="vote-buttons" data-g="P0AE52" data-a="FUNCTION: BCP protects the cell against oxidative stress by ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008379" target="_blank" class="term-link">
+                            thioredoxin peroxidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006979" target="_blank" class="term-link">
+                                response to oxidative stress
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                                PMID:10644761
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Bcp null mutant grew more slowly than its wild type in aerobic culture and showed the hypersensitivity toward various oxidants</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                                PMID:10644761
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">BCP was induced 3-fold by the oxidative stress given by changing the growth conditions from the anaerobic to aerobic culture</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10644761" target="_blank" class="term-link">
+                            PMID:10644761
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Thioredoxin-dependent hydroperoxide peroxidase activity of bacterioferritin comigratory protein (BCP) as a new member of the thiol-specific antioxidant protein (TSA)/Alkyl hydroperoxide peroxidase C (AhpC) family.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BCP is a thioredoxin-dependent thiol peroxidase that reduces H2O2 and organic hydroperoxides. Cys-45 is the essential catalytic residue.</div>
+                        
+                        <div class="finding-text">"BCP showed a thioredoxin-dependent thiol peroxidase activity...Replacement of Cys-45 with serine resulted in the complete loss of thiol peroxidase activity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BCP preferentially reduces linoleic acid hydroperoxide over H2O2 and t-butyl hydroperoxide when using thioredoxin as electron donor.</div>
+                        
+                        <div class="finding-text">"BCP preferentially reduced linoleic acid hydroperoxide rather than H(2)O(2) and t-butyl hydroperoxide with the use of thioredoxin as an in vivo immediate electron donor"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BCP exists as a monomer and its functional Cys-45 exists as cysteine sulfenic acid intermediate during catalysis.</div>
+                        
+                        <div class="finding-text">"BCP exists as a monomer, and its functional Cys-45 appeared to exist as cysteine sulfenic acid"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BCP expression is induced by oxidative stress and the bcp null mutant is hypersensitive to oxidants.</div>
+                        
+                        <div class="finding-text">"BCP was induced 3-fold by the oxidative stress given by changing the growth conditions from the anaerobic to aerobic culture. Bcp null mutant grew more slowly than its wild type in aerobic culture and showed the hypersensitivity toward various oxidants"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15911532" target="_blank" class="term-link">
+                            PMID:15911532
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Localization, annotation, and comparison of the Escherichia coli K-12 proteome under two states of growth.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BCP was identified in the cytosolic fraction of E. coli K-12.</div>
+                        
+                        <div class="finding-text">"a proteomic analysis of Escherichia coli in which 3,199 protein forms were detected, and of those 2,160 were annotated and assigned to the cytosol, periplasm, inner membrane, and outer membrane"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18304323" target="_blank" class="term-link">
+                            PMID:18304323
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Protein abundance profiling of the Escherichia coli cytosol.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BCP was identified among 1103 proteins in the E. coli cytosolic fraction, independently confirming cytosolic localization.</div>
+                        
+                        <div class="finding-text">"we identified 1103 proteins from the cytosolic fraction of the Escherichia coli strain MC4100"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21910476" target="_blank" class="term-link">
+                            PMID:21910476
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Kinetic and thermodynamic features reveal that Escherichia coli BCP is an unusually versatile peroxiredoxin.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BCP is a monomer by analytical ultracentrifugation and has broad substrate specificity, using multiple reducing substrates (Trx1, Trx2, Grx1, Grx3).</div>
+                        
+                        <div class="finding-text">"both oxidized and reduced E. coli BCP behave as monomers in solution...BCP can utilize a variety of reducing substrates, including Trx1, Trx2, Grx1, and Grx3"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BCP has the highest redox potential (-146 mV) of any characterized peroxiredoxin, suggesting it remains active under highly oxidizing conditions.</div>
+                        
+                        <div class="finding-text">"BCP exhibited a high redox potential of -145.9 ± 3.2 mV, the highest to date observed for a Prx"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BCP shows broad peroxide specificity with comparable rates for H2O2 and cumene hydroperoxide, and a pKa of ~5.8 for the peroxidatic Cys45.</div>
+                        
+                        <div class="finding-text">"BCP exhibited a broad peroxide specificity, with comparable rates for H(2)O(2) and cumene hydroperoxide...a pK(a) of ~5.8 for the peroxidatic cysteine (Cys45)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19298085" target="_blank" class="term-link">
+                            PMID:19298085
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Interrogating the molecular details of the peroxiredoxin activity of the Escherichia coli bacterioferritin comigratory protein using high-resolution mass spectrometry.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BCP is an atypical 2-Cys peroxiredoxin that forms an intramolecular disulfide between Cys-45 and Cys-50 during catalysis.</div>
+                        
+                        <div class="finding-text">"A transient sulfenic acid is initially formed on Cys-45, before resolution by the formation of an intramolecular disulfide bond between Cys-45 and Cys-50"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The C50S mutant adopts an alternative mechanism forming an intermolecular disulfide between two BCP molecules.</div>
+                        
+                        <div class="finding-text">"The C50S BCP mutant reacts with peroxide to form a sulfenic acid on Cys-45... resulting in a dimeric intermediate containing an intermolecular disulfide bond"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20078128" target="_blank" class="term-link">
+                            PMID:20078128
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Subdivision of the bacterioferritin comigratory protein family of bacterial peroxiredoxins based on catalytic activity.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The BCP family is subdivided into atypical 2-Cys (like E. coli BCP) and 1-Cys classes based on catalytic mechanism.</div>
+                        
+                        <div class="finding-text">"These studies support the subdivision of the BCP family of peroxiredoxins into two classes based on their catalytic activity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ECOLI/bcp/bcp-deep-research-bioreason.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BioReason-Pro SFT deep research for bcp</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Domain architecture analysis correctly identifies the thioredoxin-like scaffold harboring peroxiredoxin-specific catalytic signatures, supporting thiol-based peroxidase function.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the relative contributions of BCP, AhpC, and Tpx to peroxide detoxification in E. coli under different stress conditions?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Poole LB</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P0AE52" data-a="Q: What are the relative contributions of BCP, AhpC, ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does BCP have a signaling role in E. coli (as suggested by UniProt description of H2O2 sensor function), or is its role purely detoxification?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Poole LB, Kim IH</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P0AE52" data-a="Q: Does BCP have a signaling role in E. coli (as sugg..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare peroxide sensitivity and survival of wild-type, bcp-null, ahpC-null, and bcp/ahpC double mutant E. coli under increasing concentrations of H2O2 and organic hydroperoxides. Measure the oxidation state of BCP and AhpC under progressive oxidative stress to determine if BCP remains active when AhpC is overoxidized.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: BCP serves as a &#34;last resort&#34; peroxidase under severe oxidative stress when AhpC is inactivated by overoxidation.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic epistasis / redox proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P0AE52" data-a="EXPERIMENT: Compare peroxide sensitivity and survival of wild-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(bcp-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P0AE52" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="o">---</span>
+<span class="nx">provider</span><span class="p">:</span><span class="w"> </span><span class="nx">bioreason</span><span class="o">-</span><span class="nx">pro</span>
+<span class="nx">model</span><span class="p">:</span><span class="w"> </span><span class="nx">SFT</span>
+<span class="nx">source</span><span class="p">:</span><span class="w"> </span><span class="nx">huggingface</span><span class="p">.</span><span class="nx">co</span><span class="o">/</span><span class="nx">datasets</span><span class="o">/</span><span class="nx">wanglab</span><span class="o">/</span><span class="nx">protein_catalogue</span>
+<span class="nx">date</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;</span><span class="mi">2026</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">04</span><span class="err">&#39;</span>
+<span class="nx">uniprot_id</span><span class="p">:</span><span class="w"> </span><span class="nx">P0AE52</span>
+<span class="nx">gene</span><span class="p">:</span><span class="w"> </span><span class="nx">bcp</span>
+<span class="nx">organism</span><span class="p">:</span><span class="w"> </span><span class="nx">Escherichia</span><span class="w"> </span><span class="nx">coli</span><span class="w"> </span><span class="p">(</span><span class="nx">strain</span><span class="w"> </span><span class="nx">K12</span><span class="p">)</span>
+<span class="o">---</span>
+
+<span class="err">##</span><span class="w"> </span><span class="nx">Thinking</span><span class="w"> </span><span class="nx">Trace</span>
+
+<span class="nx">The</span><span class="w"> </span><span class="nx">architecture</span><span class="w"> </span><span class="nx">begins</span><span class="w"> </span><span class="nx">with</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">compact</span><span class="w"> </span><span class="nx">thioredoxin</span><span class="o">-</span><span class="k">like</span><span class="w"> </span><span class="nx">core</span><span class="p">:</span><span class="w"> </span><span class="nx">IPR036249</span><span class="w"> </span><span class="p">(</span><span class="nx">Thioredoxin</span><span class="o">-</span><span class="k">like</span><span class="w"> </span><span class="nx">superfamily</span><span class="p">,</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">3</span><span class="err">–</span><span class="mi">154</span><span class="p">)</span><span class="w"> </span><span class="nx">encompasses</span><span class="w"> </span><span class="nx">IPR013766</span><span class="w"> </span><span class="p">(</span><span class="nx">Thioredoxin</span><span class="w"> </span><span class="nx">domain</span><span class="p">,</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">4</span><span class="err">–</span><span class="mi">156</span><span class="p">),</span><span class="w"> </span><span class="nx">establishing</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">canonical</span><span class="w"> </span><span class="nx">β</span><span class="o">-</span><span class="nx">sheet</span><span class="o">/</span><span class="nx">α</span><span class="o">-</span><span class="nx">helix</span><span class="w"> </span><span class="nx">fold</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">positions</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">nucleophilic</span><span class="w"> </span><span class="nx">cysteine</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">redox</span><span class="w"> </span><span class="nx">chemistry</span><span class="p">.</span><span class="w"> </span><span class="nx">Nested</span><span class="w"> </span><span class="nx">within</span><span class="w"> </span><span class="nx">this</span><span class="w"> </span><span class="nx">fold</span><span class="w"> </span><span class="nx">are</span><span class="w"> </span><span class="nx">peroxiredoxin</span><span class="o">-</span><span class="nx">specific</span><span class="w"> </span><span class="nx">signatures</span><span class="p">:</span><span class="w"> </span><span class="nx">IPR024706</span><span class="w"> </span><span class="p">(</span><span class="nx">Peroxiredoxin</span><span class="p">,</span><span class="w"> </span><span class="nx">AhpC</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">family</span><span class="p">,</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">5</span><span class="err">–</span><span class="mi">135</span><span class="p">)</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">IPR000866</span><span class="w"> </span><span class="p">(</span><span class="nx">Alkyl</span><span class="w"> </span><span class="nx">hydroperoxide</span><span class="w"> </span><span class="nx">reductase</span><span class="w"> </span><span class="nx">subunit</span><span class="w"> </span><span class="nx">C</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">Thiol</span><span class="o">-</span><span class="nx">specific</span><span class="w"> </span><span class="nx">antioxidant</span><span class="w"> </span><span class="nx">domain</span><span class="p">,</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">7</span><span class="err">–</span><span class="mi">134</span><span class="p">)</span><span class="w"> </span><span class="nx">define</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">catalytic</span><span class="w"> </span><span class="nx">peroxidatic</span><span class="w"> </span><span class="nx">center</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">its</span><span class="w"> </span><span class="nx">resolving</span><span class="w"> </span><span class="nx">chemistry</span><span class="p">,</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="nx">IPR050924</span><span class="w"> </span><span class="p">(</span><span class="nx">Thiol</span><span class="o">-</span><span class="nx">specific</span><span class="w"> </span><span class="nx">peroxidase</span><span class="w"> </span><span class="nx">BCP</span><span class="o">/</span><span class="nx">PrxQ</span><span class="w"> </span><span class="nx">family</span><span class="p">,</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">3</span><span class="err">–</span><span class="mi">155</span><span class="p">)</span><span class="w"> </span><span class="nx">specifies</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">BCP</span><span class="o">/</span><span class="nx">PrxQ</span><span class="w"> </span><span class="nx">subclass</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="nx">optimized</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">hydrogen</span><span class="w"> </span><span class="nx">peroxide</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">organic</span><span class="w"> </span><span class="nx">hydroperoxide</span><span class="w"> </span><span class="nx">reduction</span><span class="p">.</span><span class="w"> </span><span class="nx">The</span><span class="w"> </span><span class="nx">ordered</span><span class="w"> </span><span class="nx">embedding</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">AhpC</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">core</span><span class="w"> </span><span class="nx">inside</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">thioredoxin</span><span class="o">-</span><span class="k">like</span><span class="w"> </span><span class="nx">scaffold</span><span class="w"> </span><span class="nx">causes</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">thiol</span><span class="o">-</span><span class="nx">based</span><span class="w"> </span><span class="nx">peroxidase</span><span class="w"> </span><span class="nx">mechanism</span><span class="p">:</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">peroxidatic</span><span class="w"> </span><span class="nx">cysteine</span><span class="w"> </span><span class="nx">attacks</span><span class="w"> </span><span class="nx">H2O2</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="nx">ROOH</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">form</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">sulfenic</span><span class="w"> </span><span class="nx">intermediate</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="nx">resolved</span><span class="w"> </span><span class="nx">via</span><span class="w"> </span><span class="nx">disulfide</span><span class="w"> </span><span class="nx">formation</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">reduction</span><span class="w"> </span><span class="nx">by</span><span class="w"> </span><span class="nx">thioredoxin</span><span class="p">.</span>
+</code></pre></div>
+
+<p>This domain logic directly yields the molecular functions formalized as GO:0008379 thioredoxin peroxidase activity and GO:0032843 hydroperoxide reductase activity. The BCP/PrxQ family bias toward H2O2 and lipid/alkyl hydroperoxides explains the observed preference for H2O2 over organic hydroperoxides. The catalytic cycle requires electron input from thioredoxin, which is in turn reduced by thioredoxin reductase using NADPH, accounting for the observed NADPH dependence.</p>
+<p>Detoxification of H2O2 and hydroperoxides is a primary defense against reactive oxygen species, placing the protein in GO:0006979 response to oxidative stress. By lowering peroxide levels, the enzyme preserves macromolecular integrity and supports redox homeostasis during aerobic metabolism and stress.</p>
+<p>The absence of transmembrane segments and the soluble thioredoxin-like fold indicate a cytosolic enzyme. This aligns with a role in intercepting diffusible H2O2 and cytosolic lipid hydroperoxides, supporting localization to GO:0005829 cytosol.</p>
+<p>Mechanistically, the peroxidatic cysteine cycles between reduced and sulfenylated states, forming an intramolecular or transient intermolecular disulfide that is resolved by thioredoxin. The enzyme likely operates within a broader redox network: it may receive electrons indirectly through the thioredoxin system that is also funneled to methionine sulfoxide reductase A and glutathione peroxidase, coordinating repair of oxidized proteins and membranes with peroxide removal. Functional coupling with alkyl hydroperoxide reductase complexes (AhpC/AhpF-type) would partition substrates, with this BCP/PrxQ enzyme specializing in H2O2 and certain organic hydroperoxides while Ahp systems handle lipid hydroperoxides more efficiently. Regulatory crosstalk with the accessory protein for GcvA suggests integration with acid-stress and redox-responsive transcriptional programs, ensuring peroxide detoxification is upregulated when oxidative load increases.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="nx">Functional</span><span class="w"> </span><span class="nx">Summary</span>
+
+<span class="nx">A</span><span class="w"> </span><span class="nx">cytosolic</span><span class="w"> </span><span class="nx">thiol</span><span class="o">-</span><span class="nx">dependent</span><span class="w"> </span><span class="nx">peroxidase</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">uses</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">thioredoxin</span><span class="o">-</span><span class="k">like</span><span class="w"> </span><span class="nx">catalytic</span><span class="w"> </span><span class="nx">center</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">reduce</span><span class="w"> </span><span class="nx">hydrogen</span><span class="w"> </span><span class="nx">peroxide</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">certain</span><span class="w"> </span><span class="nx">organic</span><span class="w"> </span><span class="nx">hydroperoxides</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">water</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">corresponding</span><span class="w"> </span><span class="nx">alcohols</span><span class="p">,</span><span class="w"> </span><span class="nx">with</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">preference</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">hydrogen</span><span class="w"> </span><span class="nx">peroxide</span><span class="p">.</span><span class="w"> </span><span class="nx">It</span><span class="w"> </span><span class="nx">draws</span><span class="w"> </span><span class="nx">electrons</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">NADPH</span><span class="w"> </span><span class="nx">via</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">thioredoxin</span><span class="o">/</span><span class="nx">thioredoxin</span><span class="w"> </span><span class="nx">reductase</span><span class="w"> </span><span class="nx">system</span><span class="p">,</span><span class="w"> </span><span class="nx">thereby</span><span class="w"> </span><span class="nx">protecting</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">cell</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">oxidative</span><span class="w"> </span><span class="nx">damage</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">integrating</span><span class="w"> </span><span class="nx">with</span><span class="w"> </span><span class="nx">broader</span><span class="w"> </span><span class="nx">redox</span><span class="o">-</span><span class="nx">repair</span><span class="w"> </span><span class="nx">pathways</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="nx">UniProt</span><span class="w"> </span><span class="nx">Summary</span>
+
+<span class="nx">Thiol</span><span class="o">-</span><span class="nx">specific</span><span class="w"> </span><span class="nx">peroxidase</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">catalyzes</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">reduction</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">hydrogen</span><span class="w"> </span><span class="nx">peroxide</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">organic</span><span class="w"> </span><span class="nx">hydroperoxides</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">water</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">alcohols</span><span class="p">,</span><span class="w"> </span><span class="nx">respectively</span><span class="p">.</span><span class="w"> </span><span class="nx">Has</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">peroxidase</span><span class="w"> </span><span class="nx">activity</span><span class="w"> </span><span class="nx">towards</span><span class="w"> </span><span class="nx">H</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="nx">O</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">alkyl</span><span class="w"> </span><span class="nx">hydroperoxides</span><span class="p">,</span><span class="w"> </span><span class="nx">with</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">preference</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">H</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="nx">O</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="nx">over</span><span class="w"> </span><span class="nx">organic</span><span class="w"> </span><span class="nx">hydroperoxides</span><span class="p">.</span><span class="w"> </span><span class="nx">Acts</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">hydrogen</span><span class="w"> </span><span class="nx">peroxide</span><span class="w"> </span><span class="nx">sensor</span><span class="p">.</span><span class="w"> </span><span class="nx">Required</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">protection</span><span class="w"> </span><span class="nx">against</span><span class="w"> </span><span class="nx">oxidative</span><span class="w"> </span><span class="nx">stress</span><span class="p">.</span><span class="w"> </span><span class="nx">Reduces</span><span class="w"> </span><span class="nx">H</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="nx">O</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">presence</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">NADPH</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">thioredoxin</span><span class="w"> </span><span class="nx">reductase</span><span class="w"> </span><span class="nx">TrxB</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="nx">InterPro</span><span class="w"> </span><span class="nx">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nx">IPR036249</span><span class="p">:</span><span class="w"> </span><span class="nx">Thioredoxin</span><span class="o">-</span><span class="k">like</span><span class="w"> </span><span class="nx">superfamily</span><span class="w"> </span><span class="p">(</span><span class="nx">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="o">-</span><span class="mi">154</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nx">IPR050924</span><span class="p">:</span><span class="w"> </span><span class="nx">Thiol</span><span class="o">-</span><span class="nx">specific</span><span class="w"> </span><span class="nx">peroxidase</span><span class="w"> </span><span class="nx">BCP</span><span class="o">/</span><span class="nx">PrxQ</span><span class="w"> </span><span class="p">(</span><span class="nx">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="o">-</span><span class="mi">155</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nx">IPR013766</span><span class="p">:</span><span class="w"> </span><span class="nx">Thioredoxin</span><span class="w"> </span><span class="nx">domain</span><span class="w"> </span><span class="p">(</span><span class="nx">domain</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="o">-</span><span class="mi">156</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nx">IPR024706</span><span class="p">:</span><span class="w"> </span><span class="nx">Peroxiredoxin</span><span class="p">,</span><span class="w"> </span><span class="nx">AhpC</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="p">(</span><span class="nx">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">5</span><span class="o">-</span><span class="mi">135</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nx">IPR000866</span><span class="p">:</span><span class="w"> </span><span class="nx">Alkyl</span><span class="w"> </span><span class="nx">hydroperoxide</span><span class="w"> </span><span class="nx">reductase</span><span class="w"> </span><span class="nx">subunit</span><span class="w"> </span><span class="nx">C</span><span class="o">/</span><span class="w"> </span><span class="nx">Thiol</span><span class="w"> </span><span class="nx">specific</span><span class="w"> </span><span class="nx">antioxidant</span><span class="w"> </span><span class="p">(</span><span class="nx">domain</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">7</span><span class="o">-</span><span class="mi">134</span><span class="p">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="nx">GO</span><span class="w"> </span><span class="nx">Term</span><span class="w"> </span><span class="nx">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="nx">Molecular</span><span class="w"> </span><span class="nx">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="nx">Biological</span><span class="w"> </span><span class="nx">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="nx">Cellular</span><span class="w"> </span><span class="nx">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(bcp-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P0AE52" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bcp-peroxiredoxin-bcp-research-notes">bcp (Peroxiredoxin Bcp) - Research Notes</h1>
+<h2 id="gene-identity">Gene Identity</h2>
+<ul>
+<li><strong>UniProt</strong>: P0AE52 (BCP_ECOLI)</li>
+<li><strong>Gene</strong>: bcp (b2480, JW2465)</li>
+<li><strong>Organism</strong>: Escherichia coli K12</li>
+<li><strong>EC</strong>: 1.11.1.24 (thioredoxin-dependent peroxiredoxin)</li>
+<li><strong>Full name</strong>: Peroxiredoxin Bcp; Bacterioferritin comigratory protein</li>
+<li><strong>Size</strong>: 156 aa, 17.6 kDa, monomer</li>
+</ul>
+<h2 id="peroxiredoxin-family-classification">Peroxiredoxin Family Classification</h2>
+<p>BCP belongs to the BCP/PrxQ subfamily of peroxiredoxins. Based on PubMed article retrieval, Nelson et al. (2011) <a href="https://pubmed.ncbi.nlm.nih.gov/21287625" title="existence and location of the resolving cysteine vary in some subfamilies (e.g., Prx5) to a greater degree than previously appreciated">PMID:21287625</a> established the PREX classification system defining six Prx subfamilies: AhpC/Prx1, BCP/PrxQ, Prx5, Prx6, Tpx, and AhpE. E. coli BCP is a founding member of the BCP/PrxQ subfamily.</p>
+<p>Note on nomenclature: UniProt states "Belongs to the peroxiredoxin family. BCP/PrxQ subfamily." The PREX database (Soito et al. 2011, PMID:21036863) formally classifies Prx subfamilies. BCP/PrxQ is distinct from Prx5, though both can function as atypical 2-Cys Prxs.</p>
+<h2 id="key-publications-verified-via-pubmed">Key Publications (Verified via PubMed)</h2>
+<h3 id="pmid10644761-jeong-et-al-2000-j-biol-chem">PMID:10644761 - Jeong et al. 2000 (J Biol Chem)</h3>
+<p>"Thioredoxin-dependent hydroperoxide peroxidase activity of bacterioferritin comigratory protein (BCP) as a new member of the thiol-specific antioxidant protein (TSA)/Alkyl hydroperoxide peroxidase C (AhpC) family."<br />
+- First characterization of BCP as a thiol peroxidase<br />
+- Thioredoxin-dependent activity demonstrated<br />
+- BCP "preferentially reduced linoleic acid hydroperoxide rather than H(2)O(2) and t-butyl hydroperoxide"<br />
+- Cys-45 mutation (C45S) caused "complete loss of thiol peroxidase activity"<br />
+- BCP is a monomer; Cys-45 exists as cysteine sulfenic acid<br />
+- "BCP was induced 3-fold by the oxidative stress given by changing the growth conditions from the anaerobic to aerobic culture"<br />
+- bcp null mutant: "grew more slowly than its wild type in aerobic culture and showed the hypersensitivity toward various oxidants"<br />
+- IDA evidence for GO:0008379 thioredoxin peroxidase activity<br />
+- IMP evidence for GO:0006979 response to oxidative stress</p>
+<h3 id="pmid19298085-clarke-et-al-2009-biochemistry">PMID:19298085 - Clarke et al. 2009 (Biochemistry)</h3>
+<p>"Interrogating the molecular details of the peroxiredoxin activity of the Escherichia coli bacterioferritin comigratory protein using high-resolution mass spectrometry."<br />
+- Classified E. coli BCP as an "atypical 2-Cys peroxiredoxin"<br />
+- "A transient sulfenic acid is initially formed on Cys-45, before resolution by the formation of an intramolecular disulfide bond between Cys-45 and Cys-50"<br />
+- C50S mutant "adopts a different and novel mechanistic pathway" -- intermolecular disulfide with second BCP molecule<br />
+- Both pathways are substrates for thioredoxin reduction</p>
+<h3 id="pmid21910476-reeves-et-al-2011-biochemistry">PMID:21910476 - Reeves et al. 2011 (Biochemistry)</h3>
+<p>"Kinetic and thermodynamic features reveal that Escherichia coli BCP is an unusually versatile peroxiredoxin."<br />
+- BCP is a monomer by analytical ultracentrifugation (both oxidized and reduced)<br />
+- Uses multiple reducing substrates: Trx1, Trx2, Grx1, and Grx3<br />
+- "high redox potential of -145.9 +/- 3.2 mV, the highest to date observed for a Prx"<br />
+- "broad peroxide specificity, with comparable rates for H(2)O(2) and cumene hydroperoxide"<br />
+- pKa of ~5.8 for peroxidatic Cys45<br />
+- Nonsaturable interaction with Trx1 (Km &gt; 100 uM), consistent with ping-pong mechanism<br />
+- BCP described as potentially "a defense enzyme of last resort" -- remains active under highly oxidizing conditions<br />
+- NOTE: This contradicts PMID:10644761 on substrate preference. Jeong et al. found preference for linoleic acid hydroperoxide; Reeves et al. found broad specificity with comparable rates for H2O2 and cumene hydroperoxide. Different assay conditions may explain this.</p>
+<h3 id="pmid15911532-lopez-campistrous-et-al-2005-mol-cell-proteomics">PMID:15911532 - Lopez-Campistrous et al. 2005 (Mol Cell Proteomics)</h3>
+<ul>
+<li>Large-scale E. coli K-12 proteome localization study</li>
+<li>BCP detected in cytosol fraction by 2D-gel/MS</li>
+<li>Basis for IDA annotation to GO:0005829 cytosol</li>
+</ul>
+<h3 id="pmid18304323-ishihama-et-al-2008-bmc-genomics">PMID:18304323 - Ishihama et al. 2008 (BMC Genomics)</h3>
+<ul>
+<li>Protein abundance profiling of E. coli cytosol</li>
+<li>BCP identified in cytosolic fraction</li>
+<li>Independent confirmation of cytosolic localization</li>
+<li>Basis for second IDA annotation to GO:0005829 cytosol</li>
+</ul>
+<h3 id="pmid20078128-clarke-et-al-2010-biochemistry">PMID:20078128 - Clarke et al. 2010 (Biochemistry)</h3>
+<p>"Subdivision of the bacterioferritin comigratory protein family of bacterial peroxiredoxins based on catalytic activity."<br />
+- Subdivides BCP family into two classes: atypical 2-Cys (like E. coli BCP with resolving Cys) and 1-Cys (like B. cenocepacia BCP lacking resolving Cys)<br />
+- E. coli BCP uses atypical 2-Cys pathway (intramolecular disulfide Cys45-Cys50)<br />
+- 1-Cys BCPs prefer glutathione/glutaredoxin as redox partners; 2-Cys BCPs prefer thioredoxin</p>
+<h3 id="pmid20173000-hicks-et-al-2010-j-bacteriol">PMID:20173000 - Hicks et al. 2010 (J Bacteriol)</h3>
+<ul>
+<li>Characterized BCP homolog in Coxiella burnetii</li>
+<li>Demonstrated DNA-binding activity for Coxiella BCP</li>
+<li>Complementation of E. coli bcp mutant confirmed functional conservation</li>
+</ul>
+<h3 id="pmid10998352-kong-et-al-2000-biochem-j">PMID:10998352 - Kong et al. 2000 (Biochem J)</h3>
+<p>"A novel peroxiredoxin of the plant Sedum lineare is a homologue of Escherichia coli bacterioferritin co-migratory protein (Bcp)."<br />
+- Named the plant homolog "PrxQ" -- origin of the BCP/PrxQ subfamily name<br />
+- PrxQ complemented E. coli bcp mutant<br />
+- Two conserved cysteines (Cys-44, Cys-49) essential for activity</p>
+<h2 id="e-coli-thiol-peroxidase-network">E. coli Thiol Peroxidase Network</h2>
+<p>E. coli has three peroxiredoxins:<br />
+1. <strong>AhpC</strong> (AhpC/Prx1 subfamily) - the major scavenger of endogenous H2O2<br />
+2. <strong>Tpx</strong> (Tpx subfamily) - thiol peroxidase, primarily periplasmic<br />
+3. <strong>BCP</strong> (BCP/PrxQ subfamily) - versatile peroxiredoxin, cytosolic</p>
+<p>BCP is distinct from AhpC in several ways: it is monomeric (AhpC forms decamers), has higher redox potential, broader substrate/reductant versatility, and lower abundance. The "enzyme of last resort" model (Reeves et al. 2011) suggests BCP may be particularly important under severe oxidative stress when other systems are comprommed.</p>
+<h2 id="bioreason-assessment-notes">BioReason Assessment Notes</h2>
+<p>The BioReason deep research file is reasonable but has several issues:<br />
+1. States BCP has "a preference for hydrogen peroxide" -- this is oversimplified. Jeong 2000 found preference for linoleic acid hydroperoxide; Reeves 2011 found broad specificity. The BioReason summary in the functional summary section correctly says "with a preference for hydrogen peroxide" but this is based on Reeves et al.'s findings at physiological Trx concentrations, not universal.<br />
+2. The "Functional coupling with alkyl hydroperoxide reductase complexes (AhpC/AhpF-type)" is speculative -- no direct evidence for coordination.<br />
+3. "Regulatory crosstalk with the accessory protein for GcvA" is speculative -- the bcp gene is adjacent to gcvR on the chromosome but no functional coupling is established.<br />
+4. The BioReason file has NO GO term predictions in the MF/BP/CC sections -- this is unusual.<br />
+5. The thinking trace is domain-architecture-focused and does a reasonable job connecting domains to function.</p>
+<h2 id="key-issues-for-review">Key Issues for Review</h2>
+<ul>
+<li>The GOA file is missing GO:0032843 (hydroperoxide reductase activity) which is annotated IDA in UniProt DR lines from EcoCyc but absent from the QuickGO download. This may be a GOA filtering issue. It is a valid annotation.</li>
+<li>GO:0008379 (thioredoxin peroxidase activity) appears twice: IBA and IDA. Both are appropriate.</li>
+<li>GO:0005829 (cytosol) appears twice from two independent IDA studies. Both are valid.</li>
+<li>GO:0140824 (thioredoxin-dependent peroxiredoxin activity) is more specific than GO:0008379 and represents the EC 1.11.1.24 reaction.</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(bcp-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P0AE52" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-bcp-escherichia-coli-k12">BioReason-Pro SFT Review: bcp (Escherichia coli K12)</h1>
+<p>Source: bcp-deep-research-bioreason.md</p>
+<ul>
+<li><strong>Correctness</strong>: 4/5</li>
+<li><strong>Completeness</strong>: 3/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason functional summary describes bcp as:</p>
+<blockquote>
+<p>A cytosolic thiol-dependent peroxidase that uses a thioredoxin-like catalytic center to reduce hydrogen peroxide and certain organic hydroperoxides to water and the corresponding alcohols, with a preference for hydrogen peroxide. It draws electrons from NADPH via the thioredoxin/thioredoxin reductase system, thereby protecting the cell from oxidative damage and integrating with broader redox-repair pathways.</p>
+</blockquote>
+<p>This is a mostly accurate summary. The core biochemistry is correct: cytosolic localization, thiol-dependent peroxidase mechanism, reduction of H2O2 and organic hydroperoxides, and electron flow from NADPH through the thioredoxin/thioredoxin reductase system. However, there are notable issues:</p>
+<p><strong>Correctness issues:</strong></p>
+<ol>
+<li>
+<p>The claim of "preference for hydrogen peroxide" is an oversimplification. According to PubMed, Jeong et al. (2000, <a href="https://doi.org/10.1074/jbc.275.4.2924">DOI</a>) found the opposite: "BCP preferentially reduced linoleic acid hydroperoxide rather than H(2)O(2) and t-butyl hydroperoxide" with a 5-fold higher Vmax/Km for linoleic acid hydroperoxide. Reeves et al. (2011, <a href="https://doi.org/10.1021/bi200935d">DOI</a>) later found "broad peroxide specificity, with comparable rates for H(2)O(2) and cumene hydroperoxide." The substrate preference depends on assay conditions and electron donor identity, and cannot be summarized as a simple H2O2 preference.</p>
+</li>
+<li>
+<p>The thinking trace states "The BCP/PrxQ family bias toward H2O2 and lipid/alkyl hydroperoxides explains the observed preference for H2O2 over organic hydroperoxides." This contradicts the literature -- BCP does NOT show a clear preference for H2O2 over organic hydroperoxides.</p>
+</li>
+<li>
+<p>The functional summary says BCP draws electrons "from NADPH via the thioredoxin/thioredoxin reductase system" -- this is correct but incomplete. According to PubMed, Reeves et al. (2011) showed "BCP can utilize a variety of reducing substrates, including Trx1, Trx2, Grx1, and Grx3," meaning BCP can also use the glutaredoxin system. This versatility is a key distinguishing feature of BCP.</p>
+</li>
+</ol>
+<p><strong>Completeness issues:</strong></p>
+<ol>
+<li>
+<p>No mention of the atypical 2-Cys mechanism. According to PubMed, Clarke et al. (2009, <a href="https://doi.org/10.1021/bi900189e">DOI</a>) established that BCP forms "an intramolecular disulfide bond between Cys-45 and Cys-50" during catalysis. This is the defining mechanistic feature of E. coli BCP within the BCP/PrxQ subfamily.</p>
+</li>
+<li>
+<p>No mention of BCP's unusually high redox potential (-146 mV), the highest of any characterized peroxiredoxin (Reeves et al. 2011). This is functionally significant -- it means BCP can remain active under highly oxidizing conditions, potentially serving as "a defense enzyme of last resort."</p>
+</li>
+<li>
+<p>No mention of BCP being monomeric. This distinguishes it from the major E. coli peroxiredoxin AhpC, which forms decamers.</p>
+</li>
+<li>
+<p>No mention of the bcp null mutant phenotype (hypersensitivity to oxidants, slower aerobic growth), which provides the direct genetic evidence for in vivo function.</p>
+</li>
+<li>
+<p>No mention of BCP's position within the E. coli antioxidant defense network relative to AhpC and Tpx.</p>
+</li>
+<li>
+<p>The BioReason GO term predictions sections (MF, BP, CC) are completely empty, which is unusual and unhelpful.</p>
+</li>
+</ol>
+<h2 id="comparison-with-interpro2go">Comparison with interpro2go</h2>
+<p>The interpro2go annotations map:<br />
+- IPR000866 (AhpC/TSA) to GO:0016209 (antioxidant activity) and GO:0016491 (oxidoreductase activity)</p>
+<p>The BioReason summary recapitulates and extends the information that would be inferred from interpro2go. The domain architecture analysis in the thinking trace is methodical, correctly walking from the thioredoxin superfamily (IPR036249) through the AhpC-type family (IPR024706) to the BCP/PrxQ-specific signature (IPR050924). This hierarchical reasoning adds value beyond simple interpro2go mapping by explaining WHY the protein has peroxidase activity based on its structural scaffold.</p>
+<p>However, the BioReason summary does not add substantial organism-specific information. The description could apply to any BCP/PrxQ family member. The literature-specific details (substrate versatility, high redox potential, "enzyme of last resort" model, multiple electron donor usage, genetic evidence from null mutant) are absent. These require literature knowledge that cannot be inferred from domain architecture alone.</p>
+<h2 id="notes-on-thinking-trace">Notes on thinking trace</h2>
+<p>The thinking trace follows a sound domain-architecture-first reasoning approach. It correctly identifies all InterPro entries and builds upward from the thioredoxin-like superfamily to the BCP/PrxQ-specific annotation.</p>
+<p>The trace is weakest where it makes speculative claims without literature support:</p>
+<ol>
+<li>
+<p>"Functional coupling with alkyl hydroperoxide reductase complexes (AhpC/AhpF-type) would partition substrates" -- this is speculation. There is no evidence for direct functional coupling or substrate partitioning between BCP and AhpC.</p>
+</li>
+<li>
+<p>"Regulatory crosstalk with the accessory protein for GcvA suggests integration with acid-stress and redox-responsive transcriptional programs" -- this appears to be based on the chromosomal proximity of bcp to gcvR, not on any functional evidence. The gcvR gene is adjacent to bcp on the E. coli chromosome, but no regulatory connection between BCP peroxidase activity and GcvA-mediated transcription has been established.</p>
+</li>
+<li>
+<p>The claim about "coordinating repair of oxidized proteins and membranes with peroxide removal" through methionine sulfoxide reductase A and glutathione peroxidase is generic and not BCP-specific.</p>
+</li>
+</ol>
+<p>These speculative extensions, while not unreasonable as hypotheses, are presented with a confidence that is not warranted by the available evidence.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P0AE52
+gene_symbol: bcp
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:83333
+  label: Escherichia coli (strain K12)
+description: &gt;-
+  Bcp (bacterioferritin comigratory protein) is a monomeric peroxiredoxin of
+  the BCP/PrxQ subfamily (EC 1.11.1.24) that catalyzes the thioredoxin-dependent
+  reduction of hydrogen peroxide and organic hydroperoxides to water and the
+  corresponding alcohols. It functions as an atypical 2-Cys peroxiredoxin: the
+  peroxidatic cysteine Cys45 is oxidized to sulfenic acid by peroxide, then
+  forms an intramolecular disulfide with the resolving cysteine Cys50, which
+  is subsequently reduced by thioredoxin. Unlike the major E. coli peroxiredoxin
+  AhpC, BCP is unusually versatile -- it can use multiple electron donors
+  (Trx1, Trx2, Grx1, Grx3), has the highest redox potential (-146 mV) of any
+  characterized peroxiredoxin, and shows broad peroxide substrate specificity.
+  These properties suggest BCP may serve as a defense enzyme of last resort,
+  remaining active under highly oxidizing conditions when other antioxidant
+  systems are compromised. The bcp null mutant shows hypersensitivity to
+  H2O2, tert-butyl hydroperoxide, and linoleic acid hydroperoxide, confirming
+  its role in oxidative stress defense.
+existing_annotations:
+- term:
+    id: GO:0008379
+    label: thioredoxin peroxidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      BCP has well-characterized thioredoxin-dependent peroxidase activity.
+      The IBA annotation from phylogenetic inference is strongly supported by
+      direct experimental evidence in the same organism (see IDA annotation below).
+      BCP uses thioredoxin as a primary electron donor to reduce hydroperoxides.
+    action: ACCEPT
+    reason: &gt;-
+      Thioredoxin peroxidase activity is the core molecular function of BCP,
+      demonstrated by Jeong et al. (2000) and characterized in detail by
+      Reeves et al. (2011). The phylogenetic inference is correct and
+      consistent with direct experimental data.
+    supported_by:
+    - reference_id: PMID:10644761
+      supporting_text: &#34;BCP showed a thioredoxin-dependent thiol peroxidase activity&#34;
+    - reference_id: PMID:21910476
+      supporting_text: &#34;thioredoxin (Trx1)-dependent peroxidase assays conducted by stopped-flow spectroscopy&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Cytoplasmic localization is correct for BCP. The protein lacks signal
+      peptides and transmembrane domains and is a soluble monomeric enzyme.
+      Two independent proteomics studies confirmed cytosolic localization.
+      The broader cytoplasm annotation subsumes the more specific cytosol
+      IDA annotations.
+    action: ACCEPT
+    reason: &gt;-
+      BCP is a soluble cytoplasmic enzyme. This is supported by two
+      independent large-scale proteomics studies that identified BCP in the
+      cytosolic fraction of E. coli K-12.
+    supported_by:
+    - reference_id: PMID:15911532
+      supporting_text: &#34;a proteomic analysis of Escherichia coli in which 3,199 protein forms were detected, and of those 2,160 were annotated and assigned to the cytosol, periplasm, inner membrane, and outer membrane&#34;
+    - reference_id: PMID:18304323
+      supporting_text: &#34;we identified 1103 proteins from the cytosolic fraction of the Escherichia coli strain MC4100&#34;
+- term:
+    id: GO:0034599
+    label: cellular response to oxidative stress
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      BCP is involved in the cellular response to oxidative stress. The bcp
+      null mutant shows hypersensitivity to multiple oxidants, and bcp expression
+      is induced 3-fold upon shift from anaerobic to aerobic growth. However,
+      GO:0034599 (cellular response to oxidative stress) implies a signaling
+      or regulatory response component beyond simple detoxification. While
+      UniProt states BCP acts &#34;as sensor of hydrogen peroxide-mediated signaling
+      events,&#34; the evidence for a signaling role in E. coli BCP is limited.
+      The more straightforward annotation GO:0006979 (response to oxidative
+      stress, IMP) is already present and better supported.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation is not wrong but the more specific claim of &#34;cellular
+      response&#34; (implying regulation/signaling) is less well-supported than
+      the general oxidative stress response role. The IMP annotation to
+      GO:0006979 below provides stronger direct evidence for the core
+      oxidative stress defense function.
+    supported_by:
+    - reference_id: PMID:10644761
+      supporting_text: &#34;BCP was induced 3-fold by the oxidative stress given by changing the growth conditions from the anaerobic to aerobic culture&#34;
+- term:
+    id: GO:0045454
+    label: cell redox homeostasis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      BCP participates in maintaining cellular redox balance through its
+      peroxidase activity, cycling between reduced and oxidized states via
+      the thioredoxin system. The unusually high redox potential (-146 mV)
+      and ability to use multiple electron donors (Trx1, Trx2, Grx1, Grx3)
+      suggest BCP integrates with the broader cellular redox network.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While BCP does cycle through the thioredoxin/glutaredoxin redox systems,
+      its primary evolved function is peroxide detoxification rather than
+      general redox homeostasis. This annotation is technically correct but
+      secondary to the core peroxidase function.
+    supported_by:
+    - reference_id: PMID:21910476
+      supporting_text: &#34;BCP can utilize a variety of reducing substrates, including Trx1, Trx2, Grx1, and Grx3&#34;
+    - reference_id: PMID:21910476
+      supporting_text: &#34;BCP exhibited a high redox potential of -145.9 ± 3.2 mV, the highest to date observed for a Prx&#34;
+- term:
+    id: GO:0016209
+    label: antioxidant activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      BCP is indeed an antioxidant enzyme that detoxifies reactive oxygen
+      species. This IEA annotation from InterPro (IPR000866, AhpC/TSA domain)
+      is correct but very general. The more specific annotations for
+      thioredoxin peroxidase activity (GO:0008379) and thioredoxin-dependent
+      peroxiredoxin activity (GO:0140824) provide better functional resolution.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but too general. The specific peroxidase activity terms
+      (GO:0008379, GO:0140824) are more informative for describing BCP function.
+      Retained as a broad parent annotation from InterPro2GO.
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      BCP is an oxidoreductase (EC 1.11.1.24). This IEA annotation from
+      InterPro is correct but extremely general. It is fully subsumed by
+      the more specific thioredoxin peroxidase activity annotations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Technically correct but uninformatively broad. The specific molecular
+      function annotations (GO:0008379, GO:0140824) are far more descriptive
+      of BCP function.
+- term:
+    id: GO:0098869
+    label: cellular oxidant detoxification
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      BCP detoxifies cellular oxidants (H2O2 and organic hydroperoxides) by
+      reducing them to water and alcohols. This is a core biological process
+      annotation that accurately describes BCP function. The combined IEA
+      annotation derives from the molecular function annotations (GO:0008379,
+      GO:0016209, GO:0140824).
+    action: ACCEPT
+    reason: &gt;-
+      Cellular oxidant detoxification is a core biological function of BCP.
+      The bcp null mutant shows hypersensitivity to H2O2, t-butyl hydroperoxide,
+      and linoleic acid hydroperoxide, directly demonstrating BCP detoxifies
+      these oxidants.
+    supported_by:
+    - reference_id: PMID:10644761
+      supporting_text: &#34;Bcp null mutant grew more slowly than its wild type in aerobic culture and showed the hypersensitivity toward various oxidants such as H(2)O(2), t-butyl hydroperoxide, and linoleic acid hydroperoxide&#34;
+- term:
+    id: GO:0140824
+    label: thioredoxin-dependent peroxiredoxin activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      GO:0140824 corresponds to EC 1.11.1.24 and represents the specific
+      catalytic reaction: hydroperoxide + [thioredoxin]-dithiol = alcohol +
+      [thioredoxin]-disulfide + H2O. This is the most precise molecular
+      function term for BCP and directly matches the experimentally
+      characterized activity.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most specific and accurate MF term for BCP. EC 1.11.1.24
+      is assigned to BCP with experimental evidence (PMID:10644761,
+      PMID:21910476). BCP uses the thioredoxin system as its primary electron
+      donor, making this the correct EC-linked GO term.
+    supported_by:
+    - reference_id: PMID:10644761
+      supporting_text: &#34;BCP showed a thioredoxin-dependent thiol peroxidase activity&#34;
+    - reference_id: PMID:21910476
+      supporting_text: &#34;Kinetic and thermodynamic features reveal that Escherichia coli BCP is an unusually versatile peroxiredoxin&#34;
+    - reference_id: file:ECOLI/bcp/bcp-deep-research-bioreason.md
+      supporting_text: &#34;domain logic directly yields the molecular functions formalized as GO:0008379 thioredoxin peroxidase activity&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:15911532
+  review:
+    summary: &gt;-
+      Lopez-Campistrous et al. (2005) identified BCP in the cytosolic fraction
+      of E. coli K-12 by 2D-gel electrophoresis and tandem mass spectrometry
+      after biochemical fractionation. This is direct experimental evidence
+      for cytosolic localization.
+    action: ACCEPT
+    reason: &gt;-
+      Direct identification of BCP in the cytosolic fraction by biochemical
+      fractionation followed by 2D-gel/MS/MS. BCP lacks signal peptides and
+      transmembrane domains, consistent with soluble cytosolic localization.
+    supported_by:
+    - reference_id: PMID:15911532
+      supporting_text: &#34;a proteomic analysis of Escherichia coli in which 3,199 protein forms were detected, and of those 2,160 were annotated and assigned to the cytosol, periplasm, inner membrane, and outer membrane&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:18304323
+  review:
+    summary: &gt;-
+      Ishihama et al. (2008) independently identified BCP in the cytosolic
+      fraction of E. coli MC4100 by LC-MS/MS. This provides independent
+      confirmation of cytosolic localization from a second proteomics study.
+    action: ACCEPT
+    reason: &gt;-
+      Independent confirmation of cytosolic localization using LC-MS/MS on
+      the cytosolic fraction. Consistent with the other IDA annotation from
+      PMID:15911532 and with the absence of signal peptide or transmembrane
+      domains.
+    supported_by:
+    - reference_id: PMID:18304323
+      supporting_text: &#34;we identified 1103 proteins from the cytosolic fraction of the Escherichia coli strain MC4100&#34;
+- term:
+    id: GO:0006979
+    label: response to oxidative stress
+  evidence_type: IMP
+  original_reference_id: PMID:10644761
+  review:
+    summary: &gt;-
+      The bcp null mutant showed clear hypersensitivity to oxidative stress:
+      slower growth in aerobic culture and increased sensitivity to H2O2,
+      t-butyl hydroperoxide, and linoleic acid hydroperoxide. BCP expression
+      was induced 3-fold upon shift from anaerobic to aerobic conditions.
+      Complementation with bcp gene restored resistance. This is strong
+      IMP (mutant phenotype) evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Strong mutant phenotype evidence. The bcp null mutant has clear
+      oxidative stress hypersensitivity that is complemented by bcp
+      expression, directly demonstrating BCP participates in the response
+      to oxidative stress.
+    supported_by:
+    - reference_id: PMID:10644761
+      supporting_text: &#34;Bcp null mutant grew more slowly than its wild type in aerobic culture and showed the hypersensitivity toward various oxidants such as H(2)O(2), t-butyl hydroperoxide, and linoleic acid hydroperoxide&#34;
+    - reference_id: PMID:10644761
+      supporting_text: &#34;The peroxide hypersensitivity of the null mutant could be complemented by the expression of bcp gene&#34;
+- term:
+    id: GO:0008379
+    label: thioredoxin peroxidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10644761
+  review:
+    summary: &gt;-
+      Jeong et al. (2000) directly demonstrated thioredoxin-dependent
+      peroxidase activity of purified recombinant BCP. BCP reduced H2O2,
+      t-butyl hydroperoxide, and linoleic acid hydroperoxide using
+      thioredoxin as electron donor. The C45S mutation abolished activity,
+      confirming Cys-45 as the catalytic peroxidatic cysteine.
+    action: ACCEPT
+    reason: &gt;-
+      Direct biochemical demonstration of thioredoxin-dependent peroxidase
+      activity using purified protein and multiple peroxide substrates. This
+      is the primary IDA evidence establishing BCP as a thiol-specific
+      peroxidase and the core molecular function of the protein.
+    supported_by:
+    - reference_id: PMID:10644761
+      supporting_text: &#34;BCP showed a thioredoxin-dependent thiol peroxidase activity&#34;
+    - reference_id: PMID:10644761
+      supporting_text: &#34;Replacement of Cys-45 with serine resulted in the complete loss of thiol peroxidase activity&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10644761
+  title: &gt;-
+    Thioredoxin-dependent hydroperoxide peroxidase activity of bacterioferritin
+    comigratory protein (BCP) as a new member of the thiol-specific antioxidant
+    protein (TSA)/Alkyl hydroperoxide peroxidase C (AhpC) family.
+  findings:
+  - statement: &gt;-
+      BCP is a thioredoxin-dependent thiol peroxidase that reduces H2O2 and
+      organic hydroperoxides. Cys-45 is the essential catalytic residue.
+    supporting_text: &gt;-
+      BCP showed a thioredoxin-dependent thiol peroxidase activity...Replacement
+      of Cys-45 with serine resulted in the complete loss of thiol peroxidase
+      activity
+  - statement: &gt;-
+      BCP preferentially reduces linoleic acid hydroperoxide over H2O2 and
+      t-butyl hydroperoxide when using thioredoxin as electron donor.
+    supporting_text: &gt;-
+      BCP preferentially reduced linoleic acid hydroperoxide rather than
+      H(2)O(2) and t-butyl hydroperoxide with the use of thioredoxin as an
+      in vivo immediate electron donor
+  - statement: &gt;-
+      BCP exists as a monomer and its functional Cys-45 exists as cysteine
+      sulfenic acid intermediate during catalysis.
+    supporting_text: &gt;-
+      BCP exists as a monomer, and its functional Cys-45 appeared to exist as
+      cysteine sulfenic acid
+  - statement: &gt;-
+      BCP expression is induced by oxidative stress and the bcp null mutant
+      is hypersensitive to oxidants.
+    supporting_text: &gt;-
+      BCP was induced 3-fold by the oxidative stress given by changing the
+      growth conditions from the anaerobic to aerobic culture. Bcp null mutant
+      grew more slowly than its wild type in aerobic culture and showed the
+      hypersensitivity toward various oxidants
+- id: PMID:15911532
+  title: &gt;-
+    Localization, annotation, and comparison of the Escherichia coli K-12 proteome
+    under two states of growth.
+  findings:
+  - statement: BCP was identified in the cytosolic fraction of E. coli K-12.
+    supporting_text: &gt;-
+      a proteomic analysis of Escherichia coli in which 3,199 protein forms
+      were detected, and of those 2,160 were annotated and assigned to the
+      cytosol, periplasm, inner membrane, and outer membrane
+- id: PMID:18304323
+  title: Protein abundance profiling of the Escherichia coli cytosol.
+  findings:
+  - statement: &gt;-
+      BCP was identified among 1103 proteins in the E. coli cytosolic fraction,
+      independently confirming cytosolic localization.
+    supporting_text: &gt;-
+      we identified 1103 proteins from the cytosolic fraction of the
+      Escherichia coli strain MC4100
+- id: PMID:21910476
+  title: &gt;-
+    Kinetic and thermodynamic features reveal that Escherichia coli BCP is an
+    unusually versatile peroxiredoxin.
+  findings:
+  - statement: &gt;-
+      BCP is a monomer by analytical ultracentrifugation and has broad substrate
+      specificity, using multiple reducing substrates (Trx1, Trx2, Grx1, Grx3).
+    supporting_text: &gt;-
+      both oxidized and reduced E. coli BCP behave as monomers in solution...BCP
+      can utilize a variety of reducing substrates, including Trx1, Trx2, Grx1,
+      and Grx3
+  - statement: &gt;-
+      BCP has the highest redox potential (-146 mV) of any characterized
+      peroxiredoxin, suggesting it remains active under highly oxidizing conditions.
+    supporting_text: &gt;-
+      BCP exhibited a high redox potential of -145.9 ± 3.2 mV, the highest to
+      date observed for a Prx
+  - statement: &gt;-
+      BCP shows broad peroxide specificity with comparable rates for H2O2 and
+      cumene hydroperoxide, and a pKa of ~5.8 for the peroxidatic Cys45.
+    supporting_text: &gt;-
+      BCP exhibited a broad peroxide specificity, with comparable rates for
+      H(2)O(2) and cumene hydroperoxide...a pK(a) of ~5.8 for the peroxidatic
+      cysteine (Cys45)
+- id: PMID:19298085
+  title: &gt;-
+    Interrogating the molecular details of the peroxiredoxin activity of the
+    Escherichia coli bacterioferritin comigratory protein using high-resolution
+    mass spectrometry.
+  findings:
+  - statement: &gt;-
+      BCP is an atypical 2-Cys peroxiredoxin that forms an intramolecular
+      disulfide between Cys-45 and Cys-50 during catalysis.
+    supporting_text: &gt;-
+      A transient sulfenic acid is initially formed on Cys-45, before resolution
+      by the formation of an intramolecular disulfide bond between Cys-45 and
+      Cys-50
+  - statement: &gt;-
+      The C50S mutant adopts an alternative mechanism forming an intermolecular
+      disulfide between two BCP molecules.
+    supporting_text: &gt;-
+      The C50S BCP mutant reacts with peroxide to form a sulfenic acid on Cys-45...
+      resulting in a dimeric intermediate containing an intermolecular disulfide bond
+- id: PMID:20078128
+  title: &gt;-
+    Subdivision of the bacterioferritin comigratory protein family of bacterial
+    peroxiredoxins based on catalytic activity.
+  findings:
+  - statement: &gt;-
+      The BCP family is subdivided into atypical 2-Cys (like E. coli BCP) and
+      1-Cys classes based on catalytic mechanism.
+    supporting_text: &gt;-
+      These studies support the subdivision of the BCP family of peroxiredoxins
+      into two classes based on their catalytic activity
+- id: file:ECOLI/bcp/bcp-deep-research-bioreason.md
+  title: BioReason-Pro SFT deep research for bcp
+  findings:
+  - statement: &gt;-
+      Domain architecture analysis correctly identifies the thioredoxin-like
+      scaffold harboring peroxiredoxin-specific catalytic signatures,
+      supporting thiol-based peroxidase function.
+core_functions:
+- description: &gt;-
+    BCP catalyzes the thioredoxin-dependent reduction of hydrogen peroxide
+    and organic hydroperoxides (including linoleic acid hydroperoxide) to
+    water and the corresponding alcohols. This is its primary evolved
+    molecular function, operating through an atypical 2-Cys peroxiredoxin
+    mechanism (Cys45-SOH intermediate, Cys45-Cys50 intramolecular disulfide,
+    thioredoxin-mediated reduction).
+  molecular_function:
+    id: GO:0140824
+    label: thioredoxin-dependent peroxiredoxin activity
+  directly_involved_in:
+  - id: GO:0098869
+    label: cellular oxidant detoxification
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:10644761
+    supporting_text: &#34;BCP showed a thioredoxin-dependent thiol peroxidase activity&#34;
+  - reference_id: PMID:21910476
+    supporting_text: &#34;Kinetic and thermodynamic features reveal that Escherichia coli BCP is an unusually versatile peroxiredoxin&#34;
+  - reference_id: PMID:19298085
+    supporting_text: &#34;catalysis occurs via an atypical two-cysteine peroxiredoxin pathway&#34;
+- description: &gt;-
+    BCP protects the cell against oxidative stress by detoxifying peroxides.
+    The bcp null mutant is hypersensitive to H2O2, t-butyl hydroperoxide,
+    and linoleic acid hydroperoxide, and grows more slowly under aerobic
+    conditions. BCP expression is induced 3-fold upon shift from anaerobic
+    to aerobic growth.
+  molecular_function:
+    id: GO:0008379
+    label: thioredoxin peroxidase activity
+  directly_involved_in:
+  - id: GO:0006979
+    label: response to oxidative stress
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:10644761
+    supporting_text: &#34;Bcp null mutant grew more slowly than its wild type in aerobic culture and showed the hypersensitivity toward various oxidants&#34;
+  - reference_id: PMID:10644761
+    supporting_text: &#34;BCP was induced 3-fold by the oxidative stress given by changing the growth conditions from the anaerobic to aerobic culture&#34;
+suggested_questions:
+- question: &gt;-
+    What are the relative contributions of BCP, AhpC, and Tpx to peroxide
+    detoxification in E. coli under different stress conditions?
+  experts:
+  - Poole LB
+- question: &gt;-
+    Does BCP have a signaling role in E. coli (as suggested by UniProt
+    description of H2O2 sensor function), or is its role purely detoxification?
+  experts:
+  - Poole LB
+  - Kim IH
+suggested_experiments:
+- hypothesis: &gt;-
+    BCP serves as a &#34;last resort&#34; peroxidase under severe oxidative stress
+    when AhpC is inactivated by overoxidation.
+  description: &gt;-
+    Compare peroxide sensitivity and survival of wild-type, bcp-null,
+    ahpC-null, and bcp/ahpC double mutant E. coli under increasing
+    concentrations of H2O2 and organic hydroperoxides. Measure the oxidation
+    state of BCP and AhpC under progressive oxidative stress to determine
+    if BCP remains active when AhpC is overoxidized.
+  experiment_type: genetic epistasis / redox proteomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

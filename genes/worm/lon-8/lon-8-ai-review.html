@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lon-8 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lon-8</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G5EGH7" target="_blank" class="term-link">
+                        G5EGH7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lon-8";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G5EGH7" data-a="DESCRIPTION: LON-8 is a small (162 aa) secreted protein produce..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LON-8 is a small (162 aa) secreted protein produced by hypodermal cells (hyp4 and hyp7) in C. elegans. It contains an N-terminal signal peptide and a nematode-specific BPTI-like domain (IPR057449). Loss-of-function mutations cause a Long (Lon) body size phenotype due to increased cell size (not cell number or ploidy), as well as grossly abnormal male ray morphology resembling Ram mutants. lon-8 functions independently of the Sma/Mab (TGF-beta/BMP) pathway and genetically interacts with cuticle collagen modifying enzymes dpy-11 and dpy-18. The protein is conserved across Rhabditid nematodes.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EGH7" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LON-8 contains an N-terminal signal peptide and is secreted from hypodermal cells. When the signal peptide is present in a reporter construct, GFP is secreted and diffuses, confirming extracellular localization. This IEA annotation based on UniProt subcellular location is correct.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LON-8 is established as a secreted protein. The signal peptide is required for function (hu187 allele lacking it is non-functional). Extracellular region is an appropriate general localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" target="_blank" class="term-link">
+                                        PMID:17374156
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">...Y59A8B.20 is therefore likely to be a secreted protein...Clear localization to this cell is only visible when the signal sequence is deleted, implying that in the presence of this sequence Y59A8B.20 is secreted and diffuses...</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060102" target="_blank" class="term-link">
+                                    GO:0060102
+                                </a>
+                            </span>
+                            <span class="term-label">cuticular extracellular matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17374156
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of Caenorhabditis elegans body size and male tail...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EGH7" data-a="GO:0060102" data-r="PMID:17374156" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LON-8 is secreted from hypodermal cells and genetically interacts with cuticle collagen modifying enzymes dpy-11 and dpy-18. While direct localization to the cuticle has not been shown (the protein diffuses when secreted), the functional connection to cuticle collagen processing and the body morphology phenotype support cuticular ECM as the likely site of action.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The ISM annotation is reasonable given that LON-8 is secreted from the hypodermis (which synthesizes the cuticle), genetically interacts with cuticle collagen modifying enzymes, and its loss-of-function phenotype (Lon body, abnormal ray morphology) is consistent with cuticle defects.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" target="_blank" class="term-link">
+                                        PMID:17374156
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">...both dpy-11(RNAi) and dpy-18(RNAi) completely suppress the lon-8 body size phenotype...strongly suggesting that the function of these three genes are intimately linked...</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000015
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EGH7" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> No specific molecular function has been experimentally determined for LON-8. The ND (No biological Data) annotation is appropriate. The protein contains a BPTI-like nematode-specific domain (IPR057449), but no biochemical activity has been demonstrated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No molecular function assay has been performed on LON-8. While the BPTI-like domain suggests possible protease inhibitor or protease modulating activity, this has not been tested. Note that the related C. elegans Kunitz-domain protein BLI-5 was shown to activate rather than inhibit serine proteases, so domain-based function prediction is unreliable for this protein family in nematodes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/lon-8/lon-8-deep-research-bioreason.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">BioReason predicts extracellular matrix structural constituent (GO:0005201) based on the BPTI-like domain, but this is undemonstrated and the nematode Kunitz domain family shows unexpected biochemical activities.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035264" target="_blank" class="term-link">
+                                    GO:0035264
+                                </a>
+                            </span>
+                            <span class="term-label">multicellular organism growth</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17374156
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of Caenorhabditis elegans body size and male tail...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EGH7" data-a="GO:0035264" data-r="PMID:17374156" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> lon-8 loss-of-function causes increased body length (Lon phenotype), demonstrating that LON-8 normally acts to limit body growth. The qualifier acts_upstream_of_or_within_negative_effect accurately captures that LON-8 negatively regulates growth, without asserting a specific mechanism. The increased body size results from increased cell size, not cell number or ploidy.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Two deletion alleles (hu187, hu188) and RNAi all cause a Lon phenotype. lon-8 mutants grow faster during larval development and early adulthood. The negative effect qualifier is appropriate because LON-8 normally restrains growth.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" target="_blank" class="term-link">
+                                        PMID:17374156
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">...Both alleles gave a clear Lon phenotype...throughout larval development, they outgrew their wild-type counterparts at a rate comparable to that of lon-1(e185) animals...</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045138" target="_blank" class="term-link">
+                                    GO:0045138
+                                </a>
+                            </span>
+                            <span class="term-label">nematode male tail tip morphogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17374156
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of Caenorhabditis elegans body size and male tail...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EGH7" data-a="GO:0045138" data-r="PMID:17374156" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> lon-8 mutant males display grossly abnormal ray morphology, with thickened, clumped rays resembling Ram mutants. This demonstrates that LON-8 is required for normal male tail morphogenesis. The positive effect qualifier indicates LON-8 promotes normal ray development. Despite abnormal morphology, males can still mate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Both hu187 and hu188 alleles show extensive male ray morphological defects. lon-8 is expressed in the ventral tail hypodermal cells that surround the developing rays. The phenotype resembles Ram mutants which affect cuticle apposition around rays.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" target="_blank" class="term-link">
+                                        PMID:17374156
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">...All rays appear morphologically abnormal, but rays 5 and 6 are most severely affected...lon-8(hu187) and lon-8(hu188) males can mate, suggesting that ray sensory function is intact even though ray morphology is grossly abnormal...</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040015" target="_blank" class="term-link">
+                                    GO:0040015
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of multicellular organism growth</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17374156
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of Caenorhabditis elegans body size and male tail...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G5EGH7" data-a="GO:0040015" data-r="PMID:17374156" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> lon-8 loss-of-function causes a Lon phenotype with increased body length during larval development and early adulthood, indicating LON-8 normally negatively regulates multicellular organism growth. This is a more specific annotation than GO:0035264 with negative effect qualifier, and directly reflects the observed biology.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The existing annotation uses GO:0035264 (multicellular organism growth) with acts_upstream_of_or_within_negative_effect qualifier. GO:0040015 (negative regulation of multicellular organism growth) more precisely captures the role of LON-8 as a negative regulator and is supported by the same mutant phenotype data.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" target="_blank" class="term-link">
+                                        PMID:17374156
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">...Both alleles gave a clear Lon phenotype...throughout larval development, they outgrew their wild-type counterparts at a rate comparable to that of lon-1(e185) animals...</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LON-8 is a secreted nematode-specific BPTI-like domain protein that negatively regulates body size during larval elongation and early adult growth. It is produced by hypodermal cells and secreted into the cuticular extracellular matrix, where it functions in the cuticle collagen processing pathway alongside dpy-11 and dpy-18. Its molecular activity is unknown but likely involves modulation of cuticle composition rather than direct structural contribution.</h3>
+                <span class="vote-buttons" data-g="G5EGH7" data-a="FUNCTION: LON-8 is a secreted nematode-specific BPTI-like do..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                            molecular_function
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040015" target="_blank" class="term-link">
+                                negative regulation of multicellular organism growth
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045138" target="_blank" class="term-link">
+                                nematode male tail tip morphogenesis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060102" target="_blank" class="term-link">
+                                cuticular extracellular matrix
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" target="_blank" class="term-link">
+                                PMID:17374156
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">...lon-8 encodes a secreted product of the hypodermis that controls body size and male ray morphology...lon-8 genetically interacts with enzymes that affect the composition of the cuticle...</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" target="_blank" class="term-link">
+                            PMID:17374156
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Regulation of Caenorhabditis elegans body size and male tail development by the novel gene lon-8.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">lon-8 encodes a 162 aa secreted protein expressed in hypodermal syncytia hyp4 and hyp7 from comma stage through adulthood.</div>
+                        
+                        <div class="finding-text">"...The complete Y59A8B.20 sequence (Genbank accession number EF495354) encodes a 162 amino acid protein containing an N-terminal signal sequence...the lines carrying the variant lacking the signal peptide showed clear expression in two of the hypodermal syncytia, hyp4, which surrounds the anterior part of the pharynx, and hyp7..."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">lon-8 loss-of-function causes increased body length during larval development and early adult growth, with the increase due to cell size rather than cell number.</div>
+                        
+                        <div class="finding-text">"...Both alleles gave a clear Lon phenotype... ...throughout larval development, they outgrew their wild-type counterparts at a rate comparable to that of lon-1(e185) animals...lon-8 is more important for body size determination during larval elongation and early adult growth than later in life... ...the increase in body length of lon-8 animals correlates with an increase in cell size rather than cell number..."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">lon-8 mutants display grossly abnormal male ray morphology resembling Ram mutants, with rays 5 and 6 most severely affected.</div>
+                        
+                        <div class="finding-text">"...All rays appear morphologically abnormal, but rays 5 and 6 are most severely affected...This phenotype is most reminiscent of the phenotype of mutants in a class of 8 genes that give a Ray Abnormal Morphology (Ram) phenotype..."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">lon-8 functions independently of the Sma/Mab (TGF-beta/BMP) pathway in body size regulation.</div>
+                        
+                        <div class="finding-text">"...lon-8 is unlikely to be an important effector of DBL-1 signaling...lon-8 is not transcriptionally regulated by the Sma/Mab pathway..."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">dpy-11 and dpy-18 RNAi completely suppress the lon-8 body size phenotype, linking lon-8 to cuticle collagen modification.</div>
+                        
+                        <div class="finding-text">"...both dpy-11(RNAi) and dpy-18(RNAi) completely suppress the lon-8 body size phenotype...strongly suggesting that the function of these three genes are intimately linked..."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:worm/lon-8/lon-8-deep-research-bioreason.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BioReason-Pro SFT deep research output for lon-8</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BioReason identifies the BPTI-like domain (IPR057449) and predicts extracellular matrix structural constituent function, though this specific molecular function is undemonstrated.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does LON-8 have serine protease inhibitor activity, or does it activate proteases like the related Kunitz-domain protein BLI-5?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Soete G, Korswagen HC</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EGH7" data-a="Q: Does LON-8 have serine protease inhibitor activity..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is LON-8 physically associated with cuticle collagens or collagen modifying enzymes, or does it act indirectly?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Soete G, Korswagen HC</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EGH7" data-a="Q: Is LON-8 physically associated with cuticle collag..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relationship between lon-8 and the Ram pathway genes that produce similar male tail phenotypes?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Soete G, Korswagen HC</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EGH7" data-a="Q: What is the relationship between lon-8 and the Ram..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant LON-8 and test for inhibition or activation of serine proteases in vitro, as was done for BLI-5. Include cuticle-relevant proteases such as BLI-4.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LON-8 has serine protease inhibitor or modulator activity via its BPTI-like domain.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EGH7" data-a="EXPERIMENT: Express and purify recombinant LON-8 and test for ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform co-immunoprecipitation or yeast two-hybrid experiments between LON-8 and DPY-11/DPY-18 to determine whether the genetic interaction reflects a physical interaction.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LON-8 physically interacts with cuticle collagen processing enzymes DPY-11 and DPY-18.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EGH7" data-a="EXPERIMENT: Perform co-immunoprecipitation or yeast two-hybrid..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate a functional LON-8 fusion protein with a small epitope tag (rather than GFP which diffuses) and perform immunoelectron microscopy to determine precise subcellular localization within the cuticle layers.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LON-8 localizes specifically to the cuticle rather than diffusing broadly in the extracellular space.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EGH7" data-a="EXPERIMENT: Generate a functional LON-8 fusion protein with a ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lon-8-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EGH7" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="o">---</span>
+<span class="n">provider</span><span class="p">:</span><span class="w"> </span><span class="n">bioreason</span><span class="o">-</span><span class="n">pro</span>
+<span class="n">model</span><span class="p">:</span><span class="w"> </span><span class="n">SFT</span>
+<span class="n">source</span><span class="p">:</span><span class="w"> </span><span class="n">huggingface</span><span class="o">.</span><span class="n">co</span><span class="o">/</span><span class="n">datasets</span><span class="o">/</span><span class="n">wanglab</span><span class="o">/</span><span class="n">protein_catalogue</span>
+<span class="n">date</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;2026-04-04&#39;</span>
+<span class="n">uniprot_id</span><span class="p">:</span><span class="w"> </span><span class="n">G5EGH7</span>
+<span class="n">gene</span><span class="p">:</span><span class="w"> </span><span class="n">lon</span><span class="o">-</span><span class="mi">8</span>
+<span class="n">organism</span><span class="p">:</span><span class="w"> </span><span class="n">Caenorhabditis</span><span class="w"> </span><span class="n">elegans</span>
+<span class="o">---</span>
+
+<span class="c1">## Thinking Trace</span>
+
+<span class="n">I</span><span class="w"> </span><span class="n">begin</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">architecture</span><span class="o">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">sequence</span><span class="w"> </span><span class="n">contains</span><span class="w"> </span><span class="n">IPR057449</span><span class="w"> </span><span class="p">(</span><span class="n">BPTI</span><span class="o">-</span><span class="n">like</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">77</span><span class="err">–</span><span class="mi">151</span><span class="p">)</span><span class="o">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">BPTI</span><span class="o">/</span><span class="n">Kunitz</span><span class="w"> </span><span class="n">fold</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">compact</span><span class="p">,</span><span class="w"> </span><span class="n">disulfide</span><span class="o">-</span><span class="n">rich</span><span class="w"> </span><span class="n">inhibitory</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="n">classically</span><span class="w"> </span><span class="n">used</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">block</span><span class="w"> </span><span class="n">serine</span><span class="w"> </span><span class="n">protease</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">sites</span><span class="o">.</span><span class="w"> </span><span class="n">Its</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">placement</span><span class="w"> </span><span class="n">implies</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="k">signal</span><span class="w"> </span><span class="n">peptide</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">pro</span><span class="o">-</span><span class="n">region</span><span class="w"> </span><span class="n">preceding</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">Kunitz</span><span class="w"> </span><span class="n">core</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">layout</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">typically</span><span class="w"> </span><span class="n">routes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">secretory</span><span class="w"> </span><span class="n">pathway</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">positions</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">inhibitory</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">extracellular</span><span class="w"> </span><span class="n">milieu</span><span class="o">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">disulfide</span><span class="o">-</span><span class="n">stabilized</span><span class="w"> </span><span class="n">Kunitz</span><span class="w"> </span><span class="n">scaffold</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">optimized</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">high</span><span class="o">-</span><span class="n">affinity</span><span class="p">,</span><span class="w"> </span><span class="n">reversible</span><span class="w"> </span><span class="n">protein</span><span class="err">–</span><span class="n">protein</span><span class="w"> </span><span class="n">interactions</span><span class="w"> </span><span class="n">rather</span><span class="w"> </span><span class="n">than</span><span class="w"> </span><span class="n">catalysis</span><span class="p">,</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">extracellular</span><span class="w"> </span><span class="n">matrices</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">often</span><span class="w"> </span><span class="n">tunes</span><span class="w"> </span><span class="n">proteolysis</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">restraining</span><span class="w"> </span><span class="n">endopeptidases</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">would</span><span class="w"> </span><span class="n">otherwise</span><span class="w"> </span><span class="n">remodel</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="n">components</span><span class="o">.</span>
+</code></pre></div>
+
+<p>This architecture causally supports a molecular function as an extracellular matrix structural constituent (GO:0005201). A secreted, disulfide-rich module can intercalate into matrix assemblies and provide mechanical stability and controlled viscoelasticity by modulating both direct binding to matrix proteins and the proteolytic turnover of those proteins. The Kunitz fold’s inhibitory geometry explains how the protein could regulate matrix remodeling enzymes, thereby preserving specific collagenous and glycoprotein architectures.</p>
+<p>From this molecular role, the biological processes follow. By stabilizing and patterning the extracellular scaffold, the protein contributes to shaping specialized structures in the male tail, consistent with nematode male tail tip morphogenesis (GO:0045138). The same structural tuning can limit excessive body elongation by constraining extracellular matrix expansion and by signaling through a cell-surface receptor to temper cell proliferation, aligning with negative regulation of multicellular organism growth (GO:0040015). Mechanistically, a Kunitz-domain protein tethered to the matrix can both physically reinforce the cuticle and dampen protease-driven loosening, while its receptor engagement on hypodermal cells feeds back to restrain growth programs.</p>
+<p>The cellular context is dictated by secretion and matrix integration. The Kunitz domain’s extracellular design, together with the protein’s role in morphogenesis and growth restraint, places it in the basement membrane (GO:0005604). Localization to the hypodermal basement membrane allows it to contact both apical extracellular matrix components and cell-surface receptors, enabling it to influence both matrix assembly and cell proliferation.</p>
+<p>A coherent mechanistic model emerges: the protein is secreted by hypodermal cells into the basement membrane, where its BPTI-like domain binds and inhibits matrix-remodeling proteases, thereby stabilizing collagens and glycoproteins. In parallel, it engages a cell-surface receptor to trigger signaling that restrains body size and modulates proliferation. The observed partners—Col_cuticle_N domain-containing protein, ZP domain-containing protein, and cuticle collagen lon-3—fit this model as direct matrix ligands or co-scaffolds. The Kunitz module likely binds these extracellular components to form a protective network, while receptor engagement on adjacent cells transduces a growth-limiting signal. This dual action explains how the protein shapes the male tail tip and prevents overgrowth while remaining dispensable for the general integrity of the cuticle.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="n">Functional</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">secreted</span><span class="p">,</span><span class="w"> </span><span class="n">basement</span><span class="o">-</span><span class="n">membrane</span><span class="o">-</span><span class="n">associated</span><span class="w"> </span><span class="n">extracellular</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">C</span><span class="p">.</span><span class="w"> </span><span class="n">elegans</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">uses</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">disulfide</span><span class="o">-</span><span class="n">rich</span><span class="w"> </span><span class="n">inhibitory</span><span class="w"> </span><span class="k">module</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">stabilize</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">pattern</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="n">tempering</span><span class="w"> </span><span class="n">proteolytic</span><span class="w"> </span><span class="n">remodeling</span><span class="p">.</span><span class="w"> </span><span class="k">By</span><span class="w"> </span><span class="n">binding</span><span class="w"> </span><span class="n">cuticle</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">glycoprotein</span><span class="w"> </span><span class="n">components</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">engaging</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">cell</span><span class="o">-</span><span class="n">surface</span><span class="w"> </span><span class="n">receptor</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">shapes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">male</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="n">tip</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">limits</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="n">elongation</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">dampening</span><span class="w"> </span><span class="n">proliferation</span><span class="p">.</span><span class="w"> </span><span class="n">Despite</span><span class="w"> </span><span class="n">reinforcing</span><span class="w"> </span><span class="k">local</span><span class="w"> </span><span class="n">extracellular</span><span class="w"> </span><span class="n">architecture</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">essential</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">overall</span><span class="w"> </span><span class="n">cuticle</span><span class="w"> </span><span class="n">integrity</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">UniProt</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">Involved</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">male</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="n">morphogenesis</span><span class="p">.</span><span class="w"> </span><span class="n">Negatively</span><span class="w"> </span><span class="n">regulates</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="k">size</span><span class="p">,</span><span class="w"> </span><span class="n">probably</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">modulating</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="n">proliferation</span><span class="w"> </span><span class="n">through</span><span class="w"> </span><span class="n">interaction</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">more</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="n">surface</span><span class="w"> </span><span class="n">receptors</span><span class="p">.</span><span class="w"> </span><span class="ow">Not</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">structural</span><span class="w"> </span><span class="n">integrity</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">cuticle</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nl">IPR057449</span><span class="p">:</span><span class="w"> </span><span class="n">BPTI</span><span class="o">-</span><span class="ow">like</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">77-151</span><span class="o">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="k">GO</span><span class="w"> </span><span class="n">Term</span><span class="w"> </span><span class="n">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="n">Molecular</span><span class="w"> </span><span class="k">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Biological</span><span class="w"> </span><span class="n">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Cellular</span><span class="w"> </span><span class="n">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lon-8-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EGH7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lon-8-c-elegans-research-notes">lon-8 (C. elegans) - Research Notes</h1>
+<h2 id="gene-overview">Gene Overview</h2>
+<p>lon-8 (Y59A8B.20, WBGene00013352) encodes a small (162 aa) secreted protein expressed in hypodermal syncytia (hyp4 and hyp7) from embryonic comma stage through adulthood. Loss-of-function mutations cause a Long (Lon) body size phenotype. The protein contains an N-terminal signal peptide (aa 1-23) and a BPTI-like nematode-specific domain (IPR057449, Pfam PF25315, BPTI_nem).</p>
+<h2 id="key-publication">Key Publication</h2>
+<p>PMID:17374156 (Soete et al., 2007, BMC Dev Biol) is the sole characterization paper.</p>
+<h3 id="body-size-phenotype">Body Size Phenotype</h3>
+<ul>
+<li>lon-8 loss-of-function (hu187, hu188) causes increased body length <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" title="Both alleles gave a clear Lon phenotype">PMID:17374156</a></li>
+<li>RNAi knockdown also increases body length: "1.3 +/- 0.08 mm in animals treated with control vector versus 1.4 +/- 0.08 mm in animals treated with lon-8 RNAi" <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+<li>lon-8 mutants grow faster during larval development, comparable to lon-1(e185) <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" title="throughout larval development, they outgrew their wild-type counterparts at a rate comparable to that of lon-1(e185) animals">PMID:17374156</a></li>
+<li>Growth rate slows after ~96 hours post-hatching, unlike lon-1 which continues <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" title="lon-8 is more important for body size determination during larval elongation and early adult growth than later in life">PMID:17374156</a></li>
+<li>No change in hypodermal or seam cell nuclei count - increased cell size, not cell number <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" title="the increase in body length of lon-8 animals correlates with an increase in cell size rather than cell number">PMID:17374156</a></li>
+<li>No increase in hypodermal ploidy (unlike lon-1) <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" title="lon-8 does not have an obvious effect on the nuclear content of the hypodermis">PMID:17374156</a></li>
+</ul>
+<h3 id="male-tail-phenotype">Male Tail Phenotype</h3>
+<ul>
+<li>lon-8 mutants show grossly thickened, abnormal male rays <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" title="All rays appear morphologically abnormal, but rays 5 and 6 are most severely affected">PMID:17374156</a></li>
+<li>Phenotype resembles Ram (Ray Abnormal Morphology) mutants <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" title="This phenotype is most reminiscent of the phenotype of mutants in a class of 8 genes that give a Ray Abnormal Morphology (Ram) phenotype">PMID:17374156</a></li>
+<li>Males can still mate despite abnormal morphology <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" title="lon-8(hu187) and lon-8(hu188) males can mate">PMID:17374156</a></li>
+<li>No spicule defects (unlike Sma/Mab pathway mutants) <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+</ul>
+<h3 id="relationship-to-smamab-tgf-betabmp-pathway">Relationship to Sma/Mab (TGF-beta/BMP) Pathway</h3>
+<ul>
+<li>lon-8 does NOT suppress dbl-1 or sma-6 Sma phenotype <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" title="lon-8 is unlikely to be an important effector of DBL-1 signaling">PMID:17374156</a></li>
+<li>lon-8 is NOT transcriptionally regulated by the Sma/Mab pathway <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" title="lon-8 is not transcriptionally regulated by the Sma/Mab pathway">PMID:17374156</a></li>
+<li>lon-8 functions INDEPENDENTLY of the Sma/Mab pathway <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+</ul>
+<h3 id="genetic-interactions-with-cuticle-modifying-enzymes">Genetic Interactions with Cuticle Modifying Enzymes</h3>
+<ul>
+<li>dpy-11(RNAi) and dpy-18(RNAi) completely suppress the lon-8 body size phenotype <a href="https://pubmed.ncbi.nlm.nih.gov/17374156" title="both dpy-11(RNAi) and dpy-18(RNAi) completely suppress the lon-8 body size phenotype">PMID:17374156</a></li>
+<li>dpy-11 and dpy-18 encode cuticle collagen modifying enzymes</li>
+<li>This places lon-8 function in the cuticle collagen processing pathway</li>
+</ul>
+<h3 id="expression">Expression</h3>
+<ul>
+<li>Transcriptional reporter: hyp4 and hyp7 syncytia <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+<li>Earliest expression: comma stage embryos <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+<li>In males: also in ventral tail hypodermal cells (V6.pppaa, T.aa, R6.p, T.apapa, R7.p, R8.p, R9.p) <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+<li>LON-8 is secreted and diffuses from the hypodermis <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+</ul>
+<h3 id="secretion">Secretion</h3>
+<ul>
+<li>Signal peptide present (aa 1-23) <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+<li>When signal peptide is included in reporter, GFP is secreted and diffuses <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+<li>hu187 allele lacks signal peptide and is non-functional <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+</ul>
+<h3 id="conservation">Conservation</h3>
+<ul>
+<li>Nematode-specific protein; homologs in C. briggsae, H. contortus, P. pacificus, P. trichosuri, M. incognita, B. malayi <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+<li>All homologs have predicted signal peptides despite divergent N-terminal sequences <a href="https://pubmed.ncbi.nlm.nih.gov/17374156">PMID:17374156</a></li>
+</ul>
+<h2 id="domain-architecture">Domain Architecture</h2>
+<p>UniProt lists: IPR057449 (BPTI-like, C-terminal domain, nematode-specific), Pfam PF25315 (BPTI_nem). This is a nematode-specific variant of the BPTI/Kunitz superfamily fold. Note: this is NOT the classical Kunitz/BPTI domain (PF00014) but rather a nematode-specific clade (PF25315).</p>
+<p>Other C. elegans Kunitz-domain cuticle proteins include:<br />
+- BLI-5: Kunitz domain protein involved in cuticle collagen biosynthesis; interacts with BLI-4 subtilisin-like protease; biochemically shown to ACTIVATE (not inhibit) serine proteases <a href="https://pubmed.ncbi.nlm.nih.gov/19716386">PMID:19716386</a><br />
+- MLT-11: Large Kunitz domain protein (10 Kunitz domains) required for cuticle patterning and molting; regulated by NHR-23 <a href="https://pubmed.ncbi.nlm.nih.gov/38766248">PMID:38766248</a></p>
+<h2 id="critical-assessment-of-bioreason-predictions">Critical Assessment of BioReason Predictions</h2>
+<h3 id="bioreason-claimed-go0005201-extracellular-matrix-structural-constituent">BioReason Claimed GO:0005201 (extracellular matrix structural constituent)</h3>
+<p>This is speculative. There is no evidence that LON-8 is a structural component of the ECM. The paper says LON-8 is secreted and diffuses; there is no evidence of matrix integration. The genetic interaction with cuticle collagen modifying enzymes suggests it influences cuticle composition but not necessarily as a structural constituent.</p>
+<h3 id="bioreason-claimed-go0005604-basement-membrane">BioReason Claimed GO:0005604 (basement membrane)</h3>
+<p>This is WRONG. The paper never mentions basement membrane. LON-8 is secreted from the hypodermis into the extracellular space, likely interacting with the cuticle (apical ECM), not the basement membrane (basal ECM). The existing GOA annotation of cuticular extracellular matrix (GO:0060102) is more appropriate.</p>
+<h3 id="bioreason-claimed-receptor-engagement-and-cell-proliferation">BioReason Claimed "receptor engagement" and "cell proliferation"</h3>
+<p>The paper explicitly states: "the increase in body length of lon-8 animals correlates with an increase in cell size rather than cell number" and there is no evidence of receptor engagement or signaling activity. The UniProt summary mentions "modulating cell proliferation through interaction with one or more cell surface receptors" but this is stated as a hypothesis, not demonstrated.</p>
+<h3 id="bioreason-claimed-partners-col_cuticle_n-domain-containing-protein-zp-domain-containing-protein-and-cuticle-collagen-lon-3">BioReason Claimed partners: "Col_cuticle_N domain-containing protein, ZP domain-containing protein, and cuticle collagen lon-3"</h3>
+<p>No interaction data for LON-8 with any of these proteins exists in the literature. The only genetic interactions demonstrated are with dpy-11 and dpy-18 (cuticle collagen modifying enzymes), not direct protein-protein interactions with collagens.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lon-8-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EGH7" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-lon-8-caenorhabditis-elegans">BioReason-Pro SFT Review: lon-8 (Caenorhabditis elegans)</h1>
+<p>Source: lon-8-deep-research-bioreason.md</p>
+<ul>
+<li><strong>Correctness</strong>: 2/5</li>
+<li><strong>Completeness</strong>: 3/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason functional summary describes lon-8 as:</p>
+<blockquote>
+<p>A secreted, basement-membrane-associated extracellular matrix protein in C. elegans that uses a disulfide-rich inhibitory module to stabilize and pattern the matrix while tempering proteolytic remodeling. By binding cuticle and glycoprotein components and engaging a cell-surface receptor, it shapes the male tail tip and limits body elongation by dampening proliferation. Despite reinforcing local extracellular architecture, it is not essential for overall cuticle integrity.</p>
+</blockquote>
+<p>This summary correctly captures the high-level phenotype (body size regulation and male tail morphogenesis) but introduces multiple unsupported mechanistic claims and one outright incorrect localization.</p>
+<p><strong>Correctness issues:</strong></p>
+<ol>
+<li>
+<p><strong>"Basement-membrane-associated" (GO:0005604) is WRONG.</strong> The paper (PMID:17374156) never mentions basement membrane. LON-8 is secreted from hypodermal cells and the existing GOA annotation correctly places it in the cuticular extracellular matrix (GO:0060102), which is the apical ECM. The basement membrane is the basal ECM on the opposite side of the hypodermal cells. This is a fundamental error in cell biology for C. elegans.</p>
+</li>
+<li>
+<p><strong>"Disulfide-rich inhibitory module" and "tempering proteolytic remodeling" are undemonstrated.</strong> While LON-8 contains a BPTI-like domain (IPR057449, Pfam PF25315), no biochemical activity has been tested. Importantly, the related C. elegans Kunitz-domain protein BLI-5 was shown to ACTIVATE rather than inhibit serine proteases (PMID:19716386), demonstrating that Kunitz/BPTI domain function cannot be reliably predicted in nematodes. The BioReason model assumes classical Kunitz inhibitory function without evidence.</p>
+</li>
+<li>
+<p><strong>"Engaging a cell-surface receptor" and "dampening proliferation" are fabricated.</strong> The paper explicitly states that lon-8 mutants show "an increase in cell size rather than cell number" (PMID:17374156). There is zero evidence for receptor engagement or effects on proliferation. The UniProt summary line mentions "modulating cell proliferation through interaction with one or more cell surface receptors" but this is itself a hypothesis, not established fact. BioReason appears to have treated the UniProt annotation text as experimentally validated.</p>
+</li>
+<li>
+<p><strong>"Binding cuticle and glycoprotein components" with specific partners is fabricated.</strong> The thinking trace claims partners including "Col_cuticle_N domain-containing protein, ZP domain-containing protein, and cuticle collagen lon-3." No protein-protein interaction data exists for LON-8 with any of these proteins. The only genetic interactions demonstrated are with dpy-11 and dpy-18 (cuticle collagen modifying enzymes), and these are epistatic not physical interactions.</p>
+</li>
+<li>
+<p><strong>"Stabilize and pattern the matrix" and "extracellular matrix structural constituent" (GO:0005201) are unsupported.</strong> There is no evidence that LON-8 is a structural component of the ECM. The protein is secreted and diffuses from hypodermal cells. The genetic interaction with collagen modifying enzymes suggests it influences cuticle composition, but the mechanism could be catalytic, regulatory, or structural -- this is unknown.</p>
+</li>
+</ol>
+<p><strong>What was correct:</strong></p>
+<ol>
+<li>The overall biological outcomes (body size regulation, male tail morphogenesis) are accurately captured from the literature.</li>
+<li>The statement that LON-8 "is not essential for overall cuticle integrity" is correct -- lon-8 mutants do not show cuticle blistering or barrier defects.</li>
+<li>The domain architecture description (signal peptide, disulfide-rich domain) is accurate in general terms.</li>
+<li>The description of the protein as secreted from hypodermal cells is correct.</li>
+</ol>
+<h2 id="comparison-with-goa-annotations">Comparison with GOA Annotations</h2>
+<p>The existing GOA annotations are:<br />
+- GO:0005576 extracellular region (IEA) -- correct<br />
+- GO:0060102 cuticular extracellular matrix (ISM) -- correct<br />
+- GO:0003674 molecular_function (ND) -- appropriate given lack of biochemical data<br />
+- GO:0035264 multicellular organism growth (IMP, negative effect qualifier) -- correct<br />
+- GO:0045138 nematode male tail tip morphogenesis (IMP, positive effect qualifier) -- correct</p>
+<p>The GOA annotations are conservative and well-supported. The ND annotation for molecular function honestly reflects that no biochemical activity has been determined. BioReason's assertion of GO:0005201 (extracellular matrix structural constituent) as the molecular function is unsupported and overconfident.</p>
+<h2 id="notes-on-thinking-trace">Notes on Thinking Trace</h2>
+<ol>
+<li>
+<p><strong>Incorrect anatomy.</strong> The trace places LON-8 at the "hypodermal basement membrane" to "contact both apical extracellular matrix components and cell-surface receptors." In C. elegans, the basement membrane is basal to the hypodermis, while the cuticle is apical. LON-8 is secreted apically into the cuticle/extracellular space, not basally into the basement membrane. This error reveals a misunderstanding of C. elegans body wall organization.</p>
+</li>
+<li>
+<p><strong>Overinterpretation of domain to function.</strong> The trace reasons from BPTI/Kunitz fold to "high-affinity, reversible protein-protein interactions" to "restraining endopeptidases" to "preserving specific collagenous architectures." Each step is plausible in isolation but collectively builds an edifice of unsupported mechanistic claims. The BLI-5 precedent (Kunitz domain activating rather than inhibiting proteases) directly contradicts the assumed inhibitory function.</p>
+</li>
+<li>
+<p><strong>Conflation of genetic and physical interaction.</strong> The trace states LON-8 "binds these extracellular components to form a protective network" based on what are purely genetic interactions. The suppression of lon-8 by dpy-11/dpy-18 indicates epistatic relationships, not physical binding.</p>
+</li>
+<li>
+<p><strong>Fabricated receptor signaling model.</strong> The claim that LON-8 "engages a cell-surface receptor to trigger signaling that restrains body size and modulates proliferation" has no experimental support. The paper shows increased cell size, not decreased proliferation. No receptor for LON-8 has been identified.</p>
+</li>
+<li>
+<p><strong>The GO term predictions sections are empty.</strong> Despite the extensive narrative predicting GO:0005201, GO:0005604, GO:0045138, and GO:0040015 in the thinking trace, no actual GO term predictions appear in the structured output sections (Molecular Function, Biological Process, Cellular Component are all blank).</p>
+</li>
+</ol>
+<h2 id="reference-verification">Reference Verification</h2>
+<p>PMID:17374156 (Soete et al., 2007, BMC Dev Biol) is REAL and is the primary characterization paper for lon-8. The paper's findings are accurately reflected in the GOA annotations. The BioReason model correctly cites this reference but then extrapolates well beyond what the paper demonstrates.</p>
+<h2 id="summary">Summary</h2>
+<p>The BioReason prediction correctly identifies the high-level biology of lon-8 (body size regulation, male tail morphogenesis, secreted protein) but introduces multiple fabricated mechanistic claims: wrong subcellular compartment (basement membrane instead of cuticle), assumed protease inhibitor activity contradicted by nematode Kunitz-domain precedent, invented receptor signaling and anti-proliferative mechanisms contradicted by the paper's own data showing cell size (not number) changes, and fabricated protein-protein interactions. The existing GOA annotations with the honest ND for molecular function are more accurate and informative than the BioReason output.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G5EGH7
+gene_symbol: lon-8
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: LON-8 is a small (162 aa) secreted protein produced by hypodermal
+  cells (hyp4 and hyp7) in C. elegans. It contains an N-terminal signal peptide
+  and a nematode-specific BPTI-like domain (IPR057449). Loss-of-function
+  mutations cause a Long (Lon) body size phenotype due to increased cell size
+  (not cell number or ploidy), as well as grossly abnormal male ray morphology
+  resembling Ram mutants. lon-8 functions independently of the Sma/Mab
+  (TGF-beta/BMP) pathway and genetically interacts with cuticle collagen
+  modifying enzymes dpy-11 and dpy-18. The protein is conserved across
+  Rhabditid nematodes.
+references:
+- id: PMID:17374156
+  title: Regulation of Caenorhabditis elegans body size and male tail development
+    by the novel gene lon-8.
+  findings:
+  - statement: lon-8 encodes a 162 aa secreted protein expressed in hypodermal
+      syncytia hyp4 and hyp7 from comma stage through adulthood.
+    supporting_text: &gt;-
+      ...The complete Y59A8B.20 sequence (Genbank accession number
+      EF495354) encodes a 162 amino acid protein containing an N-terminal
+      signal sequence...the lines carrying the variant lacking the signal
+      peptide showed clear expression in two of the hypodermal syncytia,
+      hyp4, which surrounds the anterior part of the pharynx, and hyp7...
+    reference_section_type: RESULTS
+  - statement: lon-8 loss-of-function causes increased body length during larval
+      development and early adult growth, with the increase due to cell size
+      rather than cell number.
+    supporting_text: &gt;-
+      ...Both alleles gave a clear Lon phenotype...
+      ...throughout larval development, they outgrew their wild-type
+      counterparts at a rate comparable to that of lon-1(e185)
+      animals...lon-8 is more important for body size determination
+      during larval elongation and early adult growth than later in
+      life...
+      ...the increase in body length of lon-8 animals correlates with
+      an increase in cell size rather than cell number...
+    reference_section_type: RESULTS
+  - statement: lon-8 mutants display grossly abnormal male ray morphology
+      resembling Ram mutants, with rays 5 and 6 most severely affected.
+    supporting_text: &gt;-
+      ...All rays appear morphologically abnormal, but rays 5 and 6
+      are most severely affected...This phenotype is most reminiscent
+      of the phenotype of mutants in a class of 8 genes that give a
+      Ray Abnormal Morphology (Ram) phenotype...
+    reference_section_type: RESULTS
+  - statement: lon-8 functions independently of the Sma/Mab (TGF-beta/BMP)
+      pathway in body size regulation.
+    supporting_text: &gt;-
+      ...lon-8 is unlikely to be an important effector of DBL-1
+      signaling...lon-8 is not transcriptionally regulated by the
+      Sma/Mab pathway...
+    reference_section_type: RESULTS
+  - statement: dpy-11 and dpy-18 RNAi completely suppress the lon-8 body size
+      phenotype, linking lon-8 to cuticle collagen modification.
+    supporting_text: &gt;-
+      ...both dpy-11(RNAi) and dpy-18(RNAi) completely suppress the
+      lon-8 body size phenotype...strongly suggesting that the function
+      of these three genes are intimately linked...
+    reference_section_type: RESULTS
+- id: file:worm/lon-8/lon-8-deep-research-bioreason.md
+  title: BioReason-Pro SFT deep research output for lon-8
+  findings:
+  - statement: BioReason identifies the BPTI-like domain (IPR057449) and
+      predicts extracellular matrix structural constituent function, though
+      this specific molecular function is undemonstrated.
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular
+    Location vocabulary mapping, accompanied by conservative changes to GO terms
+    applied by UniProt
+  findings: []
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  qualifier: located_in
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: LON-8 contains an N-terminal signal peptide and is secreted from
+      hypodermal cells. When the signal peptide is present in a reporter
+      construct, GFP is secreted and diffuses, confirming extracellular
+      localization. This IEA annotation based on UniProt subcellular location
+      is correct.
+    action: ACCEPT
+    reason: LON-8 is established as a secreted protein. The signal peptide is
+      required for function (hu187 allele lacking it is non-functional).
+      Extracellular region is an appropriate general localization.
+    supported_by:
+    - reference_id: PMID:17374156
+      supporting_text: &gt;-
+        ...Y59A8B.20 is therefore likely to be a secreted
+        protein...Clear localization to this cell is only visible when
+        the signal sequence is deleted, implying that in the presence
+        of this sequence Y59A8B.20 is secreted and diffuses...
+- term:
+    id: GO:0060102
+    label: cuticular extracellular matrix
+  qualifier: located_in
+  evidence_type: ISM
+  original_reference_id: PMID:17374156
+  review:
+    summary: LON-8 is secreted from hypodermal cells and genetically interacts
+      with cuticle collagen modifying enzymes dpy-11 and dpy-18. While direct
+      localization to the cuticle has not been shown (the protein diffuses
+      when secreted), the functional connection to cuticle collagen processing
+      and the body morphology phenotype support cuticular ECM as the likely
+      site of action.
+    action: ACCEPT
+    reason: The ISM annotation is reasonable given that LON-8 is secreted from
+      the hypodermis (which synthesizes the cuticle), genetically interacts
+      with cuticle collagen modifying enzymes, and its loss-of-function
+      phenotype (Lon body, abnormal ray morphology) is consistent with
+      cuticle defects.
+    supported_by:
+    - reference_id: PMID:17374156
+      supporting_text: &gt;-
+        ...both dpy-11(RNAi) and dpy-18(RNAi) completely suppress the
+        lon-8 body size phenotype...strongly suggesting that the
+        function of these three genes are intimately linked...
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  review:
+    summary: No specific molecular function has been experimentally determined
+      for LON-8. The ND (No biological Data) annotation is appropriate. The
+      protein contains a BPTI-like nematode-specific domain (IPR057449), but
+      no biochemical activity has been demonstrated.
+    action: ACCEPT
+    reason: No molecular function assay has been performed on LON-8. While the
+      BPTI-like domain suggests possible protease inhibitor or protease
+      modulating activity, this has not been tested. Note that the related
+      C. elegans Kunitz-domain protein BLI-5 was shown to activate rather
+      than inhibit serine proteases, so domain-based function prediction is
+      unreliable for this protein family in nematodes.
+    supported_by:
+    - reference_id: file:worm/lon-8/lon-8-deep-research-bioreason.md
+      supporting_text: &gt;-
+        BioReason predicts extracellular matrix structural constituent
+        (GO:0005201) based on the BPTI-like domain, but this is
+        undemonstrated and the nematode Kunitz domain family shows
+        unexpected biochemical activities.
+- term:
+    id: GO:0035264
+    label: multicellular organism growth
+  qualifier: acts_upstream_of_or_within_negative_effect
+  evidence_type: IMP
+  original_reference_id: PMID:17374156
+  review:
+    summary: lon-8 loss-of-function causes increased body length (Lon
+      phenotype), demonstrating that LON-8 normally acts to limit body growth.
+      The qualifier acts_upstream_of_or_within_negative_effect accurately
+      captures that LON-8 negatively regulates growth, without asserting a
+      specific mechanism. The increased body size results from increased cell
+      size, not cell number or ploidy.
+    action: ACCEPT
+    reason: Two deletion alleles (hu187, hu188) and RNAi all cause a Lon
+      phenotype. lon-8 mutants grow faster during larval development and
+      early adulthood. The negative effect qualifier is appropriate because
+      LON-8 normally restrains growth.
+    supported_by:
+    - reference_id: PMID:17374156
+      supporting_text: &gt;-
+        ...Both alleles gave a clear Lon phenotype...throughout larval
+        development, they outgrew their wild-type counterparts at a rate
+        comparable to that of lon-1(e185) animals...
+- term:
+    id: GO:0045138
+    label: nematode male tail tip morphogenesis
+  qualifier: acts_upstream_of_or_within_positive_effect
+  evidence_type: IMP
+  original_reference_id: PMID:17374156
+  review:
+    summary: lon-8 mutant males display grossly abnormal ray morphology, with
+      thickened, clumped rays resembling Ram mutants. This demonstrates that
+      LON-8 is required for normal male tail morphogenesis. The positive
+      effect qualifier indicates LON-8 promotes normal ray development.
+      Despite abnormal morphology, males can still mate.
+    action: ACCEPT
+    reason: Both hu187 and hu188 alleles show extensive male ray morphological
+      defects. lon-8 is expressed in the ventral tail hypodermal cells that
+      surround the developing rays. The phenotype resembles Ram mutants
+      which affect cuticle apposition around rays.
+    supported_by:
+    - reference_id: PMID:17374156
+      supporting_text: &gt;-
+        ...All rays appear morphologically abnormal, but rays 5 and 6
+        are most severely affected...lon-8(hu187) and lon-8(hu188) males
+        can mate, suggesting that ray sensory function is intact even
+        though ray morphology is grossly abnormal...
+- term:
+    id: GO:0040015
+    label: negative regulation of multicellular organism growth
+  evidence_type: IMP
+  original_reference_id: PMID:17374156
+  review:
+    summary: lon-8 loss-of-function causes a Lon phenotype with increased
+      body length during larval development and early adulthood, indicating
+      LON-8 normally negatively regulates multicellular organism growth.
+      This is a more specific annotation than GO:0035264 with negative
+      effect qualifier, and directly reflects the observed biology.
+    action: NEW
+    reason: The existing annotation uses GO:0035264 (multicellular organism
+      growth) with acts_upstream_of_or_within_negative_effect qualifier.
+      GO:0040015 (negative regulation of multicellular organism growth)
+      more precisely captures the role of LON-8 as a negative regulator
+      and is supported by the same mutant phenotype data.
+    supported_by:
+    - reference_id: PMID:17374156
+      supporting_text: &gt;-
+        ...Both alleles gave a clear Lon phenotype...throughout larval
+        development, they outgrew their wild-type counterparts at a rate
+        comparable to that of lon-1(e185) animals...
+core_functions:
+- description: LON-8 is a secreted nematode-specific BPTI-like domain protein
+    that negatively regulates body size during larval elongation and early
+    adult growth. It is produced by hypodermal cells and secreted into the
+    cuticular extracellular matrix, where it functions in the cuticle collagen
+    processing pathway alongside dpy-11 and dpy-18. Its molecular activity is
+    unknown but likely involves modulation of cuticle composition rather than
+    direct structural contribution.
+  molecular_function:
+    id: GO:0003674
+    label: molecular_function
+  directly_involved_in:
+  - id: GO:0040015
+    label: negative regulation of multicellular organism growth
+  - id: GO:0045138
+    label: nematode male tail tip morphogenesis
+  locations:
+  - id: GO:0060102
+    label: cuticular extracellular matrix
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:17374156
+    supporting_text: &gt;-
+      ...lon-8 encodes a secreted product of the hypodermis that controls
+      body size and male ray morphology...lon-8 genetically interacts with
+      enzymes that affect the composition of the cuticle...
+suggested_questions:
+- question: Does LON-8 have serine protease inhibitor activity, or does it
+    activate proteases like the related Kunitz-domain protein BLI-5?
+  experts:
+  - Soete G
+  - Korswagen HC
+- question: Is LON-8 physically associated with cuticle collagens or collagen
+    modifying enzymes, or does it act indirectly?
+  experts:
+  - Soete G
+  - Korswagen HC
+- question: What is the relationship between lon-8 and the Ram pathway genes
+    that produce similar male tail phenotypes?
+  experts:
+  - Soete G
+  - Korswagen HC
+suggested_experiments:
+- hypothesis: LON-8 has serine protease inhibitor or modulator activity via
+    its BPTI-like domain.
+  description: Express and purify recombinant LON-8 and test for inhibition
+    or activation of serine proteases in vitro, as was done for BLI-5.
+    Include cuticle-relevant proteases such as BLI-4.
+- hypothesis: LON-8 physically interacts with cuticle collagen processing
+    enzymes DPY-11 and DPY-18.
+  description: Perform co-immunoprecipitation or yeast two-hybrid experiments
+    between LON-8 and DPY-11/DPY-18 to determine whether the genetic
+    interaction reflects a physical interaction.
+- hypothesis: LON-8 localizes specifically to the cuticle rather than
+    diffusing broadly in the extracellular space.
+  description: Generate a functional LON-8 fusion protein with a small
+    epitope tag (rather than GFP which diffuses) and perform
+    immunoelectron microscopy to determine precise subcellular
+    localization within the cuticle layers.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

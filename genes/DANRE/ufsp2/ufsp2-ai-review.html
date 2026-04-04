@@ -1,0 +1,3086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ufsp2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ufsp2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q7T347" target="_blank" class="term-link">
+                        Q7T347
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Danio rerio</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ufsp2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q7T347" data-a="DESCRIPTION: ufsp2 encodes a UFM1-specific cysteine protease (p..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ufsp2 encodes a UFM1-specific cysteine protease (peptidase C78 family) that functions as the primary deUFMylase in the UFM1 conjugation pathway. The enzyme cleaves UFM1 from conjugated substrates (deconjugation) and processes UFM1 precursors to expose the C-terminal glycine required for conjugation (maturation). Its principal substrate is UFMylated RPL26 on ER-bound 60S ribosomal subunits, where deUFMylation by ufsp2 is required for ribosome recycling during ER-associated ribosome quality control. All annotations for zebrafish ufsp2 are inferred from mammalian orthologs (human UFSP2 and mouse Ufsp2) by sequence similarity.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. UFSP2 is recruited to the ER via its N-terminal domain interaction with DDRGK1, and acts on UFMylated RPL26 on ER-bound ribosomes. This is a functionally important localization site.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The ER localization is well supported by structural studies showing the N-terminal domain recruits UFSP2 to the ER via DDRGK1, and functional studies demonstrating its role in deUFMylation of ER-associated ribosomal subunits.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21228277" target="_blank" class="term-link">
+                                        PMID:21228277
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">plays a role in the recognition of its cellular substrate C20orf116 and thus in the recruitment of UfSP2 to the endoplasmic reticulum</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30626644" target="_blank" class="term-link">
+                                        PMID:30626644
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RPL26 UFMylation and de-UFMylation is catalyzed by enzyme complexes tethered to the cytoplasmic surface of the ER</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071567" target="_blank" class="term-link">
+                                    GO:0071567
+                                </a>
+                            </span>
+                            <span class="term-label">deUFMylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0071567" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. deUFMylase activity is the core molecular function of UFSP2. The enzyme cleaves UFM1 from conjugated substrates with strict specificity, using a catalytic cysteine-dependent mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the defining molecular function of UFSP2, supported by direct biochemical evidence from the mammalian orthologs showing specific cleavage of UFM1 conjugates, loss of activity upon Cys-to-Ser mutation, and accumulation of UFMylated RPL26 when UFSP2 is disrupted.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17182609" target="_blank" class="term-link">
+                                        PMID:17182609
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">cleaved the C-terminal extension of Ufm1 but not that of ubiquitin</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17182609" target="_blank" class="term-link">
+                                        PMID:17182609
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">replacement of the conserved Cys residue by Ser resulted in a complete loss of the UfSP1 and UfSP2 activities</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30626644" target="_blank" class="term-link">
+                                        PMID:30626644
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RPL26, is the principal target of UFM1 conjugation...UFMylated RPL26 is highly enriched on ER membrane-bound ribosomes and polysomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/ufsp2/ufsp2-deep-research-bioreason.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">A cytoplasmic cysteine protease that specializes in processing the ubiquitin-like modifier UFM1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Likely correct but non-core. Nuclear localization of UFSP2 has been reported for the mammalian ortholog, and UFSP2 has been observed to be recruited to DNA double-strand breaks. However, the primary functional site is the ER.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is reported for the mammalian ortholog and there is evidence for UFSP2 function at DNA damage sites, but the core function of UFSP2 is at the ER where it deUFMylates RPL26 on ribosomal subunits.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0006508" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too general. UFSP2 performs a highly specific form of proteolysis -- it cleaves the isopeptide bond between UFM1 and its conjugated substrates. The term proteolysis does not capture this specificity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While proteolysis is technically accurate, it is overly broad for this specialized isopeptidase. The more specific biological process is protein deUFMylation, which is part of the UFM1 conjugation pathway.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016579" target="_blank" class="term-link">
+                                    protein deubiquitination
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant with the IBA annotation for nucleus. Consistent with subcellular localization data from the mammalian ortholog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA-supported nucleus annotation. Retained as non-core since the primary functional site is the ER.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. UFSP2 is a soluble enzyme that resides in the cytoplasm and is recruited to the ER membrane surface where it acts on UFMylated substrates.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is consistent with UFSP2 being a soluble protease. While it is recruited to the ER for its primary function, the cytoplasm represents its default residence before recruitment.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0005783" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant with the IBA annotation for ER. Correct and consistent with the role of UFSP2 at the ER membrane surface.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA-supported ER annotation, but independently correct based on UniProt subcellular location data from the mammalian ortholog.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21228277" target="_blank" class="term-link">
+                                        PMID:21228277
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">plays a role in the recognition of its cellular substrate C20orf116 and thus in the recruitment of UfSP2 to the endoplasmic reticulum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071567" target="_blank" class="term-link">
+                                    GO:0071567
+                                </a>
+                            </span>
+                            <span class="term-label">deUFMylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0071567" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant with the IBA annotation for deUFMylase activity. Correct annotation from ARBA machine learning models.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA-supported annotation but independently correct. deUFMylase activity is the core molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17182609" target="_blank" class="term-link">
+                                        PMID:17182609
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">cleaved the C-terminal extension of Ufm1 but not that of ubiquitin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032790" target="_blank" class="term-link">
+                                    GO:0032790
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome disassembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0032790" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. UFSP2-mediated deUFMylation of RPL26 is a required step in the recycling of 60S ribosomal subunits from the ER. UFMylation marks stalled ribosomes for quality control, and UFSP2 removes UFM1 to enable ribosome recycling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by studies showing that RPL26 UFMylation at the ER triggers ribosome quality control and that UFSP2-mediated deUFMylation is needed for 60S subunit recycling.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30626644" target="_blank" class="term-link">
+                                        PMID:30626644
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RPL26, is the principal target of UFM1 conjugation...UFMylated RPL26 is highly enriched on ER membrane-bound ribosomes and polysomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37036982" target="_blank" class="term-link">
+                                        PMID:37036982
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">UFMylation of translocon-bound 60S subunits modulates the RTJ to promote access of proteasomes and RQC machinery to ER-APs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0006508" data-r="GO_REF:0000024" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too general. Same issue as the IBA proteolysis annotation. UFSP2 performs specific isopeptide bond cleavage of UFM1 conjugates, not general proteolysis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Overly broad for this specialized isopeptidase. Should be replaced with a more specific term capturing deUFMylation-related proteolysis.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016579" target="_blank" class="term-link">
+                                    protein deubiquitination
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071567" target="_blank" class="term-link">
+                                    GO:0071567
+                                </a>
+                            </span>
+                            <span class="term-label">deUFMylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0071567" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant with IBA and IEA annotations for deUFMylase activity. Correct and well-supported by direct experimental data from the human ortholog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function, well supported by ISS from human UFSP2 (Q9NUQ7). Consistent with all other evidence lines.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17182609" target="_blank" class="term-link">
+                                        PMID:17182609
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">replacement of the conserved Cys residue by Ser resulted in a complete loss of the UfSP1 and UfSP2 activities</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0005634" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant with IBA and IEA nucleus annotations. Non-core localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleus is a secondary localization site. The primary functional site is the ER.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant with IEA cytoplasm annotation. Correct default localization for this soluble protease.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is the default residence of this soluble enzyme before recruitment to the ER. Non-core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7T347" data-a="GO:0005783" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant with IBA and IEA ER annotations. Correct and core localization for UFSP2 function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ER is the primary functional site where UFSP2 deUFMylates RPL26 on ribosomal subunits. Well supported by structural and functional studies.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21228277" target="_blank" class="term-link">
+                                        PMID:21228277
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">plays a role in the recognition of its cellular substrate C20orf116 and thus in the recruitment of UfSP2 to the endoplasmic reticulum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>UFSP2 functions as a thiol-dependent isopeptidase that cleaves UFM1 from conjugated substrates (deUFMylation) and processes UFM1 precursors to their mature form. Its principal substrate is UFMylated RPL26 on ER-bound 60S ribosomal subunits, where deUFMylation is required for ribosome recycling during ER-associated quality control.</h3>
+                <span class="vote-buttons" data-g="Q7T347" data-a="FUNCTION: UFSP2 functions as a thiol-dependent isopeptidase ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071567" target="_blank" class="term-link">
+                            deUFMylase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032790" target="_blank" class="term-link">
+                                ribosome disassembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                endoplasmic reticulum
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.uniprot.org/uniprotkb/Q7T347" target="_blank" class="term-link">
+                                UFMylated RPL26 (60S ribosomal protein)
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30626644" target="_blank" class="term-link">
+                                PMID:30626644
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">a largely uncharacterized ribosomal protein, RPL26, is the principal target of UFM1 conjugation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17182609" target="_blank" class="term-link">
+                                PMID:17182609
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">cleaved the C-terminal extension of Ufm1 but not that of ubiquitin</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37036982" target="_blank" class="term-link">
+                                PMID:37036982
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">UFMylation of translocon-bound 60S subunits modulates the RTJ to promote access of proteasomes and RQC machinery to ER-APs</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15071506" target="_blank" class="term-link">
+                            PMID:15071506
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A novel protein-conjugating system for Ufm1, a ubiquitin-fold modifier</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UFM1 was identified as a novel ubiquitin-fold modifier with a dedicated conjugation system involving E1 (UBA5) and E2 (UFC1) enzymes, conserved in metazoa and plants but not yeast.</div>
+                        
+                        <div class="finding-text">"Ufm1, Uba5, and Ufc1 are all conserved in metazoa and plants but not in yeast"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17182609" target="_blank" class="term-link">
+                            PMID:17182609
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Two novel ubiquitin-fold modifier 1 (Ufm1)-specific proteases, UfSP1 and UfSP2</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UfSP1 and UfSP2 were identified as cysteine proteases specific for UFM1, with UfSP2 conserved across multicellular organisms.</div>
+                        
+                        <div class="finding-text">"UfSP2 is present in most, if not all, of multicellular organisms"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UfSP1/2 are strictly specific for UFM1 and do not cleave ubiquitin, SUMO-1, or ISG15.</div>
+                        
+                        <div class="finding-text">"cleaved the C-terminal extension of Ufm1 but not that of ubiquitin"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The catalytic cysteine is essential for protease activity.</div>
+                        
+                        <div class="finding-text">"replacement of the conserved Cys residue by Ser resulted in a complete loss of the UfSP1 and UfSP2 activities"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21228277" target="_blank" class="term-link">
+                            PMID:21228277
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of ubiquitin-fold modifier 1-specific protease UfSP2</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of mouse UfSP2 reveals a two-domain architecture with an unconventional catalytic triad (Cys294, Asp418, His420).</div>
+                        
+                        <div class="finding-text">"The C-terminal catalytic domain is similar to UfSP1 with Cys(294), Asp(418), His(420), Tyr(282), and a regulatory loop participating in catalysis"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The N-terminal domain of UfSP2 mediates substrate recognition and ER recruitment via interaction with DDRGK1 (C20orf116).</div>
+                        
+                        <div class="finding-text">"The novel N-terminal domain shows a unique structure and plays a role in the recognition of its cellular substrate C20orf116 and thus in the recruitment of UfSP2 to the endoplasmic reticulum"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30626644" target="_blank" class="term-link">
+                            PMID:30626644
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ribosomal protein RPL26 is the principal target of UFMylation</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RPL26 is the primary cellular UFMylation target, modified at K132/K134 on ER-bound 60S subunits. UFSP2 reverses this modification.</div>
+                        
+                        <div class="finding-text">"a largely uncharacterized ribosomal protein, RPL26, is the principal target of UFM1 conjugation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RPL26 UFMylation and deUFMylation occur at the ER surface via tethered enzyme complexes.</div>
+                        
+                        <div class="finding-text">"RPL26 UFMylation and de-UFMylation is catalyzed by enzyme complexes tethered to the cytoplasmic surface of the ER"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UFMylated RPL26 is enriched on ER-associated ribosomes.</div>
+                        
+                        <div class="finding-text">"UFMylated RPL26 is highly enriched on ER membrane-bound ribosomes and polysomes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37036982" target="_blank" class="term-link">
+                            PMID:37036982
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RPL26/uL24 UFMylation is essential for ribosome-associated quality control at the endoplasmic reticulum</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RPL26 UFMylation is required for degradation of stalled nascent chains at the ER via RQC and the ubiquitin-proteasome system.</div>
+                        
+                        <div class="finding-text">"UFMylation of translocon-bound 60S subunits modulates the RTJ to promote access of proteasomes and RQC machinery to ER-APs"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26428751" target="_blank" class="term-link">
+                            PMID:26428751
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of a mutation in the ubiquitin-fold modifier 1-specific peptidase 2 gene, UFSP2, in an extended South African family with Beukes hip dysplasia</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A Y290H mutation in UFSP2 abolishes deUFMylase activity and causes autosomal dominant Beukes hip dysplasia.</div>
+                        
+                        <div class="finding-text">"the BHD mutation abolishes UFSP2-mediated C-terminal cleavage of its substrate, Ufm1"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33473208" target="_blank" class="term-link">
+                            PMID:33473208
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A pathogenic UFSP2 variant in an autosomal recessive form of pediatric neurodevelopmental anomalies and epilepsy</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A homozygous V115E variant in the N-terminal domain of UFSP2 causes neurodevelopmental delay and epilepsy by impairing deUFMylation.</div>
+                        
+                        <div class="finding-text">"the variant more prominently affects de-UFMylation rather than UFMylation"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DANRE/ufsp2/ufsp2-deep-research-bioreason.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BioReason SFT functional summary for ufsp2 (Danio rerio)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BioReason SFT correctly identifies ufsp2 as a cytoplasmic cysteine protease specializing in UFM1 processing and deconjugation, with a two-domain architecture supporting ER-proximal protein quality control.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Has ufsp2 function been directly tested in zebrafish using morpholino knockdown or CRISPR knockout? Are there any zebrafish-specific phenotypes?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7T347" data-a="Q: Has ufsp2 function been directly tested in zebrafi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does zebrafish ufsp2 play a role in erythropoiesis or hematopoietic development, as suggested by the UFMylation pathway&#39;s role in erythroid differentiation in mammals?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7T347" data-a="Q: Does zebrafish ufsp2 play a role in erythropoiesis..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate ufsp2 CRISPR knockout zebrafish and characterize phenotypes including skeletal development, neurological function, and ER stress markers to determine if the mammalian disease phenotypes are conserved.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of ufsp2 in zebrafish will cause ER stress-related phenotypes and potentially skeletal or neurological defects analogous to human UFSP2 mutations.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7T347" data-a="EXPERIMENT: Generate ufsp2 CRISPR knockout zebrafish and chara..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform immunofluorescence microscopy in zebrafish embryos to confirm subcellular localization of ufsp2 at the ER, cytoplasm, and nucleus.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Zebrafish ufsp2 will show predominantly ER and cytoplasmic localization, consistent with mammalian orthologs.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7T347" data-a="EXPERIMENT: Perform immunofluorescence microscopy in zebrafish..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ufsp2-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7T347" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="o">---</span>
+<span class="nl">provider:</span><span class="w"> </span><span class="n">bioreason</span><span class="o">-</span><span class="n">pro</span>
+<span class="nl">model:</span><span class="w"> </span><span class="n">SFT</span>
+<span class="nl">source:</span><span class="w"> </span><span class="n">huggingface</span><span class="p">.</span><span class="n">co</span><span class="o">/</span><span class="n">datasets</span><span class="o">/</span><span class="n">wanglab</span><span class="o">/</span><span class="n">protein_catalogue</span>
+<span class="nl">date:</span><span class="w"> </span><span class="p">&#39;</span><span class="mh">2026</span><span class="o">-</span><span class="mh">04</span><span class="o">-</span><span class="mh">04</span><span class="p">&#39;</span>
+<span class="nl">uniprot_id:</span><span class="w"> </span><span class="n">Q7T347</span>
+<span class="nl">gene:</span><span class="w"> </span><span class="n">ufsp2</span>
+<span class="nl">organism:</span><span class="w"> </span><span class="n">Danio</span><span class="w"> </span><span class="n">rerio</span><span class="w"> </span><span class="p">(</span><span class="n">Zebrafish</span><span class="p">)</span>
+<span class="o">---</span>
+
+<span class="p">##</span><span class="w"> </span><span class="n">Thinking</span><span class="w"> </span><span class="n">Trace</span>
+
+<span class="n">I</span><span class="w"> </span><span class="k">begin</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">architecture</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminus</span><span class="w"> </span><span class="n">carries</span><span class="w"> </span><span class="n">IPR049387</span><span class="w"> </span><span class="p">(</span><span class="n">UFSP2</span><span class="p">,</span><span class="w"> </span><span class="n">second</span><span class="w"> </span><span class="n">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">3</span><span class="err">–</span><span class="mh">188</span><span class="p">),</span><span class="w"> </span><span class="n">followed</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="k">module</span><span class="w"> </span><span class="n">IPR012462</span><span class="w"> </span><span class="p">(</span><span class="n">UFSP1</span><span class="o">/</span><span class="mh">2</span><span class="o">/</span><span class="n">DUB</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">210</span><span class="err">–</span><span class="mh">393</span><span class="p">).</span><span class="w"> </span><span class="n">This</span><span class="w"> </span><span class="n">arrangement</span><span class="w"> </span><span class="n">places</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">UFSP</span><span class="o">-</span><span class="n">specific</span><span class="w"> </span><span class="n">noncatalytic</span><span class="w"> </span><span class="n">region</span><span class="w"> </span><span class="n">upstream</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">papain</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">cysteine</span><span class="w"> </span><span class="n">protease</span><span class="w"> </span><span class="n">core</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">UFSP1</span><span class="o">/</span><span class="mh">2</span><span class="o">/</span><span class="n">DUB</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">dictates</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">thiol</span><span class="w"> </span><span class="n">protease</span><span class="w"> </span><span class="n">chemistry</span><span class="w"> </span><span class="n">tailored</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">ubiquitin</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">modifiers</span><span class="p">,</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">UFSP2</span><span class="o">-</span><span class="n">specific</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">provides</span><span class="w"> </span><span class="n">substrate</span><span class="o">-</span><span class="n">recognition</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">positioning</span><span class="w"> </span><span class="n">surfaces</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">guide</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">modifier</span><span class="err">’</span><span class="n">s</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">linear</span><span class="w"> </span><span class="n">order</span><span class="err">—</span><span class="n">recognition</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">leading</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">cysteine</span><span class="w"> </span><span class="n">protease</span><span class="w"> </span><span class="n">core</span><span class="err">—</span><span class="n">causally</span><span class="w"> </span><span class="n">enables</span><span class="w"> </span><span class="n">selective</span><span class="w"> </span><span class="n">hydrolysis</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">isopeptide</span><span class="w"> </span><span class="n">bonds</span><span class="w"> </span><span class="n">formed</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">ubiquitin</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">modifier</span><span class="w"> </span><span class="n">rather</span><span class="w"> </span><span class="n">than</span><span class="w"> </span><span class="n">general</span><span class="w"> </span><span class="n">proteolysis</span><span class="p">.</span>
+</code></pre></div>
+
+<p>This architecture enforces a molecular function of ubiquitin-like protein peptidase activity (GO:0019783). The catalytic domain supplies the nucleophilic cysteine and general base histidine (with an acidic residue completing the triad), while the UFSP2-specific domain aligns the UFM1 C-terminus for precise scissile bond cleavage. The enzyme therefore processes UFM1 in two ways: it removes UFM1 from conjugated substrates (deconjugation) and trims the UFM1 precursor to its mature form (maturation). The same recognition logic explains specificity for UFM1 and the lack of activity toward SUMO1/2/3 or ISG15—surface features in the UFSP2-specific domain favor the hydrophobic patch and tail geometry unique to UFM1.</p>
+<p>From this molecular activity, the biological process follows. By maturing UFM1 and editing UFM1 conjugations, the enzyme tunes the UFM1 conjugation cycle that supports ER-proximal protein quality control and proteostasis. In a developing vertebrate, such control impacts tissues with high secretory and proteostatic demand, notably the inner ear and visual system. Perturbations in UFM1 processing alter the function of UFM1-ubiquitin-like conjugation on ER-associated substrates, which in sensory neurons and hair cells influences protein folding, trafficking, and signaling pathways that underlie orientation in gravity fields and photoreceptor performance. This mechanistic link rationalizes involvement in gravitaxis (GO:0042332) and response to light stimulus (GO:0009416): precise UFM1 processing maintains cellular fitness in sensory circuits that execute these behaviors.</p>
+<p>The cellular component is inferred from the soluble, two-domain protease lacking transmembrane segments, pointing to a cytosolic enzyme. Its role in UFM1 maturation and deconjugation requires access to UFM1 precursors and conjugates in the cytoplasm, consistent with cytoplasm (GO:0005737). The enzyme likely shuttles near the ER interface through transient recruitment by UFM1-pathway scaffolds, but its core residence and action remain cytoplasmic.</p>
+<p>A coherent mechanistic model emerges: the UFSP2-specific N-terminal domain captures UFM1—either as a precursor or as the C-terminally attached modifier on target proteins—and funnels its tail into the C-terminal catalytic cleft for isopeptidase cleavage. This activity is coordinated with the UFM1 conjugation machinery. The enzyme likely associates with Ubiquitin-like modifier-activating enzyme 5 (UBA5), Ubiquitin-fold modifier-conjugating enzyme 1 (UBC13-like E2), and E3 UFM1-protein ligase 1 (UFL1) to balance conjugation with deconjugation. Scaffolds such as DDRGK domain-containing protein 1 and adaptors like CDK5 regulatory subunit-associated protein 3 and Thyroid hormone receptor interactor 4 can recruit the protease to ER-proximal sites or specific substrates. Direct binding to Ubiquitin-fold modifier 1 itself is expected during both maturation and de-UFMylase reactions. Through this cycle, the enzyme maintains UFM1 homeostasis that supports sensory physiology linked to gravitaxis and light responsiveness.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="n">Functional</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">cytoplasmic</span><span class="w"> </span><span class="n">cysteine</span><span class="w"> </span><span class="n">protease</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">specializes</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">processing</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">ubiquitin</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="n">modifier</span><span class="w"> </span><span class="n">UFM1</span><span class="p">.</span><span class="w"> </span><span class="n">It</span><span class="w"> </span><span class="k">both</span><span class="w"> </span><span class="n">matures</span><span class="w"> </span><span class="n">UFM1</span><span class="w"> </span><span class="n">precursors</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">mature</span><span class="w"> </span><span class="n">form</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">removes</span><span class="w"> </span><span class="n">UFM1</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">conjugated</span><span class="w"> </span><span class="n">substrates</span><span class="p">,</span><span class="w"> </span><span class="n">thereby</span><span class="w"> </span><span class="n">balancing</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">UFM1</span><span class="w"> </span><span class="n">conjugation</span><span class="w"> </span><span class="k">cycle</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">supports</span><span class="w"> </span><span class="n">ER</span><span class="o">-</span><span class="n">proximal</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">quality</span><span class="w"> </span><span class="n">control</span><span class="p">.</span><span class="w"> </span><span class="k">By</span><span class="w"> </span><span class="n">editing</span><span class="w"> </span><span class="n">UFM1</span><span class="w"> </span><span class="n">attachments</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">sensory</span><span class="w"> </span><span class="n">cells</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">helps</span><span class="w"> </span><span class="n">sustain</span><span class="w"> </span><span class="n">proteostasis</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">proper</span><span class="w"> </span><span class="n">orientation</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">gravity</span><span class="w"> </span><span class="n">fields</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">photoreceptor</span><span class="w"> </span><span class="n">responsiveness</span><span class="p">.</span><span class="w"> </span><span class="n">Mechanistically</span><span class="p">,</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">recognition</span><span class="w"> </span><span class="k">module</span><span class="w"> </span><span class="n">positions</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">UFM1</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">cleavage</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">papain</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">core</span><span class="p">,</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">enzyme</span><span class="w"> </span><span class="n">likely</span><span class="w"> </span><span class="n">operates</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">concert</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">UFM1</span><span class="w"> </span><span class="n">E1</span><span class="p">,</span><span class="w"> </span><span class="n">E2</span><span class="p">,</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">E3</span><span class="w"> </span><span class="n">enzymes</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">ER</span><span class="o">-</span><span class="n">associated</span><span class="w"> </span><span class="n">scaffolds</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">UniProt</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">DUB</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="n">protease</span><span class="w"> </span><span class="n">which</span><span class="w"> </span><span class="n">recognizes</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">hydrolyzes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">peptide</span><span class="w"> </span><span class="n">bond</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">Gly</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">UFM1</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">ubiquitin</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="n">modifier</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">bound</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">target</span><span class="w"> </span><span class="n">proteins</span><span class="p">.</span><span class="w"> </span><span class="n">Involved</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">maturation</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">ufmylation</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">processing</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">precursor</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">UFM1</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">mature</span><span class="w"> </span><span class="n">UFM1</span><span class="p">.</span><span class="w"> </span><span class="n">Does</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">cleave</span><span class="w"> </span><span class="n">SUMO1</span><span class="p">,</span><span class="w"> </span><span class="n">SUMO2</span><span class="p">,</span><span class="w"> </span><span class="n">SUMO3</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">ISG15</span><span class="w"> </span><span class="p">(</span><span class="k">By</span><span class="w"> </span><span class="n">similarity</span><span class="p">).</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nl">IPR049387</span><span class="p">:</span><span class="w"> </span><span class="n">UFSP2</span><span class="p">,</span><span class="w"> </span><span class="k">second</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">3-188</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR012462</span><span class="p">:</span><span class="w"> </span><span class="n">UFSP1</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="n">DUB</span><span class="p">,</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">210-393</span><span class="o">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="k">GO</span><span class="w"> </span><span class="n">Term</span><span class="w"> </span><span class="n">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="n">Molecular</span><span class="w"> </span><span class="k">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Biological</span><span class="w"> </span><span class="n">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Cellular</span><span class="w"> </span><span class="n">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ufsp2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7T347" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ufsp2-danio-rerio-research-notes">ufsp2 (Danio rerio) Research Notes</h1>
+<h2 id="overview">Overview</h2>
+<p>ufsp2 encodes UFM1-specific protease 2, a thiol-dependent cysteine protease belonging to the peptidase C78 family. The enzyme specifically cleaves UFM1 (ubiquitin-fold modifier 1) from conjugated proteins and also processes UFM1 precursors to their mature form by removing C-terminal residues. This gene is the zebrafish ortholog of human UFSP2 (UniProt Q9NUQ7).</p>
+<h2 id="discovery-of-the-ufm1-pathway">Discovery of the UFM1 Pathway</h2>
+<p>The UFM1 conjugation system was first described by Komatsu et al. <a href="https://pubmed.ncbi.nlm.nih.gov/15071506" title="E1 (activating), E2 (conjugating), and E3 (ligating) enzymes">PMID:15071506</a>. UFM1 is a 9.1 kDa ubiquitin-fold modifier that "lacks obvious sequence identity" to ubiquitin but shares a similar tertiary structure. The pathway is conserved in metazoa and plants but absent from yeast <a href="https://pubmed.ncbi.nlm.nih.gov/15071506" title="Ufm1, Uba5, and Ufc1 are all conserved in metazoa and plants but not in yeast">PMID:15071506</a>.</p>
+<h2 id="ufsp2-as-a-deufmylase">UFSP2 as a DeUFMylase</h2>
+<p>Two UFM1-specific proteases, UfSP1 and UfSP2, were identified by Kang et al. <a href="https://pubmed.ncbi.nlm.nih.gov/17182609" title="UfSP2 is present in most, if not all, of multicellular organisms">PMID:17182609</a>. These enzymes "cleaved the C-terminal extension of Ufm1 but not that of ubiquitin" or related modifiers like SUMO-1 and ISG15, demonstrating strict substrate specificity <a href="https://pubmed.ncbi.nlm.nih.gov/17182609">PMID:17182609</a>. The catalytic mechanism is cysteine-dependent: "replacement of the conserved Cys residue by Ser resulted in a complete loss of the UfSP1 and UfSP2 activities" <a href="https://pubmed.ncbi.nlm.nih.gov/17182609">PMID:17182609</a>.</p>
+<h2 id="structural-biology">Structural Biology</h2>
+<p>The crystal structure of mouse UfSP2 was determined at 2.6 angstrom resolution <a href="https://pubmed.ncbi.nlm.nih.gov/21228277">PMID:21228277</a>. UfSP2 comprises two domains: an N-terminal domain (approximately 240 residues) with a novel fold, and a C-terminal catalytic domain (approximately 200 residues) resembling papain-like proteases. The active site employs an unconventional catalytic triad: "Cys294, Asp418, and His420 form the catalytic machinery" <a href="https://pubmed.ncbi.nlm.nih.gov/21228277">PMID:21228277</a>. The N-terminal domain plays a critical role in substrate recognition: "the N-terminal domain of UfSP2 plays a key role in the recognition of C20orf116 and thus in the recruitment of UfSP2 to the ER" <a href="https://pubmed.ncbi.nlm.nih.gov/21228277">PMID:21228277</a>.</p>
+<h2 id="rpl26-ufmylation-and-er-quality-control">RPL26 UFMylation and ER Quality Control</h2>
+<p>The ribosomal protein RPL26 was identified as the principal substrate of UFMylation <a href="https://pubmed.ncbi.nlm.nih.gov/30626644" title="RPL26/L1 is the principal target of UFMylation in HEK293 cells">PMID:30626644</a>. UFMylation occurs at lysines K132 and K134 specifically on 60S ribosomal subunits docked at the ER membrane. The UFMylation machinery (UFL1/CDK5RAP3/DDRGK1 E3 complex) is localized to the ER, ensuring "RPL26 UFMylation occurs exclusively at the ER surface" <a href="https://pubmed.ncbi.nlm.nih.gov/30626644">PMID:30626644</a>. UFSP2 reverses this modification: "UFMylated RPL26 increased in abundance upon disruption of UFSP2" <a href="https://pubmed.ncbi.nlm.nih.gov/30626644">PMID:30626644</a>.</p>
+<p>RPL26 UFMylation is essential for ribosome-associated quality control (RQC) at the ER <a href="https://pubmed.ncbi.nlm.nih.gov/37036982">PMID:37036982</a>. When ribosomes stall during cotranslational translocation, "UFMylation of translocon-bound 60S subunits modulates the RTJ to promote access of proteasomes and RQC machinery to ER-APs" <a href="https://pubmed.ncbi.nlm.nih.gov/37036982">PMID:37036982</a>. UFSP2-mediated deUFMylation is required to recycle the modified ribosomal subunits after quality control is completed.</p>
+<h2 id="ribosome-disassembly">Ribosome Disassembly</h2>
+<p>UFSP2 participates in ribosome disassembly at the ER. The UFM1 E3 ligase complex promotes recycling of 60S ribosomal subunits from the ER by UFMylating RPL26, and UFSP2-mediated removal of UFM1 from RPL26 is a required step in the recycling cycle. This connects UFSP2 directly to the GO:0032790 (ribosome disassembly) annotation.</p>
+<h2 id="human-disease-relevance">Human Disease Relevance</h2>
+<p>Heterozygous pathogenic variants in the C-terminal catalytic domain of human UFSP2 cause skeletal dysplasias. A Y290H (equivalent to mouse Y282H) variant was identified in Beukes hip dysplasia (BHD), an autosomal dominant disorder causing "bilateral dysmorphism of the proximal femur, which results in severe degenerative osteoarthropathy" <a href="https://pubmed.ncbi.nlm.nih.gov/26428751">PMID:26428751</a>. This mutation "abolishes UFSP2-mediated C-terminal cleavage of its substrate, Ufm1" <a href="https://pubmed.ncbi.nlm.nih.gov/26428751">PMID:26428751</a>.</p>
+<p>A separate autosomal recessive variant (V115E, in the N-terminal domain) causes severe neurodevelopmental disease with epilepsy <a href="https://pubmed.ncbi.nlm.nih.gov/33473208">PMID:33473208</a>. Patient fibroblasts showed that "the variant more prominently affects de-UFMylation rather than UFMylation," with reduced UFSP2 protein stability <a href="https://pubmed.ncbi.nlm.nih.gov/33473208">PMID:33473208</a>.</p>
+<h2 id="subcellular-localization">Subcellular Localization</h2>
+<p>Based on studies of mammalian orthologs, UFSP2 localizes to the ER, cytoplasm, and nucleus. The ER localization is functionally significant given the role in ER-associated ribosome quality control and the recruitment via the N-terminal domain interacting with DDRGK1 (C20orf116) at the ER membrane <a href="https://pubmed.ncbi.nlm.nih.gov/21228277">PMID:21228277</a>. Cytoplasmic and nuclear localizations are also reported, consistent with additional roles including at DNA double-strand breaks.</p>
+<h2 id="zebrafish-specific-considerations">Zebrafish-Specific Considerations</h2>
+<p>All annotations for zebrafish ufsp2 are transferred from mammalian orthologs (human UFSP2 Q9NUQ7 and mouse Ufsp2 Q99K23) by sequence similarity (ISS, IBA, IEA). No direct experimental evidence exists for zebrafish ufsp2 itself. The protein is highly conserved across vertebrates, so the transferred annotations are expected to be reliable.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ufsp2-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7T347" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-ufsp2-danre">BioReason-Pro SFT Review: ufsp2 (DANRE)</h1>
+<p>Source: ufsp2-deep-research-bioreason.md</p>
+<ul>
+<li><strong>Correctness</strong>: 4/5</li>
+<li><strong>Completeness</strong>: 3/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason SFT functional summary states:</p>
+<blockquote>
+<p>A cytoplasmic cysteine protease that specializes in processing the ubiquitin-like modifier UFM1. It both matures UFM1 precursors to the mature form and removes UFM1 from conjugated substrates, thereby balancing the UFM1 conjugation cycle that supports ER-proximal protein quality control. By editing UFM1 attachments in sensory cells, it helps sustain proteostasis required for proper orientation in gravity fields and photoreceptor responsiveness. Mechanistically, an N-terminal recognition module positions the UFM1 tail for cleavage by a C-terminal papain-like catalytic core, and the enzyme likely operates in concert with the UFM1 E1, E2, and E3 enzymes and ER-associated scaffolds.</p>
+</blockquote>
+<p><strong>Strengths:</strong></p>
+<ol>
+<li>
+<p>The core molecular function is correctly described. The summary accurately identifies UFSP2 as a cysteine protease with dual activity: maturation of UFM1 precursors and deconjugation of UFM1 from substrates. This matches the biochemical evidence that UFSP2 "cleaved the C-terminal extension of Ufm1" <a href="https://pubmed.ncbi.nlm.nih.gov/17182609">PMID:17182609</a> and functions as a deUFMylase.</p>
+</li>
+<li>
+<p>The two-domain architecture is correctly described: "an N-terminal recognition module positions the UFM1 tail for cleavage by a C-terminal papain-like catalytic core." This aligns with the crystal structure showing the N-terminal domain mediates substrate recognition and the C-terminal domain contains the catalytic triad <a href="https://pubmed.ncbi.nlm.nih.gov/21228277">PMID:21228277</a>.</p>
+</li>
+<li>
+<p>The connection to ER-proximal protein quality control is correct. UFSP2 balances the UFM1 conjugation cycle at the ER, where UFMylation of RPL26 on 60S ribosomal subunits supports ribosome-associated quality control [PMID:30626644, PMID:37036982].</p>
+</li>
+<li>
+<p>The mention of partnership with "UFM1 E1, E2, and E3 enzymes and ER-associated scaffolds" is accurate, though generic.</p>
+</li>
+</ol>
+<p><strong>Weaknesses:</strong></p>
+<ol>
+<li>
+<p>The claim about "gravitaxis (GO:0042332) and response to light stimulus (GO:0009416)" is unsupported. The thinking trace speculates that "perturbations in UFM1 processing alter the function of UFM1-ubiquitin-like conjugation on ER-associated substrates, which in sensory neurons and hair cells influences...orientation in gravity fields and photoreceptor performance." No published evidence links UFSP2 to gravitaxis or light response. This appears to be an over-interpretation, possibly influenced by zebrafish-specific GO terms that are enriched in the training data but not specific to UFSP2.</p>
+</li>
+<li>
+<p>The summary describes the localization as "cytoplasmic" and the thinking trace explicitly states "cytoplasm (GO:0005737)" as the core residence, downplaying the ER. While UFSP2 is a soluble cytoplasmic protein, its primary functional site is the ER, where it is recruited via DDRGK1 to deUFMylate RPL26 on ribosomal subunits. The summary mentions "ER-proximal" quality control but fails to list the ER as a primary localization.</p>
+</li>
+<li>
+<p>No mention of RPL26 as the principal UFMylation target. The curated review identifies RPL26 UFMylation as the central biological context for UFSP2 function <a href="https://pubmed.ncbi.nlm.nih.gov/30626644">PMID:30626644</a>, including the role in ribosome disassembly (GO:0032790). The BioReason summary only vaguely refers to "ER-proximal protein quality control" without identifying the specific substrate or process.</p>
+</li>
+<li>
+<p>No mention of disease relevance. While not strictly a GO annotation concern, the role of UFSP2 mutations in skeletal dysplasia <a href="https://pubmed.ncbi.nlm.nih.gov/26428751">PMID:26428751</a> and neurodevelopmental disease <a href="https://pubmed.ncbi.nlm.nih.gov/33473208">PMID:33473208</a> provides important functional validation.</p>
+</li>
+</ol>
+<p><strong>Scoring rationale:</strong></p>
+<p>Correctness (4/5): The core biochemistry (cysteine protease, UFM1 specificity, dual maturation/deconjugation activity, two-domain architecture, ER quality control link) is accurate. The gravitaxis/light stimulus claims are unsupported but do not dominate the summary. No fundamentally wrong claims about the enzymatic mechanism.</p>
+<p>Completeness (3/5): The summary captures the basic enzymatic function and domain architecture but misses the specific biological context (RPL26 UFMylation, ribosome disassembly, specific ER localization as a functional site). The gravitaxis/light stimulus speculation takes up space that could have been used for the actual characterized biology.</p>
+<h2 id="comparison-with-interpro2go">Comparison with interpro2go</h2>
+<p>The ai-review.yaml does not contain GO_REF:0000002 (InterPro2GO) annotations for ufsp2. The IEA annotations present are from GO_REF:0000044 (UniProt subcellular location mapping) and GO_REF:0000117 (ARBA). The IBA annotations are from phylogenetic inference (GO_REF:0000033).</p>
+<p>The InterPro domains for ufsp2 are IPR049387 (UFSP2, second domain) and IPR012462 (UFSP1/2/DUB catalytic domain). These domains would map via InterPro2GO to deUFMylase activity, which is correct and matches the curated annotation.</p>
+<p>BioReason's SFT output goes beyond what InterPro2GO alone would predict in several ways:<br />
+- It correctly infers the two-domain architecture and the division of labor (recognition vs. catalysis), which is biological insight beyond simple domain-to-function mapping.<br />
+- It correctly connects the enzyme to the broader UFM1 conjugation cycle and ER quality control, which InterPro2GO would not capture.<br />
+- However, it also adds unsupported claims (gravitaxis, light response) that InterPro2GO would not make, demonstrating a tendency toward over-interpretation when extending beyond domain-based prediction.</p>
+<p>Overall, the BioReason SFT output provides genuine biological insight beyond InterPro2GO for the core function, but introduces confabulated phenotype-level claims that a conservative domain-based approach would avoid.</p>
+<h2 id="notes-on-thinking-trace">Notes on thinking trace</h2>
+<p>The thinking trace shows a methodical domain-by-domain reasoning approach. It correctly identifies the UFSP2-specific N-terminal domain and the papain-like catalytic core, and derives the molecular function from domain architecture. The mechanistic chain from domain architecture to molecular function to biological process is logical.</p>
+<p>The trace goes off track when it extrapolates from "ER-proximal protein quality control" to "tissues with high secretory and proteostatic demand, notably the inner ear and visual system," and then to gravitaxis and light response. This is a multi-step inference chain where each step introduces uncertainty, and the final claims are not supported by experimental evidence for UFSP2. This pattern of plausible but unsupported phenotypic extrapolation is a characteristic failure mode of language model-based functional prediction.</p>
+<p>The trace also correctly notes the absence of transmembrane segments and predicts a soluble, cytoplasmic enzyme, though it could have given more weight to the documented ER recruitment mechanism.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q7T347
+gene_symbol: ufsp2
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7955
+  label: Danio rerio
+description: ufsp2 encodes a UFM1-specific cysteine protease (peptidase C78 family)
+  that functions as the primary deUFMylase in the UFM1 conjugation pathway. The enzyme
+  cleaves UFM1 from conjugated substrates (deconjugation) and processes UFM1 precursors
+  to expose the C-terminal glycine required for conjugation (maturation). Its principal
+  substrate is UFMylated RPL26 on ER-bound 60S ribosomal subunits, where deUFMylation
+  by ufsp2 is required for ribosome recycling during ER-associated ribosome quality
+  control. All annotations for zebrafish ufsp2 are inferred from mammalian orthologs
+  (human UFSP2 and mouse Ufsp2) by sequence similarity.
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:15071506
+  title: A novel protein-conjugating system for Ufm1, a ubiquitin-fold modifier
+  findings:
+  - statement: UFM1 was identified as a novel ubiquitin-fold modifier with a dedicated
+      conjugation system involving E1 (UBA5) and E2 (UFC1) enzymes, conserved in metazoa
+      and plants but not yeast.
+    supporting_text: Ufm1, Uba5, and Ufc1 are all conserved in metazoa and plants
+      but not in yeast
+- id: PMID:17182609
+  title: Two novel ubiquitin-fold modifier 1 (Ufm1)-specific proteases, UfSP1 and
+    UfSP2
+  findings:
+  - statement: UfSP1 and UfSP2 were identified as cysteine proteases specific for
+      UFM1, with UfSP2 conserved across multicellular organisms.
+    supporting_text: UfSP2 is present in most, if not all, of multicellular organisms
+  - statement: UfSP1/2 are strictly specific for UFM1 and do not cleave ubiquitin,
+      SUMO-1, or ISG15.
+    supporting_text: cleaved the C-terminal extension of Ufm1 but not that of ubiquitin
+  - statement: The catalytic cysteine is essential for protease activity.
+    supporting_text: replacement of the conserved Cys residue by Ser resulted in a
+      complete loss of the UfSP1 and UfSP2 activities
+- id: PMID:21228277
+  title: Structure of ubiquitin-fold modifier 1-specific protease UfSP2
+  findings:
+  - statement: Crystal structure of mouse UfSP2 reveals a two-domain architecture
+      with an unconventional catalytic triad (Cys294, Asp418, His420).
+    supporting_text: The C-terminal catalytic domain is similar to UfSP1 with Cys(294),
+      Asp(418), His(420), Tyr(282), and a regulatory loop participating in catalysis
+  - statement: The N-terminal domain of UfSP2 mediates substrate recognition and ER
+      recruitment via interaction with DDRGK1 (C20orf116).
+    supporting_text: The novel N-terminal domain shows a unique structure and plays a
+      role in the recognition of its cellular substrate C20orf116 and thus in the
+      recruitment of UfSP2 to the endoplasmic reticulum
+- id: PMID:30626644
+  title: Ribosomal protein RPL26 is the principal target of UFMylation
+  findings:
+  - statement: RPL26 is the primary cellular UFMylation target, modified at K132/K134
+      on ER-bound 60S subunits. UFSP2 reverses this modification.
+    supporting_text: a largely uncharacterized ribosomal protein, RPL26, is the principal
+      target of UFM1 conjugation
+  - statement: RPL26 UFMylation and deUFMylation occur at the ER surface via
+      tethered enzyme complexes.
+    supporting_text: RPL26 UFMylation and de-UFMylation is catalyzed by enzyme complexes
+      tethered to the cytoplasmic surface of the ER
+  - statement: UFMylated RPL26 is enriched on ER-associated ribosomes.
+    supporting_text: UFMylated RPL26 is highly enriched on ER membrane-bound ribosomes
+      and polysomes
+- id: PMID:37036982
+  title: RPL26/uL24 UFMylation is essential for ribosome-associated quality control
+    at the endoplasmic reticulum
+  findings:
+  - statement: RPL26 UFMylation is required for degradation of stalled nascent chains
+      at the ER via RQC and the ubiquitin-proteasome system.
+    supporting_text: UFMylation of translocon-bound 60S subunits modulates the RTJ
+      to promote access of proteasomes and RQC machinery to ER-APs
+- id: PMID:26428751
+  title: Identification of a mutation in the ubiquitin-fold modifier 1-specific peptidase
+    2 gene, UFSP2, in an extended South African family with Beukes hip dysplasia
+  findings:
+  - statement: A Y290H mutation in UFSP2 abolishes deUFMylase activity and causes
+      autosomal dominant Beukes hip dysplasia.
+    supporting_text: the BHD mutation abolishes UFSP2-mediated C-terminal cleavage
+      of its substrate, Ufm1
+- id: PMID:33473208
+  title: A pathogenic UFSP2 variant in an autosomal recessive form of pediatric neurodevelopmental
+    anomalies and epilepsy
+  findings:
+  - statement: A homozygous V115E variant in the N-terminal domain of UFSP2 causes
+      neurodevelopmental delay and epilepsy by impairing deUFMylation.
+    supporting_text: the variant more prominently affects de-UFMylation rather than
+      UFMylation
+- id: file:DANRE/ufsp2/ufsp2-deep-research-bioreason.md
+  title: BioReason SFT functional summary for ufsp2 (Danio rerio)
+  findings:
+  - statement: BioReason SFT correctly identifies ufsp2 as a cytoplasmic cysteine
+      protease specializing in UFM1 processing and deconjugation, with a two-domain
+      architecture supporting ER-proximal protein quality control.
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Correct. UFSP2 is recruited to the ER via its N-terminal domain interaction
+      with DDRGK1, and acts on UFMylated RPL26 on ER-bound ribosomes. This is a functionally
+      important localization site.
+    action: ACCEPT
+    reason: The ER localization is well supported by structural studies showing the
+      N-terminal domain recruits UFSP2 to the ER via DDRGK1, and functional studies
+      demonstrating its role in deUFMylation of ER-associated ribosomal subunits.
+    supported_by:
+    - reference_id: PMID:21228277
+      supporting_text: plays a role in the recognition of its cellular substrate C20orf116
+        and thus in the recruitment of UfSP2 to the endoplasmic reticulum
+    - reference_id: PMID:30626644
+      supporting_text: RPL26 UFMylation and de-UFMylation is catalyzed by enzyme complexes
+        tethered to the cytoplasmic surface of the ER
+- term:
+    id: GO:0071567
+    label: deUFMylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Correct. deUFMylase activity is the core molecular function of UFSP2.
+      The enzyme cleaves UFM1 from conjugated substrates with strict specificity,
+      using a catalytic cysteine-dependent mechanism.
+    action: ACCEPT
+    reason: This is the defining molecular function of UFSP2, supported by direct
+      biochemical evidence from the mammalian orthologs showing specific cleavage
+      of UFM1 conjugates, loss of activity upon Cys-to-Ser mutation, and accumulation
+      of UFMylated RPL26 when UFSP2 is disrupted.
+    supported_by:
+    - reference_id: PMID:17182609
+      supporting_text: cleaved the C-terminal extension of Ufm1 but not that of ubiquitin
+    - reference_id: PMID:17182609
+      supporting_text: replacement of the conserved Cys residue by Ser resulted in
+        a complete loss of the UfSP1 and UfSP2 activities
+    - reference_id: PMID:30626644
+      supporting_text: RPL26, is the principal target of UFM1 conjugation...UFMylated
+        RPL26 is highly enriched on ER membrane-bound ribosomes and polysomes
+    - reference_id: file:DANRE/ufsp2/ufsp2-deep-research-bioreason.md
+      supporting_text: A cytoplasmic cysteine protease that specializes in processing
+        the ubiquitin-like modifier UFM1
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Likely correct but non-core. Nuclear localization of UFSP2 has been reported
+      for the mammalian ortholog, and UFSP2 has been observed to be recruited to DNA
+      double-strand breaks. However, the primary functional site is the ER.
+    action: KEEP_AS_NON_CORE
+    reason: Nuclear localization is reported for the mammalian ortholog and there
+      is evidence for UFSP2 function at DNA damage sites, but the core function of
+      UFSP2 is at the ER where it deUFMylates RPL26 on ribosomal subunits.
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Correct but too general. UFSP2 performs a highly specific form of proteolysis
+      -- it cleaves the isopeptide bond between UFM1 and its conjugated substrates.
+      The term proteolysis does not capture this specificity.
+    action: MODIFY
+    reason: While proteolysis is technically accurate, it is overly broad for this
+      specialized isopeptidase. The more specific biological process is protein deUFMylation,
+      which is part of the UFM1 conjugation pathway.
+    proposed_replacement_terms:
+    - id: GO:0016579
+      label: protein deubiquitination
+      description: The closest available BP term for Ubl deconjugation; protein deUFMylation
+        would be the ideal term but may not exist as a separate GO term. Note that
+        GO:0006508 proteolysis is a valid ancestor.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Redundant with the IBA annotation for nucleus. Consistent with subcellular
+      localization data from the mammalian ortholog.
+    action: KEEP_AS_NON_CORE
+    reason: Redundant with the IBA-supported nucleus annotation. Retained as non-core
+      since the primary functional site is the ER.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Correct. UFSP2 is a soluble enzyme that resides in the cytoplasm and
+      is recruited to the ER membrane surface where it acts on UFMylated substrates.
+    action: KEEP_AS_NON_CORE
+    reason: Cytoplasmic localization is consistent with UFSP2 being a soluble protease.
+      While it is recruited to the ER for its primary function, the cytoplasm represents
+      its default residence before recruitment.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Redundant with the IBA annotation for ER. Correct and consistent with
+      the role of UFSP2 at the ER membrane surface.
+    action: ACCEPT
+    reason: Redundant with the IBA-supported ER annotation, but independently correct
+      based on UniProt subcellular location data from the mammalian ortholog.
+    supported_by:
+    - reference_id: PMID:21228277
+      supporting_text: plays a role in the recognition of its cellular substrate C20orf116
+        and thus in the recruitment of UfSP2 to the endoplasmic reticulum
+- term:
+    id: GO:0071567
+    label: deUFMylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Redundant with the IBA annotation for deUFMylase activity. Correct annotation
+      from ARBA machine learning models.
+    action: ACCEPT
+    reason: Redundant with the IBA-supported annotation but independently correct.
+      deUFMylase activity is the core molecular function.
+    supported_by:
+    - reference_id: PMID:17182609
+      supporting_text: cleaved the C-terminal extension of Ufm1 but not that of ubiquitin
+- term:
+    id: GO:0032790
+    label: ribosome disassembly
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Correct. UFSP2-mediated deUFMylation of RPL26 is a required step in the
+      recycling of 60S ribosomal subunits from the ER. UFMylation marks stalled ribosomes
+      for quality control, and UFSP2 removes UFM1 to enable ribosome recycling.
+    action: ACCEPT
+    reason: Supported by studies showing that RPL26 UFMylation at the ER triggers
+      ribosome quality control and that UFSP2-mediated deUFMylation is needed for
+      60S subunit recycling.
+    supported_by:
+    - reference_id: PMID:30626644
+      supporting_text: RPL26, is the principal target of UFM1 conjugation...UFMylated
+        RPL26 is highly enriched on ER membrane-bound ribosomes and polysomes
+    - reference_id: PMID:37036982
+      supporting_text: UFMylation of translocon-bound 60S subunits modulates the RTJ
+        to promote access of proteasomes and RQC machinery to ER-APs
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Correct but too general. Same issue as the IBA proteolysis annotation.
+      UFSP2 performs specific isopeptide bond cleavage of UFM1 conjugates, not general
+      proteolysis.
+    action: MODIFY
+    reason: Overly broad for this specialized isopeptidase. Should be replaced with
+      a more specific term capturing deUFMylation-related proteolysis.
+    proposed_replacement_terms:
+    - id: GO:0016579
+      label: protein deubiquitination
+      description: Closest available BP term for Ubl deconjugation activity.
+- term:
+    id: GO:0071567
+    label: deUFMylase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Redundant with IBA and IEA annotations for deUFMylase activity. Correct
+      and well-supported by direct experimental data from the human ortholog.
+    action: ACCEPT
+    reason: Core molecular function, well supported by ISS from human UFSP2 (Q9NUQ7).
+      Consistent with all other evidence lines.
+    supported_by:
+    - reference_id: PMID:17182609
+      supporting_text: replacement of the conserved Cys residue by Ser resulted in
+        a complete loss of the UfSP1 and UfSP2 activities
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Redundant with IBA and IEA nucleus annotations. Non-core localization.
+    action: KEEP_AS_NON_CORE
+    reason: Nucleus is a secondary localization site. The primary functional site
+      is the ER.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Redundant with IEA cytoplasm annotation. Correct default localization
+      for this soluble protease.
+    action: KEEP_AS_NON_CORE
+    reason: Cytoplasm is the default residence of this soluble enzyme before recruitment
+      to the ER. Non-core localization.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Redundant with IBA and IEA ER annotations. Correct and core localization
+      for UFSP2 function.
+    action: ACCEPT
+    reason: ER is the primary functional site where UFSP2 deUFMylates RPL26 on ribosomal
+      subunits. Well supported by structural and functional studies.
+    supported_by:
+    - reference_id: PMID:21228277
+      supporting_text: plays a role in the recognition of its cellular substrate C20orf116
+        and thus in the recruitment of UfSP2 to the endoplasmic reticulum
+core_functions:
+- description: UFSP2 functions as a thiol-dependent isopeptidase that cleaves UFM1
+    from conjugated substrates (deUFMylation) and processes UFM1 precursors to their
+    mature form. Its principal substrate is UFMylated RPL26 on ER-bound 60S ribosomal
+    subunits, where deUFMylation is required for ribosome recycling during ER-associated
+    quality control.
+  molecular_function:
+    id: GO:0071567
+    label: deUFMylase activity
+  directly_involved_in:
+  - id: GO:0032790
+    label: ribosome disassembly
+  locations:
+  - id: GO:0005783
+    label: endoplasmic reticulum
+  substrates:
+  - id: UniProtKB:Q7T347
+    label: UFMylated RPL26 (60S ribosomal protein)
+  supported_by:
+  - reference_id: PMID:30626644
+    supporting_text: a largely uncharacterized ribosomal protein, RPL26, is the principal
+      target of UFM1 conjugation
+  - reference_id: PMID:17182609
+    supporting_text: cleaved the C-terminal extension of Ufm1 but not that of ubiquitin
+  - reference_id: PMID:37036982
+    supporting_text: UFMylation of translocon-bound 60S subunits modulates the RTJ
+      to promote access of proteasomes and RQC machinery to ER-APs
+suggested_questions:
+- question: Has ufsp2 function been directly tested in zebrafish using morpholino
+    knockdown or CRISPR knockout? Are there any zebrafish-specific phenotypes?
+  experts: []
+- question: Does zebrafish ufsp2 play a role in erythropoiesis or hematopoietic development,
+    as suggested by the UFMylation pathway&#39;s role in erythroid differentiation in
+    mammals?
+  experts: []
+suggested_experiments:
+- description: Generate ufsp2 CRISPR knockout zebrafish and characterize phenotypes
+    including skeletal development, neurological function, and ER stress markers to
+    determine if the mammalian disease phenotypes are conserved.
+  hypothesis: Loss of ufsp2 in zebrafish will cause ER stress-related phenotypes and
+    potentially skeletal or neurological defects analogous to human UFSP2 mutations.
+- description: Perform immunofluorescence microscopy in zebrafish embryos to confirm
+    subcellular localization of ufsp2 at the ER, cytoplasm, and nucleus.
+  hypothesis: Zebrafish ufsp2 will show predominantly ER and cytoplasmic localization,
+    consistent with mammalian orthologs.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
