@@ -307,3 +307,54 @@ This confirms all three sources derive from the same GO-GPT predictions, just pr
 ### Coverage gaps
 
 Notable proteins NOT in the 223K catalogue: TP53 (P04637), EGFR (P00533), NOTCH1 (P46531), MTOR (P42345). Several well-known proteins that are present have truncated generations (cut off mid-sentence, never reaching the GO section): MYC (P01106), BCL2 (P10415), PTEN (P60484), CTNNB1 (P35222).
+
+## SFT Catalogue Evaluation (45 proteins, 15 clades)
+
+Full details: [research/bioreason-sft-evaluation.md](/research/bioreason-sft-evaluation.md)
+
+We evaluated 45 proteins from the HF SFT catalogue across 15 clades (DANRE, DICDI, METJA, MYCTU, PSEAE, ANOGA, ARATH, DROME, ECOLI, SCHPO, human, mouse, rat, worm, yeast), 3 proteins per clade, mixing well-characterized and poorly-characterized proteins.
+
+**Overall: Correctness 2.9/5, Completeness 2.7/5**
+
+### Score distribution
+
+| Score | Correctness | Completeness |
+|-------|:-----------:|:------------:|
+| 5 | 0 (0%) | 0 (0%) |
+| 4 | 12 (27%) | 1 (2%) |
+| 3 | 20 (44%) | 28 (62%) |
+| 2 | 7 (16%) | 10 (22%) |
+| 1 | 4 (9%) | 4 (9%) |
+| 0 | 1 (2%) | 1 (2%) |
+
+These results are consistent with the RL evaluation (139 genes): **overall correctness 3.7/5, completeness 2.9/5** (RL scores slightly higher, as expected from the paper's claim that RL has fewer hallucinations).
+
+### Top failure modes (SFT catalogue)
+
+1. **Fabricated UniProt summaries (7/45 = 16%)**. BioReason generates fake "UniProt Summary" text for uncharacterized proteins. All 7 cases are on proteins where UniProt says "Uncharacterized protein." This is systematic and dangerous — it misrepresents an authoritative database.
+
+2. **Paralog/family conflation (8/45 = 18%)**. Biology from well-characterized family members is applied to divergent paralogs: mlcD (calmodulin→myosin I LC), rdgBbeta (vibrator→Class II PITP), Ndufb1/NDUFAB1 confusion, Ifi204/AIM2 conflation, Hmgcs2/HMGCS1 mixing.
+
+3. **Organism-specific biology absent (systematic)**. Not once in 45 proteins did BioReason provide organism-specific insight beyond domain architecture. Mosquito eye pigmentation, Mtb drug targets, yeast cell wall biology, worm body size regulation, plant cold stress — all missed.
+
+4. **Inverse quality vs characterization**. Proteins with 0-3 GOA annotations (where BioReason could add most value) consistently score 0-1/5. Well-characterized proteins (where BioReason scores 4/5) already have extensive annotations making the narrative redundant.
+
+5. **Hallucinated GO IDs**. BioReason cites specific GO IDs that map to completely different terms (e.g. GO:0047554 cited as caffeoyl-CoA O-methyltransferase, actually 2-pyrone-4,6-dicarboxylate lactonase).
+
+6. **Directional errors**. Several errors get the mechanism exactly backwards: CRH1 donor-acceptor direction, Sstr5 ligand preference, gcl substrate clearance direction, CHL1 cell death promotion vs limitation.
+
+### Comparison: SFT catalogue vs RL web scrapes (139 genes)
+
+| Metric | SFT catalogue (45) | RL web scrapes (139) |
+|--------|:------------------:|:--------------------:|
+| Mean correctness | 2.9 | 3.7 |
+| Mean completeness | 2.7 | 2.9 |
+| Fabricated UniProt summaries | 16% | not assessed |
+| 5/5 correctness | 0% | 27% |
+| 1/5 or worse | 11% | 4% |
+
+The SFT model scores lower than RL, consistent with the paper's finding that SFT has "more hallucinations." The fabricated UniProt summary rate (16%) is particularly concerning and was not systematically assessed in the RL evaluation. The RL model's claim to "never fabricate InterPro entries" (from the paper) does not extend to UniProt summaries in SFT.
+
+### Key conclusion
+
+BioReason SFT is a **domain-interpretation narrative engine**, not a biological knowledge system. It adds modest value (~30% of proteins) when domain architectures are diagnostic, but introduces systematic fabrication and false specificity for the remaining ~70%. The proteins where BioReason could add the most value (uncharacterized, minimal annotations) are precisely where it performs worst.
