@@ -264,6 +264,9 @@ def check_best_practices_rules(
             "GO_REF", "GO", "Reactome", "UniProt", "UniProtKB",
             "PDB", "EC", "TEMP", "ISBN", "RHEA", "file",
         ],
+        literal_bracket_patterns=[
+            r"[^a-zA-Z\s]",  # keep brackets containing non-alpha chars: [2Fe-2S], [poly(A)+], [+21], [Ca2+]
+        ],
     )
 
     dynamic_enum_plugin = DynamicEnumPlugin(
@@ -1284,9 +1287,12 @@ def validate_rule_review(
             ref_config = ReferenceValidationConfig(
                 cache_dir=str(Path("publications")),
                 skip_prefixes=[
-            "GO_REF", "GO", "Reactome", "UniProt", "UniProtKB",
-            "PDB", "EC", "TEMP", "ISBN", "RHEA", "file",
-        ],
+                    "GO_REF", "GO", "Reactome", "UniProt", "UniProtKB",
+                    "PDB", "EC", "TEMP", "ISBN", "RHEA", "file",
+                ],
+                literal_bracket_patterns=[
+                    r"[^a-zA-Z\s]",
+                ],
             )
             ref_plugin = ReferenceValidationPlugin(config=ref_config)
             ref_validator = LinkMLValidator(
