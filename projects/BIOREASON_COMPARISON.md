@@ -54,7 +54,7 @@ Per gene, the following files are available (example: [ECOLI/SlyD](https://githu
 |------|-------------|
 | `{GENE}-deep-research-bioreason-rl.md` | Raw BioReason-Pro RL web export (reasoning trace, functional summary, InterPro, GO-GPT terms) |
 | `{GENE}-bioreason-rl-review.md` | Evaluation of reasoning trace vs curated review (correctness/completeness scores + interpro2go comparison) |
-| `{GENE}-bioreason-rl-predictions.yaml` | GO-GPT leaf terms as PredictionReview YAML |
+| `{GENE}-gogpt-leaf-predictions.yaml` | GO-GPT leaf terms as PredictionReview YAML |
 | `{GENE}-ai-review.yaml` | Expert-curated AIGR review (ground truth for comparison) |
 
 ## Evaluation rubric
@@ -252,3 +252,58 @@ Both are pseudoenzymes with catalytic domain signatures. BioReason **correctly**
 - **Human eval**: 192 proteins, 162 by external biologists. Protein list not published.
 - **Overlap with AIGR**: 7 of 1,211 genes. Low by design -- their test set is newly annotated, ours is deeply characterized.
 - 99 additional genes from their test set are being reviewed to expand overlap.
+
+## HuggingFace protein_catalogue analysis
+
+The HF dataset [`wanglab/protein_catalogue`](https://huggingface.co/datasets/wanglab/protein_catalogue) contains 223,214 proteins across 8,439 organisms (Apache-2.0). All entries are **SFT model only** (the `model` column is uniformly `SFT`). There is no RL equivalent.
+
+Local copy: `data/bioreason-hf/*.parquet` (3 shards, ~626MB total). Queryable with duckdb:
+
+```sql
+SELECT * FROM 'data/bioreason-hf/*.parquet' WHERE protein_id = 'P0A9K9'
+```
+
+### What the pipeline actually produces
+
+| Component | Model | Output |
+|-----------|-------|--------|
+| GO-GPT (`wanglab/gogpt`) | Autoregressive transformer (ESM2 + organism) | GO term hierarchy (F_max 0.65-0.70) |
+| BioReason-Pro SFT (`wanglab/bioreason-pro-sft`, 4B) | Qwen3 fine-tuned on GPT-5-generated reasoning traces (124K examples) | `<think>` trace + functional summary. *"More hypothesis, more hallucinations"* |
+| BioReason-Pro RL (`wanglab/bioreason-pro-rl`, 4B) | Same base + GRPO (9.2K examples) | Same format. *"More accurate, less mechanistically deep"*. Never fabricated InterPro |
+
+### GO term provenance: what comes from where
+
+The web app shows "GO GPT" and "GO Leaf" panels regardless of SFT/RL selection. These are always **GO-GPT predictions** (the upstream model), not BioReason-Pro output. BioReason-Pro is fundamentally a narrative reasoning model -- it takes GO-GPT's GO terms as input and produces a reasoning trace + functional summary. It does not independently predict GO terms.
+
+The HF catalogue's structured GO section (at the end of the `generation` column) appears to be reformulated from the GO-GPT input, not independent predictions. ~97% of entries have this structured section; ~3% are truncated.
+
+**RL model GO predictions are not accessible anywhere.** The web app shows GO-GPT (input), the HF catalogue is SFT only, and the RL reasoning trace does not emit its own GO terms.
+
+| Source | GO-GPT (input) | BioReason SFT GO | BioReason RL GO |
+|--------|----------------|------------------|-----------------|
+| Web app panels | "GO GPT" + "GO Leaf" | Not shown separately | Not shown separately |
+| HF `protein_catalogue` | In `<think>` block | Structured section at end | **Not available** |
+| Scraped `-rl.md` files | Full hierarchy in GO Terms section | N/A | **Not emitted** |
+
+### SlyD (P0A9K9) cross-source comparison
+
+We compared GO terms for SlyD across three sources to understand the relationship between them:
+
+**Website SFT scrape** (`SlyD-deep-research-bioreason.md`, 9 terms -- leaf-pruned):
+GO:0003755 (PPIase activity), GO:0016859, GO:0140096, GO:0016853, GO:0003824, GO:0006457, GO:0005737, GO:0005829, GO:0005622
+
+**Website RL scrape** (`SlyD-deep-research-bioreason-rl.md`, 58 terms -- full GO-GPT with all ancestors):
+Includes the above plus metal binding (GO:0008270, GO:0005507, GO:0016151, GO:0050897), unfolded protein binding (GO:0051082), heat response (GO:0009408), refolding (GO:0042026), stabilization (GO:0050821), and all ancestor terms up to root.
+
+**HF SFT catalogue** (structured section, 13 terms):
+GO:0051082, GO:0003755, GO:0008270, GO:0005507, GO:0016151, GO:0050897 (MF);
+GO:0009408, GO:0022417, GO:0042026, GO:0044008, GO:0050821, GO:0000413 (BP);
+GO:0005829 (CC)
+
+**Key finding**: 12 of 13 HF SFT terms are contained in the RL website GO-GPT output. The one HF-only term (GO:0044008, modulation by symbiont of host adenylate cyclase pathway) is a more specific descendant also present in the RL hierarchy. The website RL dump includes the full GO hierarchy (all ancestors up to root), while the HF SFT keeps leaf-ish terms. The website SFT scrape was pruned to very generic parent terms.
+
+This confirms all three sources derive from the same GO-GPT predictions, just pruned/presented differently. The HF catalogue is the most useful bulk source since it retains informative leaf terms without ancestor noise.
+
+### Coverage gaps
+
+Notable proteins NOT in the 223K catalogue: TP53 (P04637), EGFR (P00533), NOTCH1 (P46531), MTOR (P42345). Several well-known proteins that are present have truncated generations (cut off mid-sentence, never reaching the GO section): MYC (P01106), BCL2 (P10415), PTEN (P60484), CTNNB1 (P35222).
