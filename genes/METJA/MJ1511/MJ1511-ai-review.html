@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MJ1511 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MJ1511</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q58906" target="_blank" class="term-link">
+                        Q58906
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Methanocaldococcus jannaschii (strain ATCC 43067 / DSM 2661 / JAL-1 / JCM 10045 / NBRC 100440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MJ1511";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q58906" data-a="DESCRIPTION: MJ1511 is a small (107 aa), uncharacterized protei..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MJ1511 is a small (107 aa), uncharacterized protein from the hyperthermophilic archaeon Methanocaldococcus jannaschii. It belongs to the AhpD-like / CMD (carboxymuconolactone decarboxylase-like) structural superfamily (IPR029032, IPR003779, Pfam PF02627). However, MJ1511 lacks the conserved CXXC catalytic motif that is essential for canonical AhpD peroxidase activity. Its two cysteines (Cys-17 and Cys-107) are separated by 90 residues, unlike the 2-3 residue spacing seen in functionally characterized AhpD enzymes. No direct experimental literature exists for this protein. Its function remains genuinely uncertain.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q58906" data-a="GO:0016491" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for oxidoreductase activity based on PANTHER phylogenetic inference (PTN002142863) using M. tuberculosis AhpD (P9WQB5) as reference. The phylogenetic transfer is questionable because MJ1511 lacks the conserved CXXC catalytic motif that is essential for AhpD-type thiol-disulfide oxidoreductase activity. P9WQB5 has Cys-130/Cys-133 in a CXXC motif, while MJ1511 has only Cys-17 and Cys-107 separated by 90 residues. The AhpD-like fold is conserved, but the catalytic machinery for oxidoreductase activity appears absent.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The structural fold is conserved (AhpD-like), which supports membership in the broader superfamily. However, the absence of the CXXC catalytic motif means the specific oxidoreductase activity that characterizes functional AhpD enzymes may not apply to MJ1511. Without experimental data, it is impossible to confirm whether this protein retains oxidoreductase activity through a non-canonical mechanism or has diverged to a different function entirely.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11914371" target="_blank" class="term-link">
+                                        PMID:11914371
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The two catalytic sulfhydryl groups, Cys-130 and Cys-133, are located near a central cavity in the trimer</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12761216" target="_blank" class="term-link">
+                                        PMID:12761216
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The collective results strongly support the proposed catalytic mechanism for AhpD</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21615954" target="_blank" class="term-link">
+                                        PMID:21615954
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the functional activity is supplied by a proton relay system of five residues, Glu36, Cys48, Tyr50, Cys51, and His55, and one structural water molecule</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:METJA/MJ1511/MJ1511-deep-research-bioreason.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[BioReason SFT trace identifies AhpD-like fold but functional claims are largely unsupported]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MJ1511 has the AhpD-like structural fold but lacks the conserved CXXC catalytic motif found in functionally characterized AhpD peroxidases. Its molecular function is genuinely unknown. The AhpD-like fold could potentially support a non-canonical redox function, a decarboxylase function (CMD-like), or a structural or regulatory role unrelated to peroxide detoxification. Without experimental data, no specific molecular function can be confidently assigned.</h3>
+                <span class="vote-buttons" data-g="Q58906" data-a="FUNCTION: MJ1511 has the AhpD-like structural fold but lacks..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                            molecular_function
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11914371" target="_blank" class="term-link">
+                                PMID:11914371
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The two catalytic sulfhydryl groups, Cys-130 and Cys-133, are located near a central cavity in the trimer</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21615954" target="_blank" class="term-link">
+                                PMID:21615954
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">A comparison of five other related hypothetical proteins from various species, assigned to the alkyl hydroperoxidase D-like protein family, shows they contain the same conserved structural motif and catalytic sequence Cys-X-X-Cys</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8688087" target="_blank" class="term-link">
+                            PMID:8688087
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence of the methanogenic archaeon, Methanococcus jannaschii</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MJ1511 was identified as an ORF in the M. jannaschii genome sequence. No function was assigned.</div>
+                        
+                        <div class="finding-text">"A total of 1738 predicted protein-coding genes were identified; however, only a minority of these (38 percent) could be assigned a putative cellular role with high confidence"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11914371" target="_blank" class="term-link">
+                            PMID:11914371
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The crystal structure of Mycobacterium tuberculosis alkylhydroperoxidase AhpD, a potential target for antitubercular drug design</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">M. tuberculosis AhpD has a CXXC catalytic motif (Cys-130, Cys-133) essential for alkylhydroperoxidase activity. The structure reveals an all-helical fold.</div>
+                        
+                        <div class="finding-text">"The two catalytic sulfhydryl groups, Cys-130 and Cys-133, are located near a central cavity in the trimer"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The catalytic mechanism involves deprotonation of Cys-133 via a proton relay and subsequent disulfide bond formation.</div>
+                        
+                        <div class="finding-text">"The structure supports a mechanism for the alkylhydroperoxidase activity in which Cys-133 is deprotonated by a distant glutamic acid via the relay action of His-137 and a water molecule"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12761216" target="_blank" class="term-link">
+                            PMID:12761216
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The mechanism of Mycobacterium tuberculosis alkylhydroperoxidase AhpD as defined by mutagenesis, crystallography, and kinetics</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mutagenesis confirms the CXXC-dependent catalytic mechanism of AhpD, with both catalytic cysteines essential for activity.</div>
+                        
+                        <div class="finding-text">"The collective results strongly support the proposed catalytic mechanism for AhpD"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21615954" target="_blank" class="term-link">
+                            PMID:21615954
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structure of alkyl hydroperoxidase D like protein PA0269 from Pseudomonas aeruginosa</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">P. aeruginosa AhpD-like protein has the same conserved CXXC motif and proton relay system as M. tuberculosis AhpD, with weak peroxidase activity.</div>
+                        
+                        <div class="finding-text">"the functional activity is supplied by a proton relay system of five residues, Glu36, Cys48, Tyr50, Cys51, and His55, and one structural water molecule"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The conserved catalytic CXXC sequence is present across functional members of the AhpD-like family.</div>
+                        
+                        <div class="finding-text">"A comparison of five other related hypothetical proteins from various species, assigned to the alkyl hydroperoxidase D-like protein family, shows they contain the same conserved structural motif and catalytic sequence Cys-X-X-Cys"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26402328" target="_blank" class="term-link">
+                            PMID:26402328
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of lpg0406, a carboxymuconolactone decarboxylase family protein possibly involved in antioxidative response from Legionella pneumophila</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CMD family proteins share the AhpD-like fold and can have CXXC-dependent redox activity, but substrate preferences vary across family members.</div>
+                        
+                        <div class="finding-text">"The protein has an all-helical fold with a conserved thioredoxin-like active site CXXC motif and a proton relay system similar to that of alkylhydroperoxidase from Mycobacterium tuberculosis"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31974167" target="_blank" class="term-link">
+                            PMID:31974167
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure-function analyses of alkylhydroperoxidase D from Streptococcus pneumoniae reveal an unusual three-cysteine active site architecture</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Not all AhpD family members function as classical peroxidases. S. pneumoniae AhpD does not transfer electrons to AhpC and may instead act as a redox switch.</div>
+                        
+                        <div class="finding-text">"We propose that it is unlikely that SpAhpD removes peroxides either directly or via AhpC, and that SpAhpD cysteine oxidation may act as a redox switch or mediate electron transfer with other thiol proteins"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:METJA/MJ1511/MJ1511-deep-research-bioreason.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BioReason SFT trace for MJ1511 from HuggingFace protein catalogue</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BioReason SFT identifies AhpD-like fold and predicts oxidoreductase function, but fabricates specific pathway context (desulfoferrodoxin, HMF catabolism) with no supporting evidence.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does MJ1511 have any detectable peroxidase, oxidoreductase, or disulfide exchange activity in vitro despite lacking the canonical CXXC motif?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q58906" data-a="Q: Does MJ1511 have any detectable peroxidase, oxidor..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is MJ1511 expressed under oxidative stress conditions in M. jannaschii, suggesting a role in antioxidant defense?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q58906" data-a="Q: Is MJ1511 expressed under oxidative stress conditi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the oligomeric state of MJ1511? AhpD enzymes typically form trimers or higher-order oligomers.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q58906" data-a="Q: What is the oligomeric state of MJ1511? AhpD enzym..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does MJ1511 interact with a peroxiredoxin (AhpC-like) partner in M. jannaschii?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q58906" data-a="Q: Does MJ1511 interact with a peroxiredoxin (AhpC-li..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant MJ1511 and test for peroxidase activity using a FOX assay (ferrous oxidation-xylenol orange) with hydrogen peroxide and alkyl hydroperoxides as substrates, as done for P. aeruginosa AhpD-like protein (PMID:21615954). Also test for thiol-disulfide exchange activity. Include C17S and C107S single mutants to assess the contribution of each cysteine.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MJ1511 may retain weak peroxidase or disulfide exchange activity despite lacking the canonical CXXC motif.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biochemical assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q58906" data-a="EXPERIMENT: Express and purify recombinant MJ1511 and test for..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test purified MJ1511 for carboxymuconolactone decarboxylase activity using gamma-carboxymuconolactone as substrate, monitoring decarboxylation spectrophotometrically.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MJ1511 may have a decarboxylase rather than oxidoreductase function, consistent with the CMD (carboxymuconolactone decarboxylase) family classification.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: enzyme activity assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q58906" data-a="EXPERIMENT: Test purified MJ1511 for carboxymuconolactone deca..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform transcriptomic or proteomic analysis of M. jannaschii under oxidative stress conditions (e.g. exposure to oxygen or hydrogen peroxide) and compare MJ1511 expression with control conditions.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MJ1511 is expressed under conditions of oxidative stress in M. jannaschii.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: transcriptomics/proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q58906" data-a="EXPERIMENT: Perform transcriptomic or proteomic analysis of M...." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MJ1511-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q58906" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="o">---</span>
+<span class="n">provider</span><span class="p">:</span><span class="w"> </span><span class="n">bioreason</span><span class="o">-</span><span class="n">pro</span>
+<span class="n">model</span><span class="p">:</span><span class="w"> </span><span class="n">SFT</span>
+<span class="n">source</span><span class="p">:</span><span class="w"> </span><span class="n">huggingface</span><span class="o">.</span><span class="n">co</span><span class="o">/</span><span class="n">datasets</span><span class="o">/</span><span class="n">wanglab</span><span class="o">/</span><span class="n">protein_catalogue</span>
+<span class="n">date</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;2026-04-04&#39;</span>
+<span class="n">uniprot_id</span><span class="p">:</span><span class="w"> </span><span class="n">Q58906</span>
+<span class="n">gene</span><span class="p">:</span><span class="w"> </span><span class="n">MJ1511</span>
+<span class="n">organism</span><span class="p">:</span><span class="w"> </span><span class="n">Methanocaldococcus</span><span class="w"> </span><span class="n">jannaschii</span><span class="w"> </span><span class="p">(</span><span class="n">strain</span><span class="w"> </span><span class="n">ATCC</span><span class="w"> </span><span class="mi">43067</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">DSM</span><span class="w"> </span><span class="mi">2661</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">JAL</span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">JCM</span><span class="w"> </span><span class="mi">10045</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">NBRC</span><span class="w"> </span><span class="mi">100440</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="n">Methanococcus</span><span class="w"> </span><span class="n">jannaschii</span><span class="p">)</span>
+<span class="o">---</span>
+
+<span class="c1">## Thinking Trace</span>
+
+<span class="n">I</span><span class="w"> </span><span class="n">begin</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">architecture</span><span class="o">.</span><span class="w"> </span><span class="n">Three</span><span class="w"> </span><span class="n">overlapping</span><span class="w"> </span><span class="n">signatures</span><span class="w"> </span><span class="n">define</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">compact</span><span class="w"> </span><span class="n">AhpD</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">fold</span><span class="p">:</span><span class="w"> </span><span class="n">IPR029032</span><span class="w"> </span><span class="p">(</span><span class="n">AhpD</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">homologous</span><span class="w"> </span><span class="n">superfamily</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">2</span><span class="err">–</span><span class="mi">101</span><span class="p">)</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">IPR029032</span><span class="w"> </span><span class="p">(</span><span class="n">AhpD</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">homologous</span><span class="w"> </span><span class="n">superfamily</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">10</span><span class="err">–</span><span class="mi">104</span><span class="p">)</span><span class="w"> </span><span class="n">encompass</span><span class="w"> </span><span class="n">IPR003779</span><span class="w"> </span><span class="p">(</span><span class="n">Alkyl</span><span class="w"> </span><span class="n">hydroperoxide</span><span class="w"> </span><span class="n">reductase</span><span class="w"> </span><span class="n">AhpD</span><span class="o">/</span><span class="n">CMD</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">18</span><span class="err">–</span><span class="mi">99</span><span class="p">)</span><span class="o">.</span><span class="w"> </span><span class="n">This</span><span class="w"> </span><span class="n">arrangement</span><span class="w"> </span><span class="n">places</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">canonical</span><span class="w"> </span><span class="n">AhpD</span><span class="o">/</span><span class="n">CMD</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">core</span><span class="w"> </span><span class="n">centrally</span><span class="p">,</span><span class="w"> </span><span class="n">flanked</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">broader</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="n">envelope</span><span class="o">.</span><span class="w"> </span><span class="n">AhpD</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">domains</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">small</span><span class="p">,</span><span class="w"> </span><span class="n">soluble</span><span class="w"> </span><span class="n">redox</span><span class="w"> </span><span class="n">modules</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">typically</span><span class="w"> </span><span class="n">harbor</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">conserved</span><span class="w"> </span><span class="n">Cys</span><span class="o">-</span><span class="n">containing</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="w"> </span><span class="p">(</span><span class="n">often</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">Cys</span><span class="err">–</span><span class="n">X</span><span class="p">(</span><span class="err">–</span><span class="p">)</span><span class="mi">4</span><span class="o">/</span><span class="n">Cys</span><span class="err">–</span><span class="n">X</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="err">–</span><span class="n">Cys</span><span class="w"> </span><span class="n">motif</span><span class="p">)</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">assemble</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">dimers</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">higher</span><span class="o">-</span><span class="n">order</span><span class="w"> </span><span class="n">oligomers</span><span class="o">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">absence</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">transmembrane</span><span class="w"> </span><span class="n">segments</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="k">signal</span><span class="w"> </span><span class="n">peptides</span><span class="w"> </span><span class="n">implies</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">cytosolic</span><span class="w"> </span><span class="n">enzyme</span><span class="o">.</span><span class="w"> </span><span class="n">In</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">AhpD</span><span class="o">/</span><span class="n">CMD</span><span class="w"> </span><span class="n">lineage</span><span class="p">,</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">fold</span><span class="w"> </span><span class="n">creates</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">redox</span><span class="o">-</span><span class="n">active</span><span class="w"> </span><span class="n">pocket</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">cycles</span><span class="w"> </span><span class="n">between</span><span class="w"> </span><span class="n">reduced</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">disulfide</span><span class="o">-</span><span class="n">oxidized</span><span class="w"> </span><span class="n">states</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">couples</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">partner</span><span class="w"> </span><span class="n">electron</span><span class="w"> </span><span class="n">carriers</span><span class="o">.</span>
+</code></pre></div>
+
+<p>This fold directly causes thiol–disulfide exchange chemistry. The catalytic cysteines form a transient disulfide that is reduced by an external electron donor, enabling transfer of reducing equivalents to disulfide-containing acceptors. That mechanism matches the molecular function formalized as GO:0016671 oxidoreductase activity, acting on a sulfur group of donors, disulfide as acceptor. In the present system, the physiological electron donor is rubredoxin reduced by a flavodoxin reductase using NAD(P)H, and the acceptor is the disulfide in the FAD cofactor of the dehydrogenase subunit of the desulfoferrodoxin complex. The AhpD-like pocket thus serves as the redox relay that resets the FAD from a disulfide to a dithiol state, priming the dehydrogenase for another catalytic turnover.</p>
+<p>By enabling turnover of 2-hydroxy-6-oxo-3-methylchromo-3-carboxylate (HOCMC), this redox relay drives a specific step in the degradation of 5-hydroxymethylfurfural (HMF). HMF is a toxic by-product of lignocellulosic biomass processing; its detoxification proceeds through ring-oxidation and decarboxylation to HOCMC, which then requires reduction to complete catabolism. The AhpD-like oxidoreductase therefore sustains flux through the HMF catabolic route, aligning with GO:0046279 5-hydroxymethylfurfural catabolic process. The chemistry is consistent with an EC 1.8.-.- class reaction, where a sulfur-based redox couple mediates electron transfer to a flavin disulfide.</p>
+<p>The structural and mechanistic features indicate a soluble enzyme that operates in the cytosol, where NAD(P)H, flavodoxin/flavodoxin reductase, rubredoxin, and the desulfoferrodoxin dehydrogenase co-reside. Functionally, it associates with the desulfoferrodoxin assembly, which constitutes a defined redox enzyme ensemble; this supports localization to the GO:1990204 oxidoreductase complex. Given the lack of targeting signals and the metabolic context, the most plausible subcellular site is the cytosol.</p>
+<p>Mechanistically, I propose the following: reduced flavodoxin reduces rubredoxin, which in turn directly reduces the AhpD-like active site disulfide. The now-reduced AhpD transfers electrons to the FAD disulfide within the dehydrogenase subunit of desulfoferrodoxin, regenerating the catalytic dithiol state required for continued reduction of HOCMC. The enzyme likely forms a transient complex with the desulfoferrodoxin dehydrogenase and rubredoxin to enable efficient electron channeling. Consistent with this, plausible interaction partners include the desulfoferrodoxin (putative rbo) dehydrogenase, rubredoxin-like non-heme iron proteins (as electron shuttles), and additional conserved hypothetical proteins that may act as adaptors or scaffolds stabilizing the oxidoreductase complex in the archaeal cytosol.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="n">Functional</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">small</span><span class="p">,</span><span class="w"> </span><span class="n">soluble</span><span class="w"> </span><span class="n">redox</span><span class="w"> </span><span class="n">relay</span><span class="w"> </span><span class="n">enzyme</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">Methanocaldococcus</span><span class="w"> </span><span class="n">jannaschii</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">uses</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">cysteine</span><span class="o">-</span><span class="n">based</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">accept</span><span class="w"> </span><span class="n">electrons</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">rubredoxin</span><span class="o">/</span><span class="n">flavodoxin</span><span class="o">/</span><span class="n">NAD</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="n">H</span><span class="w"> </span><span class="n">pathway</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">reduce</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">flavin</span><span class="w"> </span><span class="n">disulfide</span><span class="w"> </span><span class="k">within</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w"> </span><span class="n">subunit</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">desulfoferrodoxin</span><span class="w"> </span><span class="n">complex</span><span class="p">.</span><span class="w"> </span><span class="k">By</span><span class="w"> </span><span class="n">regenerating</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">dithiol</span><span class="w"> </span><span class="k">state</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">turnover</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">drives</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">reduction</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">detoxification</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="mi">5</span><span class="o">-</span><span class="n">hydroxymethylfurfural</span><span class="p">,</span><span class="w"> </span><span class="n">converting</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">intermediate</span><span class="w"> </span><span class="n">HOCMC</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">its</span><span class="w"> </span><span class="n">reduced</span><span class="w"> </span><span class="n">product</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">sustaining</span><span class="w"> </span><span class="n">flux</span><span class="w"> </span><span class="n">through</span><span class="w"> </span><span class="n">lignocellulosic</span><span class="o">-</span><span class="n">derived</span><span class="w"> </span><span class="n">aromatic</span><span class="w"> </span><span class="n">catabolism</span><span class="p">.</span><span class="w"> </span><span class="n">It</span><span class="w"> </span><span class="n">likely</span><span class="w"> </span><span class="n">operates</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">cytosol</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">part</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">oxidoreductase</span><span class="w"> </span><span class="n">assembly</span><span class="p">,</span><span class="w"> </span><span class="n">forming</span><span class="w"> </span><span class="n">transient</span><span class="w"> </span><span class="n">electron</span><span class="o">-</span><span class="n">transfer</span><span class="w"> </span><span class="n">complexes</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">rubredoxin</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">desulfoferrodoxin</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">UniProt</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">Component</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">desulfoferrodoxin</span><span class="w"> </span><span class="n">complex</span><span class="p">,</span><span class="w"> </span><span class="n">involved</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">degradation</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="mi">5</span><span class="o">-</span><span class="n">hydroxymethylfurfural</span><span class="w"> </span><span class="p">(</span><span class="n">HMF</span><span class="p">),</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">toxic</span><span class="w"> </span><span class="k">by</span><span class="o">-</span><span class="n">product</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">lignocellulosic</span><span class="w"> </span><span class="n">biomass</span><span class="w"> </span><span class="n">processing</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">complex</span><span class="w"> </span><span class="n">catalyzes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">reduction</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="mi">2</span><span class="o">-</span><span class="n">hydroxy</span><span class="o">-</span><span class="mi">6</span><span class="o">-</span><span class="n">oxo</span><span class="o">-</span><span class="mi">3</span><span class="o">-</span><span class="n">methylchromo</span><span class="o">-</span><span class="mi">3</span><span class="o">-</span><span class="n">carboxylic</span><span class="w"> </span><span class="n">acid</span><span class="w"> </span><span class="p">(</span><span class="n">HOCMC</span><span class="p">).</span><span class="w"> </span><span class="n">AhpD</span><span class="w"> </span><span class="n">reduces</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">FAD</span><span class="w"> </span><span class="n">cofactor</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w"> </span><span class="n">subunit</span><span class="w"> </span><span class="p">(</span><span class="n">rbo</span><span class="p">)</span><span class="w"> </span><span class="k">using</span><span class="w"> </span><span class="n">reduced</span><span class="w"> </span><span class="n">flavodoxin</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">electron</span><span class="w"> </span><span class="n">donor</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nl">IPR029032</span><span class="p">:</span><span class="w"> </span><span class="n">AhpD</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">2-101</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR029032</span><span class="p">:</span><span class="w"> </span><span class="n">AhpD</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">10-104</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR003779</span><span class="p">:</span><span class="w"> </span><span class="n">Alkyl</span><span class="w"> </span><span class="n">hydroperoxide</span><span class="w"> </span><span class="n">reductase</span><span class="w"> </span><span class="n">AhpD</span><span class="o">/</span><span class="n">CMD</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">18-99</span><span class="o">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="k">GO</span><span class="w"> </span><span class="n">Term</span><span class="w"> </span><span class="n">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="n">Molecular</span><span class="w"> </span><span class="k">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Biological</span><span class="w"> </span><span class="n">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Cellular</span><span class="w"> </span><span class="n">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MJ1511-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q58906" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mj1511-q58906-research-notes-methanocaldococcus-jannaschii">MJ1511 (Q58906) Research Notes -- Methanocaldococcus jannaschii</h1>
+<h2 id="summary">Summary</h2>
+<p>MJ1511 is a small (107 aa), uncharacterized protein from the hyperthermophilic archaeon<br />
+Methanocaldococcus jannaschii. It belongs to the AhpD-like / CMD (carboxymuconolactone<br />
+decarboxylase-like) superfamily based on domain architecture. There is no direct experimental<br />
+literature on MJ1511.</p>
+<h2 id="domain-architecture">Domain Architecture</h2>
+<ul>
+<li>IPR029032: AhpD-like homologous superfamily (residues 2-101 and 10-104)</li>
+<li>IPR003779: Alkyl hydroperoxide reductase AhpD/CMD-like domain (residues 18-99)</li>
+<li>Pfam PF02627: CMD domain</li>
+<li>PANTHER PTHR33930: Alkyl hydroperoxide reductase AhpD</li>
+<li>SUPFAM SSF69118: AhpD-like</li>
+<li>Gene3D 1.20.1290.10: AhpD-like</li>
+</ul>
+<h2 id="critical-sequence-analysis-absence-of-cxxc-motif">Critical Sequence Analysis: Absence of CXXC Motif</h2>
+<p>The MJ1511 sequence contains only two cysteines: Cys-17 and Cys-107. These are separated<br />
+by 90 residues. This is critical because the canonical AhpD catalytic mechanism depends on<br />
+a conserved CXXC (Cys-X-X-Cys) motif where the two catalytic cysteines are separated by<br />
+only 2-3 residues.</p>
+<p>In M. tuberculosis AhpD (P9WQB5), the catalytic cysteines are Cys-130 and Cys-133,<br />
+forming a CXXC motif that enables thiol-disulfide exchange chemistry<br />
+[PMID:11914371, "The two catalytic sulfhydryl groups, Cys-130 and Cys-133, are located near a central cavity in the trimer"].<br />
+The mechanism involves deprotonation of Cys-133 via a proton relay (Glu-118, His-137, water),<br />
+followed by reaction with the peroxide to form a sulfenic acid and subsequent disulfide bond<br />
+formation with Cys-130 [PMID:12761216, "The collective results strongly support the proposed catalytic mechanism for AhpD"].</p>
+<p>In P. aeruginosa AhpD-like PA0269, the same conserved CXXC motif is present:<br />
+[PMID:21615954, "the functional activity is supplied by a proton relay system of five residues, Glu36, Cys48, Tyr50, Cys51, and His55, and one structural water molecule"].</p>
+<p>In Legionella pneumophila lpg0406 (CMD family), a CXXC motif is also present:<br />
+[PMID:26402328, "The protein has an all-helical fold with a conserved thioredoxin-like active site CXXC motif and a proton relay system similar to that of alkylhydroperoxidase from Mycobacterium tuberculosis"].</p>
+<p>The absence of a CXXC motif in MJ1511 raises serious questions about whether it can<br />
+perform canonical AhpD-type peroxidase or thiol-disulfide exchange activity.</p>
+<h2 id="phylogenetic-context">Phylogenetic Context</h2>
+<p>The IBA annotation (GO:0016491, oxidoreductase activity) is based on PANTHER phylogenetic<br />
+inference (PTN002142863) with P9WQB5 (M. tuberculosis AhpD) as the reference sequence.<br />
+However, P9WQB5 has the CXXC motif whereas MJ1511 does not, making this phylogenetic<br />
+transfer questionable at the molecular function level.</p>
+<h2 id="what-is-the-cmdahpd-like-superfamily">What is the CMD/AhpD-like Superfamily?</h2>
+<p>The CMD/AhpD-like superfamily encompasses diverse functions:</p>
+<ol>
+<li>AhpD peroxidases (with CXXC motif) - reduce AhpC peroxiredoxins</li>
+<li>Carboxymuconolactone decarboxylases (CMD) - involved in protocatechuate degradation in bacteria</li>
+<li>Redox-active disulfide exchange proteins (with CXXC)</li>
+<li>Proteins of unknown function (lacking the CXXC motif)</li>
+</ol>
+<p>The Legionella CMD family protein lpg0406 demonstrates this diversity:<br />
+[PMID:26402328, "A comparison of the size and the surface topology of the putative substrate-binding region between lpg0406 and MtAhpD indicates that the two enzymes accommodate the different substrate preferences"].</p>
+<p>The Streptococcus pneumoniae AhpD has a three-cysteine active site and unusually does NOT<br />
+transfer electrons to AhpC, showing the family has diverse and sometimes unexpected functions:<br />
+[PMID:31974167, "We propose that it is unlikely that AhpD removes peroxides either directly or via AhpC, and that AhpD cysteine oxidation may act as a redox switch or mediate electron transfer with other thiol proteins"].</p>
+<h2 id="assessment">Assessment</h2>
+<p>Given the absence of the canonical CXXC motif, MJ1511 is unlikely to function as a<br />
+classical AhpD peroxidase. The broad annotation of "oxidoreductase activity" (GO:0016491)<br />
+from IBA may be too specific or simply incorrect. Possible alternative functions include:</p>
+<ol>
+<li>A structural/regulatory role related to the AhpD-like fold</li>
+<li>A non-canonical redox function using the two distant cysteines</li>
+<li>A decarboxylase function (CMD-like) unrelated to peroxide detoxification</li>
+<li>A protein of genuinely unknown function that has diverged from the ancestral activity</li>
+</ol>
+<p>Without experimental characterization, it is impossible to confirm any of these. The protein<br />
+remains functionally uncharacterized.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>PMID:8688087 - Bult et al. 1996. M. jannaschii genome sequence.</li>
+<li>PMID:11914371 - Nunn et al. 2002. Crystal structure of M. tuberculosis AhpD.</li>
+<li>PMID:12761216 - Koshkin et al. 2003. Mechanism of M. tuberculosis AhpD.</li>
+<li>PMID:15215090 - Koshkin et al. 2004. Inhibition of M. tuberculosis AhpD.</li>
+<li>PMID:21615954 - Clarke et al. 2011. Crystal structure of AhpD-like PA0269 from P. aeruginosa.</li>
+<li>PMID:26402328 - Chen et al. 2015. Structure of lpg0406, CMD family protein from L. pneumophila.</li>
+<li>PMID:31974167 - Meng et al. 2020. Structure-function of AhpD from S. pneumoniae.</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MJ1511-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q58906" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-mj1511-methanocaldococcus-jannaschii">BioReason-Pro SFT Review: MJ1511 (Methanocaldococcus jannaschii)</h1>
+<p>Source: MJ1511-deep-research-bioreason.md</p>
+<ul>
+<li><strong>Correctness</strong>: 1/5</li>
+<li><strong>Completeness</strong>: 2/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason SFT functional summary describes MJ1511 as:</p>
+<blockquote>
+<p>A small, soluble redox relay enzyme in Methanocaldococcus jannaschii that uses a cysteine-based active site to accept electrons from the rubredoxin/flavodoxin/NAD(P)H pathway and reduce the flavin disulfide within the dehydrogenase subunit of the desulfoferrodoxin complex. By regenerating the catalytic dithiol state required for turnover, it drives the reduction step in the detoxification of 5-hydroxymethylfurfural, converting the intermediate HOCMC to its reduced product and sustaining flux through lignocellulosic-derived aromatic catabolism.</p>
+</blockquote>
+<p>This functional summary is almost entirely fabricated. The key problems:</p>
+<ol>
+<li>
+<p><strong>Desulfoferrodoxin complex</strong>: There is no evidence that MJ1511 interacts with or is part of a desulfoferrodoxin complex. A PubMed search for "desulfoferrodoxin Methanocaldococcus" returns zero results.</p>
+</li>
+<li>
+<p><strong>5-hydroxymethylfurfural (HMF) catabolism</strong>: The claim that MJ1511 participates in HMF detoxification is absurd for an archaeon. HMF is a by-product of lignocellulosic biomass processing -- a process relevant to industrial biotechnology and some soil bacteria, not to a hyperthermophilic methanogenic archaeon living in deep-sea hydrothermal vents. There is zero evidence for HMF catabolism in M. jannaschii. A PubMed search for "5-hydroxymethylfurfural catabolic archaea" returns zero results.</p>
+</li>
+<li>
+<p><strong>Rubredoxin/flavodoxin electron transfer chain</strong>: While M. jannaschii does contain rubredoxin and flavodoxin, there is no evidence linking MJ1511 to these electron carriers.</p>
+</li>
+<li>
+<p><strong>"Cysteine-based active site"</strong>: The thinking trace claims a "conserved Cys-containing active site (often a Cys-X(-)4/Cys-X(n)-Cys motif)." In reality, MJ1511 has only two cysteines (Cys-17 and Cys-107) separated by 90 residues. It completely lacks the CXXC motif that is essential for canonical AhpD thiol-disulfide exchange chemistry. All experimentally characterized AhpD peroxidases have a CXXC motif with 2-3 residue spacing (PMID:11914371, PMID:12761216, PMID:21615954, PMID:26402328).</p>
+</li>
+<li>
+<p><strong>The UniProt Summary section</strong> in the BioReason report states the protein is "Component of the desulfoferrodoxin complex, involved in the degradation of 5-hydroxymethylfurfural." This is NOT from UniProt -- the actual UniProt record describes MJ1511 simply as "Uncharacterized protein MJ1511." This appears to be a hallucinated or fabricated "UniProt summary."</p>
+</li>
+</ol>
+<p>The only correct aspects of the summary are: (a) the protein is small and soluble, (b) it has an AhpD-like fold, and (c) it is likely cytosolic (no signal peptide).</p>
+<p>Comparison with interpro2go:</p>
+<p>There are no InterPro2GO mappings for either IPR003779 (CMD-like) or IPR029032 (AhpD-like). The InterPro API confirms both entries have null GO terms. The only IEA annotation in the UniProt record (GO:0051920, peroxiredoxin activity, from InterPro) does not appear in the GOA file. The single GOA annotation is GO:0016491 (oxidoreductase activity) via IBA from PANTHER phylogenetic inference. Since there are no interpro2go annotations to compare against, BioReason is not recapitulating interpro2go -- instead, it has fabricated an entirely novel and unsupported functional narrative. The PANTHER family description ("reduce the AhpC active site cysteine residues and regenerate AhpC enzyme activity") is reasonable but the BioReason SFT trace ignores this and invents a completely different pathway context (desulfoferrodoxin/HMF).</p>
+<h2 id="notes-on-thinking-trace">Notes on thinking trace</h2>
+<p>The thinking trace begins reasonably by identifying the InterPro domains and noting the AhpD-like fold. However, it then makes a series of unjustified leaps:</p>
+<ol>
+<li>
+<p>It correctly identifies that AhpD-like domains "typically harbor a conserved Cys-containing active site" but does not check whether MJ1511 actually has this motif. This is a critical failure of sequence-level validation.</p>
+</li>
+<li>
+<p>The trace then constructs an elaborate electron transfer pathway (rubredoxin -&gt; AhpD -&gt; desulfoferrodoxin -&gt; FAD -&gt; HOCMC) with no supporting evidence. Each step in this chain is fabricated.</p>
+</li>
+<li>
+<p>The HMF catabolic pathway (GO:0046279) is a classic cross-kingdom annotation error. HMF is a product of sugar dehydration in industrial processes and is catabolized by some soil bacteria. Attributing this pathway to a hyperthermophilic methanogenic archaeon from deep-sea vents is biologically implausible.</p>
+</li>
+<li>
+<p>The GO term GO:0016671 (oxidoreductase activity, acting on a sulfur group of donors, disulfide as acceptor) is cited in the thinking trace but is far more specific than what the evidence supports. Even the curated IBA annotation uses only the parent term GO:0016491.</p>
+</li>
+</ol>
+<p>This SFT trace represents a severe case of hallucination, where domain-level structural similarity is used as a springboard for fabricating a detailed but entirely unsupported metabolic pathway narrative.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q58906
+gene_symbol: MJ1511
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:243232
+  label: Methanocaldococcus jannaschii (strain ATCC 43067 / DSM 2661 / JAL-1 / JCM
+    10045 / NBRC 100440)
+description: MJ1511 is a small (107 aa), uncharacterized protein from the hyperthermophilic
+  archaeon Methanocaldococcus jannaschii. It belongs to the AhpD-like / CMD (carboxymuconolactone
+  decarboxylase-like) structural superfamily (IPR029032, IPR003779, Pfam PF02627).
+  However, MJ1511 lacks the conserved CXXC catalytic motif that is essential for
+  canonical AhpD peroxidase activity. Its two cysteines (Cys-17 and Cys-107) are
+  separated by 90 residues, unlike the 2-3 residue spacing seen in functionally
+  characterized AhpD enzymes. No direct experimental literature exists for this protein.
+  Its function remains genuinely uncertain.
+existing_annotations:
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for oxidoreductase activity based on PANTHER phylogenetic
+      inference (PTN002142863) using M. tuberculosis AhpD (P9WQB5) as reference.
+      The phylogenetic transfer is questionable because MJ1511 lacks the conserved
+      CXXC catalytic motif that is essential for AhpD-type thiol-disulfide oxidoreductase
+      activity. P9WQB5 has Cys-130/Cys-133 in a CXXC motif, while MJ1511 has only
+      Cys-17 and Cys-107 separated by 90 residues. The AhpD-like fold is conserved,
+      but the catalytic machinery for oxidoreductase activity appears absent.
+    action: UNDECIDED
+    reason: The structural fold is conserved (AhpD-like), which supports membership
+      in the broader superfamily. However, the absence of the CXXC catalytic motif
+      means the specific oxidoreductase activity that characterizes functional AhpD
+      enzymes may not apply to MJ1511. Without experimental data, it is impossible
+      to confirm whether this protein retains oxidoreductase activity through a
+      non-canonical mechanism or has diverged to a different function entirely.
+    supported_by:
+    - reference_id: PMID:11914371
+      supporting_text: The two catalytic sulfhydryl groups, Cys-130 and Cys-133, are
+        located near a central cavity in the trimer
+    - reference_id: PMID:12761216
+      supporting_text: The collective results strongly support the proposed catalytic
+        mechanism for AhpD
+    - reference_id: PMID:21615954
+      supporting_text: the functional activity is supplied by a proton relay system
+        of five residues, Glu36, Cys48, Tyr50, Cys51, and His55, and one structural
+        water molecule
+    - reference_id: file:METJA/MJ1511/MJ1511-deep-research-bioreason.md
+      supporting_text: &#39;[BioReason SFT trace identifies AhpD-like fold but functional
+        claims are largely unsupported]&#39;
+core_functions:
+- description: MJ1511 has the AhpD-like structural fold but lacks the conserved CXXC
+    catalytic motif found in functionally characterized AhpD peroxidases. Its molecular
+    function is genuinely unknown. The AhpD-like fold could potentially support a
+    non-canonical redox function, a decarboxylase function (CMD-like), or a structural
+    or regulatory role unrelated to peroxide detoxification. Without experimental
+    data, no specific molecular function can be confidently assigned.
+  supported_by:
+  - reference_id: PMID:11914371
+    supporting_text: The two catalytic sulfhydryl groups, Cys-130 and Cys-133, are
+      located near a central cavity in the trimer
+  - reference_id: PMID:21615954
+    supporting_text: A comparison of five other related hypothetical proteins from
+      various species, assigned to the alkyl hydroperoxidase D-like protein family,
+      shows they contain the same conserved structural motif and catalytic sequence
+      Cys-X-X-Cys
+  molecular_function:
+    id: GO:0003674
+    label: molecular_function
+references:
+- id: PMID:8688087
+  title: Complete genome sequence of the methanogenic archaeon, Methanococcus jannaschii
+  findings:
+  - statement: MJ1511 was identified as an ORF in the M. jannaschii genome sequence.
+      No function was assigned.
+    supporting_text: A total of 1738 predicted protein-coding genes were identified;
+      however, only a minority of these (38 percent) could be assigned a putative
+      cellular role with high confidence
+- id: PMID:11914371
+  title: The crystal structure of Mycobacterium tuberculosis alkylhydroperoxidase
+    AhpD, a potential target for antitubercular drug design
+  findings:
+  - statement: M. tuberculosis AhpD has a CXXC catalytic motif (Cys-130, Cys-133)
+      essential for alkylhydroperoxidase activity. The structure reveals an all-helical
+      fold.
+    supporting_text: The two catalytic sulfhydryl groups, Cys-130 and Cys-133, are
+      located near a central cavity in the trimer
+  - statement: The catalytic mechanism involves deprotonation of Cys-133 via a proton
+      relay and subsequent disulfide bond formation.
+    supporting_text: The structure supports a mechanism for the alkylhydroperoxidase
+      activity in which Cys-133 is deprotonated by a distant glutamic acid via the
+      relay action of His-137 and a water molecule
+- id: PMID:12761216
+  title: The mechanism of Mycobacterium tuberculosis alkylhydroperoxidase AhpD as
+    defined by mutagenesis, crystallography, and kinetics
+  findings:
+  - statement: Mutagenesis confirms the CXXC-dependent catalytic mechanism of AhpD,
+      with both catalytic cysteines essential for activity.
+    supporting_text: The collective results strongly support the proposed catalytic
+      mechanism for AhpD
+- id: PMID:21615954
+  title: Crystal structure of alkyl hydroperoxidase D like protein PA0269 from Pseudomonas
+    aeruginosa
+  findings:
+  - statement: P. aeruginosa AhpD-like protein has the same conserved CXXC motif and
+      proton relay system as M. tuberculosis AhpD, with weak peroxidase activity.
+    supporting_text: the functional activity is supplied by a proton relay system
+      of five residues, Glu36, Cys48, Tyr50, Cys51, and His55, and one structural
+      water molecule
+  - statement: The conserved catalytic CXXC sequence is present across functional
+      members of the AhpD-like family.
+    supporting_text: A comparison of five other related hypothetical proteins from
+      various species, assigned to the alkyl hydroperoxidase D-like protein family,
+      shows they contain the same conserved structural motif and catalytic sequence
+      Cys-X-X-Cys
+- id: PMID:26402328
+  title: Structure of lpg0406, a carboxymuconolactone decarboxylase family protein
+    possibly involved in antioxidative response from Legionella pneumophila
+  findings:
+  - statement: CMD family proteins share the AhpD-like fold and can have CXXC-dependent
+      redox activity, but substrate preferences vary across family members.
+    supporting_text: The protein has an all-helical fold with a conserved thioredoxin-like
+      active site CXXC motif and a proton relay system similar to that of alkylhydroperoxidase
+      from Mycobacterium tuberculosis
+- id: PMID:31974167
+  title: Structure-function analyses of alkylhydroperoxidase D from Streptococcus
+    pneumoniae reveal an unusual three-cysteine active site architecture
+  findings:
+  - statement: Not all AhpD family members function as classical peroxidases. S. pneumoniae
+      AhpD does not transfer electrons to AhpC and may instead act as a redox switch.
+    supporting_text: We propose that it is unlikely that SpAhpD removes peroxides either
+      directly or via AhpC, and that SpAhpD cysteine oxidation may act as a redox switch
+      or mediate electron transfer with other thiol proteins
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: file:METJA/MJ1511/MJ1511-deep-research-bioreason.md
+  title: BioReason SFT trace for MJ1511 from HuggingFace protein catalogue
+  findings:
+  - statement: BioReason SFT identifies AhpD-like fold and predicts oxidoreductase
+      function, but fabricates specific pathway context (desulfoferrodoxin, HMF catabolism)
+      with no supporting evidence.
+suggested_questions:
+- question: Does MJ1511 have any detectable peroxidase, oxidoreductase, or disulfide
+    exchange activity in vitro despite lacking the canonical CXXC motif?
+- question: Is MJ1511 expressed under oxidative stress conditions in M. jannaschii,
+    suggesting a role in antioxidant defense?
+- question: What is the oligomeric state of MJ1511? AhpD enzymes typically form trimers
+    or higher-order oligomers.
+- question: Does MJ1511 interact with a peroxiredoxin (AhpC-like) partner in M. jannaschii?
+suggested_experiments:
+- hypothesis: MJ1511 may retain weak peroxidase or disulfide exchange activity despite
+    lacking the canonical CXXC motif.
+  description: Express and purify recombinant MJ1511 and test for peroxidase activity
+    using a FOX assay (ferrous oxidation-xylenol orange) with hydrogen peroxide and
+    alkyl hydroperoxides as substrates, as done for P. aeruginosa AhpD-like protein
+    (PMID:21615954). Also test for thiol-disulfide exchange activity. Include C17S
+    and C107S single mutants to assess the contribution of each cysteine.
+  experiment_type: biochemical assay
+- hypothesis: MJ1511 may have a decarboxylase rather than oxidoreductase function,
+    consistent with the CMD (carboxymuconolactone decarboxylase) family classification.
+  description: Test purified MJ1511 for carboxymuconolactone decarboxylase activity
+    using gamma-carboxymuconolactone as substrate, monitoring decarboxylation spectrophotometrically.
+  experiment_type: enzyme activity assay
+- hypothesis: MJ1511 is expressed under conditions of oxidative stress in M. jannaschii.
+  description: Perform transcriptomic or proteomic analysis of M. jannaschii under
+    oxidative stress conditions (e.g. exposure to oxygen or hydrogen peroxide) and
+    compare MJ1511 expression with control conditions.
+  experiment_type: transcriptomics/proteomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

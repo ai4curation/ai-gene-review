@@ -1,0 +1,3125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>wsc1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>wsc1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P87179" target="_blank" class="term-link">
+                        P87179
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "wsc1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P87179" data-a="DESCRIPTION: Wsc1 is a single-pass transmembrane mechanosensor ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Wsc1 is a single-pass transmembrane mechanosensor in fission yeast that detects mechanical stress at the cell surface and coordinates cell wall repair with polar growth. Its extracellular WSC domain binds cell wall polysaccharides and forms force-dependent clusters at sites of wall compression. Clustering reduces lateral diffusion and is autonomous, independent of polarity machinery or downstream signaling. Through its cytoplasmic tail, Wsc1 recruits the Rho-GEF Rgf2p, which activates Rho1p to stimulate beta-1,3-glucan synthase for wall biosynthesis. Unlike S. cerevisiae Wsc1, the S. pombe Wsc1 signals independently of the MAPK cell integrity pathway. Wsc1 is concentrated at growing cell tips and is functionally redundant with Mtl2 for Rho1 activation, as wsc1-delta mtl2-delta double mutants are lethal.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903338" target="_blank" class="term-link">
+                                    GO:1903338
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell wall organization or biogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P87179" data-a="GO:1903338" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This phylogenetic inference is well-supported by direct experimental evidence in S. pombe. Wsc1 regulates cell wall organization through Rho1-mediated activation of glucan synthase, and wsc1-delta mutants show defective cell wall thickness homeostasis. The IBA annotation duplicates the experimentally supported EXP annotation but is independently correct.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P87179" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is correct but overly general. Wsc1 is a single-pass transmembrane protein localized to the plasma membrane. More specific localization terms (plasma membrane, plasma membrane of cell tip) are annotated with experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23907979
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The fission yeast cell wall stress sensor-like proteins Mtl2...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P87179" data-a="GO:0005886" data-r="PMID:23907979" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Well-supported by GFP-tagged Wsc1 localization in Cruz et al. 2013. Wsc1p-GFP was observed at the cell periphery concentrated at cell tips, confirming plasma membrane localization.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" target="_blank" class="term-link">
+                                        PMID:23907979
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Wsc1p-GFP was concentrated in patches at the cell tips</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34666001
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Detection of surface forces by the cell-wall mechanosensor W...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P87179" data-a="GO:0005886" data-r="PMID:34666001" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Neeli-Venkata et al. 2021 extensively studied Wsc1-GFP dynamics at the plasma membrane, demonstrating force-dependent clustering at the cell surface. Confirms plasma membrane localization with detailed biophysical characterization.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" target="_blank" class="term-link">
+                                        PMID:34666001
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we uncovered the formation of micrometer-sized clusters at sites of force application onto the CW</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031520" target="_blank" class="term-link">
+                                    GO:0031520
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane of cell tip</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23907979
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The fission yeast cell wall stress sensor-like proteins Mtl2...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P87179" data-a="GO:0031520" data-r="PMID:23907979" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cruz et al. 2013 showed Wsc1p-GFP concentrated in patches specifically at cell tips, which is the site of polarized growth in fission yeast. This specific localization is functionally significant because it positions the mechanosensor where wall expansion and remodeling are most active.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" target="_blank" class="term-link">
+                                        PMID:23907979
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Wsc1p-GFP was concentrated in patches at the cell tips</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140897" target="_blank" class="term-link">
+                                    GO:0140897
+                                </a>
+                            </span>
+                            <span class="term-label">mechanoreceptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34666001
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Detection of surface forces by the cell-wall mechanosensor W...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P87179" data-a="GO:0140897" data-r="PMID:34666001" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function annotation for Wsc1. Neeli-Venkata et al. 2021 provided direct biophysical evidence that Wsc1 detects mechanical forces by forming dose-dependent clusters at sites of cell wall compression, with disassembly upon relaxation. The WSC domain binds cell wall polysaccharides and reduces lateral diffusivity under stress, functioning as an autonomous mechanosensing module.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" target="_blank" class="term-link">
+                                        PMID:34666001
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Clusters assembled within minutes of CW compression, in dose dependence with mechanical stress and disassembled upon relaxation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" target="_blank" class="term-link">
+                                        PMID:34666001
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Wsc1 may represent an autonomous module to detect and transduce local surface forces onto the CW</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SCHPO/wsc1/wsc1-deep-research-bioreason.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">A single-pass plasma membrane receptor in fission yeast that uses an extracellular carbohydrate-binding module to sense mechanical strain at growth sites</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050982" target="_blank" class="term-link">
+                                    GO:0050982
+                                </a>
+                            </span>
+                            <span class="term-label">detection of mechanical stimulus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34666001
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Detection of surface forces by the cell-wall mechanosensor W...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P87179" data-a="GO:0050982" data-r="PMID:34666001" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Well-supported by Neeli-Venkata et al. 2021 who demonstrated that Wsc1 detects mechanical forces applied to the cell wall. Wsc1 clusters form at sites of compression within minutes and scale with the magnitude of applied force. This is a core biological process directly linked to the mechanoreceptor molecular function.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" target="_blank" class="term-link">
+                                        PMID:34666001
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Clusters assembled within minutes of CW compression, in dose dependence with mechanical stress and disassembled upon relaxation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903338" target="_blank" class="term-link">
+                                    GO:1903338
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell wall organization or biogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29689193" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29689193
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mechanosensation Dynamically Coordinates Polar Growth and Ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P87179" data-a="GO:1903338" data-r="PMID:29689193" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Davi et al. 2018 demonstrated that mechanosensing through the CWI pathway mediates a feedback loop controlling cell wall thickness homeostasis. wsc1-delta mutants were defective in this thickness homeostasis and lysed by wall rupture. This establishes Wsc1 as essential for regulating cell wall assembly in coordination with growth.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29689193" target="_blank" class="term-link">
+                                        PMID:29689193
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This feedback was mediated by mechanosensing through the CW integrity pathway, which probes strain in the wall to adjust synthase localization and activity to surface growth</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29689193" target="_blank" class="term-link">
+                                        PMID:29689193
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mutants defective in thickness homeostasis lysed by rupturing the wall</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21832151" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21832151
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Endocytosis is essential for dynamic translocation of a synt...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P87179" data-a="GO:0005886" data-r="PMID:21832151" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Kashiwazaki et al. 2011 is a study of syntaxin Psy1 relocalization during meiosis. Wsc1 (SPBC30B4.01c) appears in Table 3 as one of many plasma membrane proteins surveyed for localization during meiosis. Wsc1 was confirmed at the plasma membrane during vegetative growth using GFP-tagging. This is secondary data confirming PM localization.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21832151" target="_blank" class="term-link">
+                                        PMID:21832151
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SPBC30B4.01cwsc1+Transmembrane receptor1PMZK373</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007166" target="_blank" class="term-link">
+                                    GO:0007166
+                                </a>
+                            </span>
+                            <span class="term-label">cell surface receptor signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000111
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P87179" data-a="GO:0007166" data-r="GO_REF:0000111" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IC annotation infers involvement in cell surface receptor signaling pathway based on sequence similarity evidence for signal transduction receptor activity (GO:0004888). The inference is reasonable given that Wsc1 is a transmembrane receptor that signals through Rgf2/Rho1 to activate glucan synthase. However, the specific downstream pathway in S. pombe differs from the canonical CWI MAPK pathway seen in S. cerevisiae.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" target="_blank" class="term-link">
+                                        PMID:23907979
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">signaling from Wsc1p and Rgf2p through Rho1p to activate glucan synthase (GS)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035556" target="_blank" class="term-link">
+                                    GO:0035556
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P87179" data-a="GO:0035556" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This ISO annotation transfers from S. cerevisiae Slg1/Wsc1 (SGD:S000005534). While S. pombe Wsc1 does participate in intracellular signal transduction through the Rgf2-&gt;Rho1-&gt;GS pathway, this term is quite broad. The specific signaling mechanism in S. pombe differs from S. cerevisiae (no MAPK pathway involvement). Acceptable as a general annotation.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" target="_blank" class="term-link">
+                                        PMID:23907979
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">signaling from Wsc1p and Rgf2p through Rho1p to activate glucan synthase (GS)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mechanosensing at the cell surface through force-dependent clustering mediated by WSC domain binding to cell wall polysaccharides, detecting mechanical strain during polar growth and stress</h3>
+                <span class="vote-buttons" data-g="P87179" data-a="FUNCTION: Mechanosensing at the cell surface through force-d..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140897" target="_blank" class="term-link">
+                            mechanoreceptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050982" target="_blank" class="term-link">
+                                detection of mechanical stimulus
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903338" target="_blank" class="term-link">
+                                regulation of cell wall organization or biogenesis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031520" target="_blank" class="term-link">
+                                plasma membrane of cell tip
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" target="_blank" class="term-link">
+                                PMID:34666001
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Wsc1 accumulates to sites of enhanced mechanical stress through reduced lateral diffusivity, mediated by the binding of its extracellular WSC domain to CW polysaccharides</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29689193" target="_blank" class="term-link">
+                                PMID:29689193
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">This feedback was mediated by mechanosensing through the CW integrity pathway, which probes strain in the wall to adjust synthase localization and activity to surface growth</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Activation of Rho1 GTPase through recruitment of the Rho-GEF Rgf2, coupling mechanosensing to beta-1,3-glucan synthase activation for cell wall biosynthesis and repair</h3>
+                <span class="vote-buttons" data-g="P87179" data-a="FUNCTION: Activation of Rho1 GTPase through recruitment of t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140897" target="_blank" class="term-link">
+                            mechanoreceptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007166" target="_blank" class="term-link">
+                                cell surface receptor signaling pathway
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903338" target="_blank" class="term-link">
+                                regulation of cell wall organization or biogenesis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031520" target="_blank" class="term-link">
+                                plasma membrane of cell tip
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" target="_blank" class="term-link">
+                                PMID:23907979
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">signaling from Wsc1p and Rgf2p through Rho1p to activate glucan synthase (GS)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" target="_blank" class="term-link">
+                                PMID:23907979
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">wsc1Δ and mtl2Δ cells showed a low level of Rho1p-GTP under cell wall stress</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000111.md" target="_blank" class="term-link">
+                            GO_REF:0000111
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotations Inferred by Curator (IC) using at least one Inferred by Sequence Similarity (ISS) annotation to support the inference</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10759889" target="_blank" class="term-link">
+                            PMID:10759889
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Large-scale screening of intracellular protein localization in living fission yeast cells by the use of a GFP-fusion genomic DNA library.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Early GFP-fusion library screening identified Wsc1 as a membrane-associated protein in S. pombe</div>
+                        
+                        <div class="finding-text">"microscopic screening of 49 845 transformants yielded 6954 transformants which exhibited GFP fluorescence"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15948957" target="_blank" class="term-link">
+                            PMID:15948957
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Protein O-mannosylation is crucial for cell wall integrity, septation and viability in fission yeast.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Wsc1 is O-mannosylated, which contributes to the rigidity and function of its extracellular Ser/Thr-rich region</div>
+                        
+                        <div class="finding-text">"a lack of O-mannosylation results in abnormal cell wall and septum formation, thereby severely affecting cell morphology and cell-cell separation"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18257517" target="_blank" class="term-link">
+                            PMID:18257517
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Phosphoproteome analysis of fission yeast.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Wsc1 is phosphorylated at Ser-354 in the cytoplasmic tail, identified by mass spectrometry in a large-scale phosphoproteome analysis</div>
+                        
+                        <div class="finding-text">"2887 distinct phosphorylation sites were identified from 1194 proteins with an estimated false-discovery rate of &lt;0.5% at the peptide level"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21832151" target="_blank" class="term-link">
+                            PMID:21832151
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Endocytosis is essential for dynamic translocation of a syntaxin 1 orthologue during fission yeast meiosis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Wsc1 was confirmed as a plasma membrane protein during vegetative growth in a global survey of PM protein localization during meiosis</div>
+                        
+                        <div class="finding-text">"SPBC30B4.01cwsc1+Transmembrane receptor1PMZK373"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" target="_blank" class="term-link">
+                            PMID:23907979
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The fission yeast cell wall stress sensor-like proteins Mtl2 and Wsc1 act by turning on the GTPase Rho1p but act independently of the cell wall integrity pathway.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Wsc1p-GFP localizes to patches at cell tips and interacts with the Rho-GEF Rgf2p</div>
+                        
+                        <div class="finding-text">"Wsc1p-GFP was concentrated in patches at the cell tips, it interacted with the Rho-GEF Rgf2p"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Wsc1 overexpression activates cell wall biosynthesis</div>
+                        
+                        <div class="finding-text">"its overexpression activated cell wall biosynthesis"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">wsc1-delta is viable but wsc1-delta mtl2-delta double deletion is lethal, rescued by Rho1 or GEF overexpression</div>
+                        
+                        <div class="finding-text">"Each gene could be deleted individually without affecting viability, but the deletion of both was lethal and this phenotype was rescued by overexpression of the genes encoding either Rho1p or its GDP/GTP exchange factors (GEFs)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Wsc1 signals through Rgf2-&gt;Rho1-&gt;glucan synthase, independently of the MAPK Pmk1 cell integrity pathway</div>
+                        
+                        <div class="finding-text">"the second one implicates signaling from Wsc1p and Rgf2p through Rho1p to activate glucan synthase (GS)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">wsc1-delta and mtl2-delta cells show reduced Rho1p-GTP levels under cell wall stress</div>
+                        
+                        <div class="finding-text">"wsc1Δ and mtl2Δ cells showed a low level of Rho1p-GTP under cell wall stress"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29689193" target="_blank" class="term-link">
+                            PMID:29689193
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mechanosensation Dynamically Coordinates Polar Growth and Cell Wall Assembly to Promote Cell Survival.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cell wall thickness homeostasis at growing tips is mediated by mechanosensing through the CWI pathway, and wsc1 mutants are defective in this homeostasis and lyse</div>
+                        
+                        <div class="finding-text">"This feedback was mediated by mechanosensing through the CW integrity pathway, which probes strain in the wall to adjust synthase localization and activity to surface growth ...Mutants defective in thickness homeostasis lysed by rupturing the wall"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" target="_blank" class="term-link">
+                            PMID:34666001
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Detection of surface forces by the cell-wall mechanosensor Wsc1 in yeast.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Wsc1 forms micrometer-sized clusters at sites of mechanical force application on the cell wall within minutes, in dose-dependence with stress magnitude</div>
+                        
+                        <div class="finding-text">"we uncovered the formation of micrometer-sized clusters at sites of force application onto the CW. Clusters assembled within minutes of CW compression, in dose dependence with mechanical stress and disassembled upon relaxation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Wsc1 clustering is mediated by reduced lateral diffusivity through WSC domain binding to CW polysaccharides, independent of polarity and downstream pathways</div>
+                        
+                        <div class="finding-text">"Wsc1 accumulates to sites of enhanced mechanical stress through reduced lateral diffusivity, mediated by the binding of its extracellular WSC domain to CW polysaccharides, independent of canonical polarity, trafficking, and downstream CW regulatory pathways"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Wsc1 functions as an autonomous mechanosensing module</div>
+                        
+                        <div class="finding-text">"Wsc1 may represent an autonomous module to detect and transduce local surface forces onto the CW"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SCHPO/wsc1/wsc1-deep-research-bioreason.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BioReason deep research on wsc1</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SCHPO/wsc1/wsc1-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Research notes on wsc1</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the phosphorylation at Ser-354 in the Wsc1 cytoplasmic tail regulate its interaction with Rgf2 or its signaling output?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Yolanda Sanchez, Nicolas Minc</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P87179" data-a="Q: Does the phosphorylation at Ser-354 in the Wsc1 cy..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relationship between Wsc1 clustering dynamics and Rho1 activation kinetics at growing tips?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Nicolas Minc, Ramakanth Neeli-Venkata</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P87179" data-a="Q: What is the relationship between Wsc1 clustering d..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Wsc1 have additional downstream effectors beyond the Rgf2-Rho1-glucan synthase pathway, particularly under specific stress conditions?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Yolanda Sanchez, Patricia Garcia</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P87179" data-a="Q: Does Wsc1 have additional downstream effectors bey..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> FRAP and single-molecule tracking of Wsc1-GFP in rgf2-delta and rho1 temperature-sensitive mutants to determine if downstream signaling feeds back on Wsc1 clustering dynamics</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: live-cell imaging</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P87179" data-a="EXPERIMENT: FRAP and single-molecule tracking of Wsc1-GFP in r..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Phosphomimetic (S354D) and phospho-dead (S354A) mutations in Wsc1 to test whether cytoplasmic tail phosphorylation affects Rgf2 interaction or glucan synthase activation</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: site-directed mutagenesis and biochemistry</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P87179" data-a="EXPERIMENT: Phosphomimetic (S354D) and phospho-dead (S354A) mu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation or proximity labeling (BioID) of Wsc1 cytoplasmic tail to identify additional interacting partners beyond Rgf2</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P87179" data-a="EXPERIMENT: Co-immunoprecipitation or proximity labeling (BioI..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(wsc1-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P87179" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="o">---</span>
+<span class="nx">provider</span><span class="p">:</span><span class="w"> </span><span class="nx">bioreason</span><span class="o">-</span><span class="nx">pro</span>
+<span class="nx">model</span><span class="p">:</span><span class="w"> </span><span class="nx">SFT</span>
+<span class="nx">source</span><span class="p">:</span><span class="w"> </span><span class="nx">huggingface</span><span class="p">.</span><span class="nx">co</span><span class="o">/</span><span class="nx">datasets</span><span class="o">/</span><span class="nx">wanglab</span><span class="o">/</span><span class="nx">protein_catalogue</span>
+<span class="nx">date</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;</span><span class="mi">2026</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">04</span><span class="err">&#39;</span>
+<span class="nx">uniprot_id</span><span class="p">:</span><span class="w"> </span><span class="nx">P87179</span>
+<span class="nx">gene</span><span class="p">:</span><span class="w"> </span><span class="nx">wsc1</span>
+<span class="nx">organism</span><span class="p">:</span><span class="w"> </span><span class="nx">Schizosaccharomyces</span><span class="w"> </span><span class="nx">pombe</span><span class="w"> </span><span class="p">(</span><span class="nx">strain</span><span class="w"> </span><span class="mi">972</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">ATCC</span><span class="w"> </span><span class="mi">24843</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">Fission</span><span class="w"> </span><span class="nx">yeast</span><span class="p">)</span>
+<span class="o">---</span>
+
+<span class="err">##</span><span class="w"> </span><span class="nx">Thinking</span><span class="w"> </span><span class="nx">Trace</span>
+
+<span class="nx">I</span><span class="w"> </span><span class="nx">begin</span><span class="w"> </span><span class="nx">with</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">InterPro</span><span class="w"> </span><span class="nx">architecture</span><span class="p">.</span><span class="w"> </span><span class="nx">Two</span><span class="w"> </span><span class="nx">overlapping</span><span class="w"> </span><span class="nx">carbohydrate</span><span class="o">-</span><span class="nx">binding</span><span class="w"> </span><span class="nx">signatures</span><span class="p">,</span><span class="w"> </span><span class="nx">IPR002889</span><span class="w"> </span><span class="p">(</span><span class="nx">Carbohydrate</span><span class="o">-</span><span class="nx">binding</span><span class="w"> </span><span class="nx">WSC</span><span class="w"> </span><span class="nx">domain</span><span class="p">,</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">31</span><span class="err">–</span><span class="mi">119</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">36</span><span class="err">–</span><span class="mi">109</span><span class="p">),</span><span class="w"> </span><span class="nx">occupy</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">N</span><span class="o">-</span><span class="nx">terminal</span><span class="w"> </span><span class="nx">region</span><span class="p">,</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">these</span><span class="w"> </span><span class="nx">are</span><span class="w"> </span><span class="nx">embedded</span><span class="w"> </span><span class="nx">within</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">broader</span><span class="w"> </span><span class="nx">family</span><span class="w"> </span><span class="nx">assignment</span><span class="p">,</span><span class="w"> </span><span class="nx">IPR051836</span><span class="w"> </span><span class="p">(</span><span class="nx">Kremen</span><span class="w"> </span><span class="nx">receptor</span><span class="w"> </span><span class="nx">family</span><span class="p">,</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">36</span><span class="err">–</span><span class="mi">273</span><span class="p">).</span><span class="w"> </span><span class="nx">The</span><span class="w"> </span><span class="nx">WSC</span><span class="w"> </span><span class="nx">domain</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">cysteine</span><span class="o">-</span><span class="nx">rich</span><span class="p">,</span><span class="w"> </span><span class="nx">extracellular</span><span class="w"> </span><span class="nx">module</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">binds</span><span class="w"> </span><span class="nx">cell</span><span class="w"> </span><span class="nx">wall</span><span class="w"> </span><span class="nx">polysaccharides</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">senses</span><span class="w"> </span><span class="nx">mechanical</span><span class="w"> </span><span class="nx">strain</span><span class="w"> </span><span class="nx">transmitted</span><span class="w"> </span><span class="nx">through</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">cell</span><span class="w"> </span><span class="nx">wall</span><span class="err">–</span><span class="nx">plasma</span><span class="w"> </span><span class="nx">membrane</span><span class="w"> </span><span class="kd">interface</span><span class="p">.</span><span class="w"> </span><span class="nx">Its</span><span class="w"> </span><span class="nx">placement</span><span class="w"> </span><span class="nx">at</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">N</span><span class="o">-</span><span class="nx">terminus</span><span class="w"> </span><span class="nx">implies</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">luminal</span><span class="o">/</span><span class="nx">extracellular</span><span class="w"> </span><span class="nx">position</span><span class="p">,</span><span class="w"> </span><span class="nx">consistent</span><span class="w"> </span><span class="nx">with</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">single</span><span class="o">-</span><span class="nx">pass</span><span class="w"> </span><span class="k">type</span><span class="w"> </span><span class="nx">I</span><span class="w"> </span><span class="nx">topology</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">which</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">N</span><span class="o">-</span><span class="nx">terminus</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="nx">outside</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">C</span><span class="o">-</span><span class="nx">terminus</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="nx">cytosolic</span><span class="p">.</span><span class="w"> </span><span class="nx">The</span><span class="w"> </span><span class="nx">Kremen</span><span class="w"> </span><span class="nx">receptor</span><span class="w"> </span><span class="nx">family</span><span class="w"> </span><span class="nx">signature</span><span class="w"> </span><span class="nx">further</span><span class="w"> </span><span class="nx">supports</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">receptor</span><span class="o">-</span><span class="k">like</span><span class="w"> </span><span class="nx">scaffold</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">couples</span><span class="w"> </span><span class="nx">an</span><span class="w"> </span><span class="nx">extracellular</span><span class="w"> </span><span class="nx">ligand</span><span class="o">/</span><span class="nx">mechanosensor</span><span class="w"> </span><span class="nx">module</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">intracellular</span><span class="w"> </span><span class="nx">signaling</span><span class="p">.</span><span class="w"> </span><span class="nx">This</span><span class="w"> </span><span class="nx">domain</span><span class="w"> </span><span class="nx">order</span><span class="err">—</span><span class="nx">extracellular</span><span class="w"> </span><span class="nx">WSC</span><span class="w"> </span><span class="nx">followed</span><span class="w"> </span><span class="nx">by</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">transmembrane</span><span class="w"> </span><span class="nx">segment</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">cytosolic</span><span class="w"> </span><span class="nx">tail</span><span class="err">—</span><span class="nx">causally</span><span class="w"> </span><span class="nx">establishes</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">transmembrane</span><span class="w"> </span><span class="nx">signaling</span><span class="w"> </span><span class="nx">receptor</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">detects</span><span class="w"> </span><span class="nx">extracellular</span><span class="w"> </span><span class="nx">cues</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">transduces</span><span class="w"> </span><span class="nx">them</span><span class="w"> </span><span class="nx">across</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">membrane</span><span class="p">.</span>
+</code></pre></div>
+
+<p>From this architecture, the molecular function resolves to GO:0004888 transmembrane signaling receptor activity. The WSC domain’s affinity for carbohydrate matrices and its known role in strain sensing explains how the receptor detects mechanical perturbations at the cell surface. Mechanical deformation of the cell wall–membrane interface would be captured by the WSC domain, triggering conformational changes that propagate through the single-pass helix to the cytosolic tail.</p>
+<p>This receptor activity drives a cell surface receptor signaling pathway (GO:0007166). In fission yeast, cell wall integrity signaling is executed by a Rho1-centered cascade that culminates in a MAP kinase. The presence of interaction partners Rho1 guanine nucleotide exchange factor 1 and 2, GTP-binding protein Rho1, Protein kinase C-like 2, and MAP kinase kinase skh1/pek1 maps precisely onto the canonical cell wall integrity (CWI) module: the receptor activates Rho1 via its GEFs, Rho1 engages Protein kinase C-like 2, and PKC-like 2 activates the MAPKK Skh1/Pek1, which then phosphorylates downstream effectors. This chain of activation explains how the receptor’s extracellular sensing causes intracellular kinase signaling. Because the WSC domain detects strain, the process-level consequence is detection of mechanical stimulus (GO:0050982), which is converted into kinase signaling that remodels the cell wall and stabilizes the cortex. Sustained CWI signaling also buffers stress-induced apoptosis-like and necrotic pathways; thus, by maintaining wall integrity and kinase activity, the receptor contributes to negative regulation of necrotic cell death (GO:0060547).</p>
+<p>The cellular component follows from the topology and the role in polarized growth. A single-pass type I receptor with an extracellular WSC domain must be an integral membrane protein, and in fission yeast, CWI signaling is concentrated at growth sites. Therefore, the protein resides at the plasma membrane of the cell tip (GO:0031520), where polarized exocytosis and wall synthesis occur, and it is an integral component of membrane (GO:0016021). The tip localization ensures that mechanical cues specific to elongation and septation are sensed where wall remodeling is most active.</p>
+<p>Mechanistically, the extracellular WSC domain binds cell wall carbohydrates and experiences force under wall stress or growth-driven tension. This mechanical load stabilizes receptor dimerization/oligomerization, which promotes recruitment or activation of Rho1 GEFs at the cytosolic tail, switching Rho1 to its GTP-bound state. Activated Rho1 engages Protein kinase C-like 2, which in turn activates the MAPKK Skh1/Pek1, driving downstream transcriptional and enzymatic programs that reinforce the wall and maintain ion/osmotic balance. Through this signaling, the receptor prevents catastrophic wall rupture and dampens necrotic death pathways. The observed partners—Rho1 GEFs, Rho1, Protein kinase C-like 2, and Skh1/Pek1—fit this mechanism as direct or proximal transducers, while the uncharacterized aminotransferase C6B12.04c may modulate local metabolite pools that influence cell wall biosynthesis or stress responses at the tip.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">## Functional Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">single</span><span class="o">-</span><span class="k">pass</span><span class="w"> </span><span class="n">plasma</span><span class="w"> </span><span class="n">membrane</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">fission</span><span class="w"> </span><span class="n">yeast</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">uses</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">extracellular</span><span class="w"> </span><span class="n">carbohydrate</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">sense</span><span class="w"> </span><span class="n">mechanical</span><span class="w"> </span><span class="n">strain</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">growth</span><span class="w"> </span><span class="n">sites</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">transmit</span><span class="w"> </span><span class="n">this</span><span class="w"> </span><span class="n">information</span><span class="w"> </span><span class="n">across</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">membrane</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">Rho1</span><span class="o">-</span><span class="n">centered</span><span class="w"> </span><span class="n">kinase</span><span class="w"> </span><span class="n">cascade</span><span class="o">.</span><span class="w"> </span><span class="n">By</span><span class="w"> </span><span class="n">activating</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">kinase</span><span class="w"> </span><span class="n">C</span><span class="err">–</span><span class="n">MAP</span><span class="w"> </span><span class="n">kinase</span><span class="w"> </span><span class="n">pathway</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">maintains</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="n">wall</span><span class="w"> </span><span class="n">integrity</span><span class="p">,</span><span class="w"> </span><span class="n">supports</span><span class="w"> </span><span class="n">polarized</span><span class="w"> </span><span class="n">growth</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="n">tip</span><span class="p">,</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">restrains</span><span class="w"> </span><span class="n">stress</span><span class="o">-</span><span class="n">induced</span><span class="w"> </span><span class="n">necrotic</span><span class="w"> </span><span class="n">death</span><span class="o">.</span>
+
+<span class="c1">## UniProt Summary</span>
+
+<span class="n">Cell</span><span class="w"> </span><span class="n">membrane</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">activates</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="n">wall</span><span class="w"> </span><span class="n">integrity</span><span class="w"> </span><span class="p">(</span><span class="n">CWI</span><span class="p">)</span><span class="w"> </span><span class="n">signaling</span><span class="w"> </span><span class="n">pathway</span><span class="w"> </span><span class="n">involving</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">PKC1</span><span class="o">/</span><span class="n">PEK1</span><span class="o">/</span><span class="n">PEK2</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">RHO1</span><span class="w"> </span><span class="n">proteins</span><span class="o">.</span><span class="w"> </span><span class="n">Required</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="n">wall</span><span class="w"> </span><span class="n">integrity</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="n">growth</span><span class="o">.</span><span class="w"> </span><span class="n">May</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">involved</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">control</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">apoptosis</span><span class="o">.</span>
+
+<span class="c1">## InterPro Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="n">IPR002889</span><span class="p">:</span><span class="w"> </span><span class="n">Carbohydrate</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">WSC</span><span class="w"> </span><span class="p">(</span><span class="n">domain</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">31</span><span class="o">-</span><span class="mi">119</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR002889</span><span class="p">:</span><span class="w"> </span><span class="n">Carbohydrate</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">WSC</span><span class="w"> </span><span class="p">(</span><span class="n">domain</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">36</span><span class="o">-</span><span class="mi">109</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR051836</span><span class="p">:</span><span class="w"> </span><span class="n">Kremen</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">36</span><span class="o">-</span><span class="mi">273</span><span class="p">]</span>
+
+<span class="c1">## GO Term Predictions</span>
+
+<span class="c1">### Molecular Function</span>
+
+
+<span class="c1">### Biological Process</span>
+
+
+<span class="c1">### Cellular Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(wsc1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P87179" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="wsc1-s-pombe-research-notes">Wsc1 (S. pombe) - Research Notes</h1>
+<h2 id="gene-overview">Gene Overview</h2>
+<ul>
+<li>UniProt: P87179</li>
+<li>Gene: wsc1 (SPBC30B4.01c)</li>
+<li>Organism: Schizosaccharomyces pombe (strain 972 / ATCC 24843)</li>
+<li>Full name: Cell wall integrity and stress response component 1</li>
+<li>374 AA, single-pass type I transmembrane protein with N-terminal signal peptide</li>
+</ul>
+<h2 id="domain-architecture">Domain Architecture</h2>
+<ul>
+<li><strong>WSC domain</strong> (aa 31-119): Cysteine-rich extracellular carbohydrate-binding domain. Binds cell wall polysaccharides and mediates mechanosensing <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" title="Wsc1 accumulates to sites of enhanced mechanical stress through reduced lateral diffusivity, mediated by the binding of its extracellular WSC domain to CW polysaccharides">PMID:34666001</a></li>
+<li><strong>Ser/Thr-rich region</strong> (aa ~132-236): Heavily O-mannosylated, disordered region that likely functions as a rigid rod-like spacer in the periplasm [PMID:15948957, O-mannosylation confirmed]</li>
+<li><strong>Transmembrane helix</strong> (aa 293-313): Single-pass membrane anchor</li>
+<li><strong>Cytoplasmic tail</strong> (aa 314-374): Short cytoplasmic domain; contains phosphoserine at Ser354 <a href="https://pubmed.ncbi.nlm.nih.gov/18257517">PMID:18257517</a></li>
+<li>InterPro: IPR002889 (WSC carbohydrate-binding domain), IPR051836 (Kremen receptor family)</li>
+<li>PANTHER: PTHR24269:SF16 (Protein SLG1 subfamily)</li>
+</ul>
+<h2 id="key-literature-findings">Key Literature Findings</h2>
+<h3 id="pmid23907979-cruz-et-al-2013-microbiologyopen">PMID:23907979 - Cruz et al. 2013 (MicrobiologyOpen)</h3>
+<p>"The fission yeast cell wall stress sensor-like proteins Mtl2 and Wsc1 act by turning on the GTPase Rho1p but act independently of the cell wall integrity pathway."</p>
+<p>Key findings for Wsc1:<br />
+1. Wsc1p-GFP localizes to patches at cell tips <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" title="Wsc1p-GFP was concentrated in patches at the cell tips">PMID:23907979</a><br />
+2. Wsc1p interacts with Rho-GEF Rgf2p <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" title="it interacted with the Rho-GEF Rgf2p">PMID:23907979</a><br />
+3. Overexpression activates cell wall biosynthesis <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" title="its overexpression activated cell wall biosynthesis">PMID:23907979</a><br />
+4. Single deletion (wsc1-delta) is viable but double deletion with mtl2 is lethal <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" title="Each gene could be deleted individually without affecting viability, but the deletion of both was lethal">PMID:23907979</a><br />
+5. Rescued by overexpression of Rho1 or its GEFs <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" title="this phenotype was rescued by overexpression of the genes encoding either Rho1p or its GDP/GTP exchange factors (GEFs)">PMID:23907979</a><br />
+6. wsc1-delta shows low Rho1p-GTP under cell wall stress <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" title="wsc1-delta and mtl2-delta cells showed a low level of Rho1p-GTP under cell wall stress">PMID:23907979</a><br />
+7. Two separate signaling branches: Wsc1-&gt;Rgf2-&gt;Rho1-&gt;glucan synthase (GS); Mtl2-&gt;Rho1-&gt;Pck1 <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" title="signaling from Wsc1p and Rgf2p through Rho1p to activate glucan synthase (GS)">PMID:23907979</a><br />
+8. CRITICAL: MAPK Pmk1p pathway remains active in wsc1-delta, meaning Wsc1 acts INDEPENDENTLY of the canonical CWI MAPK pathway <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" title="signaling through the mitogen-activated protein kinase (MAPK) Pmk1p remained active in mtl2-delta and wsc1-delta disruptants exposed to cell wall stress">PMID:23907979</a></p>
+<h3 id="pmid34666001-neeli-venkata-et-al-2021-dev-cell">PMID:34666001 - Neeli-Venkata et al. 2021 (Dev Cell)</h3>
+<p>"Detection of surface forces by the cell-wall mechanosensor Wsc1 in yeast."</p>
+<p>Key findings:<br />
+1. Wsc1 forms micrometer-sized clusters at sites of force application on cell wall <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" title="we uncovered the formation of micrometer-sized clusters at sites of force application onto the CW">PMID:34666001</a><br />
+2. Clusters assemble within minutes of CW compression in dose-dependence with mechanical stress <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" title="Clusters assembled within minutes of CW compression, in dose dependence with mechanical stress">PMID:34666001</a><br />
+3. Clusters disassemble upon relaxation <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" title="disassembled upon relaxation">PMID:34666001</a><br />
+4. Clustering mechanism: reduced lateral diffusivity via WSC domain binding to CW polysaccharides <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" title="Wsc1 accumulates to sites of enhanced mechanical stress through reduced lateral diffusivity, mediated by the binding of its extracellular WSC domain to CW polysaccharides">PMID:34666001</a><br />
+5. Clustering is independent of canonical polarity, trafficking, and downstream CW regulatory pathways <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" title="independent of canonical polarity, trafficking, and downstream CW regulatory pathways">PMID:34666001</a><br />
+6. Wsc1 functions as an autonomous mechanosensing module <a href="https://pubmed.ncbi.nlm.nih.gov/34666001" title="Wsc1 may represent an autonomous module to detect and transduce local surface forces onto the CW">PMID:34666001</a></p>
+<h3 id="pmid29689193-davi-et-al-2018-dev-cell">PMID:29689193 - Davi et al. 2018 (Dev Cell)</h3>
+<p>"Mechanosensation Dynamically Coordinates Polar Growth and Cell Wall Assembly to Promote Cell Survival."</p>
+<p>Key findings:<br />
+1. CW thickness at growing tips fluctuates with homeostatic feedback <a href="https://pubmed.ncbi.nlm.nih.gov/29689193" title="Thickness at growing tips exhibited a fluctuating behavior with thickening phases followed by thinning phases, indicative of a delayed feedback promoting thickness homeostasis">PMID:29689193</a><br />
+2. This feedback is mediated by mechanosensing through the CWI pathway <a href="https://pubmed.ncbi.nlm.nih.gov/29689193" title="This feedback was mediated by mechanosensing through the CW integrity pathway, which probes strain in the wall to adjust synthase localization and activity to surface growth">PMID:29689193</a><br />
+3. wsc1-delta mutants defective in thickness homeostasis lyse by wall rupture <a href="https://pubmed.ncbi.nlm.nih.gov/29689193" title="Mutants defective in thickness homeostasis lysed by rupturing the wall">PMID:29689193</a></p>
+<h3 id="pmid21832151-kashiwazaki-et-al-2011-mol-biol-cell">PMID:21832151 - Kashiwazaki et al. 2011 (Mol Biol Cell)</h3>
+<p>"Endocytosis is essential for dynamic translocation of a syntaxin 1 orthologue during fission yeast meiosis."</p>
+<p>This is not a Wsc1-focused paper. Wsc1 (SPBC30B4.01c) appears in Table 3 as one of many PM proteins surveyed for their localization during meiosis. The paper confirmed Wsc1 plasma membrane localization during vegetative growth via GFP-tagging.</p>
+<h3 id="pmid15948957-willer-et-al-2005-mol-microbiol">PMID:15948957 - Willer et al. 2005 (Mol Microbiol)</h3>
+<p>"Protein O-mannosylation is crucial for cell wall integrity, septation and viability in fission yeast."</p>
+<p>This paper first describes SpWsc1p as an O-mannosylated protein, supporting the structural model that O-mannosylation of the Ser/Thr-rich region contributes to the rod-like rigidity of the ectodomain.</p>
+<h3 id="pmid18257517-wilson-grady-et-al-2008-j-proteome-res">PMID:18257517 - Wilson-Grady et al. 2008 (J Proteome Res)</h3>
+<p>"Phosphoproteome analysis of fission yeast."</p>
+<p>Large-scale phosphoproteome study; identifies phosphoserine at Ser-354 in the cytoplasmic tail of Wsc1. This is potentially important for signal transduction.</p>
+<h2 id="signaling-pathway-summary">Signaling Pathway Summary</h2>
+<p>Based on all literature, the Wsc1 signaling pathway in S. pombe:</p>
+<ol>
+<li>Wsc1 WSC domain binds cell wall polysaccharides</li>
+<li>Under mechanical stress (wall compression/stretching), Wsc1 lateral diffusion is reduced, leading to clustering</li>
+<li>Clustered Wsc1 recruits/activates the Rho-GEF Rgf2p at the cytoplasmic tail</li>
+<li>Rgf2p activates Rho1p (GDP-&gt;GTP exchange)</li>
+<li>Active Rho1p-GTP directly activates beta-1,3-glucan synthase (Bgs complex)</li>
+<li>This promotes cell wall synthesis and repair</li>
+</ol>
+<p>IMPORTANT: Unlike S. cerevisiae Wsc1, S. pombe Wsc1 acts INDEPENDENTLY of the MAPK (Pmk1) cell wall integrity pathway. The BioReason model incorrectly describes signaling through "PKC-like 2 -&gt; MAPKK Skh1/Pek1" as part of the Wsc1 pathway. This is the Mtl2 branch or the general CWI MAPK pathway, not the Wsc1-specific branch.</p>
+<h2 id="notes-on-bioreason-predictions">Notes on BioReason Predictions</h2>
+<ol>
+<li>GO:0004888 (transmembrane signaling receptor activity) - reasonable inference from domain architecture, but the existing curated term GO:0140897 (mechanoreceptor activity) is more specific and experimentally validated</li>
+<li>GO:0060547 (negative regulation of necrotic cell death) - this GO term is OBSOLETE; moreover, there is no direct evidence that Wsc1 regulates necrotic cell death. This appears to be an unsupported extrapolation.</li>
+<li>GO:0016021 (integral component of membrane) - reasonable structural inference but redundant with the more specific GO:0005886 (plasma membrane) and GO:0031520 (plasma membrane of cell tip)</li>
+<li>BioReason correctly identifies the Rho1-centered signaling but incorrectly merges the Wsc1 and Mtl2 branches and adds the PKC-&gt;MAPK cascade that is NOT part of Wsc1 signaling in S. pombe</li>
+<li>BioReason mentions "uncharacterized aminotransferase C6B12.04c" as an interaction partner - this is not validated in the literature</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(wsc1-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P87179" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-wsc1-schizosaccharomyces-pombe">BioReason-Pro SFT Review: wsc1 (Schizosaccharomyces pombe)</h1>
+<p>Source: wsc1-deep-research-bioreason.md</p>
+<ul>
+<li><strong>Correctness</strong>: 3/5</li>
+<li><strong>Completeness</strong>: 3/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason functional summary describes Wsc1 as:</p>
+<blockquote>
+<p>A single-pass plasma membrane receptor in fission yeast that uses an extracellular carbohydrate-binding module to sense mechanical strain at growth sites and transmit this information across the membrane to a Rho1-centered kinase cascade. By activating a protein kinase C-MAP kinase pathway, it maintains cell wall integrity, supports polarized growth at the cell tip, and restrains stress-induced necrotic death.</p>
+</blockquote>
+<p>This summary correctly captures the overall architecture and localization of Wsc1, including the WSC domain, single-pass topology, plasma membrane localization at cell tips, and Rho1-centered signaling. However, it contains several significant errors in the downstream pathway and one unsupported functional claim.</p>
+<p><strong>Correctness issues:</strong></p>
+<ol>
+<li>
+<p><strong>The PKC-MAPK pathway assignment is incorrect for S. pombe Wsc1.</strong> BioReason states Wsc1 activates "a protein kinase C-MAP kinase pathway" involving "Protein kinase C-like 2" and "MAP kinase kinase skh1/pek1." This conflates the Wsc1-specific signaling branch with the general CWI MAPK pathway. Cruz et al. 2013 (PMID:23907979) explicitly demonstrated that MAPK Pmk1p signaling remained active in wsc1-delta disruptants, meaning Wsc1 acts INDEPENDENTLY of the CWI MAPK cascade. The actual Wsc1 pathway is: Wsc1 -&gt; Rgf2 (Rho-GEF) -&gt; Rho1 -&gt; beta-1,3-glucan synthase. The PKC pathway (Mtl2 -&gt; Rho1 -&gt; Pck1) is the parallel Mtl2-specific branch. This is a fundamental pathway-assignment error.</p>
+</li>
+<li>
+<p><strong>"Negative regulation of necrotic cell death" (GO:0060547) is unsupported and uses an obsolete term.</strong> GO:0060547 is listed as obsolete in the Gene Ontology. Moreover, there is no published evidence that S. pombe Wsc1 regulates necrotic cell death. While CWI pathway mutants can undergo lytic death from wall rupture, this is mechanical failure, not regulated necrotic cell death. The claim that Wsc1 "restrains stress-induced necrotic death" is an unsupported extrapolation from the general concept that maintaining wall integrity prevents lysis.</p>
+</li>
+<li>
+<p><strong>GO:0004888 (transmembrane signaling receptor activity) was proposed but the existing curated term GO:0140897 (mechanoreceptor activity) is more specific and experimentally validated.</strong> BioReason defaults to the general receptor term when the curated annotation already captures the specific type of receptor activity.</p>
+</li>
+<li>
+<p><strong>The thinking trace mentions "MAP kinase kinase skh1/pek1" as a direct component of the Wsc1 pathway.</strong> There is no evidence that Wsc1 signals through Skh1/Pek1 in S. pombe. This appears to be transferred from S. cerevisiae Wsc1 biology without recognizing the critical difference demonstrated in Cruz et al. 2013.</p>
+</li>
+<li>
+<p><strong>The mention of "uncharacterized aminotransferase C6B12.04c" as an interaction partner</strong> is not validated in the peer-reviewed literature for Wsc1 function and may come from high-throughput interaction datasets without functional validation.</p>
+</li>
+</ol>
+<p><strong>What BioReason got right:</strong></p>
+<ol>
+<li>The WSC domain architecture and its role in binding cell wall polysaccharides is accurately described.</li>
+<li>The single-pass type I topology with extracellular WSC domain and cytoplasmic signaling tail is correct.</li>
+<li>Rho1 as the central signaling hub is correct.</li>
+<li>Plasma membrane of cell tip localization is correct.</li>
+<li>The general function in cell wall integrity and polarized growth is correct.</li>
+</ol>
+<p><strong>Completeness issues:</strong></p>
+<ol>
+<li>
+<p><strong>No mention of Wsc1 force-dependent clustering.</strong> The key mechanistic insight from Neeli-Venkata et al. 2021 (PMID:34666001) -- that Wsc1 forms micrometer-sized clusters at sites of force application through reduced lateral diffusivity -- is absent. This is the defining mechanistic feature of Wsc1 mechanosensing.</p>
+</li>
+<li>
+<p><strong>No mention of the autonomous nature of Wsc1 mechanosensing.</strong> Neeli-Venkata et al. 2021 showed clustering is independent of canonical polarity, trafficking, and downstream CW regulatory pathways. This is a distinctive property.</p>
+</li>
+<li>
+<p><strong>No mention of cell wall thickness homeostasis.</strong> Davi et al. 2018 (PMID:29689193) demonstrated that Wsc1 mediates a dynamic feedback controlling wall thickness at growing tips, and wsc1 mutants lyse from wall rupture. This directly establishes physiological function.</p>
+</li>
+<li>
+<p><strong>No mention that Wsc1 and Mtl2 are functionally redundant for Rho1 activation.</strong> The synthetic lethality of the double deletion is a key genetic finding.</p>
+</li>
+<li>
+<p><strong>No mention of O-mannosylation</strong> of the Ser/Thr-rich ectodomain, which contributes to the rod-like rigidity of the extracellular domain.</p>
+</li>
+</ol>
+<h2 id="comparison-with-interpro2go">Comparison with InterPro2GO</h2>
+<p>The InterPro annotations for Wsc1 yield:<br />
+- IPR002889 (WSC domain): No direct InterPro2GO mapping to a specific MF term<br />
+- IPR051836 (Kremen receptor family): Broad structural classification</p>
+<p>BioReason adds substantial mechanistic context beyond raw InterPro2GO annotations by correctly inferring receptor-like signaling from the domain architecture. However, the pathway errors (PKC-MAPK attribution) and the unsupported necrotic cell death claim make portions of the BioReason output less accurate than the curated PomBase annotations.</p>
+<h2 id="notes-on-thinking-trace">Notes on Thinking Trace</h2>
+<p>The thinking trace demonstrates competent domain-to-function reasoning from the WSC domain and transmembrane topology. The main weakness is the pathway assignment: the trace constructs a linear cascade (Wsc1 -&gt; Rho1-GEF -&gt; Rho1 -&gt; PKC-like 2 -&gt; MAPKK Skh1/Pek1) that merges the distinct Wsc1 and Mtl2 signaling branches documented in the literature. In S. pombe, the Wsc1-specific output is Rgf2 -&gt; Rho1 -&gt; glucan synthase (not PKC -&gt; MAPK). The PKC branch is the Mtl2 pathway. This error likely stems from over-reliance on S. cerevisiae Wsc1 biology where Wsc1 does signal through PKC/MAPK, without accounting for the documented differences in S. pombe.</p>
+<p>The GO:0060547 prediction for necrotic cell death reveals a tendency to extrapolate from indirect reasoning (wall integrity -&gt; prevents lysis -&gt; prevents necrotic death) without checking whether the GO term is valid or whether experimental evidence supports the claim. The term is in fact obsolete.</p>
+<h2 id="go-term-predictions-assessment">GO Term Predictions Assessment</h2>
+<p>BioReason's deep-research file curiously lists empty GO term predictions under "Molecular Function," "Biological Process," and "Cellular Component" sections, despite the thinking trace discussing specific terms. The predictions are embedded only in the narrative, not in structured form, making systematic evaluation difficult.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P87179
+gene_symbol: wsc1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: Wsc1 is a single-pass transmembrane mechanosensor in fission yeast that detects mechanical
+  stress at the cell surface and coordinates cell wall repair with polar growth. Its extracellular
+  WSC domain binds cell wall polysaccharides and forms force-dependent clusters at sites of wall
+  compression. Clustering reduces lateral diffusion and is autonomous, independent of polarity
+  machinery or downstream signaling. Through its cytoplasmic tail, Wsc1 recruits the Rho-GEF Rgf2p,
+  which activates Rho1p to stimulate beta-1,3-glucan synthase for wall biosynthesis. Unlike
+  S. cerevisiae Wsc1, the S. pombe Wsc1 signals independently of the MAPK cell integrity pathway.
+  Wsc1 is concentrated at growing cell tips and is functionally redundant with Mtl2 for Rho1
+  activation, as wsc1-delta mtl2-delta double mutants are lethal.
+existing_annotations:
+- term:
+    id: GO:1903338
+    label: regulation of cell wall organization or biogenesis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This phylogenetic inference is well-supported by direct experimental evidence in S. pombe.
+      Wsc1 regulates cell wall organization through Rho1-mediated activation of glucan synthase,
+      and wsc1-delta mutants show defective cell wall thickness homeostasis. The IBA annotation
+      duplicates the experimentally supported EXP annotation but is independently correct.
+    action: ACCEPT
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: This IEA annotation is correct but overly general. Wsc1 is a single-pass transmembrane
+      protein localized to the plasma membrane. More specific localization terms (plasma membrane,
+      plasma membrane of cell tip) are annotated with experimental evidence.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:23907979
+  review:
+    summary: Well-supported by GFP-tagged Wsc1 localization in Cruz et al. 2013. Wsc1p-GFP was
+      observed at the cell periphery concentrated at cell tips, confirming plasma membrane localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:23907979
+      supporting_text: Wsc1p-GFP was concentrated in patches at the cell tips
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:34666001
+  review:
+    summary: Neeli-Venkata et al. 2021 extensively studied Wsc1-GFP dynamics at the plasma membrane,
+      demonstrating force-dependent clustering at the cell surface. Confirms plasma membrane
+      localization with detailed biophysical characterization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:34666001
+      supporting_text: we uncovered the formation of micrometer-sized clusters at sites of force
+        application onto the CW
+- term:
+    id: GO:0031520
+    label: plasma membrane of cell tip
+  evidence_type: IDA
+  original_reference_id: PMID:23907979
+  review:
+    summary: Cruz et al. 2013 showed Wsc1p-GFP concentrated in patches specifically at cell tips,
+      which is the site of polarized growth in fission yeast. This specific localization is functionally
+      significant because it positions the mechanosensor where wall expansion and remodeling are
+      most active.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:23907979
+      supporting_text: Wsc1p-GFP was concentrated in patches at the cell tips
+- term:
+    id: GO:0140897
+    label: mechanoreceptor activity
+  evidence_type: EXP
+  original_reference_id: PMID:34666001
+  review:
+    summary: This is the core molecular function annotation for Wsc1. Neeli-Venkata et al. 2021
+      provided direct biophysical evidence that Wsc1 detects mechanical forces by forming
+      dose-dependent clusters at sites of cell wall compression, with disassembly upon relaxation.
+      The WSC domain binds cell wall polysaccharides and reduces lateral diffusivity under stress,
+      functioning as an autonomous mechanosensing module.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:34666001
+      supporting_text: Clusters assembled within minutes of CW compression, in dose dependence
+        with mechanical stress and disassembled upon relaxation
+    - reference_id: PMID:34666001
+      supporting_text: Wsc1 may represent an autonomous module to detect and transduce local surface
+        forces onto the CW
+    - reference_id: file:SCHPO/wsc1/wsc1-deep-research-bioreason.md
+      supporting_text: A single-pass plasma membrane receptor in fission yeast that uses an extracellular
+        carbohydrate-binding module to sense mechanical strain at growth sites
+- term:
+    id: GO:0050982
+    label: detection of mechanical stimulus
+  evidence_type: EXP
+  original_reference_id: PMID:34666001
+  review:
+    summary: Well-supported by Neeli-Venkata et al. 2021 who demonstrated that Wsc1 detects
+      mechanical forces applied to the cell wall. Wsc1 clusters form at sites of compression within
+      minutes and scale with the magnitude of applied force. This is a core biological process
+      directly linked to the mechanoreceptor molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:34666001
+      supporting_text: Clusters assembled within minutes of CW compression, in dose dependence
+        with mechanical stress and disassembled upon relaxation
+- term:
+    id: GO:1903338
+    label: regulation of cell wall organization or biogenesis
+  evidence_type: EXP
+  original_reference_id: PMID:29689193
+  review:
+    summary: Davi et al. 2018 demonstrated that mechanosensing through the CWI pathway mediates
+      a feedback loop controlling cell wall thickness homeostasis. wsc1-delta mutants were defective
+      in this thickness homeostasis and lysed by wall rupture. This establishes Wsc1 as essential
+      for regulating cell wall assembly in coordination with growth.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:29689193
+      supporting_text: This feedback was mediated by mechanosensing through the CW integrity pathway,
+        which probes strain in the wall to adjust synthase localization and activity to surface growth
+    - reference_id: PMID:29689193
+      supporting_text: Mutants defective in thickness homeostasis lysed by rupturing the wall
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:21832151
+  review:
+    summary: Kashiwazaki et al. 2011 is a study of syntaxin Psy1 relocalization during meiosis.
+      Wsc1 (SPBC30B4.01c) appears in Table 3 as one of many plasma membrane proteins surveyed
+      for localization during meiosis. Wsc1 was confirmed at the plasma membrane during vegetative
+      growth using GFP-tagging. This is secondary data confirming PM localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:21832151
+      supporting_text: SPBC30B4.01cwsc1+Transmembrane receptor1PMZK373
+- term:
+    id: GO:0007166
+    label: cell surface receptor signaling pathway
+  evidence_type: IC
+  original_reference_id: GO_REF:0000111
+  review:
+    summary: This IC annotation infers involvement in cell surface receptor signaling pathway based
+      on sequence similarity evidence for signal transduction receptor activity (GO:0004888). The
+      inference is reasonable given that Wsc1 is a transmembrane receptor that signals through
+      Rgf2/Rho1 to activate glucan synthase. However, the specific downstream pathway in S. pombe
+      differs from the canonical CWI MAPK pathway seen in S. cerevisiae.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:23907979
+      supporting_text: signaling from Wsc1p and Rgf2p through Rho1p to activate glucan synthase (GS)
+- term:
+    id: GO:0035556
+    label: intracellular signal transduction
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: This ISO annotation transfers from S. cerevisiae Slg1/Wsc1 (SGD:S000005534). While
+      S. pombe Wsc1 does participate in intracellular signal transduction through the Rgf2-&gt;Rho1-&gt;GS
+      pathway, this term is quite broad. The specific signaling mechanism in S. pombe differs from
+      S. cerevisiae (no MAPK pathway involvement). Acceptable as a general annotation.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:23907979
+      supporting_text: signaling from Wsc1p and Rgf2p through Rho1p to activate glucan synthase (GS)
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000111
+  title: Gene Ontology annotations Inferred by Curator (IC) using at least one Inferred
+    by Sequence Similarity (ISS) annotation to support the inference
+  findings: []
+- id: PMID:10759889
+  title: Large-scale screening of intracellular protein localization in living fission
+    yeast cells by the use of a GFP-fusion genomic DNA library.
+  findings:
+  - statement: Early GFP-fusion library screening identified Wsc1 as a membrane-associated protein
+      in S. pombe
+    supporting_text: microscopic screening of 49 845 transformants yielded 6954 transformants which
+      exhibited GFP fluorescence
+- id: PMID:15948957
+  title: Protein O-mannosylation is crucial for cell wall integrity, septation and
+    viability in fission yeast.
+  full_text_unavailable: true
+  findings:
+  - statement: Wsc1 is O-mannosylated, which contributes to the rigidity and function of its
+      extracellular Ser/Thr-rich region
+    supporting_text: a lack of O-mannosylation results in abnormal cell wall and septum formation,
+      thereby severely affecting cell morphology and cell-cell separation
+- id: PMID:18257517
+  title: Phosphoproteome analysis of fission yeast.
+  full_text_unavailable: true
+  findings:
+  - statement: Wsc1 is phosphorylated at Ser-354 in the cytoplasmic tail, identified by mass
+      spectrometry in a large-scale phosphoproteome analysis
+    supporting_text: 2887 distinct phosphorylation sites were identified from 1194 proteins with
+      an estimated false-discovery rate of &lt;0.5% at the peptide level
+- id: PMID:21832151
+  title: Endocytosis is essential for dynamic translocation of a syntaxin 1 orthologue
+    during fission yeast meiosis.
+  findings:
+  - statement: Wsc1 was confirmed as a plasma membrane protein during vegetative growth in a
+      global survey of PM protein localization during meiosis
+    supporting_text: SPBC30B4.01cwsc1+Transmembrane receptor1PMZK373
+- id: PMID:23907979
+  title: The fission yeast cell wall stress sensor-like proteins Mtl2 and Wsc1 act
+    by turning on the GTPase Rho1p but act independently of the cell wall integrity
+    pathway.
+  findings:
+  - statement: Wsc1p-GFP localizes to patches at cell tips and interacts with the Rho-GEF Rgf2p
+    supporting_text: Wsc1p-GFP was concentrated in patches at the cell tips, it interacted with
+      the Rho-GEF Rgf2p
+  - statement: Wsc1 overexpression activates cell wall biosynthesis
+    supporting_text: its overexpression activated cell wall biosynthesis
+  - statement: wsc1-delta is viable but wsc1-delta mtl2-delta double deletion is lethal, rescued
+      by Rho1 or GEF overexpression
+    supporting_text: Each gene could be deleted individually without affecting viability, but the
+      deletion of both was lethal and this phenotype was rescued by overexpression of the genes
+      encoding either Rho1p or its GDP/GTP exchange factors (GEFs)
+  - statement: Wsc1 signals through Rgf2-&gt;Rho1-&gt;glucan synthase, independently of the MAPK Pmk1
+      cell integrity pathway
+    supporting_text: the second one implicates signaling from Wsc1p and Rgf2p through Rho1p to
+      activate glucan synthase (GS)
+  - statement: wsc1-delta and mtl2-delta cells show reduced Rho1p-GTP levels under cell wall stress
+    supporting_text: wsc1Δ and mtl2Δ cells showed a low level of Rho1p-GTP under cell wall stress
+- id: PMID:29689193
+  title: Mechanosensation Dynamically Coordinates Polar Growth and Cell Wall Assembly
+    to Promote Cell Survival.
+  findings:
+  - statement: Cell wall thickness homeostasis at growing tips is mediated by mechanosensing through
+      the CWI pathway, and wsc1 mutants are defective in this homeostasis and lyse
+    supporting_text: This feedback was mediated by mechanosensing through the CW integrity pathway,
+      which probes strain in the wall to adjust synthase localization and activity to surface growth
+      ...Mutants defective in thickness homeostasis lysed by rupturing the wall
+- id: PMID:34666001
+  title: Detection of surface forces by the cell-wall mechanosensor Wsc1 in yeast.
+  findings:
+  - statement: Wsc1 forms micrometer-sized clusters at sites of mechanical force application on
+      the cell wall within minutes, in dose-dependence with stress magnitude
+    supporting_text: we uncovered the formation of micrometer-sized clusters at sites of force
+      application onto the CW. Clusters assembled within minutes of CW compression, in dose
+      dependence with mechanical stress and disassembled upon relaxation
+  - statement: Wsc1 clustering is mediated by reduced lateral diffusivity through WSC domain binding
+      to CW polysaccharides, independent of polarity and downstream pathways
+    supporting_text: Wsc1 accumulates to sites of enhanced mechanical stress through reduced lateral
+      diffusivity, mediated by the binding of its extracellular WSC domain to CW polysaccharides,
+      independent of canonical polarity, trafficking, and downstream CW regulatory pathways
+  - statement: Wsc1 functions as an autonomous mechanosensing module
+    supporting_text: Wsc1 may represent an autonomous module to detect and transduce local surface
+      forces onto the CW
+- id: file:SCHPO/wsc1/wsc1-deep-research-bioreason.md
+  title: BioReason deep research on wsc1
+  findings: []
+- id: file:SCHPO/wsc1/wsc1-notes.md
+  title: Research notes on wsc1
+  findings: []
+core_functions:
+- description: Mechanosensing at the cell surface through force-dependent clustering mediated by
+    WSC domain binding to cell wall polysaccharides, detecting mechanical strain during polar
+    growth and stress
+  molecular_function:
+    id: GO:0140897
+    label: mechanoreceptor activity
+  directly_involved_in:
+  - id: GO:0050982
+    label: detection of mechanical stimulus
+  - id: GO:1903338
+    label: regulation of cell wall organization or biogenesis
+  locations:
+  - id: GO:0031520
+    label: plasma membrane of cell tip
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:34666001
+    supporting_text: Wsc1 accumulates to sites of enhanced mechanical stress through reduced lateral
+      diffusivity, mediated by the binding of its extracellular WSC domain to CW polysaccharides
+  - reference_id: PMID:29689193
+    supporting_text: This feedback was mediated by mechanosensing through the CW integrity pathway,
+      which probes strain in the wall to adjust synthase localization and activity to surface growth
+- description: Activation of Rho1 GTPase through recruitment of the Rho-GEF Rgf2, coupling
+    mechanosensing to beta-1,3-glucan synthase activation for cell wall biosynthesis and repair
+  molecular_function:
+    id: GO:0140897
+    label: mechanoreceptor activity
+  directly_involved_in:
+  - id: GO:0007166
+    label: cell surface receptor signaling pathway
+  - id: GO:1903338
+    label: regulation of cell wall organization or biogenesis
+  locations:
+  - id: GO:0031520
+    label: plasma membrane of cell tip
+  supported_by:
+  - reference_id: PMID:23907979
+    supporting_text: signaling from Wsc1p and Rgf2p through Rho1p to activate glucan synthase (GS)
+  - reference_id: PMID:23907979
+    supporting_text: wsc1Δ and mtl2Δ cells showed a low level of Rho1p-GTP under cell wall stress
+suggested_questions:
+- question: Does the phosphorylation at Ser-354 in the Wsc1 cytoplasmic tail regulate its interaction
+    with Rgf2 or its signaling output?
+  experts:
+  - Yolanda Sanchez
+  - Nicolas Minc
+- question: What is the relationship between Wsc1 clustering dynamics and Rho1 activation kinetics
+    at growing tips?
+  experts:
+  - Nicolas Minc
+  - Ramakanth Neeli-Venkata
+- question: Does Wsc1 have additional downstream effectors beyond the Rgf2-Rho1-glucan synthase
+    pathway, particularly under specific stress conditions?
+  experts:
+  - Yolanda Sanchez
+  - Patricia Garcia
+suggested_experiments:
+- description: FRAP and single-molecule tracking of Wsc1-GFP in rgf2-delta and rho1 temperature-sensitive
+    mutants to determine if downstream signaling feeds back on Wsc1 clustering dynamics
+  experiment_type: live-cell imaging
+- description: Phosphomimetic (S354D) and phospho-dead (S354A) mutations in Wsc1 to test whether
+    cytoplasmic tail phosphorylation affects Rgf2 interaction or glucan synthase activation
+  experiment_type: site-directed mutagenesis and biochemistry
+- description: Co-immunoprecipitation or proximity labeling (BioID) of Wsc1 cytoplasmic tail to
+    identify additional interacting partners beyond Rgf2
+  experiment_type: proteomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

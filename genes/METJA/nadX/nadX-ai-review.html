@@ -1,0 +1,2512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nadX - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nadX</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q58325" target="_blank" class="term-link">
+                        Q58325
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Methanocaldococcus jannaschii (strain ATCC 43067 / DSM 2661 / JAL-1 / JCM 10045 / NBRC 100440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nadX";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q58325" data-a="DESCRIPTION: NadX (MJ0915) is an L-aspartate dehydrogenase (EC ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NadX (MJ0915) is an L-aspartate dehydrogenase (EC 1.4.1.21) that catalyzes the NAD(P)-dependent oxidative deamination of L-aspartate to iminoaspartate, the first committed step in the de novo NAD+ biosynthetic pathway from L-aspartate. This enzyme represents an alternative to the FAD-dependent L-aspartate oxidase (NadB) used in classical bacterial NAD biosynthesis pathways. NadX is a homodimeric protein with an N-terminal Rossmann fold NAD(P)-binding domain and a C-terminal catalytic domain. The iminoaspartate product is channeled to quinolinate synthase (NadA) for quinolinate biosynthesis. NadX homologs are found in many methanogenic archaea and some bacteria such as Thermotoga maritima.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q58325" data-a="GO:0009435" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NadX catalyzes the first step of de novo NAD+ biosynthesis from L-aspartate, producing iminoaspartate for the NadA quinolinate synthase reaction. This annotation is correct but could be more specific; GO:0034628 (&#39;de novo&#39; NAD+ biosynthetic process from L-aspartate) precisely describes the pathway route used by NadX.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The more specific term GO:0034628 (&#39;de novo&#39; NAD+ biosynthetic process from L-aspartate) precisely captures NadX&#39;s role in the aspartate-derived de novo pathway, distinguishing it from salvage pathways and the tryptophan-derived route.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034628" target="_blank" class="term-link">
+                                    &#39;de novo&#39; NAD+ biosynthetic process from L-aspartate
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12496312" target="_blank" class="term-link">
+                                        PMID:12496312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">two different enzymes, an oxidase and a dehydrogenase, may have evolved to catalyze the first step of NAD biosynthesis in prokaryotes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:METJA/nadX/nadX-deep-research-bioreason.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">BioReason SFT trace correctly identifies NAD biosynthesis pathway context</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q58325" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This InterPro2GO annotation from IPR005106 (Aspartate/homoserine dehydrogenase, NAD-binding domain) is correct but too general. NadX has a well-characterized specific activity: L-aspartate dehydrogenase [NAD(P)+] activity (GO:0033735). The general oxidoreductase term adds no information beyond what the more specific term already provides.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016491 (oxidoreductase activity) is far too general; GO:0033735 provides the precise molecular function. This is a typical InterPro2GO limitation where domain-level annotation yields only broad functional categories.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033735" target="_blank" class="term-link">
+                                    L-aspartate dehydrogenase [NAD(P)+] activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12496312" target="_blank" class="term-link">
+                                        PMID:12496312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The enzymatic characterization of TM1643 revealed that it possesses NAD or NADP-dependent dehydrogenase activity toward l-aspartate but no aspartate oxidase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016639" target="_blank" class="term-link">
+                                    GO:0016639
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-NH2 group of donors, NAD or NADP as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q58325" data-a="GO:0016639" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation correctly captures that NadX acts on the CH-NH2 group of L-aspartate using NAD or NADP as acceptor. However, the more specific child term GO:0033735 (L-aspartate dehydrogenase [NAD(P)+] activity) is available and precisely identifies the substrate specificity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A more specific child term exists that exactly describes this enzyme&#39;s activity and substrate specificity.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033735" target="_blank" class="term-link">
+                                    L-aspartate dehydrogenase [NAD(P)+] activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16731057" target="_blank" class="term-link">
+                                        PMID:16731057
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The enzyme specifically utilized L-aspartate as the electron donor, while either NAD or NADP could serve as the electron acceptor</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033735" target="_blank" class="term-link">
+                                    GO:0033735
+                                </a>
+                            </span>
+                            <span class="term-label">L-aspartate dehydrogenase [NAD(P)+] activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q58325" data-a="GO:0033735" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most specific and accurate molecular function term for NadX. The enzyme catalyzes NAD(P)-dependent oxidative deamination of L-aspartate to iminoaspartate (which spontaneously decomposes to oxaloacetate + NH4+). Structural and biochemical studies on homologs from T. maritima and A. fulgidus have confirmed this activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0033735 precisely matches the experimentally characterized enzymatic activity of NadX. Although the evidence for M. jannaschii NadX specifically is computational (IEA), the activity has been experimentally demonstrated for close homologs in T. maritima and A. fulgidus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12496312" target="_blank" class="term-link">
+                                        PMID:12496312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The enzymatic characterization of TM1643 revealed that it possesses NAD or NADP-dependent dehydrogenase activity toward l-aspartate but no aspartate oxidase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16731057" target="_blank" class="term-link">
+                                        PMID:16731057
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Characterization revealed the enzyme to be a highly thermostable L-aspartate dehydrogenase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050661" target="_blank" class="term-link">
+                                    GO:0050661
+                                </a>
+                            </span>
+                            <span class="term-label">NADP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q58325" data-a="GO:0050661" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NadX binds NADP as one of its two cofactor options. The A. fulgidus homolog has a Km of 0.32 mM for NADP. While NADP binding is implicit in the GO:0033735 term (which specifies NAD(P)+), this annotation provides explicit documentation of NADP cofactor binding capability.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NADP binding is already implicit in GO:0033735 (L-aspartate dehydrogenase [NAD(P)+] activity). This annotation is not wrong but is redundant with the more specific MF term. Keeping as non-core for completeness.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16731057" target="_blank" class="term-link">
+                                        PMID:16731057
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Km values for NAD and NADP were 0.11 and 0.32 mM, respectively</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q58325" data-a="GO:0051287" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NadX binds NAD as its preferred cofactor. The A. fulgidus homolog has a Km of 0.11 mM for NAD, and crystal structures show NAD bound in the Rossmann fold domain. As with NADP binding, this is implicit in GO:0033735 but provides explicit documentation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NAD binding is already implicit in GO:0033735 (L-aspartate dehydrogenase [NAD(P)+] activity). Keeping as non-core for completeness. Kinetic data from the A. fulgidus homolog suggest a slight preference for NAD over NADP.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17651440" target="_blank" class="term-link">
+                                        PMID:17651440
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The crystal structure of the highly thermostable L-aspartate dehydrogenase (L-aspDH; EC 1.4.1.21) from the hyperthermophilic archaeon Archaeoglobus fulgidus was determined in the presence of NAD and a substrate analog, citrate</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16731057" target="_blank" class="term-link">
+                                        PMID:16731057
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Km values for L-aspartate were 0.19 and 4.3 mM when NAD or NADP, respectively, served as the electron acceptor</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q58325" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NadX is a soluble enzyme with no predicted transmembrane segments or signal peptides, consistent with cytoplasmic localization. As a central metabolic enzyme in NAD biosynthesis, cytoplasmic localization is expected for this archaeal protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is consistent with the enzyme&#39;s soluble nature and its role in the cytoplasmic de novo NAD biosynthesis pathway. No transmembrane domains are predicted.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16731057" target="_blank" class="term-link">
+                                        PMID:16731057
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a homodimeric protein with a molecular mass of about 48 kDa</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NadX catalyzes the NAD(P)-dependent oxidative deamination of L-aspartate to iminoaspartate as the first committed step of de novo NAD+ biosynthesis from L-aspartate. This is an alternative to the FAD-dependent aspartate oxidase (NadB) found in many bacteria. The iminoaspartate product is channeled to quinolinate synthase (NadA) for quinolinate biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q58325" data-a="FUNCTION: NadX catalyzes the NAD(P)-dependent oxidative deam..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033735" target="_blank" class="term-link">
+                            L-aspartate dehydrogenase [NAD(P)+] activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034628" target="_blank" class="term-link">
+                                &#39;de novo&#39; NAD+ biosynthetic process from L-aspartate
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12496312" target="_blank" class="term-link">
+                                PMID:12496312
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">two different enzymes, an oxidase and a dehydrogenase, may have evolved to catalyze the first step of NAD biosynthesis in prokaryotes</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16731057" target="_blank" class="term-link">
+                                PMID:16731057
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Characterization revealed the enzyme to be a highly thermostable L-aspartate dehydrogenase</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12496312" target="_blank" class="term-link">
+                            PMID:12496312
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Aspartate dehydrogenase, a novel enzyme identified from structural and functional studies of TM1643</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TM1643 from Thermotoga maritima is an NAD/NADP-dependent L-aspartate dehydrogenase that produces iminoaspartate, representing an alternative to aspartate oxidase (NadB) for the first step of NAD biosynthesis.</div>
+                        
+                        <div class="finding-text">"two different enzymes, an oxidase and a dehydrogenase, may have evolved to catalyze the first step of NAD biosynthesis in prokaryotes. TM1643 establishes a new class of amino acid dehydrogenases"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The crystal structure reveals an N-terminal Rossmann fold domain with bound NAD+ and a C-terminal catalytic domain.</div>
+                        
+                        <div class="finding-text">"The structure reveals the presence of an N-terminal Rossmann fold domain with a bound NAD(+) cofactor and a C-terminal alpha+beta domain"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TM1643 has no aspartate oxidase activity, confirming it is a dehydrogenase and not an oxidase.</div>
+                        
+                        <div class="finding-text">"The enzymatic characterization of TM1643 revealed that it possesses NAD or NADP-dependent dehydrogenase activity toward l-aspartate but no aspartate oxidase activity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16731057" target="_blank" class="term-link">
+                            PMID:16731057
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The first archaeal L-aspartate dehydrogenase from the hyperthermophile Archaeoglobus fulgidus</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The A. fulgidus L-aspartate dehydrogenase is a homodimeric protein (~48 kDa) that is highly thermostable with optimum temperature of ~80 degrees C.</div>
+                        
+                        <div class="finding-text">"a homodimeric protein with a molecular mass of about 48 kDa...The enzyme specifically utilized L-aspartate as the electron donor, while either NAD or NADP could serve as the electron acceptor"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Homologs of L-aspartate dehydrogenase are found in many methanogenic archaea but not in Thermococcales or Sulfolobales.</div>
+                        
+                        <div class="finding-text">"Within the archaeal domain, homologues of this enzyme occurred in many Methanogenic species, but not in Thermococcales or Sulfolobales species"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17651440" target="_blank" class="term-link">
+                            PMID:17651440
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structure of archaeal highly thermostable L-aspartate dehydrogenase/NAD/citrate ternary complex</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The A. fulgidus L-aspDH crystal structure at 1.9 A resolution shows a dimeric enzyme with two domains per subunit separated by a deep active-site cleft.</div>
+                        
+                        <div class="finding-text">"each subunit consists of two domains separated by a deep cleft containing an active site"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Substrate binding induces a large conformational change with movement of two loops, and thermostability is achieved through inter- and intrasubunit ion pairs.</div>
+                        
+                        <div class="finding-text">"A. fulgidus L-aspDH assumes a closed conformation and that a large movement of the two loops takes place during substrate binding"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8688087" target="_blank" class="term-link">
+                            PMID:8688087
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence of the methanogenic archaeon, Methanococcus jannaschii</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The complete genome sequence of M. jannaschii, which includes the MJ0915 locus (nadX).</div>
+                        
+                        <div class="finding-text">"Complete genome sequence of the methanogenic archaeon, Methanococcus jannaschii"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Has L-aspartate dehydrogenase activity been directly demonstrated for the M. jannaschii NadX protein (Q58325), or is all experimental evidence from homologs (T. maritima TM1643, A. fulgidus)?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Toshihisa Ohshima, Liang Tong</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q58325" data-a="Q: Has L-aspartate dehydrogenase activity been direct..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is there experimental evidence for physical interaction between NadX and NadA (quinolinate synthase) in M. jannaschii to channel the unstable iminoaspartate intermediate?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q58325" data-a="Q: Is there experimental evidence for physical intera..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant M. jannaschii NadX. Perform kinetic characterization measuring NAD- and NADP-dependent oxidation of L-aspartate by monitoring NADH/NADPH production spectrophotometrically at 340 nm. Determine Km values for L-aspartate, NAD, and NADP.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The M. jannaschii NadX (Q58325) has L-aspartate dehydrogenase activity with similar kinetic parameters to the characterized A. fulgidus homolog.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: enzyme kinetics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q58325" data-a="EXPERIMENT: Express and purify recombinant M. jannaschii NadX...." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform co-purification or co-immunoprecipitation experiments with tagged NadX and NadA from M. jannaschii. Use cross-linking mass spectrometry to identify interaction surfaces. Test whether coupled NadX-NadA reactions show enhanced quinolinate production compared to sequential reactions.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: NadX physically interacts with NadA to channel the unstable iminoaspartate intermediate in M. jannaschii.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: protein-protein interaction</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q58325" data-a="EXPERIMENT: Perform co-purification or co-immunoprecipitation ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nadX-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q58325" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="c1">---</span>
+<span class="nl">provider</span><span class="p">:</span><span class="w"> </span><span class="n">bioreason</span><span class="o">-</span><span class="n">pro</span>
+<span class="nl">model</span><span class="p">:</span><span class="w"> </span><span class="n">SFT</span>
+<span class="nl">source</span><span class="p">:</span><span class="w"> </span><span class="n">huggingface</span><span class="p">.</span><span class="n">co</span><span class="o">/</span><span class="n">datasets</span><span class="o">/</span><span class="n">wanglab</span><span class="o">/</span><span class="n">protein_catalogue</span>
+<span class="nc">date</span><span class="err">:</span><span class="w"> </span><span class="s1">&#39;2026-04-04&#39;</span>
+<span class="nl">uniprot_id</span><span class="p">:</span><span class="w"> </span><span class="n">Q58325</span>
+<span class="nl">gene</span><span class="p">:</span><span class="w"> </span><span class="n">nadX</span>
+<span class="nl">organism</span><span class="p">:</span><span class="w"> </span><span class="n">Methanocaldococcus</span><span class="w"> </span><span class="n">jannaschii</span><span class="w"> </span><span class="p">(</span><span class="n">strain</span><span class="w"> </span><span class="n">ATCC</span><span class="w"> </span><span class="mi">43067</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">DSM</span><span class="w"> </span><span class="mi">2661</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">JAL</span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">JCM</span><span class="w"> </span><span class="mi">10045</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">NBRC</span><span class="w"> </span><span class="mi">100440</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="n">Methanococcus</span><span class="w"> </span><span class="n">jannaschii</span><span class="p">)</span>
+<span class="c1">---</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">Thinking</span><span class="w"> </span><span class="n">Trace</span>
+
+<span class="n">The</span><span class="w"> </span><span class="n">architecture</span><span class="w"> </span><span class="n">begins</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">dinucleotide</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="k">module</span><span class="err">:</span><span class="w"> </span><span class="n">IPR036291</span><span class="w"> </span><span class="p">(</span><span class="n">NAD</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">1</span><span class="err">–</span><span class="mi">146</span><span class="p">)</span><span class="w"> </span><span class="k">overlaps</span><span class="w"> </span><span class="n">IPR005106</span><span class="w"> </span><span class="p">(</span><span class="n">Aspartate</span><span class="o">/</span><span class="n">homoserine</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">,</span><span class="w"> </span><span class="n">NAD</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="k">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">8</span><span class="err">–</span><span class="mi">121</span><span class="p">),</span><span class="w"> </span><span class="n">establishing</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">Rossmann</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="n">fold</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">positions</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">pyrophosphate</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">ribose</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">NADP</span><span class="p">(</span><span class="n">H</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">hydride</span><span class="w"> </span><span class="n">transfer</span><span class="p">.</span><span class="w"> </span><span class="n">This</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">followed</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="nl">core</span><span class="p">:</span><span class="w"> </span><span class="n">IPR002811</span><span class="w"> </span><span class="p">(</span><span class="n">Aspartate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w"> </span><span class="k">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">168</span><span class="err">–</span><span class="mi">253</span><span class="p">),</span><span class="w"> </span><span class="n">which</span><span class="w"> </span><span class="n">houses</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">active</span><span class="o">-</span><span class="n">site</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">bind</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">stabilize</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">oxaloacetate</span><span class="w"> </span><span class="n">intermediate</span><span class="p">.</span><span class="w"> </span><span class="n">Three</span><span class="w"> </span><span class="n">family</span><span class="o">-</span><span class="k">level</span><span class="w"> </span><span class="n">signatures</span><span class="w"> </span><span class="n">span</span><span class="w"> </span><span class="n">nearly</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">full</span><span class="w"> </span><span class="n">polypeptide</span><span class="err">—</span><span class="n">IPR011182</span><span class="w"> </span><span class="p">(</span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w"> </span><span class="n">family</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">1</span><span class="err">–</span><span class="mi">267</span><span class="p">),</span><span class="w"> </span><span class="n">IPR020626</span><span class="w"> </span><span class="p">(</span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">,</span><span class="w"> </span><span class="n">prokaryotic</span><span class="w"> </span><span class="n">family</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">2</span><span class="err">–</span><span class="mi">265</span><span class="p">),</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">IPR022487</span><span class="w"> </span><span class="p">(</span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">,</span><span class="w"> </span><span class="n">archaeal</span><span class="w"> </span><span class="n">family</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">27</span><span class="err">–</span><span class="mi">264</span><span class="p">)</span><span class="err">—</span><span class="n">together</span><span class="w"> </span><span class="n">specifying</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">prokaryotic</span><span class="o">/</span><span class="n">archaeal</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w"> </span><span class="n">scaffold</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">juxtaposition</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">Rossmann</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="n">NADP</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">region</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">aspartate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="n">causes</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">reversible</span><span class="w"> </span><span class="n">redox</span><span class="w"> </span><span class="n">chemistry</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="err">’</span><span class="n">s</span><span class="w"> </span><span class="n">C2</span><span class="p">,</span><span class="w"> </span><span class="k">using</span><span class="w"> </span><span class="n">NADP</span><span class="o">+</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">electron</span><span class="w"> </span><span class="n">acceptor</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">form</span><span class="w"> </span><span class="n">oxaloacetate</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">NH4</span><span class="o">+</span><span class="p">,</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="k">using</span><span class="w"> </span><span class="n">NAD</span><span class="o">+</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">donor</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">oxidize</span><span class="w"> </span><span class="n">oxaloacetate</span><span class="w"> </span><span class="n">back</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">archaeal</span><span class="o">/</span><span class="n">prokaryotic</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="n">context</span><span class="w"> </span><span class="n">typically</span><span class="w"> </span><span class="n">enforces</span><span class="w"> </span><span class="n">dimerization</span><span class="p">,</span><span class="w"> </span><span class="k">where</span><span class="w"> </span><span class="k">each</span><span class="w"> </span><span class="n">protomer</span><span class="w"> </span><span class="n">contributes</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">stability</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">partner</span><span class="err">’</span><span class="n">s</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="p">;</span><span class="w"> </span><span class="n">this</span><span class="w"> </span><span class="n">explains</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">homodimerization</span><span class="w"> </span><span class="n">activity</span><span class="w"> </span><span class="p">(</span><span class="k">GO</span><span class="err">:</span><span class="mi">0042803</span><span class="p">).</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">presence</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="k">both</span><span class="w"> </span><span class="n">NADP</span><span class="w"> </span><span class="n">binding</span><span class="w"> </span><span class="p">(</span><span class="k">GO</span><span class="err">:</span><span class="mi">0050661</span><span class="p">)</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">NAD</span><span class="w"> </span><span class="n">binding</span><span class="w"> </span><span class="p">(</span><span class="k">GO</span><span class="err">:</span><span class="mi">0051287</span><span class="p">)</span><span class="w"> </span><span class="n">follows</span><span class="w"> </span><span class="n">directly</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">dual</span><span class="o">-</span><span class="n">cofactor</span><span class="w"> </span><span class="n">Rossmann</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">known</span><span class="w"> </span><span class="n">bidirectionality</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">reaction</span><span class="p">.</span>
+</code></pre></div>
+
+<p>At the process level, the NADP-dependent oxidative direction supplies oxaloacetate that feeds into the shikimate pathway, where oxaloacetate condenses with phosphoenolpyruvate to form phosphoenolpyruvate-derived intermediates en route to chorismate. Thus, the enzyme’s redox activity causally supports the chorismate biosynthetic process (GO:0009423) by provisioning oxaloacetate under NADP+–favored conditions. The archaeal family signature and lack of transmembrane segments indicate a soluble enzyme. In prokaryotic/archaeal cells, such central metabolic dehydrogenases operate in the cytoplasm, aligning with a cytoplasmic localization (GO:0005737).</p>
+<p>Mechanistically, the N-terminal Rossmann-like domain binds NADP+ with preference, orienting the nicotinamide for hydride acceptance, while the C-terminal catalytic domain binds L-aspartate and promotes hydride transfer to NADP+, yielding oxaloacetate and releasing ammonium. The archaeal family context implies a homodimer that stabilizes the catalytic geometry and may create a metabolon interface. In this role, the enzyme likely associates with quinolinate synthetase (nadA) to channel aspartate-derived flux toward NAD biosynthesis, and with aspartate carbamoyltransferase regulatory and catalytic chains (pyrI, pyrB) to balance aspartate partitioning between pyrimidine and purine branches. Interactions with aspartate aminotransferase (aspB1) would buffer oxaloacetate/aspartate pools, while contacts with adenylosuccinate synthetase (purA), argininosuccinate synthetase (argG), and asparagine synthetase (asnB) would coordinate nitrogen and aspartate utilization. Association with a pantothenate metabolism flavoprotein (dfp) and a conserved hypothetical protein could stabilize a broader central-metabolism assembly that tunes cofactor availability and flux directionality according to cellular redox state.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="n">Functional</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">soluble</span><span class="w"> </span><span class="n">archaeal</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">forms</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">homodimer</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">uses</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">Rossmann</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="n">dinucleotide</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="k">module</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">bind</span><span class="w"> </span><span class="n">NADP</span><span class="o">+</span><span class="w"> </span><span class="n">preferentially</span><span class="w"> </span><span class="n">alongside</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">oxidizes</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">oxaloacetate</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="k">release</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">ammonium</span><span class="p">,</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">reduces</span><span class="w"> </span><span class="n">oxaloacetate</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">NAD</span><span class="o">+</span><span class="p">.</span><span class="w"> </span><span class="k">By</span><span class="w"> </span><span class="n">supplying</span><span class="w"> </span><span class="n">oxaloacetate</span><span class="w"> </span><span class="k">under</span><span class="w"> </span><span class="n">NADP</span><span class="o">+-</span><span class="n">favored</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">feeds</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">shikimate</span><span class="w"> </span><span class="n">pathway</span><span class="w"> </span><span class="n">toward</span><span class="w"> </span><span class="n">chorismate</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">coordinates</span><span class="w"> </span><span class="n">aspartate</span><span class="w"> </span><span class="n">flux</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">neighboring</span><span class="w"> </span><span class="n">metabolic</span><span class="w"> </span><span class="n">nodes</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">cytoplasm</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">UniProt</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">Catalyzes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">reversible</span><span class="w"> </span><span class="n">oxidation</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">oxaloacetate</span><span class="p">.</span><span class="w"> </span><span class="n">Has</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">preference</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">NADP</span><span class="p">(</span><span class="o">+</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">hydrogen</span><span class="w"> </span><span class="n">acceptor</span><span class="p">.</span><span class="w"> </span><span class="n">Plays</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="k">role</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">chorismate</span><span class="w"> </span><span class="n">biosynthesis</span><span class="w"> </span><span class="n">pathway</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nl">IPR011182</span><span class="p">:</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">1-267</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR036291</span><span class="p">:</span><span class="w"> </span><span class="n">NAD</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">1-146</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR020626</span><span class="p">:</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">,</span><span class="w"> </span><span class="n">prokaryotic</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">2-265</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR005106</span><span class="p">:</span><span class="w"> </span><span class="n">Aspartate</span><span class="o">/</span><span class="n">homoserine</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">,</span><span class="w"> </span><span class="n">NAD</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">8-121</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR022487</span><span class="p">:</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">aspartate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">,</span><span class="w"> </span><span class="n">archaeal</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">27-264</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR002811</span><span class="p">:</span><span class="w"> </span><span class="n">Aspartate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">168-253</span><span class="o">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="k">GO</span><span class="w"> </span><span class="n">Term</span><span class="w"> </span><span class="n">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="n">Molecular</span><span class="w"> </span><span class="k">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Biological</span><span class="w"> </span><span class="n">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Cellular</span><span class="w"> </span><span class="n">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nadX-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q58325" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nadx-mj0915-l-aspartate-dehydrogenase-research-notes">nadX (MJ0915) - L-aspartate dehydrogenase - Research Notes</h1>
+<h2 id="gene-identity">Gene Identity</h2>
+<ul>
+<li>UniProt: Q58325 (ASPD_METJA)</li>
+<li>Locus: MJ0915</li>
+<li>Organism: Methanocaldococcus jannaschii (strain ATCC 43067 / DSM 2661)</li>
+<li>EC: 1.4.1.21</li>
+<li>Gene name: nadX</li>
+</ul>
+<h2 id="core-function-l-aspartate-dehydrogenase-in-de-novo-nad-biosynthesis">Core Function: L-aspartate dehydrogenase in de novo NAD biosynthesis</h2>
+<p>NadX catalyzes the first committed step in the de novo NAD+ biosynthetic pathway from L-aspartate in archaea and some bacteria. It performs the NAD(P)-dependent oxidative deamination of L-aspartate to iminoaspartate, which is the substrate for the next enzyme in the pathway, quinolinate synthase (NadA).</p>
+<p>This enzyme represents an alternative to the FAD-dependent L-aspartate oxidase (NadB) used in the classical bacterial NAD biosynthesis pathway (e.g., in E. coli). The key discovery paper is Yang et al. (2003), who identified this novel enzymatic activity in the Thermotoga maritima homolog TM1643 <a href="https://pubmed.ncbi.nlm.nih.gov/12496312" title="two different enzymes, an oxidase and a dehydrogenase, may have evolved to catalyze the first step of NAD biosynthesis in prokaryotes. TM1643 establishes a new class of amino acid dehydrogenases">PMID:12496312</a>.</p>
+<h2 id="key-biochemical-features">Key Biochemical Features</h2>
+<h3 id="reaction-catalyzed">Reaction catalyzed</h3>
+<p>L-aspartate + NAD(P)+ + H2O -&gt; iminoaspartate -&gt; (spontaneous) oxaloacetate + NH4+ + NAD(P)H</p>
+<p>The iminoaspartate product is unstable in aqueous solution and spontaneously hydrolyzes to oxaloacetate and ammonia. The biologically relevant product is iminoaspartate, which is channeled to NadA for quinolinate synthesis before it can decompose.</p>
+<h3 id="cofactor-specificity">Cofactor specificity</h3>
+<p>The enzyme can use either NAD+ or NADP+ as electron acceptor. According to PubMed, kinetic characterization of the A. fulgidus homolog showed Km values for L-aspartate of 0.19 mM (with NAD+) and 4.3 mM (with NADP+), and Km values for NAD and NADP of 0.11 and 0.32 mM respectively [PMID:16731057, DOI:10.1016/j.bbapap.2006.04.006 "The enzyme specifically utilized L-aspartate as the electron donor, while either NAD or NADP could serve as the electron acceptor"].</p>
+<h3 id="structure">Structure</h3>
+<p>According to PubMed, the crystal structure of the T. maritima homolog (TM1643) revealed an N-terminal Rossmann fold domain with a bound NAD+ cofactor and a C-terminal alpha+beta domain, with the active site at the interface between the two domains [PMID:12496312, DOI:10.1074/jbc.M211892200 "The structure reveals the presence of an N-terminal Rossmann fold domain with a bound NAD(+) cofactor and a C-terminal alpha+beta domain"].</p>
+<p>The crystal structure of the A. fulgidus homolog in complex with NAD and citrate (substrate analog) was determined at 1.9 A resolution, showing a dimeric enzyme with a closed conformation upon substrate binding [PMID:17651440, DOI:10.1111/j.1742-4658.2007.05961.x "The dimeric structure of A. fulgidus L-aspDH was refined at a resolution of 1.9 A...each subunit consists of two domains separated by a deep cleft containing an active site"].</p>
+<h3 id="oligomeric-state">Oligomeric state</h3>
+<p>The enzyme forms a homodimer. According to PubMed, the A. fulgidus homolog was characterized as "a homodimeric protein with a molecular mass of about 48 kDa" [PMID:16731057, DOI:10.1016/j.bbapap.2006.04.006].</p>
+<h3 id="thermostability">Thermostability</h3>
+<p>The enzyme is highly thermostable, consistent with the hyperthermophilic lifestyle of M. jannaschii and related archaea. The A. fulgidus homolog showed an optimum temperature of about 80 degrees C and little loss of activity after incubation for 1 h at up to 80 degrees C <a href="https://pubmed.ncbi.nlm.nih.gov/16731057">PMID:16731057</a>.</p>
+<h2 id="pathway-context">Pathway Context</h2>
+<p>The de novo NAD+ biosynthetic pathway from L-aspartate in prokaryotes proceeds:</p>
+<ol>
+<li>L-aspartate -&gt; iminoaspartate (NadB in bacteria via FAD-dependent oxidation, or NadX in archaea/some bacteria via NAD(P)-dependent dehydrogenation)</li>
+<li>Iminoaspartate + dihydroxyacetone phosphate -&gt; quinolinate (NadA, quinolinate synthase)</li>
+<li>Quinolinate -&gt; nicotinate mononucleotide (NadC, quinolinate phosphoribosyltransferase)</li>
+<li>Further steps to NAD+</li>
+</ol>
+<p>The discovery that NadX provides an alternative to NadB was a significant finding in comparative genomics <a href="https://pubmed.ncbi.nlm.nih.gov/12496312" title="our studies demonstrate that two different enzymes, an oxidase and a dehydrogenase, may have evolved to catalyze the first step of NAD biosynthesis in prokaryotes">PMID:12496312</a>.</p>
+<h2 id="taxonomic-distribution">Taxonomic Distribution</h2>
+<p>Within the archaeal domain, homologs of L-aspartate dehydrogenase occur in many methanogenic species, but not in Thermococcales or Sulfolobales [PMID:16731057, DOI:10.1016/j.bbapap.2006.04.006 "Within the archaeal domain, homologues of this enzyme occurred in many Methanogenic species, but not in Thermococcales or Sulfolobales species"]. Some bacteria (e.g., Thermotoga maritima) also have NadX instead of NadB.</p>
+<h2 id="genome-context">Genome Context</h2>
+<p>The M. jannaschii genome was sequenced in 1996 [PMID:8688087, DOI:10.1126/science.273.5278.1058 "Complete genome sequence of the methanogenic archaeon, Methanococcus jannaschii"]. The nadX gene (MJ0915) was identified based on homology. In T. maritima, TM1643 was found in an operon with two other genes encoding enzymes involved in NAD biosynthesis <a href="https://pubmed.ncbi.nlm.nih.gov/12496312">PMID:12496312</a>.</p>
+<h2 id="important-note-not-involved-in-chorismate-biosynthesis">Important Note: Not Involved in Chorismate Biosynthesis</h2>
+<p>The UniProt entry includes a note about a role in chorismate biosynthesis. However, the primary literature does not support a direct role for NadX in chorismate biosynthesis. The enzyme's established function is exclusively in NAD+ biosynthesis, converting L-aspartate to iminoaspartate for quinolinate synthesis. While oxaloacetate (the spontaneous decomposition product) could theoretically enter other metabolic pathways, the biological function of NadX is specifically to produce iminoaspartate for NAD biosynthesis, not to supply oxaloacetate for the shikimate pathway.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nadX-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q58325" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-nadx-methanocaldococcus-jannaschii">BioReason-Pro SFT Review: nadX (Methanocaldococcus jannaschii)</h1>
+<p>Source: nadX-deep-research-bioreason.md</p>
+<ul>
+<li><strong>Correctness</strong>: 3/5</li>
+<li><strong>Completeness</strong>: 4/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason SFT functional summary describes NadX as:</p>
+<blockquote>
+<p>A soluble archaeal dehydrogenase that forms a homodimer and uses a Rossmann-like dinucleotide-binding module to bind NADP+ preferentially alongside a catalytic domain that oxidizes L-aspartate to oxaloacetate with release of ammonium, or reduces oxaloacetate to L-aspartate with NAD+.</p>
+</blockquote>
+<p>This description is partially correct but contains several inaccuracies:</p>
+<ol>
+<li>
+<p><strong>Incorrect product identification.</strong> The summary states the enzyme "oxidizes L-aspartate to oxaloacetate." In reality, the direct enzymatic product is iminoaspartate, not oxaloacetate. Oxaloacetate is the spontaneous decomposition product of iminoaspartate in aqueous solution. This distinction is biologically critical because the relevant product in vivo is iminoaspartate, which is channeled to quinolinate synthase (NadA) before it can decompose. Yang et al. (2003, PMID:12496312) explicitly state: "The product of the aspartate dehydrogenase activity is also iminoaspartate."</p>
+</li>
+<li>
+<p><strong>NADP+ preference claim is unsupported.</strong> The summary claims the enzyme binds "NADP+ preferentially." Kinetic data from the A. fulgidus homolog (PMID:16731057) actually show a lower Km for NAD (0.11 mM) than NADP (0.32 mM), and a much lower Km for L-aspartate when NAD is the acceptor (0.19 mM vs 4.3 mM), suggesting NAD may be the preferred cofactor in vivo.</p>
+</li>
+<li>
+<p><strong>False claim about chorismate biosynthesis.</strong> The summary states NadX "feeds the shikimate pathway toward chorismate." This is incorrect. NadX functions in NAD+ biosynthesis, not chorismate biosynthesis. The biological product (iminoaspartate) feeds into quinolinate synthesis via NadA. While oxaloacetate (the decomposition product) could theoretically enter other pathways, there is no evidence that NadX functions in the shikimate pathway, and this claim appears to be a hallucination or over-interpretation.</p>
+</li>
+<li>
+<p><strong>Homodimer claim is correct.</strong> The A. fulgidus homolog was characterized as a homodimeric protein of ~48 kDa (PMID:16731057), and the crystal structure confirms dimeric architecture (PMID:17651440).</p>
+</li>
+<li>
+<p><strong>Core structural description is broadly correct.</strong> The Rossmann-like NAD(P)-binding N-terminal domain and the C-terminal catalytic domain are accurately described, consistent with the crystal structure (PMID:12496312).</p>
+</li>
+</ol>
+<p>The thinking trace contains additional problematic claims, including speculative interactions with "quinolinate synthetase (nadA)," "aspartate carbamoyltransferase regulatory and catalytic chains (pyrI, pyrB)," "aspartate aminotransferase (aspB1)," and several others. These protein-protein interactions are entirely speculative and not supported by any published evidence.</p>
+<p>The claim about "protein homodimerization activity (GO:0042803)" in the thinking trace is an over-annotation. The enzyme forms a homodimer, but GO:0042803 implies homodimerization is itself a molecular function of the protein rather than a structural feature. GO curation guidelines would not annotate a simple homodimeric enzyme with this term.</p>
+<h2 id="comparison-with-interpro2go">Comparison with interpro2go</h2>
+<p>The InterPro2GO annotation (GO_REF:0000002) assigns GO:0016491 (oxidoreductase activity) based on IPR005106 (Aspartate/homoserine dehydrogenase, NAD-binding domain). This is a very general annotation that correctly identifies the enzyme as an oxidoreductase but provides no information about substrate specificity or biological context.</p>
+<p>BioReason goes substantially beyond InterPro2GO by:<br />
+- Correctly identifying the specific substrate (L-aspartate)<br />
+- Correctly identifying the homodimeric quaternary structure<br />
+- Correctly describing the two-domain architecture (Rossmann fold + catalytic domain)<br />
+- Identifying the biological pathway context (NAD biosynthesis)</p>
+<p>However, BioReason also introduces errors not present in InterPro2GO:<br />
+- The false chorismate biosynthesis claim is entirely novel (not from InterPro2GO)<br />
+- The misidentification of the product as oxaloacetate rather than iminoaspartate<br />
+- Speculative protein-protein interactions with no literature support</p>
+<p>The BioReason functional summary is clearly not a simple recapitulation of InterPro2GO. It synthesizes domain architecture information with pathway context, but introduces biological errors in the process. The InterPro2GO annotation, while uninformative, is at least not wrong. The more informative annotations in the GOA file (GO:0033735 from GO_REF:0000120, and the BP term GO:0009435) come from UniRule/HAMAP rather than InterPro2GO, and BioReason's functional summary covers similar ground to these UniRule annotations but with lower precision.</p>
+<h2 id="notes-on-thinking-trace">Notes on thinking trace</h2>
+<p>The thinking trace demonstrates a systematic domain-by-domain analysis that is methodologically sound. It correctly maps InterPro domain boundaries and structural features. However, the reasoning goes off track in two areas:</p>
+<ol>
+<li>
+<p>The chorismate pathway connection is fabricated. The trace states "the NADP-dependent oxidative direction supplies oxaloacetate that feeds into the shikimate pathway, where oxaloacetate condenses with phosphoenolpyruvate." This confuses the role of oxaloacetate in the shikimate pathway (oxaloacetate is not a shikimate pathway intermediate; the pathway starts from erythrose 4-phosphate and phosphoenolpyruvate).</p>
+</li>
+<li>
+<p>The extensive protein-protein interaction predictions (with nadA, pyrI, pyrB, aspB1, purA, argG, asnB, dfp) appear to be fabricated metabolic network reasoning without any supporting evidence. While NadX and NadA do participate in the same pathway, none of these specific physical interactions have been demonstrated.</p>
+</li>
+</ol>
+<p>The trace correctly uses the archaeal family signatures (IPR022487) to contextualize the enzyme taxonomically.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q58325
+gene_symbol: nadX
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:243232
+  label: Methanocaldococcus jannaschii (strain ATCC 43067 / DSM 2661 / JAL-1 / JCM
+    10045 / NBRC 100440)
+description: &gt;-
+  NadX (MJ0915) is an L-aspartate dehydrogenase (EC 1.4.1.21) that catalyzes the
+  NAD(P)-dependent oxidative deamination of L-aspartate to iminoaspartate, the first
+  committed step in the de novo NAD+ biosynthetic pathway from L-aspartate. This enzyme
+  represents an alternative to the FAD-dependent L-aspartate oxidase (NadB) used in
+  classical bacterial NAD biosynthesis pathways. NadX is a homodimeric protein with an
+  N-terminal Rossmann fold NAD(P)-binding domain and a C-terminal catalytic domain. The
+  iminoaspartate product is channeled to quinolinate synthase (NadA) for quinolinate
+  biosynthesis. NadX homologs are found in many methanogenic archaea and some bacteria
+  such as Thermotoga maritima.
+existing_annotations:
+# ================== NAD+ BIOSYNTHETIC PROCESS ==================
+- term:
+    id: GO:0009435
+    label: NAD+ biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      NadX catalyzes the first step of de novo NAD+ biosynthesis from L-aspartate,
+      producing iminoaspartate for the NadA quinolinate synthase reaction. This
+      annotation is correct but could be more specific; GO:0034628 (&#39;de novo&#39; NAD+
+      biosynthetic process from L-aspartate) precisely describes the pathway route
+      used by NadX.
+    action: MODIFY
+    reason: &gt;-
+      The more specific term GO:0034628 (&#39;de novo&#39; NAD+ biosynthetic process from
+      L-aspartate) precisely captures NadX&#39;s role in the aspartate-derived de novo
+      pathway, distinguishing it from salvage pathways and the tryptophan-derived
+      route.
+    proposed_replacement_terms:
+      - id: GO:0034628
+        label: &#34;&#39;de novo&#39; NAD+ biosynthetic process from L-aspartate&#34;
+    supported_by:
+      - reference_id: PMID:12496312
+        supporting_text: &#34;two different enzymes, an oxidase and a dehydrogenase, may have evolved to catalyze the first step of NAD biosynthesis in prokaryotes&#34;
+      - reference_id: file:METJA/nadX/nadX-deep-research-bioreason.md
+        supporting_text: &#34;BioReason SFT trace correctly identifies NAD biosynthesis pathway context&#34;
+
+# ================== OXIDOREDUCTASE ACTIVITY (InterPro2GO) ==================
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This InterPro2GO annotation from IPR005106 (Aspartate/homoserine dehydrogenase,
+      NAD-binding domain) is correct but too general. NadX has a well-characterized
+      specific activity: L-aspartate dehydrogenase [NAD(P)+] activity (GO:0033735).
+      The general oxidoreductase term adds no information beyond what the more specific
+      term already provides.
+    action: MODIFY
+    reason: &gt;-
+      GO:0016491 (oxidoreductase activity) is far too general; GO:0033735 provides
+      the precise molecular function. This is a typical InterPro2GO limitation where
+      domain-level annotation yields only broad functional categories.
+    proposed_replacement_terms:
+      - id: GO:0033735
+        label: L-aspartate dehydrogenase [NAD(P)+] activity
+    supported_by:
+      - reference_id: PMID:12496312
+        supporting_text: &#34;The enzymatic characterization of TM1643 revealed that it possesses NAD or NADP-dependent dehydrogenase activity toward l-aspartate but no aspartate oxidase activity&#34;
+
+# ================== OXIDOREDUCTASE ACTIVITY (CH-NH2 group) ==================
+- term:
+    id: GO:0016639
+    label: oxidoreductase activity, acting on the CH-NH2 group of donors, NAD or NADP
+      as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      This annotation correctly captures that NadX acts on the CH-NH2 group of
+      L-aspartate using NAD or NADP as acceptor. However, the more specific child
+      term GO:0033735 (L-aspartate dehydrogenase [NAD(P)+] activity) is available
+      and precisely identifies the substrate specificity.
+    action: MODIFY
+    reason: &gt;-
+      A more specific child term exists that exactly describes this enzyme&#39;s
+      activity and substrate specificity.
+    proposed_replacement_terms:
+      - id: GO:0033735
+        label: L-aspartate dehydrogenase [NAD(P)+] activity
+    supported_by:
+      - reference_id: PMID:16731057
+        supporting_text: &#34;The enzyme specifically utilized L-aspartate as the electron donor, while either NAD or NADP could serve as the electron acceptor&#34;
+
+# ================== L-ASPARTATE DEHYDROGENASE ACTIVITY ==================
+- term:
+    id: GO:0033735
+    label: L-aspartate dehydrogenase [NAD(P)+] activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This is the most specific and accurate molecular function term for NadX.
+      The enzyme catalyzes NAD(P)-dependent oxidative deamination of L-aspartate
+      to iminoaspartate (which spontaneously decomposes to oxaloacetate + NH4+).
+      Structural and biochemical studies on homologs from T. maritima and A. fulgidus
+      have confirmed this activity.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0033735 precisely matches the experimentally characterized enzymatic
+      activity of NadX. Although the evidence for M. jannaschii NadX specifically
+      is computational (IEA), the activity has been experimentally demonstrated
+      for close homologs in T. maritima and A. fulgidus.
+    supported_by:
+      - reference_id: PMID:12496312
+        supporting_text: &#34;The enzymatic characterization of TM1643 revealed that it possesses NAD or NADP-dependent dehydrogenase activity toward l-aspartate but no aspartate oxidase activity&#34;
+      - reference_id: PMID:16731057
+        supporting_text: &#34;Characterization revealed the enzyme to be a highly thermostable L-aspartate dehydrogenase&#34;
+
+# ================== NADP BINDING ==================
+- term:
+    id: GO:0050661
+    label: NADP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      NadX binds NADP as one of its two cofactor options. The A. fulgidus homolog
+      has a Km of 0.32 mM for NADP. While NADP binding is implicit in the
+      GO:0033735 term (which specifies NAD(P)+), this annotation provides explicit
+      documentation of NADP cofactor binding capability.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      NADP binding is already implicit in GO:0033735 (L-aspartate dehydrogenase
+      [NAD(P)+] activity). This annotation is not wrong but is redundant with the
+      more specific MF term. Keeping as non-core for completeness.
+    supported_by:
+      - reference_id: PMID:16731057
+        supporting_text: &#34;The Km values for NAD and NADP were 0.11 and 0.32 mM, respectively&#34;
+
+# ================== NAD BINDING ==================
+- term:
+    id: GO:0051287
+    label: NAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      NadX binds NAD as its preferred cofactor. The A. fulgidus homolog has a Km
+      of 0.11 mM for NAD, and crystal structures show NAD bound in the Rossmann fold
+      domain. As with NADP binding, this is implicit in GO:0033735 but provides
+      explicit documentation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      NAD binding is already implicit in GO:0033735 (L-aspartate dehydrogenase
+      [NAD(P)+] activity). Keeping as non-core for completeness. Kinetic data from
+      the A. fulgidus homolog suggest a slight preference for NAD over NADP.
+    supported_by:
+      - reference_id: PMID:17651440
+        supporting_text: &#34;The crystal structure of the highly thermostable L-aspartate dehydrogenase (L-aspDH; EC 1.4.1.21) from the hyperthermophilic archaeon Archaeoglobus fulgidus was determined in the presence of NAD and a substrate analog, citrate&#34;
+      - reference_id: PMID:16731057
+        supporting_text: &#34;The Km values for L-aspartate were 0.19 and 4.3 mM when NAD or NADP, respectively, served as the electron acceptor&#34;
+
+# ================== CYTOPLASM (NEW) ==================
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      NadX is a soluble enzyme with no predicted transmembrane segments or signal
+      peptides, consistent with cytoplasmic localization. As a central metabolic
+      enzyme in NAD biosynthesis, cytoplasmic localization is expected for this
+      archaeal protein.
+    action: NEW
+    reason: &gt;-
+      Cytoplasmic localization is consistent with the enzyme&#39;s soluble nature and
+      its role in the cytoplasmic de novo NAD biosynthesis pathway. No transmembrane
+      domains are predicted.
+    supported_by:
+      - reference_id: PMID:16731057
+        supporting_text: &#34;a homodimeric protein with a molecular mass of about 48 kDa&#34;
+
+references:
+- id: PMID:12496312
+  title: &#34;Aspartate dehydrogenase, a novel enzyme identified from structural and functional studies of TM1643&#34;
+  findings:
+    - statement: &gt;-
+        TM1643 from Thermotoga maritima is an NAD/NADP-dependent L-aspartate
+        dehydrogenase that produces iminoaspartate, representing an alternative
+        to aspartate oxidase (NadB) for the first step of NAD biosynthesis.
+      supporting_text: &#34;two different enzymes, an oxidase and a dehydrogenase, may have evolved to catalyze the first step of NAD biosynthesis in prokaryotes. TM1643 establishes a new class of amino acid dehydrogenases&#34;
+    - statement: &gt;-
+        The crystal structure reveals an N-terminal Rossmann fold domain with bound
+        NAD+ and a C-terminal catalytic domain.
+      supporting_text: &#34;The structure reveals the presence of an N-terminal Rossmann fold domain with a bound NAD(+) cofactor and a C-terminal alpha+beta domain&#34;
+    - statement: &gt;-
+        TM1643 has no aspartate oxidase activity, confirming it is a dehydrogenase
+        and not an oxidase.
+      supporting_text: &#34;The enzymatic characterization of TM1643 revealed that it possesses NAD or NADP-dependent dehydrogenase activity toward l-aspartate but no aspartate oxidase activity&#34;
+- id: PMID:16731057
+  title: &#34;The first archaeal L-aspartate dehydrogenase from the hyperthermophile Archaeoglobus fulgidus&#34;
+  findings:
+    - statement: &gt;-
+        The A. fulgidus L-aspartate dehydrogenase is a homodimeric protein (~48 kDa)
+        that is highly thermostable with optimum temperature of ~80 degrees C.
+      supporting_text: &#34;a homodimeric protein with a molecular mass of about 48 kDa...The enzyme specifically utilized L-aspartate as the electron donor, while either NAD or NADP could serve as the electron acceptor&#34;
+    - statement: &gt;-
+        Homologs of L-aspartate dehydrogenase are found in many methanogenic archaea
+        but not in Thermococcales or Sulfolobales.
+      supporting_text: &#34;Within the archaeal domain, homologues of this enzyme occurred in many Methanogenic species, but not in Thermococcales or Sulfolobales species&#34;
+- id: PMID:17651440
+  title: &#34;Crystal structure of archaeal highly thermostable L-aspartate dehydrogenase/NAD/citrate ternary complex&#34;
+  findings:
+    - statement: &gt;-
+        The A. fulgidus L-aspDH crystal structure at 1.9 A resolution shows a dimeric
+        enzyme with two domains per subunit separated by a deep active-site cleft.
+      supporting_text: &#34;each subunit consists of two domains separated by a deep cleft containing an active site&#34;
+    - statement: &gt;-
+        Substrate binding induces a large conformational change with movement of two
+        loops, and thermostability is achieved through inter- and intrasubunit ion pairs.
+      supporting_text: &#34;A. fulgidus L-aspDH assumes a closed conformation and that a large movement of the two loops takes place during substrate binding&#34;
+- id: PMID:8688087
+  title: &#34;Complete genome sequence of the methanogenic archaeon, Methanococcus jannaschii&#34;
+  findings:
+    - statement: &gt;-
+        The complete genome sequence of M. jannaschii, which includes the MJ0915
+        locus (nadX).
+      supporting_text: &#34;Complete genome sequence of the methanogenic archaeon, Methanococcus jannaschii&#34;
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+
+core_functions:
+- description: &gt;-
+    NadX catalyzes the NAD(P)-dependent oxidative deamination of L-aspartate to
+    iminoaspartate as the first committed step of de novo NAD+ biosynthesis from
+    L-aspartate. This is an alternative to the FAD-dependent aspartate oxidase
+    (NadB) found in many bacteria. The iminoaspartate product is channeled to
+    quinolinate synthase (NadA) for quinolinate biosynthesis.
+  molecular_function:
+    id: GO:0033735
+    label: L-aspartate dehydrogenase [NAD(P)+] activity
+  directly_involved_in:
+    - id: GO:0034628
+      label: &#34;&#39;de novo&#39; NAD+ biosynthetic process from L-aspartate&#34;
+  locations:
+    - id: GO:0005737
+      label: cytoplasm
+  supported_by:
+    - reference_id: PMID:12496312
+      supporting_text: &#34;two different enzymes, an oxidase and a dehydrogenase, may have evolved to catalyze the first step of NAD biosynthesis in prokaryotes&#34;
+    - reference_id: PMID:16731057
+      supporting_text: &#34;Characterization revealed the enzyme to be a highly thermostable L-aspartate dehydrogenase&#34;
+
+suggested_questions:
+- question: &gt;-
+    Has L-aspartate dehydrogenase activity been directly demonstrated for the
+    M. jannaschii NadX protein (Q58325), or is all experimental evidence from
+    homologs (T. maritima TM1643, A. fulgidus)?
+  experts:
+    - &#34;Toshihisa Ohshima&#34;
+    - &#34;Liang Tong&#34;
+- question: &gt;-
+    Is there experimental evidence for physical interaction between NadX and
+    NadA (quinolinate synthase) in M. jannaschii to channel the unstable
+    iminoaspartate intermediate?
+
+suggested_experiments:
+- hypothesis: &gt;-
+    The M. jannaschii NadX (Q58325) has L-aspartate dehydrogenase activity
+    with similar kinetic parameters to the characterized A. fulgidus homolog.
+  description: &gt;-
+    Express and purify recombinant M. jannaschii NadX. Perform kinetic
+    characterization measuring NAD- and NADP-dependent oxidation of L-aspartate
+    by monitoring NADH/NADPH production spectrophotometrically at 340 nm.
+    Determine Km values for L-aspartate, NAD, and NADP.
+  experiment_type: enzyme kinetics
+- hypothesis: &gt;-
+    NadX physically interacts with NadA to channel the unstable iminoaspartate
+    intermediate in M. jannaschii.
+  description: &gt;-
+    Perform co-purification or co-immunoprecipitation experiments with tagged
+    NadX and NadA from M. jannaschii. Use cross-linking mass spectrometry to
+    identify interaction surfaces. Test whether coupled NadX-NadA reactions
+    show enhanced quinolinate production compared to sequential reactions.
+  experiment_type: protein-protein interaction
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

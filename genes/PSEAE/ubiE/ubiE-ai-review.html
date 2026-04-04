@@ -1,0 +1,2799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ubiE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ubiE</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9HUC0" target="_blank" class="term-link">
+                        Q9HUC0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ubiE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9HUC0" data-a="DESCRIPTION: UbiE (PA5063) is a bifunctional SAM-dependent C-me..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>UbiE (PA5063) is a bifunctional SAM-dependent C-methyltransferase that catalyzes the penultimate C-methylation step in both ubiquinone and menaquinone biosynthesis in P. aeruginosa. In the ubiquinone pathway, it converts 2-polyprenyl-6-methoxy-1,4-benzoquinol to 2-polyprenyl-3-methyl-6-methoxy-1,4-benzoquinol (EC 2.1.1.201); in the menaquinone pathway, it converts demethylmenaquinol to menaquinol (EC 2.1.1.163). Both ubiquinone-9 and menaquinone are essential electron carriers in the branched respiratory chain of P. aeruginosa, supporting aerobic respiration and anaerobic denitrification (PMID:32409583). The enzyme belongs to the class I SAM-binding methyltransferase superfamily (UbiE/COQ5 family). No direct experimental characterization exists in P. aeruginosa; function is inferred from orthologs in E. coli (PMID:9045837), S. cerevisiae COQ5 (PMID:9083049), and mycobacterial MenG (PMID:36417754).</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HUC0" data-a="GO:0006744" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for ubiquinone biosynthetic process, inferred from phylogenetic trees. UbiE catalyzes the C-methylation of 2-polyprenyl-6-methoxy-1,4-benzoquinol in the ubiquinone pathway. This is a core function of the UbiE/COQ5 family, well established in E. coli (PMID:9045837) and yeast (PMID:9083049).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biosynthetic process. UbiE is directly involved in ubiquinone biosynthesis as the C-methyltransferase for the penultimate step. The BioReason SFT trace (ubiE-deep-research-bioreason.md) also identifies menaquinone headgroup maturation as a core function, consistent with this annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045837" target="_blank" class="term-link">
+                                        PMID:9045837
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Strains of Escherichia coli with mutations in the ubiE gene are not able to catalyze the carbon methylation reaction in the biosynthesis of ubiquinone (coenzyme Q) and menaquinone (vitamin K2), essential isoprenoid quinone components of the respiratory electron transport chain</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAE/ubiE/ubiE-deep-research-bioreason.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">A SAM-dependent C-methyltransferase in Pseudomonas aeruginosa that installs the C-3 methyl group on demethylated menaquinone (and related demethylated quinone intermediates), thereby advancing menaquinone headgroup maturation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008425" target="_blank" class="term-link">
+                                    GO:0008425
+                                </a>
+                            </span>
+                            <span class="term-label">2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HUC0" data-a="GO:0008425" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for the specific molecular function in the ubiquinone pathway (EC 2.1.1.201). This is one of the two core catalytic activities of UbiE, converting DDMQH2 to DMQH2 via SAM-dependent C-methylation. Well supported by ortholog data from E. coli and yeast COQ5.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function. This is one of the two specific methyltransferase activities of UbiE, directly corresponding to EC 2.1.1.201.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9083049" target="_blank" class="term-link">
+                                        PMID:9083049
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Coq5p is required for the C-methyltransferase step that converts 2-methoxy-6-polyprenyl-1, 4-benzoquinone to 2-methoxy-5-methyl-6-polyprenyl-1,4-benzoquinone</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HUC0" data-a="GO:0006744" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for ubiquinone biosynthetic process from UniRule/UniPathway. Redundant with the IBA annotation above but independently supported. Correct annotation for a core biosynthetic function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and redundant with phylogenetic inference. UniRule UR000030800 (HAMAP MF_01813) appropriately assigns this term to the UbiE/COQ5 family.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008168" target="_blank" class="term-link">
+                                    GO:0008168
+                                </a>
+                            </span>
+                            <span class="term-label">methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HUC0" data-a="GO:0008168" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO annotation from IPR004033 (UbiE/COQ5 methyltransferase) and IPR023576 (conserved site). The general methyltransferase activity term is correct but overly broad. More specific terms (GO:0008425 and GO:0043770) are already annotated and better represent the actual catalytic activities.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but too general. The more specific terms GO:0008425 (2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity) and GO:0043770 (demethylmenaquinone methyltransferase activity) are already present and more informative.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008425" target="_blank" class="term-link">
+                                    2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043770" target="_blank" class="term-link">
+                                    demethylmenaquinone methyltransferase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008425" target="_blank" class="term-link">
+                                    GO:0008425
+                                </a>
+                            </span>
+                            <span class="term-label">2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HUC0" data-a="GO:0008425" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for the ubiquinone-pathway methyltransferase activity from UniRule. Correct and specific, corresponding to EC 2.1.1.201. Redundant with the IBA annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct specific molecular function. Independently supported by both UniRule/Rhea and phylogenetic inference.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009060" target="_blank" class="term-link">
+                                    GO:0009060
+                                </a>
+                            </span>
+                            <span class="term-label">aerobic respiration</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HUC0" data-a="GO:0009060" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for aerobic respiration. Ubiquinone is indispensable for the aerobic electron transport chain in P. aeruginosa (PMID:6774977), so ubiE is required for aerobic respiration. However, this is an indirect downstream consequence of ubiquinone biosynthesis rather than a direct function of ubiE. The enzyme catalyzes a biosynthetic step; it does not directly participate in electron transport.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While correct that UbiE activity is required for aerobic respiration (because ubiquinone is essential for the respiratory chain), this annotation describes a downstream physiological consequence rather than the direct molecular role. The core annotation is the biosynthetic process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6774977" target="_blank" class="term-link">
+                                        PMID:6774977
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Complete removal of ubiquinone performed by extracting the lyophilized membrane particles with n-pentane containing acetone resulted in complete loss of all oxidase activities for glucose, gluconate, malate, succinate, and NADH</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009234" target="_blank" class="term-link">
+                                    GO:0009234
+                                </a>
+                            </span>
+                            <span class="term-label">menaquinone biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HUC0" data-a="GO:0009234" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for menaquinone biosynthetic process from UniRule/UniPathway. UbiE catalyzes the final step in menaquinone headgroup maturation, converting demethylmenaquinol to menaquinol. This is the second of the two core biosynthetic pathways involving UbiE.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biosynthetic process. UbiE/MenG directly catalyzes the terminal C-methylation step in menaquinone biosynthesis, well established in E. coli and mycobacteria.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045837" target="_blank" class="term-link">
+                                        PMID:9045837
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Strains of Escherichia coli with mutations in the ubiE gene are not able to catalyze the carbon methylation reaction in the biosynthesis of ubiquinone (coenzyme Q) and menaquinone (vitamin K2), essential isoprenoid quinone components of the respiratory electron transport chain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042181" target="_blank" class="term-link">
+                                    GO:0042181
+                                </a>
+                            </span>
+                            <span class="term-label">ketone biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HUC0" data-a="GO:0042181" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA-assigned annotation for ketone biosynthetic process. Ubiquinone and menaquinone are quinones (not ketones per se, although quinones contain carbonyl groups). This is an overly general and somewhat misleading parent term. The specific pathway terms (GO:0006744 ubiquinone biosynthetic process and GO:0009234 menaquinone biosynthetic process) are already present and far more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Technically not wrong (quinones contain ketone-like carbonyl groups), but this is an uninformative high-level grouping term that obscures the actual biology. The specific quinone biosynthesis terms already capture the biology precisely.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043770" target="_blank" class="term-link">
+                                    GO:0043770
+                                </a>
+                            </span>
+                            <span class="term-label">demethylmenaquinone methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HUC0" data-a="GO:0043770" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for the menaquinone-pathway methyltransferase activity (EC 2.1.1.163) from UniRule. This is the second of the two core catalytic activities of UbiE, converting demethylmenaquinol to menaquinol. Well supported by ortholog data, including direct enzymatic characterization of mycobacterial MenG (PMID:36417754).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function. This is the specific methyltransferase activity for the menaquinone pathway, directly corresponding to EC 2.1.1.163.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36417754" target="_blank" class="term-link">
+                                        PMID:36417754
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Partially purified recombinant protein catalyzed the formation of MK from demethylmenaquinone (DMK), although the activity of the recombinant protein was low and appeared to require a cofactor or intact membrane structure for activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>C-methylation of 2-polyprenyl-6-methoxy-1,4-benzoquinol in the ubiquinone biosynthetic pathway, using SAM as methyl donor</h3>
+                <span class="vote-buttons" data-g="Q9HUC0" data-a="FUNCTION: C-methylation of 2-polyprenyl-6-methoxy-1,4-benzoq..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008425" target="_blank" class="term-link">
+                            2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9045837" target="_blank" class="term-link">
+                                PMID:9045837
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Strains of Escherichia coli with mutations in the ubiE gene are not able to catalyze the carbon methylation reaction in the biosynthesis of ubiquinone (coenzyme Q) and menaquinone (vitamin K2), essential isoprenoid quinone components of the respiratory electron transport chain</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>C-methylation of demethylmenaquinol in the menaquinone biosynthetic pathway, using SAM as methyl donor. This is the terminal step in menaquinone headgroup maturation.</h3>
+                <span class="vote-buttons" data-g="Q9HUC0" data-a="FUNCTION: C-methylation of demethylmenaquinol in the menaqui..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043770" target="_blank" class="term-link">
+                            demethylmenaquinone methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009234" target="_blank" class="term-link">
+                                menaquinone biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36417754" target="_blank" class="term-link">
+                                PMID:36417754
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Partially purified recombinant protein catalyzed the formation of MK from demethylmenaquinone (DMK), although the activity of the recombinant protein was low and appeared to require a cofactor or intact membrane structure for activity</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9045837" target="_blank" class="term-link">
+                            PMID:9045837
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A C-methyltransferase involved in both ubiquinone and menaquinone biosynthesis; isolation and identification of the Escherichia coli ubiE gene</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">E. coli ubiE encodes a C-methyltransferase required for C-methylation in both ubiquinone and menaquinone biosynthesis.</div>
+                        
+                        <div class="finding-text">"Strains of Escherichia coli with mutations in the ubiE gene are not able to catalyze the carbon methylation reaction in the biosynthesis of ubiquinone (coenzyme Q) and menaquinone (vitamin K2), essential isoprenoid quinone components of the respiratory electron transport chain"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ubiE mutants accumulate demethylmenaquinone and 2-octaprenyl-6-methoxy-1,4-benzoquinone.</div>
+                        
+                        <div class="finding-text">"E. coli strains containing either the disruption or the point mutation in ubiE accumulated 2-octaprenyl-6-methoxy-1,4-benzoquinone and demethylmenaquinone as predominant intermediates"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UbiE contains SAM-binding motifs common to SAM-dependent methyltransferases.</div>
+                        
+                        <div class="finding-text">"we evaluated the amino acid sequences encoded by open reading frames located in this region for the presence of sequence motifs common to a wide variety of S-adenosyl-L-methionine-dependent methyltransferases"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9083049" target="_blank" class="term-link">
+                            PMID:9083049
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of the COQ5 gene from Saccharomyces cerevisiae. Evidence for a C-methyltransferase in ubiquinone biosynthesis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Yeast COQ5 has 44% identity to E. coli UbiE and is required for a C-methyltransferase step in ubiquinone biosynthesis.</div>
+                        
+                        <div class="finding-text">"with 44% sequence identity over 262 amino acids to UbiE, which is required for a C-methyltransferase step in the Q and menaquinone biosynthetic pathways in Escherichia coli. Both the ubiE and COQ5 coding sequences contain sequence motifs common to a wide variety of S-adenosyl-L-methionine-dependent methyltransferases"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36417754" target="_blank" class="term-link">
+                            PMID:36417754
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mycobacterial MenG; Partial Purification, Characterization, and Inhibition</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mycobacterial MenG (Rv0558) is a SAM/demethylmenaquinol methyltransferase that complements E. coli ubiE deletion.</div>
+                        
+                        <div class="finding-text">"Heterologous expression of Rv0558 complemented an ubiE (the quinone C-methyltransferase involved in ubiquinone and menaquinone synthesis) deletion in Escherichia coli, and expression in a wild-type E. coli strain increased quinone C-methyltransferase specific activity by threefold"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The reduced form demethylmenaquinol, not the oxidized demethylmenaquinone, is the true substrate.</div>
+                        
+                        <div class="finding-text">"addition of dithiothreitol, dithionite, NADH, or other substrates of primary dehydrogenases to reaction mixtures containing membrane preparations stimulated the activity. Thus, these observations strongly suggest that demethylmenaquinol is the actual substrate of MenG"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10960098" target="_blank" class="term-link">
+                            PMID:10960098
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of Escherichia coli ubiB, a gene required for the first monooxygenase step in ubiquinone biosynthesis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ubiE is the first gene in an operon with yigP and ubiB in E. coli.</div>
+                        
+                        <div class="finding-text">"the ubiE gene encodes a C-methyltransferase required for the synthesis of both CoQ and menaquinone, and it is the 5&#39; gene in an operon containing ubiE, yigP, and ubiB"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9325429" target="_blank" class="term-link">
+                            PMID:9325429
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterisation of Escherichia coli K-12 mutants defective in formate-dependent nitrite reduction; essential roles for hemN and the menFDBCE operon</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In E. coli, menaquinone (but not demethylmenaquinone) is essential for certain anaerobic electron transfer pathways.</div>
+                        
+                        <div class="finding-text">"combined data establish that menaquinones are essential for cytochrome-c-dependent trimethylamine-N-oxide reductase (Tor) and Nrf activity, but that either menaquinone or ubiquinone, but not demethylmenaquinone, can transfer electrons to a third cytochrome-c-dependent electron transfer chain, the periplasmic nitrate reductase"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32409583" target="_blank" class="term-link">
+                            PMID:32409583
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The O(2)-independent pathway of ubiquinone biosynthesis is essential for denitrification in Pseudomonas aeruginosa.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ubiquinone-9 is the major quinone in P. aeruginosa and is required for anaerobic denitrification.</div>
+                        
+                        <div class="finding-text">"we established that UQ9 is the major quinone of Pseudomonas aeruginosa and is required for growth under anaerobic respiration (i.e. denitrification)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6774977" target="_blank" class="term-link">
+                            PMID:6774977
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Function of ubiquinone in the electron transport system of Pseudomonas aeruginosa grown aerobically</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ubiquinone is indispensable for the aerobic electron transport chain of P. aeruginosa.</div>
+                        
+                        <div class="finding-text">"Complete removal of ubiquinone performed by extracting the lyophilized membrane particles with n-pentane containing acetone resulted in complete loss of all oxidase activities for glucose, gluconate, malate, succinate, and NADH"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6766443" target="_blank" class="term-link">
+                            PMID:6766443
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Membrane-bound respiratory chain of Pseudomonas aeruginosa grown aerobically</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Aerobically grown P. aeruginosa uses coenzyme Q9 in its respiratory chain.</div>
+                        
+                        <div class="finding-text">"The electron transport chain of the gram-negative bacterium Pseudomonas aeruginosa, grown aerobically, contained a number of primary dehydrogenases and respiratory components (soluble flavin, bound flavin, coenzyme Q9, heme b, heme c, and cytochrome o)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10984043" target="_blank" class="term-link">
+                            PMID:10984043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence of Pseudomonas aeruginosa PAO1, an opportunistic pathogen</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does P. aeruginosa ubiE have a preference for the ubiquinone versus menaquinone pathway substrate? The relative importance of each pathway may differ from E. coli given that UQ9 is the dominant quinone in P. aeruginosa.</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Fabien Pierrel, Ludovic Pelosi</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9HUC0" data-a="Q: Does P. aeruginosa ubiE have a preference for the ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is there any direct experimental evidence for ubiE function in P. aeruginosa (e.g., gene knockout, complementation, or enzymatic assay)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9HUC0" data-a="Q: Is there any direct experimental evidence for ubiE..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate a clean deletion of PA5063 (ubiE) in P. aeruginosa PAO1 using allelic exchange. Assess growth phenotype on aerobic and anaerobic (denitrifying) media. Analyze quinone profiles (UQ9, MK, DMK) by HPLC-MS. Complement with wild-type ubiE expressed from a plasmid.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: P. aeruginosa ubiE knockout would be deficient in both ubiquinone and menaquinone biosynthesis, resulting in growth defects under both aerobic and anaerobic conditions.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: gene knockout and metabolite profiling</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9HUC0" data-a="EXPERIMENT: Generate a clean deletion of PA5063 (ubiE) in P. a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ubiE-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9HUC0" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="o">---</span>
+<span class="nl">provider:</span><span class="w"> </span><span class="n">bioreason</span><span class="o">-</span><span class="n">pro</span>
+<span class="nl">model:</span><span class="w"> </span><span class="n">SFT</span>
+<span class="nl">source:</span><span class="w"> </span><span class="n">huggingface</span><span class="p">.</span><span class="n">co</span><span class="o">/</span><span class="n">datasets</span><span class="o">/</span><span class="n">wanglab</span><span class="o">/</span><span class="n">protein_catalogue</span>
+<span class="nl">date:</span><span class="w"> </span><span class="p">&#39;</span><span class="mh">2026</span><span class="o">-</span><span class="mh">04</span><span class="o">-</span><span class="mh">04</span><span class="p">&#39;</span>
+<span class="nl">uniprot_id:</span><span class="w"> </span><span class="n">Q9HUC0</span>
+<span class="nl">gene:</span><span class="w"> </span><span class="n">ubiE</span>
+<span class="nl">organism:</span><span class="w"> </span><span class="n">Pseudomonas</span><span class="w"> </span><span class="n">aeruginosa</span><span class="w"> </span><span class="p">(</span><span class="n">strain</span><span class="w"> </span><span class="n">ATCC</span><span class="w"> </span><span class="mh">15692</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">DSM</span><span class="w"> </span><span class="mh">22644</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">CIP</span><span class="w"> </span><span class="mh">104116</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">JCM</span><span class="w"> </span><span class="mh">14847</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">LMG</span><span class="w"> </span><span class="mh">12228</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mh">1</span><span class="n">C</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PRS</span><span class="w"> </span><span class="mh">101</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PAO1</span><span class="p">)</span>
+<span class="o">---</span>
+
+<span class="p">##</span><span class="w"> </span><span class="n">Thinking</span><span class="w"> </span><span class="n">Trace</span>
+
+<span class="n">I</span><span class="w"> </span><span class="k">begin</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">architecture</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">core</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">defined</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">IPR004033</span><span class="w"> </span><span class="p">(</span><span class="n">UbiE</span><span class="o">/</span><span class="n">COQ5</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="n">spanning</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">21</span><span class="err">–</span><span class="mh">255</span><span class="p">,</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">three</span><span class="w"> </span><span class="n">overlapping</span><span class="w"> </span><span class="n">entries</span><span class="w"> </span><span class="n">across</span><span class="w"> </span><span class="mh">21</span><span class="err">–</span><span class="mh">255</span><span class="o">/</span><span class="mh">25</span><span class="err">–</span><span class="mh">255</span><span class="o">/</span><span class="mh">30</span><span class="err">–</span><span class="mh">255</span><span class="p">,</span><span class="w"> </span><span class="n">indicating</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">canonical</span><span class="w"> </span><span class="n">UbiE</span><span class="o">/</span><span class="n">COQ5</span><span class="w"> </span><span class="n">fold</span><span class="p">.</span><span class="w"> </span><span class="n">This</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="n">assignment</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">embedded</span><span class="w"> </span><span class="n">within</span><span class="w"> </span><span class="n">IPR029063</span><span class="w"> </span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">adenosyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">methionine</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">superfamily</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">18</span><span class="err">–</span><span class="mh">253</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mh">36</span><span class="err">–</span><span class="mh">256</span><span class="p">),</span><span class="w"> </span><span class="n">which</span><span class="w"> </span><span class="n">denotes</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">Rossmann</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">class</span><span class="w"> </span><span class="n">I</span><span class="w"> </span><span class="n">SAM</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">scaffold</span><span class="p">.</span><span class="w"> </span><span class="n">Two</span><span class="w"> </span><span class="n">conserved</span><span class="w"> </span><span class="n">sites</span><span class="w"> </span><span class="n">punctuate</span><span class="w"> </span><span class="n">this</span><span class="w"> </span><span class="nl">core:</span><span class="w"> </span><span class="n">IPR023576</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">41</span><span class="err">–</span><span class="mh">56</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">163</span><span class="err">–</span><span class="mf">177.</span><span class="w"> </span><span class="n">These</span><span class="w"> </span><span class="n">motifs</span><span class="w"> </span><span class="n">typically</span><span class="w"> </span><span class="n">organize</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">SAM</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">pocket</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">environment</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">stabilizes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">transition</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">electrophilic</span><span class="w"> </span><span class="n">methyl</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">carbon</span><span class="w"> </span><span class="n">center</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">ordered</span><span class="w"> </span><span class="n">layout</span><span class="err">—</span><span class="n">superfamily</span><span class="w"> </span><span class="n">Rossmann</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">SAM</span><span class="o">-</span><span class="n">MTase</span><span class="w"> </span><span class="n">scaffold</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">UbiE</span><span class="o">/</span><span class="n">COQ5</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="n">determinants</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">two</span><span class="w"> </span><span class="n">conserved</span><span class="w"> </span><span class="n">catalytic</span><span class="o">/</span><span class="n">ligand</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">sites</span><span class="err">—</span><span class="n">causes</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">chemistry</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">uses</span><span class="w"> </span><span class="n">S</span><span class="o">-</span><span class="n">adenosyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">methionine</span><span class="w"> </span><span class="p">(</span><span class="n">SAM</span><span class="p">)</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">methylate</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">quinone</span><span class="w"> </span><span class="n">ring</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">defined</span><span class="w"> </span><span class="n">carbon</span><span class="p">.</span>
+</code></pre></div>
+
+<p>From this architecture, the molecular function resolves to a SAM-dependent quinone C-methylation. The UbiE/COQ5 family is specialized for methylating prenylated quinones at the C-3 position of demethylated intermediates. The presence of the UbiE/COQ5 family signatures together with the conserved sites that coordinate SAM and the quinone substrate supports the specific activity formalized as GO:0008924 3-demethylubiquinone methyltransferase activity. The same catalytic logic applies to demethylmenaquinone substrates in some bacteria, because the reaction is a carbon–carbon bond-forming methylation of a quinone headgroup; thus the enzyme can act on 3-demethylmenaquinone as well as 3-demethylubiquinone.</p>
+<p>This chemistry feeds directly into quinone biosynthesis. By installing the C-3 methyl group, the enzyme completes the headgroup maturation of demethylmenaquinone, advancing it toward functional menaquinone. This places the protein in the biological process GO:0009234 menaquinone biosynthetic process. In organisms that use both ubiquinone and menaquinone pathways, UbiE/COQ5-like enzymes often exhibit substrate breadth governed by active-site determinants encoded in the family core; here, the UbiE/COQ5 family signatures and conserved sites are consistent with catalysis on demethylmenaquinone as part of the menaquinone branch.</p>
+<p>The cellular context follows from the pathway organization. Quinone biosynthesis in Pseudomonas aeruginosa proceeds at the cytoplasmic face of the inner (plasma) membrane, where hydrophobic prenylated intermediates partition. UbiE/COQ5-like enzymes typically assemble into multi-enzyme metabolons with other quinone biosynthetic proteins to channel hydrophobic intermediates. This supports a residence within a GO:0032991 protein-containing complex. Given the membrane-proximal nature of the substrates and the need for efficient handoff among pathway enzymes, the most plausible physical setting is at the bacterial plasma membrane, where the enzyme associates peripherally with the membrane-resident biosynthetic machinery.</p>
+<p>Mechanistically, the enzyme binds SAM in the Rossmann-like pocket formed by the class I methyltransferase superfamily scaffold (IPR029063) and positions 3-demethylmenaquinone (or 3-demethylubiquinone) in a hydrophobic channel shaped by the UbiE/COQ5 family core (IPR004033). The conserved sites at residues 41–56 and 163–177 stabilize the transition state for electrophilic substitution at C-3 of the quinone headgroup, transferring the methyl from SAM to yield the methylated quinone and S-adenosyl-L-homocysteine. Within a membrane-associated quinone biosynthetic complex, it likely receives the demethylated quinone from upstream methyltransferases and passes the product to downstream tailoring or modification steps.</p>
+<p>This model predicts specific interaction partners. Association with 4-hydroxybenzoate-octaprenyl transferase positions the enzyme downstream of prenylation, while proximity to 3-demethylubiquinone 3-methyltransferase and Ubiquinone biosynthetic protein UbiB would organize a quinone-biosynthesis metabolon at the membrane. Contacts with NAD(P)H quinone oxidoreductase and probable NAD(P)H dehydrogenases could couple redox poise to quinone maturation, while the Trp repressor binding protein WrbA may buffer reactive oxygen species generated during quinone processing. The presence of a hypothetical protein partner suggests accessory scaffolds or adaptors that stabilize the complex. Together, these interactions would create a membrane-proximal assembly that channels hydrophobic intermediates and coordinates methylation with the rest of the quinone pathway.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="n">Functional</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">SAM</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">methyltransferase</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">Pseudomonas</span><span class="w"> </span><span class="n">aeruginosa</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">installs</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="mi">3</span><span class="w"> </span><span class="n">methyl</span><span class="w"> </span><span class="k">group</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">demethylated</span><span class="w"> </span><span class="n">menaquinone</span><span class="w"> </span><span class="p">(</span><span class="ow">and</span><span class="w"> </span><span class="n">related</span><span class="w"> </span><span class="n">demethylated</span><span class="w"> </span><span class="n">quinone</span><span class="w"> </span><span class="n">intermediates</span><span class="p">),</span><span class="w"> </span><span class="n">thereby</span><span class="w"> </span><span class="n">advancing</span><span class="w"> </span><span class="n">menaquinone</span><span class="w"> </span><span class="n">headgroup</span><span class="w"> </span><span class="n">maturation</span><span class="w"> </span><span class="k">within</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">membrane</span><span class="o">-</span><span class="n">associated</span><span class="w"> </span><span class="n">quinone</span><span class="o">-</span><span class="n">biosynthesis</span><span class="w"> </span><span class="n">assembly</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">enzyme</span><span class="w"> </span><span class="n">uses</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">Rossmann</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="n">I</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">core</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">bind</span><span class="w"> </span><span class="n">S</span><span class="o">-</span><span class="n">adenosyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">methionine</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">UbiE</span><span class="o">/</span><span class="n">COQ5</span><span class="o">-</span><span class="k">specific</span><span class="w"> </span><span class="n">pocket</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="k">position</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">quinone</span><span class="w"> </span><span class="n">ring</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">electrophilic</span><span class="w"> </span><span class="n">methyl</span><span class="w"> </span><span class="n">transfer</span><span class="p">,</span><span class="w"> </span><span class="n">likely</span><span class="w"> </span><span class="n">operating</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">cytoplasmic</span><span class="w"> </span><span class="n">face</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">inner</span><span class="w"> </span><span class="n">membrane</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">part</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">multi</span><span class="o">-</span><span class="n">enzyme</span><span class="w"> </span><span class="n">complex</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">channels</span><span class="w"> </span><span class="n">hydrophobic</span><span class="w"> </span><span class="n">intermediates</span><span class="w"> </span><span class="ow">between</span><span class="w"> </span><span class="n">pathway</span><span class="w"> </span><span class="n">steps</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">UniProt</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">Menaquinone</span><span class="w"> </span><span class="n">biosynthesis</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nl">IPR029063</span><span class="p">:</span><span class="w"> </span><span class="n">S</span><span class="o">-</span><span class="n">adenosyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">methionine</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">18-253</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR004033</span><span class="p">:</span><span class="w"> </span><span class="n">UbiE</span><span class="o">/</span><span class="n">COQ5</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">21-255</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR004033</span><span class="p">:</span><span class="w"> </span><span class="n">UbiE</span><span class="o">/</span><span class="n">COQ5</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">25-255</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR004033</span><span class="p">:</span><span class="w"> </span><span class="n">UbiE</span><span class="o">/</span><span class="n">COQ5</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">30-255</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR029063</span><span class="p">:</span><span class="w"> </span><span class="n">S</span><span class="o">-</span><span class="n">adenosyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">methionine</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">36-256</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR023576</span><span class="p">:</span><span class="w"> </span><span class="n">UbiE</span><span class="o">/</span><span class="n">COQ5</span><span class="w"> </span><span class="n">methyltransferase</span><span class="p">,</span><span class="w"> </span><span class="n">conserved</span><span class="w"> </span><span class="n">site</span><span class="w"> </span><span class="p">(</span><span class="n">conserved_site</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">41-56</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR023576</span><span class="p">:</span><span class="w"> </span><span class="n">UbiE</span><span class="o">/</span><span class="n">COQ5</span><span class="w"> </span><span class="n">methyltransferase</span><span class="p">,</span><span class="w"> </span><span class="n">conserved</span><span class="w"> </span><span class="n">site</span><span class="w"> </span><span class="p">(</span><span class="n">conserved_site</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">163-177</span><span class="o">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="k">GO</span><span class="w"> </span><span class="n">Term</span><span class="w"> </span><span class="n">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="n">Molecular</span><span class="w"> </span><span class="k">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Biological</span><span class="w"> </span><span class="n">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Cellular</span><span class="w"> </span><span class="n">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ubiE-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9HUC0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ubie-pseudomonas-aeruginosa-pao1-research-notes">ubiE (Pseudomonas aeruginosa PAO1) - Research Notes</h1>
+<h2 id="gene-identity">Gene Identity</h2>
+<ul>
+<li>UniProt: Q9HUC0</li>
+<li>Ordered locus: PA5063</li>
+<li>EC: 2.1.1.163 (demethylmenaquinone methyltransferase), 2.1.1.201 (2-methoxy-6-polyprenyl-1,4-benzoquinol methylase)</li>
+<li>Family: Class I SAM-dependent methyltransferase superfamily, UbiE/COQ5 family</li>
+</ul>
+<h2 id="core-biochemistry">Core Biochemistry</h2>
+<p>UbiE is a bifunctional SAM-dependent C-methyltransferase that catalyzes the penultimate C-methylation step in both ubiquinone (coenzyme Q) and menaquinone (vitamin K2) biosynthesis. The E. coli ortholog was originally identified by Lee et al. (1997), who demonstrated that ubiE mutants fail to catalyze the C-methylation reaction in both pathways <a href="https://pubmed.ncbi.nlm.nih.gov/9045837" title="Strains of Escherichia coli with mutations in the ubiE gene are not able to catalyze the carbon methylation reaction in the biosynthesis of ubiquinone (coenzyme Q) and menaquinone (vitamin K2), essential isoprenoid quinone components of the respiratory electron transport chain">PMID:9045837</a>. The same study showed that disruption of ubiE causes accumulation of 2-octaprenyl-6-methoxy-1,4-benzoquinone and demethylmenaquinone as predominant intermediates <a href="https://pubmed.ncbi.nlm.nih.gov/9045837" title="E. coli strains containing either the disruption or the point mutation in ubiE accumulated 2-octaprenyl-6-methoxy-1,4-benzoquinone and demethylmenaquinone as predominant intermediates">PMID:9045837</a>.</p>
+<p>The yeast ortholog COQ5 was independently characterized by Barkovich et al. (1997), who confirmed C-methyltransferase activity and mitochondrial localization <a href="https://pubmed.ncbi.nlm.nih.gov/9083049" title="The DNA segment responsible for the complementation contained an open reading frame (GenBankTM accession number Z49210Z49210) with 44% sequence identity over 262 amino acids to UbiE, which is required for a C-methyltransferase step in the Q and menaquinone biosynthetic pathways in Escherichia coli">PMID:9083049</a>.</p>
+<h2 id="dual-pathway-function">Dual Pathway Function</h2>
+<p>The enzyme has two distinct catalytic activities:</p>
+<ol>
+<li><strong>Menaquinone pathway</strong> (EC 2.1.1.163): Converts demethylmenaquinol (DMKH2) to menaquinol (MKH2) by methylating the C-3 position. This is the final step in menaquinone headgroup maturation.</li>
+<li><strong>Ubiquinone pathway</strong> (EC 2.1.1.201): Converts 2-polyprenyl-6-methoxy-1,4-benzoquinol (DDMQH2) to 2-polyprenyl-3-methyl-6-methoxy-1,4-benzoquinol (DMQH2).</li>
+</ol>
+<p>In the mycobacterial ortholog (MenG/Rv0558), Pujari et al. (2022) demonstrated that the actual substrate is the reduced form (demethylmenaquinol), as addition of reductants stimulated activity <a href="https://pubmed.ncbi.nlm.nih.gov/36417754" title="Interestingly, addition of dithiothreitol, dithionite, NADH, or other substrates of primary dehydrogenases to reaction mixtures containing membrane preparations stimulated the activity. Thus, these observations strongly suggest that demethylmenaquinol is the actual substrate of MenG">PMID:36417754</a>.</p>
+<h2 id="p-aeruginosa-quinone-biology">P. aeruginosa Quinone Biology</h2>
+<p>P. aeruginosa uses ubiquinone-9 (coenzyme Q9) as the primary electron carrier in its aerobic respiratory chain. Matsushita et al. (1980) established that ubiquinone is indispensable for respiratory chain function in P. aeruginosa <a href="https://pubmed.ncbi.nlm.nih.gov/6774977" title="Complete removal of ubiquinone performed by extracting the lyophilized membrane particles with n-pentane containing acetone resulted in complete loss of all oxidase activities for glucose, gluconate, malate, succinate, and NADH">PMID:6774977</a>. The respiratory chain of aerobically grown P. aeruginosa contains coenzyme Q9 along with b-type and c-type cytochromes <a href="https://pubmed.ncbi.nlm.nih.gov/6766443" title="The electron transport chain of the gram-negative bacterium Pseudomonas aeruginosa, grown aerobically, contained a number of primary dehydrogenases and respiratory components (soluble flavin, bound flavin, coenzyme Q9, heme b, heme c, and cytochrome o)">PMID:6766443</a>.</p>
+<p>Critically, Vo et al. (2020) demonstrated that UQ9 is required for anaerobic denitrification in P. aeruginosa, not just aerobic respiration <a href="https://pubmed.ncbi.nlm.nih.gov/32409583" title="we established that UQ is the major quinone of [P. aeruginosa] and is required for growth under anaerobic respiration (denitrification)">PMID:32409583</a>. This means that both ubiquinone and menaquinone biosynthesis are physiologically relevant in this organism, and the ubiE C-methylation step is essential for both pathways.</p>
+<h2 id="role-in-electron-transport">Role in Electron Transport</h2>
+<p>E. coli studies showed that menaquinone (but not demethylmenaquinone) is required for certain anaerobic electron transfer pathways. Tyson et al. (1997) demonstrated that ubiE mutants, which produce demethylmenaquinone but not menaquinone, retain some but not all respiratory activity <a href="https://pubmed.ncbi.nlm.nih.gov/9325429" title="A mutant defective in the methyltransferase activity involved in both ubiquinone synthesis and conversion of demethylmenaquinone to menaquinone expressed the same Nrf activity as the parental strain">PMID:9325429</a>. This work also established that menaquinone is essential for cytochrome-c-dependent TMAO reductase and Nrf activities.</p>
+<h2 id="operon-context">Operon Context</h2>
+<p>In E. coli, ubiE is the first gene of an operon containing ubiE-yigP-ubiB <a href="https://pubmed.ncbi.nlm.nih.gov/10960098" title="the ubiE gene encodes a C-methyltransferase required for the synthesis of both CoQ and menaquinone, and it is the 5' gene in an operon containing ubiE, yigP, and ubiB">PMID:10960098</a>. In P. aeruginosa PAO1, ubiE (PA5063) is similarly located in a genomic context with genes involved in quinone metabolism, identified through the complete genome sequence <a href="https://pubmed.ncbi.nlm.nih.gov/10984043">PMID:10984043</a>.</p>
+<h2 id="sam-binding-and-structure">SAM-Binding and Structure</h2>
+<p>The protein belongs to the class I SAM-binding methyltransferase superfamily (IPR029063) with a Rossmann-like fold. It contains the UbiE/COQ5 family signature (IPR004033) and conserved sites (IPR023576) that coordinate SAM binding. The protein has 256 amino acids with SAM-binding residues at positions 79, 100, and 128-129 (UniProt annotation by HAMAP rule MF_01813).</p>
+<h2 id="summary">Summary</h2>
+<p>P. aeruginosa ubiE (PA5063) encodes a bifunctional SAM-dependent C-methyltransferase that is required for the C-methylation step in both ubiquinone and menaquinone biosynthesis. Both products are essential for the branched respiratory chain of P. aeruginosa, which uses ubiquinone for both aerobic and anaerobic (denitrification) respiration. The protein is annotated entirely by homology transfer (no direct experimental evidence in P. aeruginosa), but the function is strongly supported by experimental characterization of orthologs in E. coli, yeast, and mycobacteria.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ubiE-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9HUC0" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-ubie-pseae">BioReason-Pro SFT Review: ubiE (PSEAE)</h1>
+<p>Source: ubiE-deep-research-bioreason.md</p>
+<ul>
+<li><strong>Correctness</strong>: 4/5</li>
+<li><strong>Completeness</strong>: 3/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason functional summary states:</p>
+<blockquote>
+<p>A SAM-dependent C-methyltransferase in Pseudomonas aeruginosa that installs the C-3 methyl group on demethylated menaquinone (and related demethylated quinone intermediates), thereby advancing menaquinone headgroup maturation within a membrane-associated quinone-biosynthesis assembly. The enzyme uses a Rossmann-like class I methyltransferase core to bind S-adenosyl-L-methionine and a UbiE/COQ5-specific pocket to position the quinone ring for electrophilic methyl transfer, likely operating at the cytoplasmic face of the inner membrane as part of a multi-enzyme complex that channels hydrophobic intermediates between pathway steps.</p>
+</blockquote>
+<p>The core catalytic identity -- SAM-dependent C-methyltransferase that methylates demethylated quinone intermediates -- is correct and well-stated. The mechanistic detail about the Rossmann-like class I methyltransferase core and SAM binding is accurate. The description of the UbiE/COQ5-specific pocket positioning the quinone ring for electrophilic methyl transfer matches the known biochemistry.</p>
+<p>However, there are notable issues:</p>
+<ol>
+<li>
+<p><strong>Menaquinone bias</strong>: The summary heavily emphasizes menaquinone biosynthesis while only parenthetically mentioning "related demethylated quinone intermediates." In reality, UbiE is well established as a bifunctional enzyme acting in BOTH ubiquinone and menaquinone biosynthesis (PMID:9045837). The ubiquinone pathway role (EC 2.1.1.201, GO:0008425) is equally important, especially in P. aeruginosa where UQ9 is the dominant quinone (PMID:6774977, PMID:32409583). The omission of explicit mention of ubiquinone biosynthesis is a significant gap.</p>
+</li>
+<li>
+<p><strong>Speculative complex formation</strong>: The summary claims the enzyme operates "as part of a multi-enzyme complex that channels hydrophobic intermediates." While metabolon formation has been hypothesized for quinone biosynthesis, direct evidence for a UbiE-containing complex in bacteria is limited. The thinking trace goes further to name specific interaction partners (UbiB, quinone oxidoreductases, WrbA), which are speculative.</p>
+</li>
+<li>
+<p><strong>Cellular localization speculation</strong>: The claim of operating at "the cytoplasmic face of the inner membrane" is plausible but unsupported by direct evidence. UbiE is a soluble protein; the membrane association, if any, would be through interaction with hydrophobic substrates or other membrane-associated proteins.</p>
+</li>
+<li>
+<p><strong>No mention of aerobic/anaerobic respiration context</strong>: The physiological significance of UbiE in supporting both aerobic respiration and anaerobic denitrification in P. aeruginosa (PMID:32409583) is not discussed.</p>
+</li>
+<li>
+<p><strong>Correct GO term cited but rare</strong>: The thinking trace cites GO:0008924 (3-demethylubiquinone methyltransferase activity), which is not the standard term used in current annotations. The curated annotations use GO:0008425 (2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity) and GO:0043770 (demethylmenaquinone methyltransferase activity).</p>
+</li>
+</ol>
+<p>Comparison with interpro2go:</p>
+<p>The InterPro2GO annotation (GO_REF:0000002) assigns GO:0008168 (methyltransferase activity) based on IPR004033 and IPR023576. This is a very broad, non-specific assignment. BioReason substantially improves on interpro2go by:</p>
+<ul>
+<li>Correctly identifying the specific UbiE/COQ5 family function (SAM-dependent quinone C-methylation) rather than generic methyltransferase activity</li>
+<li>Providing mechanistic detail about the Rossmann-fold SAM binding and quinone substrate positioning</li>
+<li>Identifying the specific pathway context (menaquinone biosynthesis)</li>
+</ul>
+<p>However, BioReason does NOT simply recapitulate interpro2go. It adds genuine biological insight about the catalytic mechanism and pathway context. The main weakness compared to the curated review is the incomplete coverage of the ubiquinone pathway role and the speculative claims about complex formation and membrane association. The interpro2go annotation, despite being broad, at least avoids these speculative errors.</p>
+<h2 id="notes-on-thinking-trace">Notes on thinking trace</h2>
+<p>The thinking trace systematically walks through InterPro domain architecture, which is methodologically sound. The identification of IPR004033 (UbiE/COQ5 family), IPR029063 (SAM-dependent methyltransferase superfamily), and IPR023576 (conserved sites) is accurate and well-reasoned. The deduction of SAM-dependent quinone C-methylation from these domains is logical and correct.</p>
+<p>The trace becomes speculative when it infers protein complex membership (GO:0032991) and specific interaction partners. The claim that the enzyme "likely receives the demethylated quinone from upstream methyltransferases and passes the product to downstream tailoring or modification steps" is a reasonable hypothesis but presented with unwarranted confidence. The naming of specific interaction partners (4-hydroxybenzoate-octaprenyl transferase, UbiB, WrbA, NAD(P)H quinone oxidoreductase) appears to be drawn from STRING or similar interaction databases and is presented as if it were established biology.</p>
+<p>The GO term predictions section is empty (no MF, BP, or CC predictions listed), which is unusual. The functional summary and thinking trace contain the BioReason reasoning, while the GO term predictions were apparently not populated for this SFT entry.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9HUC0
+gene_symbol: ubiE
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:208964
+  label: Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM
+    14847 / LMG 12228 / 1C / PRS 101 / PAO1)
+description: &gt;-
+  UbiE (PA5063) is a bifunctional SAM-dependent C-methyltransferase that catalyzes
+  the penultimate C-methylation step in both ubiquinone and menaquinone biosynthesis
+  in P. aeruginosa. In the ubiquinone pathway, it converts 2-polyprenyl-6-methoxy-1,4-benzoquinol
+  to 2-polyprenyl-3-methyl-6-methoxy-1,4-benzoquinol (EC 2.1.1.201); in the
+  menaquinone pathway, it converts demethylmenaquinol to menaquinol (EC 2.1.1.163).
+  Both ubiquinone-9 and menaquinone are essential electron carriers in the branched
+  respiratory chain of P. aeruginosa, supporting aerobic respiration and anaerobic
+  denitrification (PMID:32409583). The enzyme belongs to the class I SAM-binding
+  methyltransferase superfamily (UbiE/COQ5 family). No direct experimental characterization
+  exists in P. aeruginosa; function is inferred from orthologs in E. coli (PMID:9045837),
+  S. cerevisiae COQ5 (PMID:9083049), and mycobacterial MenG (PMID:36417754).
+references:
+- id: PMID:9045837
+  title: A C-methyltransferase involved in both ubiquinone and menaquinone biosynthesis;
+    isolation and identification of the Escherichia coli ubiE gene
+  findings:
+  - statement: &gt;-
+      E. coli ubiE encodes a C-methyltransferase required for C-methylation in
+      both ubiquinone and menaquinone biosynthesis.
+    supporting_text: &gt;-
+      Strains of Escherichia coli with mutations in the ubiE gene are not able
+      to catalyze the carbon methylation reaction in the biosynthesis of
+      ubiquinone (coenzyme Q) and menaquinone (vitamin K2), essential isoprenoid
+      quinone components of the respiratory electron transport chain
+  - statement: &gt;-
+      ubiE mutants accumulate demethylmenaquinone and 2-octaprenyl-6-methoxy-1,4-benzoquinone.
+    supporting_text: &gt;-
+      E. coli strains containing either the disruption or the point mutation in
+      ubiE accumulated 2-octaprenyl-6-methoxy-1,4-benzoquinone and demethylmenaquinone
+      as predominant intermediates
+  - statement: &gt;-
+      UbiE contains SAM-binding motifs common to SAM-dependent methyltransferases.
+    supporting_text: &gt;-
+      we evaluated the amino acid sequences encoded by open reading frames
+      located in this region for the presence of sequence motifs common to a
+      wide variety of S-adenosyl-L-methionine-dependent methyltransferases
+- id: PMID:9083049
+  title: Characterization of the COQ5 gene from Saccharomyces cerevisiae. Evidence
+    for a C-methyltransferase in ubiquinone biosynthesis
+  findings:
+  - statement: &gt;-
+      Yeast COQ5 has 44% identity to E. coli UbiE and is required for a
+      C-methyltransferase step in ubiquinone biosynthesis.
+    supporting_text: &gt;-
+      with 44% sequence identity over 262 amino acids to UbiE, which is
+      required for a C-methyltransferase step in the Q and menaquinone biosynthetic
+      pathways in Escherichia coli. Both the ubiE and COQ5 coding sequences contain
+      sequence motifs common to a wide variety of S-adenosyl-L-methionine-dependent
+      methyltransferases
+- id: PMID:36417754
+  title: Mycobacterial MenG; Partial Purification, Characterization, and Inhibition
+  findings:
+  - statement: &gt;-
+      Mycobacterial MenG (Rv0558) is a SAM/demethylmenaquinol methyltransferase
+      that complements E. coli ubiE deletion.
+    supporting_text: &gt;-
+      Heterologous expression of Rv0558 complemented an ubiE (the quinone
+      C-methyltransferase involved in ubiquinone and menaquinone synthesis) deletion
+      in Escherichia coli, and expression in a wild-type E. coli strain increased
+      quinone C-methyltransferase specific activity by threefold
+  - statement: &gt;-
+      The reduced form demethylmenaquinol, not the oxidized demethylmenaquinone,
+      is the true substrate.
+    supporting_text: &gt;-
+      addition of dithiothreitol, dithionite, NADH, or other substrates of
+      primary dehydrogenases to reaction mixtures containing membrane preparations
+      stimulated the activity. Thus, these observations strongly suggest that
+      demethylmenaquinol is the actual substrate of MenG
+- id: PMID:10960098
+  title: Identification of Escherichia coli ubiB, a gene required for the first
+    monooxygenase step in ubiquinone biosynthesis
+  findings:
+  - statement: &gt;-
+      ubiE is the first gene in an operon with yigP and ubiB in E. coli.
+    supporting_text: &gt;-
+      the ubiE gene encodes a C-methyltransferase required for the synthesis of
+      both CoQ and menaquinone, and it is the 5&#39; gene in an operon containing
+      ubiE, yigP, and ubiB
+- id: PMID:9325429
+  title: Characterisation of Escherichia coli K-12 mutants defective in formate-dependent
+    nitrite reduction; essential roles for hemN and the menFDBCE operon
+  findings:
+  - statement: &gt;-
+      In E. coli, menaquinone (but not demethylmenaquinone) is essential for
+      certain anaerobic electron transfer pathways.
+    supporting_text: &gt;-
+      combined data establish that menaquinones are essential for
+      cytochrome-c-dependent trimethylamine-N-oxide reductase (Tor) and Nrf
+      activity, but that either menaquinone or ubiquinone, but not
+      demethylmenaquinone, can transfer electrons to a third
+      cytochrome-c-dependent electron transfer chain, the periplasmic nitrate
+      reductase
+- id: PMID:32409583
+  title: The O(2)-independent pathway of ubiquinone biosynthesis is essential for
+    denitrification in Pseudomonas aeruginosa.
+  findings:
+  - statement: &gt;-
+      Ubiquinone-9 is the major quinone in P. aeruginosa and is required for
+      anaerobic denitrification.
+    supporting_text: &gt;-
+      we established that UQ9 is the major quinone of Pseudomonas aeruginosa
+      and is required for growth under anaerobic respiration (i.e. denitrification)
+- id: PMID:6774977
+  title: Function of ubiquinone in the electron transport system of Pseudomonas aeruginosa
+    grown aerobically
+  findings:
+  - statement: &gt;-
+      Ubiquinone is indispensable for the aerobic electron transport chain of
+      P. aeruginosa.
+    supporting_text: &gt;-
+      Complete removal of ubiquinone performed by extracting the lyophilized
+      membrane particles with n-pentane containing acetone resulted in complete
+      loss of all oxidase activities for glucose, gluconate, malate, succinate,
+      and NADH
+- id: PMID:6766443
+  title: Membrane-bound respiratory chain of Pseudomonas aeruginosa grown aerobically
+  findings:
+  - statement: &gt;-
+      Aerobically grown P. aeruginosa uses coenzyme Q9 in its respiratory chain.
+    supporting_text: &gt;-
+      The electron transport chain of the gram-negative bacterium Pseudomonas
+      aeruginosa, grown aerobically, contained a number of primary dehydrogenases
+      and respiratory components (soluble flavin, bound flavin, coenzyme Q9,
+      heme b, heme c, and cytochrome o)
+- id: PMID:10984043
+  title: Complete genome sequence of Pseudomonas aeruginosa PAO1, an opportunistic
+    pathogen
+  findings: []
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+existing_annotations:
+# ============================================================
+# IBA annotations (phylogenetic inference from PANTHER)
+# ============================================================
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for ubiquinone biosynthetic process, inferred from phylogenetic
+      trees. UbiE catalyzes the C-methylation of 2-polyprenyl-6-methoxy-1,4-benzoquinol
+      in the ubiquinone pathway. This is a core function of the UbiE/COQ5 family,
+      well established in E. coli (PMID:9045837) and yeast (PMID:9083049).
+    action: ACCEPT
+    reason: &gt;-
+      Core biosynthetic process. UbiE is directly involved in ubiquinone biosynthesis
+      as the C-methyltransferase for the penultimate step. The BioReason SFT trace
+      (ubiE-deep-research-bioreason.md) also identifies menaquinone headgroup
+      maturation as a core function, consistent with this annotation.
+    supported_by:
+    - reference_id: PMID:9045837
+      supporting_text: &gt;-
+        Strains of Escherichia coli with mutations in the ubiE gene are not able
+        to catalyze the carbon methylation reaction in the biosynthesis of
+        ubiquinone (coenzyme Q) and menaquinone (vitamin K2), essential isoprenoid
+        quinone components of the respiratory electron transport chain
+    - reference_id: file:PSEAE/ubiE/ubiE-deep-research-bioreason.md
+      supporting_text: &gt;-
+        A SAM-dependent C-methyltransferase in Pseudomonas aeruginosa that
+        installs the C-3 methyl group on demethylated menaquinone (and related
+        demethylated quinone intermediates), thereby advancing menaquinone
+        headgroup maturation
+- term:
+    id: GO:0008425
+    label: 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for the specific molecular function in the ubiquinone pathway
+      (EC 2.1.1.201). This is one of the two core catalytic activities of UbiE,
+      converting DDMQH2 to DMQH2 via SAM-dependent C-methylation. Well supported
+      by ortholog data from E. coli and yeast COQ5.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function. This is one of the two specific methyltransferase
+      activities of UbiE, directly corresponding to EC 2.1.1.201.
+    supported_by:
+    - reference_id: PMID:9083049
+      supporting_text: &gt;-
+        Coq5p is required for the C-methyltransferase step that converts
+        2-methoxy-6-polyprenyl-1, 4-benzoquinone to
+        2-methoxy-5-methyl-6-polyprenyl-1,4-benzoquinone
+# ============================================================
+# IEA annotations (electronic)
+# ============================================================
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for ubiquinone biosynthetic process from UniRule/UniPathway.
+      Redundant with the IBA annotation above but independently supported.
+      Correct annotation for a core biosynthetic function.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and redundant with phylogenetic inference. UniRule UR000030800
+      (HAMAP MF_01813) appropriately assigns this term to the UbiE/COQ5 family.
+- term:
+    id: GO:0008168
+    label: methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      InterPro2GO annotation from IPR004033 (UbiE/COQ5 methyltransferase) and
+      IPR023576 (conserved site). The general methyltransferase activity term is
+      correct but overly broad. More specific terms (GO:0008425 and GO:0043770)
+      are already annotated and better represent the actual catalytic activities.
+    action: MODIFY
+    reason: &gt;-
+      Correct but too general. The more specific terms GO:0008425
+      (2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity) and
+      GO:0043770 (demethylmenaquinone methyltransferase activity) are already
+      present and more informative.
+    proposed_replacement_terms:
+    - id: GO:0008425
+      label: 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+    - id: GO:0043770
+      label: demethylmenaquinone methyltransferase activity
+- term:
+    id: GO:0008425
+    label: 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for the ubiquinone-pathway methyltransferase activity from
+      UniRule. Correct and specific, corresponding to EC 2.1.1.201. Redundant
+      with the IBA annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Correct specific molecular function. Independently supported by both
+      UniRule/Rhea and phylogenetic inference.
+- term:
+    id: GO:0009060
+    label: aerobic respiration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      IEA annotation for aerobic respiration. Ubiquinone is indispensable for
+      the aerobic electron transport chain in P. aeruginosa (PMID:6774977), so
+      ubiE is required for aerobic respiration. However, this is an indirect
+      downstream consequence of ubiquinone biosynthesis rather than a direct
+      function of ubiE. The enzyme catalyzes a biosynthetic step; it does not
+      directly participate in electron transport.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While correct that UbiE activity is required for aerobic respiration
+      (because ubiquinone is essential for the respiratory chain), this
+      annotation describes a downstream physiological consequence rather than
+      the direct molecular role. The core annotation is the biosynthetic process.
+    supported_by:
+    - reference_id: PMID:6774977
+      supporting_text: &gt;-
+        Complete removal of ubiquinone performed by extracting the lyophilized
+        membrane particles with n-pentane containing acetone resulted in complete
+        loss of all oxidase activities for glucose, gluconate, malate, succinate,
+        and NADH
+- term:
+    id: GO:0009234
+    label: menaquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for menaquinone biosynthetic process from UniRule/UniPathway.
+      UbiE catalyzes the final step in menaquinone headgroup maturation, converting
+      demethylmenaquinol to menaquinol. This is the second of the two core
+      biosynthetic pathways involving UbiE.
+    action: ACCEPT
+    reason: &gt;-
+      Core biosynthetic process. UbiE/MenG directly catalyzes the terminal
+      C-methylation step in menaquinone biosynthesis, well established in
+      E. coli and mycobacteria.
+    supported_by:
+    - reference_id: PMID:9045837
+      supporting_text: &gt;-
+        Strains of Escherichia coli with mutations in the ubiE gene are not able
+        to catalyze the carbon methylation reaction in the biosynthesis of
+        ubiquinone (coenzyme Q) and menaquinone (vitamin K2), essential isoprenoid
+        quinone components of the respiratory electron transport chain
+- term:
+    id: GO:0042181
+    label: ketone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      ARBA-assigned annotation for ketone biosynthetic process. Ubiquinone and
+      menaquinone are quinones (not ketones per se, although quinones contain
+      carbonyl groups). This is an overly general and somewhat misleading parent
+      term. The specific pathway terms (GO:0006744 ubiquinone biosynthetic
+      process and GO:0009234 menaquinone biosynthetic process) are already present
+      and far more informative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Technically not wrong (quinones contain ketone-like carbonyl groups),
+      but this is an uninformative high-level grouping term that obscures the
+      actual biology. The specific quinone biosynthesis terms already capture
+      the biology precisely.
+- term:
+    id: GO:0043770
+    label: demethylmenaquinone methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for the menaquinone-pathway methyltransferase activity
+      (EC 2.1.1.163) from UniRule. This is the second of the two core catalytic
+      activities of UbiE, converting demethylmenaquinol to menaquinol. Well
+      supported by ortholog data, including direct enzymatic characterization of
+      mycobacterial MenG (PMID:36417754).
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function. This is the specific methyltransferase activity
+      for the menaquinone pathway, directly corresponding to EC 2.1.1.163.
+    supported_by:
+    - reference_id: PMID:36417754
+      supporting_text: &gt;-
+        Partially purified recombinant protein catalyzed the formation of MK
+        from demethylmenaquinone (DMK), although the activity of the recombinant
+        protein was low and appeared to require a cofactor or intact membrane
+        structure for activity
+core_functions:
+- description: &gt;-
+    C-methylation of 2-polyprenyl-6-methoxy-1,4-benzoquinol in the ubiquinone
+    biosynthetic pathway, using SAM as methyl donor
+  molecular_function:
+    id: GO:0008425
+    label: 2-methoxy-6-polyprenyl-1,4-benzoquinol methyltransferase activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  supported_by:
+  - reference_id: PMID:9045837
+    supporting_text: &gt;-
+      Strains of Escherichia coli with mutations in the ubiE gene are not able
+      to catalyze the carbon methylation reaction in the biosynthesis of
+      ubiquinone (coenzyme Q) and menaquinone (vitamin K2), essential isoprenoid
+      quinone components of the respiratory electron transport chain
+- description: &gt;-
+    C-methylation of demethylmenaquinol in the menaquinone biosynthetic pathway,
+    using SAM as methyl donor. This is the terminal step in menaquinone headgroup
+    maturation.
+  molecular_function:
+    id: GO:0043770
+    label: demethylmenaquinone methyltransferase activity
+  directly_involved_in:
+  - id: GO:0009234
+    label: menaquinone biosynthetic process
+  supported_by:
+  - reference_id: PMID:36417754
+    supporting_text: &gt;-
+      Partially purified recombinant protein catalyzed the formation of MK from
+      demethylmenaquinone (DMK), although the activity of the recombinant protein
+      was low and appeared to require a cofactor or intact membrane structure for
+      activity
+suggested_questions:
+- question: &gt;-
+    Does P. aeruginosa ubiE have a preference for the ubiquinone versus menaquinone
+    pathway substrate? The relative importance of each pathway may differ from E. coli
+    given that UQ9 is the dominant quinone in P. aeruginosa.
+  experts:
+  - Fabien Pierrel
+  - Ludovic Pelosi
+- question: &gt;-
+    Is there any direct experimental evidence for ubiE function in P. aeruginosa
+    (e.g., gene knockout, complementation, or enzymatic assay)?
+  experts: []
+suggested_experiments:
+- hypothesis: &gt;-
+    P. aeruginosa ubiE knockout would be deficient in both ubiquinone and menaquinone
+    biosynthesis, resulting in growth defects under both aerobic and anaerobic conditions.
+  description: &gt;-
+    Generate a clean deletion of PA5063 (ubiE) in P. aeruginosa PAO1 using allelic
+    exchange. Assess growth phenotype on aerobic and anaerobic (denitrifying) media.
+    Analyze quinone profiles (UQ9, MK, DMK) by HPLC-MS. Complement with wild-type
+    ubiE expressed from a plasmid.
+  experiment_type: gene knockout and metabolite profiling
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

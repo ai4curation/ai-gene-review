@@ -1,0 +1,2941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TDO - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TDO</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O77457" target="_blank" class="term-link">
+                        O77457
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Anopheles gambiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TDO";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O77457" data-a="DESCRIPTION: TDO (Tryptophan 2,3-dioxygenase, AGAP002721) is th..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TDO (Tryptophan 2,3-dioxygenase, AGAP002721) is the sole enzyme initiating L-tryptophan degradation via the kynurenine pathway in Anopheles gambiae. It is a heme-dependent dioxygenase that catalyzes the oxidative cleavage of the indole ring of L-tryptophan to produce N-formylkynurenine, the first and rate-limiting step of tryptophan catabolism. TDO is a homolog of the Drosophila vermilion gene and is essential for ommochrome eye pigment biosynthesis in insects. The gene maps to chromosome 2R (inside inversion 2Rb), encodes a 392 amino acid protein that assembles as a homotetramer, and is ubiquitously expressed across tissues with developmental regulation. Its enzymatic product feeds into the kynurenine pathway, which in mosquitoes is critical for processing tryptophan from blood meals, producing xanthurenic acid (a trigger of Plasmodium gametogenesis in the midgut), and maintaining midgut homeostasis. The A. gambiae TDO cDNA functionally complements Drosophila vermilion eye color mutants, confirming conserved function. The gene also serves as a visible phenotypic marker for mosquito germline transformation.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004833" target="_blank" class="term-link">
+                                    GO:0004833
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan 2,3-dioxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O77457" data-a="GO:0004833" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation is derived from phylogenetic inference, with supporting evidence from Drosophila vermilion (FBgn0003965) and other TDO orthologs. The A. gambiae protein shares 74% identity with Drosophila TDO and functional complementation has been demonstrated experimentally.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TDO activity is the core molecular function of this protein. The phylogenetic inference is strongly supported by sequence conservation (74% identity to Drosophila), functional complementation of Drosophila vermilion mutants (PMID:9443379), and direct biochemical characterization of recombinant A. gambiae TDO showing Michaelis-Menten kinetics (PMID:18687401).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18687401" target="_blank" class="term-link">
+                                        PMID:18687401
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the malaria vector Anopheles gambiae, tryptophan 2,3-dioxygenase (TDO) is the only enzyme able to initiate l-tryptophan degradation through the kynurenine pathway</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9443379" target="_blank" class="term-link">
+                                        PMID:9443379
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The successful genetic complementation by this construct demonstrated both the proper function of the tryptophan oxygenase product</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/TDO/TDO-deep-research-bioreason.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the active-site geometry and redox environment enable GO:0004833 tryptophan 2,3-dioxygenase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O77457" data-a="GO:0020037" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation for heme binding is inferred from phylogenetic analysis and supported by the conserved heme-binding residue (His-313 axial ligand) and direct spectral analysis of the recombinant protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Heme binding is integral to TDO catalysis. Paglino et al. (2008) purified recombinant A. gambiae TDO in its heme-ferric form and performed spectral analyses confirming heme incorporation. The active-site histidine serving as the proximal axial ligand for the heme iron is conserved.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18687401" target="_blank" class="term-link">
+                                        PMID:18687401
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Spectral analyses showed that the enzyme was purified in its heme-ferric form</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004833" target="_blank" class="term-link">
+                                    GO:0004833
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan 2,3-dioxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O77457" data-a="GO:0004833" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant IEA annotation for TDO activity derived from combined automated methods (ARBA, InterPro, RHEA, EC number, UniRule). Correct but redundant with the IBA annotation above.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct. TDO activity is experimentally validated by biochemical characterization (PMID:18687401) and functional complementation (PMID:9443379). Redundancy with IBA is expected and acceptable.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18687401" target="_blank" class="term-link">
+                                        PMID:18687401
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">TDO converts l-tryptophan to N-formylkynurenine by catalyzing the heme-dependent oxidative opening of the substrate indole ring</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006727" target="_blank" class="term-link">
+                                    GO:0006727
+                                </a>
+                            </span>
+                            <span class="term-label">ommochrome biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O77457" data-a="GO:0006727" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation places TDO in the ommochrome biosynthetic pathway, derived from UniRule mapping. TDO catalyzes the first committed step of ommochrome biosynthesis by diverting tryptophan into the kynurenine pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TDO is the first enzyme in the ommochrome biosynthetic pathway in insects. The Drosophila vermilion mutant (TDO loss-of-function) lacks ommochrome eye pigments. Functional complementation of vermilion by A. gambiae TDO confirms its role in ommochrome biosynthesis (PMID:9443379). Multiple studies on insect ommochrome pathways confirm TDO as the initiating step.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8969464" target="_blank" class="term-link">
+                                        PMID:8969464
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Since this gene is known to control adult eye color in other flies, its cloning from A. gambiae provides the basis for a dominant phenotypic marker for germline transformation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9443379" target="_blank" class="term-link">
+                                        PMID:9443379
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The chimeric construct, expressed transiently in vermilion (tryptophan oxygenase) mutants of Drosophila melanogaster, partially rescued adult eye color</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O77457" data-a="GO:0020037" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant IEA annotation for heme binding from combined automated methods. Correct but redundant with the IBA annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct. Heme binding is experimentally confirmed by spectral analysis of recombinant A. gambiae TDO (PMID:18687401).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18687401" target="_blank" class="term-link">
+                                        PMID:18687401
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Spectral analyses showed that the enzyme was purified in its heme-ferric form</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O77457" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation for metal ion binding is derived from InterPro domain mapping (IPR037217, Tryptophan/Indoleamine 2,3-dioxygenase-like superfamily). TDO binds iron as part of its heme prosthetic group.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Technically correct because TDO binds heme iron, but the term is overly general. The more specific GO:0020037 (heme binding) already captures this function accurately. Metal ion binding is not independently informative for this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18687401" target="_blank" class="term-link">
+                                        PMID:18687401
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Spectral analyses showed that the enzyme was purified in its heme-ferric form</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004833" target="_blank" class="term-link">
+                                    GO:0004833
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan 2,3-dioxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O77457" data-a="GO:0004833" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation for TDO activity based on manual transfer from Q17P71 (Aedes aegypti TDO) by curator judgment. Redundant with IBA and IEA annotations but independently validated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and well-supported. The ISS reference organism (Aedes aegypti) is a closely related mosquito. Direct biochemical evidence exists for A. gambiae TDO (PMID:18687401).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18687401" target="_blank" class="term-link">
+                                        PMID:18687401
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">TDO converts l-tryptophan to N-formylkynurenine by catalyzing the heme-dependent oxidative opening of the substrate indole ring</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O77457" data-a="GO:0006569" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation for L-tryptophan catabolic process transferred from Aedes aegypti TDO. TDO catalyzes the first step of tryptophan catabolism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TDO is the sole enzyme initiating tryptophan catabolism in A. gambiae (PMID:18687401). The annotation is appropriate as TDO commits tryptophan irreversibly to catabolism. The term GO:0006569 is suitably general for what TDO does (initiates catabolism) without over-specifying the downstream fate of the carbon.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18687401" target="_blank" class="term-link">
+                                        PMID:18687401
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the malaria vector Anopheles gambiae, tryptophan 2,3-dioxygenase (TDO) is the only enzyme able to initiate l-tryptophan degradation through the kynurenine pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O77457" data-a="GO:0020037" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation for heme binding transferred from Aedes aegypti TDO. Redundant with IBA and IEA annotations but correct.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct. Heme binding is experimentally confirmed by spectral analysis of recombinant A. gambiae TDO (PMID:18687401).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18687401" target="_blank" class="term-link">
+                                        PMID:18687401
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Spectral analyses showed that the enzyme was purified in its heme-ferric form</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TDO is a heme-dependent dioxygenase that catalyzes the oxidative cleavage of the L-tryptophan indole ring to produce N-formylkynurenine. It is the sole enzyme initiating tryptophan catabolism via the kynurenine pathway in A. gambiae. Recombinant enzyme has been biochemically characterized with Michaelis-Menten kinetics determined. The enzyme requires a physiological reductant and the heme-ferric form is catalytically active after reduction.</h3>
+                <span class="vote-buttons" data-g="O77457" data-a="FUNCTION: TDO is a heme-dependent dioxygenase that catalyzes..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004833" target="_blank" class="term-link">
+                            L-tryptophan 2,3-dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                L-tryptophan catabolic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006727" target="_blank" class="term-link">
+                                ommochrome biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18687401" target="_blank" class="term-link">
+                                PMID:18687401
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">TDO converts l-tryptophan to N-formylkynurenine by catalyzing the heme-dependent oxidative opening of the substrate indole ring</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9443379" target="_blank" class="term-link">
+                                PMID:9443379
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The successful genetic complementation by this construct demonstrated both the proper function of the tryptophan oxygenase product</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8969464" target="_blank" class="term-link">
+                            PMID:8969464
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The tryptophan oxygenase gene of Anopheles gambiae.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The A. gambiae TDO gene was cloned and maps to chromosome 2R</div>
+                        
+                        <div class="finding-text">"The Anopheles gambiae gene encoding tryptophan oxygenase, a homolog of the Drosophila melanogaster vermilion gene, has been molecularly cloned and characterized"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TDO encodes a 392 amino acid protein with 74% identity to Drosophila</div>
+                        
+                        <div class="finding-text">"Amino acid comparisons between the deduced protein and previously known tryptophan oxygenases revealed 74% identity between Anopheles and Drosophila"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TDO transcript is developmentally regulated</div>
+                        
+                        <div class="finding-text">"Northern analysis detected a developmentally regulated transcript about 2 kb in length"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TDO controls eye color and can serve as a transformation marker</div>
+                        
+                        <div class="finding-text">"Since this gene is known to control adult eye color in other flies, its cloning from A. gambiae provides the basis for a dominant phenotypic marker for germline transformation"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9443379" target="_blank" class="term-link">
+                            PMID:9443379
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Anopheles gambiae tryptophan oxygenase gene expressed from a baculovirus promoter complements Drosophila melanogaster vermilion.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A. gambiae TDO functionally complements Drosophila vermilion eye color</div>
+                        
+                        <div class="finding-text">"The chimeric construct, expressed transiently in vermilion (tryptophan oxygenase) mutants of Drosophila melanogaster, partially rescued adult eye color"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrates proper function of the A. gambiae TDO product</div>
+                        
+                        <div class="finding-text">"The successful genetic complementation by this construct demonstrated both the proper function of the tryptophan oxygenase product and the effectiveness of the ie-1 promoter in directing expression of foreign genes in live insects"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11240635" target="_blank" class="term-link">
+                            PMID:11240635
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Patterns of DNA sequence variation in chromosomally recognized taxa of Anopheles gambiae.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TDO locus inside inversion 2Rb shows introgressive hybridization between species</div>
+                        
+                        <div class="finding-text">"At the tryptophan oxygenase locus inside inversion 2Rb, variation was structured only by inversion orientation and not by taxonomic designation even between An. gambiae and An. arabiensis"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12364791" target="_blank" class="term-link">
+                            PMID:12364791
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The genome sequence of the malaria mosquito Anopheles gambiae.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides genomic context for AGAP002721 on chromosome 2R</div>
+                        
+                        <div class="finding-text">"The genome sequence of the malaria mosquito Anopheles gambiae"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18687401" target="_blank" class="term-link">
+                            PMID:18687401
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Purification and biochemical characterization of a recombinant Anopheles gambiae tryptophan 2,3-dioxygenase expressed in Escherichia coli.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TDO is the only enzyme initiating tryptophan degradation via the kynurenine pathway in A. gambiae</div>
+                        
+                        <div class="finding-text">"In the malaria vector Anopheles gambiae, tryptophan 2,3-dioxygenase (TDO) is the only enzyme able to initiate l-tryptophan degradation through the kynurenine pathway"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TDO mRNA is ubiquitously expressed across tissues</div>
+                        
+                        <div class="finding-text">"a RT-PCR-based analysis of the tissue distribution of TDO mRNA in A. gambiae that revealed a ubiquitous expression of the gene"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant TDO purified in heme-ferric form with Michaelis-Menten kinetics determined</div>
+                        
+                        <div class="finding-text">"Spectral analyses showed that the enzyme was purified in its heme-ferric form that was subsequently used to determining the Michaelis-Menten constants"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Several kynurenines and tryptophan metabolites modulate TDO activity</div>
+                        
+                        <div class="finding-text">"The screening of a number of compounds as potential TDO modulators showed that several kynurenines and other Tryptophan-derived molecules interfere with the enzyme activity in vitro"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34999199" target="_blank" class="term-link">
+                            PMID:34999199
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Beyond the eye - Kynurenine pathway impairment causes midgut homeostasis dysfunction and survival and reproductive costs in blood-feeding mosquitoes.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Kynurenine pathway disruption impairs midgut homeostasis and reproduction in mosquitoes</div>
+                        
+                        <div class="finding-text">"Female mosquitoes with spontaneous and induced mutations in the orthologs of the genes encoding kynurenine hydroxylase in Aedes aegypti, Anopheles stephensi and Culex quinquefasciatus exhibited impaired survival and reproductive phenotypes that varied in type and severity among the species"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Xanthurenic acid (KP end-product) rescues lethality from pathway disruption</div>
+                        
+                        <div class="finding-text">"Supplemental xanthurenic acid, a KP end-product, rescued lethality and limited microbiota proliferation in Ae. aegypti"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35437328" target="_blank" class="term-link">
+                            PMID:35437328
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Anopheline mosquitoes are protected against parasite infection by tryptophan catabolism in gut microbiota.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Gut microbiota catabolize 3-HK to protect against Plasmodium infection</div>
+                        
+                        <div class="finding-text">"3-HK impaired the structure of the peritrophic matrix and promoted Plasmodium berghei infection"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16585514" target="_blank" class="term-link">
+                            PMID:16585514
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structure of the Anopheles gambiae 3-hydroxykynurenine transaminase.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Xanthurenic acid plays a key role in Plasmodium gametogenesis in A. gambiae</div>
+                        
+                        <div class="finding-text">"In Anopheles gambiae, the vector for the most deadly malaria parasite Plasmodium falciparum, xanthurenic acid (XA) plays a key role in parasite gametogenesis and fertility"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11463462" target="_blank" class="term-link">
+                            PMID:11463462
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Both mosquito-derived xanthurenic acid and a host blood-derived factor regulate gametogenesis of Plasmodium in the midgut of the mosquito.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Xanthurenic acid is a gametocyte-activating factor for Plasmodium</div>
+                        
+                        <div class="finding-text">"Removal of both host and vector sources of GAF totally inhibited both exflagellation and ookinete production"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ANOGA/TDO/TDO-deep-research-bioreason.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BioReason-Pro SFT prediction for A. gambiae TDO</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Domain architecture consistent with heme-dependent TDO</div>
+                        
+                        <div class="finding-text">"a core catalytic region that is further encompassed by IPR037217 from residues 27-359"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does A. gambiae TDO expression change in response to blood feeding, and if so, what is the tissue-specific and temporal pattern of induction?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O77457" data-a="Q: Does A. gambiae TDO expression change in response ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the kinetic parameters (Km, kcat) of A. gambiae TDO for L-tryptophan under physiologically relevant reductant conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O77457" data-a="Q: What are the kinetic parameters (Km, kcat) of A. g..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does TDO disruption in A. gambiae affect Plasmodium transmission by altering xanthurenic acid levels in the midgut?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O77457" data-a="Q: Does TDO disruption in A. gambiae affect Plasmodiu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> CRISPR knockout of TDO in A. gambiae to assess effects on eye pigmentation, blood meal processing, survival, fecundity, and Plasmodium transmission.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TDO knockout will produce white/vermilion-like eyes, impair tryptophan homeostasis after blood feeding, and alter Plasmodium development in the midgut through changes in xanthurenic acid production.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O77457" data-a="EXPERIMENT: CRISPR knockout of TDO in A. gambiae to assess eff..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Tissue-specific and blood meal-responsive transcriptomic profiling of TDO and downstream kynurenine pathway genes in A. gambiae.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TDO expression is induced in the midgut following blood feeding to process the tryptophan load from hemoglobin digestion.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O77457" data-a="EXPERIMENT: Tissue-specific and blood meal-responsive transcri..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TDO-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O77457" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="o">---</span>
+<span class="nx">provider</span><span class="p">:</span><span class="w"> </span><span class="nx">bioreason</span><span class="o">-</span><span class="nx">pro</span>
+<span class="nx">model</span><span class="p">:</span><span class="w"> </span><span class="nx">SFT</span>
+<span class="nx">source</span><span class="p">:</span><span class="w"> </span><span class="nx">huggingface</span><span class="p">.</span><span class="nx">co</span><span class="o">/</span><span class="nx">datasets</span><span class="o">/</span><span class="nx">wanglab</span><span class="o">/</span><span class="nx">protein_catalogue</span>
+<span class="nx">date</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;</span><span class="mi">2026</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">04</span><span class="err">&#39;</span>
+<span class="nx">uniprot_id</span><span class="p">:</span><span class="w"> </span><span class="nx">O77457</span>
+<span class="nx">gene</span><span class="p">:</span><span class="w"> </span><span class="nx">TDO</span>
+<span class="nx">organism</span><span class="p">:</span><span class="w"> </span><span class="nx">Anopheles</span><span class="w"> </span><span class="nx">gambiae</span><span class="w"> </span><span class="p">(</span><span class="nx">African</span><span class="w"> </span><span class="nx">malaria</span><span class="w"> </span><span class="nx">mosquito</span><span class="p">)</span>
+<span class="o">---</span>
+
+<span class="err">##</span><span class="w"> </span><span class="nx">Thinking</span><span class="w"> </span><span class="nx">Trace</span>
+
+<span class="nx">I</span><span class="w"> </span><span class="nx">begin</span><span class="w"> </span><span class="nx">with</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">InterPro</span><span class="w"> </span><span class="nx">architecture</span><span class="p">.</span><span class="w"> </span><span class="nx">Three</span><span class="w"> </span><span class="nx">overlapping</span><span class="w"> </span><span class="nx">family</span><span class="w"> </span><span class="nx">signatures</span><span class="err">—</span><span class="nx">IPR004981</span><span class="w"> </span><span class="p">(</span><span class="nx">Tryptophan</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">-</span><span class="nx">dioxygenase</span><span class="w"> </span><span class="nx">family</span><span class="p">)</span><span class="w"> </span><span class="nx">spanning</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">8</span><span class="err">–</span><span class="mi">378</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="err">–</span><span class="mi">358</span><span class="p">,</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mi">20</span><span class="err">–</span><span class="mi">358</span><span class="err">—</span><span class="nx">enclose</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">core</span><span class="w"> </span><span class="nx">catalytic</span><span class="w"> </span><span class="nx">region</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="nx">further</span><span class="w"> </span><span class="nx">encompassed</span><span class="w"> </span><span class="nx">by</span><span class="w"> </span><span class="nx">IPR037217</span><span class="w"> </span><span class="p">(</span><span class="nx">Tryptophan</span><span class="o">/</span><span class="nx">Indoleamine</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">-</span><span class="nx">dioxygenase</span><span class="o">-</span><span class="k">like</span><span class="w"> </span><span class="nx">homologous</span><span class="w"> </span><span class="nx">superfamily</span><span class="p">)</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">27</span><span class="err">–</span><span class="mi">359</span><span class="p">.</span><span class="w"> </span><span class="nx">This</span><span class="w"> </span><span class="nx">layered</span><span class="w"> </span><span class="nx">arrangement</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="nx">characteristic</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">heme</span><span class="o">-</span><span class="nx">dependent</span><span class="w"> </span><span class="nx">tryptophan</span><span class="o">/</span><span class="nx">indoleamine</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">-</span><span class="nx">dioxygenases</span><span class="p">:</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">conserved</span><span class="w"> </span><span class="nx">catalytic</span><span class="w"> </span><span class="nx">fold</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">binds</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">b</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">heme</span><span class="w"> </span><span class="nx">via</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">proximal</span><span class="w"> </span><span class="nx">histidine</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">positions</span><span class="w"> </span><span class="nx">molecular</span><span class="w"> </span><span class="nx">oxygen</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nx">insertion</span><span class="w"> </span><span class="nx">into</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">indole</span><span class="w"> </span><span class="nx">ring</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">L</span><span class="o">-</span><span class="nx">tryptophan</span><span class="p">.</span><span class="w"> </span><span class="nx">The</span><span class="w"> </span><span class="nx">breadth</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">family</span><span class="w"> </span><span class="nx">signatures</span><span class="w"> </span><span class="nx">across</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">central</span><span class="w"> </span><span class="nx">polypeptide</span><span class="w"> </span><span class="nx">indicates</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">single</span><span class="o">-</span><span class="nx">domain</span><span class="w"> </span><span class="nx">enzyme</span><span class="w"> </span><span class="nx">whose</span><span class="w"> </span><span class="nx">N</span><span class="o">-</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">C</span><span class="o">-</span><span class="nx">termini</span><span class="w"> </span><span class="nx">contribute</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">oligomerization</span><span class="w"> </span><span class="nx">interfaces</span><span class="w"> </span><span class="nx">rather</span><span class="w"> </span><span class="nx">than</span><span class="w"> </span><span class="nx">distinct</span><span class="w"> </span><span class="nx">modules</span><span class="p">.</span><span class="w"> </span><span class="nx">Such</span><span class="w"> </span><span class="nx">enzymes</span><span class="w"> </span><span class="nx">typically</span><span class="w"> </span><span class="nx">assemble</span><span class="w"> </span><span class="nx">into</span><span class="w"> </span><span class="nx">higher</span><span class="o">-</span><span class="nx">order</span><span class="w"> </span><span class="nx">complexes</span><span class="w"> </span><span class="p">(</span><span class="nx">often</span><span class="w"> </span><span class="nx">tetramers</span><span class="p">),</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">conserved</span><span class="w"> </span><span class="nx">fold</span><span class="w"> </span><span class="nx">stabilizes</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">heme</span><span class="w"> </span><span class="nx">pocket</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">dioxygen</span><span class="w"> </span><span class="nx">activation</span><span class="w"> </span><span class="nx">chemistry</span><span class="p">.</span>
+</code></pre></div>
+
+<p>This architecture causes two molecular functions. First, the heme pocket formed by the conserved fold enforces GO:0020037 heme binding. Second, the active-site geometry and redox environment enable GO:0004833 tryptophan 2,3-dioxygenase activity, in which O2 is inserted across the C2–C3 bond of the indole ring to generate N-formylkynurenine. The catalytic outcome is mechanistically inseparable from a heme–O2 adduct that is subsequently resolved by electron input from a reductant, consistent with the requirement for a physiological reductant such as NADPH via an associated reductase.</p>
+<p>The immediate biochemical consequence of this activity is the first committed step of the kynurenine pathway, producing N-formylkynurenine that is then hydrolyzed to kynurenine. This places the enzyme squarely in GO:0019441 tryptophan catabolic process to kynurenine. Because the reaction irreversibly diverts L-tryptophan from biosynthesis and signaling roles into catabolism, the enzyme functions as a metabolic gatekeeper controlling flux into downstream kynurenine- and NAD+–related branches.</p>
+<p>The oligomeric nature implied by the family architecture supports assembly into a GO:1902494 catalytic complex, where subunits cooperate to stabilize the heme environment and coordinate access to substrate and reductant. The absence of transmembrane segments and the soluble enzyme fold argue for a cytosolic location, where substrate availability and redox partners are abundant; thus a cytosolic catalytic complex is the most plausible operational site.</p>
+<p>From this mechanistic base, I hypothesize interaction partners and pathway wiring. Kynurenine formamidase likely associates functionally to receive N-formylkynurenine or kynurenine, creating a substrate channel that minimizes diffusion and protects labile intermediates. Kynurenine 3-monooxygenase would engage downstream to convert kynurenine toward 3-hydroxykynurenine, linking to NAD+ biosynthesis and oxidative stress chemistry. Tyrosine aminotransferase may intersect at points of aromatic amino acid balance, drawing on kynurenine-derived pools or competing for shared cofactors and redox currency. Hormone-sensitive lipase could modulate local lipid-derived NADPH production or membrane-proximal redox microenvironments that influence the reductase-dependent step. The phosphotransferase LOC123688 and several Anopheles gene products (AGAP006020-PA., AGAP009091-PA., AGAP011158-PA., AGAP004500-PA., AGAP003887-PB.) plausibly act as regulatory or scaffolding factors that tune activity via phosphorylation, complex assembly, or localization, thereby coupling tryptophan catabolism to developmental or stress-responsive programs in the mosquito.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="n">Functional</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">heme</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">dioxygenase</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">African</span><span class="w"> </span><span class="n">malaria</span><span class="w"> </span><span class="n">mosquito</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">assembles</span><span class="w"> </span><span class="k">into</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">soluble</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">complex</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">catalyzes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">first</span><span class="p">,</span><span class="w"> </span><span class="n">rate</span><span class="o">-</span><span class="n">setting</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">tryptophan</span><span class="w"> </span><span class="n">breakdown</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">inserting</span><span class="w"> </span><span class="n">oxygen</span><span class="w"> </span><span class="n">across</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">indole</span><span class="w"> </span><span class="n">ring</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">tryptophan</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">form</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">formylkynurenine</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">reaction</span><span class="w"> </span><span class="n">requires</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">physiological</span><span class="w"> </span><span class="n">reductant</span><span class="p">,</span><span class="w"> </span><span class="n">consistent</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">electron</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">heme</span><span class="err">–</span><span class="n">oxygen</span><span class="w"> </span><span class="n">intermediate</span><span class="w"> </span><span class="n">during</span><span class="w"> </span><span class="n">catalysis</span><span class="p">.</span><span class="w"> </span><span class="k">By</span><span class="w"> </span><span class="n">committing</span><span class="w"> </span><span class="n">tryptophan</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">kynurenine</span><span class="w"> </span><span class="n">pathway</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">governs</span><span class="w"> </span><span class="n">flux</span><span class="w"> </span><span class="k">into</span><span class="w"> </span><span class="n">downstream</span><span class="w"> </span><span class="n">catabolic</span><span class="w"> </span><span class="n">branches</span><span class="p">,</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">proximal</span><span class="w"> </span><span class="n">enzymes</span><span class="w"> </span><span class="n">likely</span><span class="w"> </span><span class="n">associating</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">channel</span><span class="w"> </span><span class="n">intermediates</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">coordinate</span><span class="w"> </span><span class="n">redox</span><span class="w"> </span><span class="n">supply</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">cytosol</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">UniProt</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">Heme</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">dioxygenase</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">catalyzes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">first</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">rate</span><span class="o">-</span><span class="n">limiting</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">catabolism</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">essential</span><span class="w"> </span><span class="n">amino</span><span class="w"> </span><span class="n">acid</span><span class="w"> </span><span class="n">tryptophan</span><span class="w"> </span><span class="n">along</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">kynurenine</span><span class="w"> </span><span class="n">pathway</span><span class="p">.</span><span class="w"> </span><span class="n">Catalyzes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">oxidative</span><span class="w"> </span><span class="n">cleavage</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">tryptophan</span><span class="w"> </span><span class="n">indole</span><span class="w"> </span><span class="n">ring</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">converts</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">tryptophan</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">formylkynurenine</span><span class="p">.</span><span class="w"> </span><span class="n">Requires</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">reductant</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">physically</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">functionally</span><span class="w"> </span><span class="n">incorporated</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="k">cycle</span><span class="w"> </span><span class="p">(</span><span class="k">By</span><span class="w"> </span><span class="n">similarity</span><span class="p">).</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nl">IPR004981</span><span class="p">:</span><span class="w"> </span><span class="n">Tryptophan</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">-</span><span class="n">dioxygenase</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">8-378</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR004981</span><span class="p">:</span><span class="w"> </span><span class="n">Tryptophan</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">-</span><span class="n">dioxygenase</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">11-358</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR004981</span><span class="p">:</span><span class="w"> </span><span class="n">Tryptophan</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">-</span><span class="n">dioxygenase</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">20-358</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR037217</span><span class="p">:</span><span class="w"> </span><span class="n">Tryptophan</span><span class="o">/</span><span class="n">Indoleamine</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">-</span><span class="n">dioxygenase</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">27-359</span><span class="o">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="k">GO</span><span class="w"> </span><span class="n">Term</span><span class="w"> </span><span class="n">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="n">Molecular</span><span class="w"> </span><span class="k">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Biological</span><span class="w"> </span><span class="n">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Cellular</span><span class="w"> </span><span class="n">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TDO-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O77457" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="tdo-anoga-research-notes">TDO (ANOGA) - Research Notes</h1>
+<h2 id="gene-identity">Gene Identity</h2>
+<ul>
+<li>UniProt: O77457 (T23O_ANOGA)</li>
+<li>Gene: AGAP002721</li>
+<li>Organism: Anopheles gambiae (African malaria mosquito)</li>
+<li>Enzyme: Tryptophan 2,3-dioxygenase (EC 1.13.11.11)</li>
+<li>Chromosome location: 2R (subdivision 12E)</li>
+<li>Homolog of Drosophila melanogaster <em>vermilion</em> gene</li>
+</ul>
+<h2 id="key-literature">Key Literature</h2>
+<h3 id="mukabayire-et-al-1996-pmid8969464-gene-cloning-and-characterization">Mukabayire et al. 1996 (PMID:8969464) - Gene cloning and characterization</h3>
+<p>The foundational paper. Cloned and characterized the A. gambiae tryptophan oxygenase gene (homolog of Drosophila vermilion).<br />
+- Maps to chromosome 2R, subdivision 12E (unlike Drosophila where it is X-linked)<br />
+- Six introns: four positioned identically to Drosophila, one similarly positioned, one novel<br />
+- 1955 nt cDNA encoding 392 amino acid protein (~45 kDa)<br />
+- 74% identity to Drosophila, 53% identity to nematode/mammalian TDOs<br />
+- Developmentally regulated transcript ~2 kb<br />
+- "Since this gene is known to control adult eye color in other flies, its cloning from A. gambiae provides the basis for a dominant phenotypic marker for germline transformation" <a href="https://pubmed.ncbi.nlm.nih.gov/8969464">PMID:8969464</a></p>
+<h3 id="besansky-et-al-1997-pmid9443379-functional-complementation">Besansky et al. 1997 (PMID:9443379) - Functional complementation</h3>
+<ul>
+<li>A. gambiae TDO cDNA expressed under baculovirus ie-1 promoter partially rescued Drosophila vermilion eye color</li>
+<li>"The successful genetic complementation by this construct demonstrated both the proper function of the tryptophan oxygenase product and the effectiveness of the ie-1 promoter" <a href="https://pubmed.ncbi.nlm.nih.gov/9443379">PMID:9443379</a></li>
+<li>Confirms functional conservation across millions of years of independent evolution</li>
+</ul>
+<h3 id="mukabayire-et-al-2001-pmid11240635-population-genetics">Mukabayire et al. 2001 (PMID:11240635) - Population genetics</h3>
+<ul>
+<li>Used the tryptophan oxygenase locus for population genetic studies of A. gambiae chromosomal forms</li>
+<li>The TDO locus lies inside inversion 2Rb</li>
+<li>"At the tryptophan oxygenase locus inside inversion 2Rb, variation was structured only by inversion orientation and not by taxonomic designation even between An. gambiae and An. arabiensis, providing the first molecular evidence that the 2Rb inversion was transferred between species by introgressive hybridization" <a href="https://pubmed.ncbi.nlm.nih.gov/11240635">PMID:11240635</a></li>
+</ul>
+<h3 id="paglino-et-al-2008-pmid18687401-biochemical-characterization">Paglino et al. 2008 (PMID:18687401) - Biochemical characterization</h3>
+<p>The key biochemical paper on recombinant A. gambiae TDO.<br />
+- "In the malaria vector Anopheles gambiae, tryptophan 2,3-dioxygenase (TDO) is the only enzyme able to initiate l-tryptophan degradation through the kynurenine pathway" <a href="https://pubmed.ncbi.nlm.nih.gov/18687401">PMID:18687401</a><br />
+- TDO mRNA is ubiquitously expressed across tissues<br />
+- Purified recombinant enzyme in heme-ferric form<br />
+- Determined Michaelis-Menten kinetics with reducing agents<br />
+- Several kynurenines and tryptophan-derived molecules modulate TDO activity in vitro<br />
+- "Our study could contribute to understanding TDO regulation in vivo and to the identification of inhibitors to be used to alter Tryptophan homeostasis in the malaria vector" <a href="https://pubmed.ncbi.nlm.nih.gov/18687401">PMID:18687401</a></p>
+<h3 id="holt-et-al-2002-pmid12364791-genome-sequence">Holt et al. 2002 (PMID:12364791) - Genome sequence</h3>
+<ul>
+<li>The A. gambiae genome paper; provides the genomic context for AGAP002721 on chromosome 2R</li>
+</ul>
+<h3 id="bottino-rojas-et-al-2022-pmid34999199-kynurenine-pathway-and-midgut-homeostasis">Bottino-Rojas et al. 2022 (PMID:34999199) - Kynurenine pathway and midgut homeostasis</h3>
+<ul>
+<li>Studies on kynurenine hydroxylase mutants in Aedes aegypti, Anopheles stephensi, Culex quinquefasciatus</li>
+<li>"Insect ommochrome biosynthesis pathways metabolize tryptophan to generate eye-color pigments"</li>
+<li>"Female mosquitoes with spontaneous and induced mutations in the orthologs of the genes encoding kynurenine hydroxylase... exhibited impaired survival and reproductive phenotypes"</li>
+<li>"A compromised midgut permeability barrier function was also observed in An. stephensi"</li>
+<li>KP is implicated in midgut homeostasis and host/microbiota interface regulation</li>
+<li>Xanthurenic acid (KP end-product) rescued lethality and limited microbiota proliferation</li>
+</ul>
+<h3 id="feng-et-al-2022-pmid35437328-microbiota-and-tryptophan-catabolism">Feng et al. 2022 (PMID:35437328) - Microbiota and tryptophan catabolism</h3>
+<ul>
+<li>Gut microbiota in Anopheles stephensi involved in tryptophan metabolism</li>
+<li>3-hydroxykynurenine (3-HK) impaired peritrophic matrix and promoted Plasmodium berghei infection</li>
+<li>Pseudomonas alcaligenes catabolizes 3-HK via kynureninase (KynU)</li>
+<li>Identifies "an unexpected function of mosquito gut microbiota in controlling mosquito tryptophan metabolism, with important implications for vector competence" <a href="https://pubmed.ncbi.nlm.nih.gov/35437328">PMID:35437328</a></li>
+</ul>
+<h3 id="rossi-et-al-2006-pmid16585514-3-hkt-crystal-structure">Rossi et al. 2006 (PMID:16585514) - 3-HKT crystal structure</h3>
+<ul>
+<li>Crystal structure of A. gambiae 3-hydroxykynurenine transaminase (downstream enzyme)</li>
+<li>"In Anopheles gambiae, xanthurenic acid (XA) plays a key role in parasite gametogenesis"</li>
+<li>XA produced by transamination of 3-HK, the main detoxification route</li>
+<li>Structure-based design of specific enzyme inhibitors as potential antimalarial agents</li>
+</ul>
+<h3 id="arai-et-al-2001-pmid11463462-xa-and-plasmodium-gametogenesis">Arai et al. 2001 (PMID:11463462) - XA and Plasmodium gametogenesis</h3>
+<ul>
+<li>Both mosquito-derived XA and host blood-derived factors regulate Plasmodium gametogenesis</li>
+<li>XA is a gametocyte-activating factor (GAF)</li>
+<li>"Removal of both host and vector sources of GAF totally inhibited both exflagellation and ookinete production"</li>
+</ul>
+<h2 id="pathway-context">Pathway Context</h2>
+<h3 id="kynurenine-pathway-in-mosquitoes">Kynurenine Pathway in Mosquitoes</h3>
+<p>TDO catalyzes step 1: L-tryptophan + O2 --&gt; N-formylkynurenine<br />
+N-formylkynurenine is then hydrolyzed to kynurenine by kynurenine formamidase.<br />
+Kynurenine --&gt; 3-hydroxykynurenine (via kynurenine 3-monooxygenase)<br />
+3-HK --&gt; xanthurenic acid (via 3-HKT) OR --&gt; ommochrome pigments</p>
+<h3 id="biological-roles">Biological Roles</h3>
+<ol>
+<li><strong>Eye pigmentation</strong>: TDO is the first enzyme in the ommochrome biosynthetic pathway. Loss-of-function = vermilion (bright red/white) eye phenotype in Drosophila and other insects.</li>
+<li><strong>Tryptophan homeostasis</strong>: TDO is the only enzyme initiating Trp degradation via the kynurenine pathway in A. gambiae (no IDO identified). Ubiquitous expression underscores metabolic importance.</li>
+<li><strong>Blood meal processing</strong>: Blood-feeding generates a massive tryptophan load from hemoglobin digestion. The KP processes this potentially toxic excess.</li>
+<li><strong>Malaria transmission</strong>: Downstream product xanthurenic acid triggers Plasmodium gametogenesis in the mosquito midgut.</li>
+<li><strong>Midgut homeostasis</strong>: KP disruption impairs midgut permeability barrier and affects host-microbiota interface.</li>
+<li><strong>Transformation marker</strong>: The gene provides a visible phenotypic marker (eye color) for germline transformation in mosquito transgenesis.</li>
+</ol>
+<h2 id="notes-on-existing-annotations">Notes on Existing Annotations</h2>
+<p>The GOA annotations are all computational:<br />
+- IBA (phylogenetic inference): TDO activity, heme binding -- supported by Drosophila vermilion orthology<br />
+- IEA (electronic annotation): TDO activity, heme binding, ommochrome biosynthesis, metal ion binding<br />
+- ISS (sequence similarity): TDO activity, heme binding, L-tryptophan catabolism (based on Q17P71)</p>
+<p>The UniProt record also lists GO:0019441 (L-tryptophan catabolic process to kynurenine, ISS) and GO:0019442 (L-tryptophan catabolic process to acetyl-CoA, IBA) but these were not present in the GOA download.</p>
+<p>Note: GO:0019442 (L-tryptophan catabolic process to acetyl-CoA) is an over-annotation for this enzyme. TDO only catalyzes the first step to N-formylkynurenine. The full pathway to acetyl-CoA requires many additional enzymes. GO:0019441 (to kynurenine) is more appropriate but still covers two enzymatic steps (TDO + formamidase).</p>
+<h2 id="bioreason-sft-assessment-notes">BioReason SFT Assessment Notes</h2>
+<p>The BioReason deep-research file correctly identifies:<br />
+- Heme-dependent dioxygenase activity<br />
+- Kynurenine pathway first step<br />
+- Heme binding<br />
+- Homotetramer assembly</p>
+<p>Issues identified:<br />
+1. No literature citations in the trace -- all from InterPro/UniProt<br />
+2. Speculative interaction partners: "Hormone-sensitive lipase could modulate local lipid-derived NADPH production" -- no evidence<br />
+3. Claims about "GO:1902494 catalytic complex" -- no experimental evidence for TDO complex annotation<br />
+4. Mentions of AGAP006020-PA, AGAP009091-PA etc. as "regulatory or scaffolding factors" -- speculative STRING neighbors<br />
+5. The thinking trace is reasonable but generic; misses the organism-specific biology (eye pigmentation, blood meal processing, malaria transmission link)<br />
+6. No GO predictions listed in the MF/BP/CC sections despite discussing functions in the thinking trace</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TDO-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O77457" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-tdo-anoga">BioReason-Pro SFT Review: TDO (ANOGA)</h1>
+<p>Source: TDO-deep-research-bioreason.md</p>
+<ul>
+<li><strong>Correctness</strong>: 4/5</li>
+<li><strong>Completeness</strong>: 2/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason SFT functional summary states:</p>
+<blockquote>
+<p>A heme-dependent dioxygenase in the African malaria mosquito that assembles into a soluble catalytic complex and catalyzes the first, rate-setting step of tryptophan breakdown by inserting oxygen across the indole ring of L-tryptophan to form N-formylkynurenine. The reaction requires a physiological reductant, consistent with electron transfer to the heme-oxygen intermediate during catalysis. By committing tryptophan to the kynurenine pathway, it governs flux into downstream catabolic branches, with proximal enzymes likely associating to channel intermediates and coordinate redox supply in the cytosol.</p>
+</blockquote>
+<p>The core enzymatic description is accurate: heme-dependent dioxygenase, first step of kynurenine pathway, L-tryptophan to N-formylkynurenine, requires reductant. This aligns with the biochemical characterization by Paglino et al. (2008, PMID:18687401).</p>
+<p><strong>Errors and issues</strong>:</p>
+<ol>
+<li>
+<p><strong>"Soluble catalytic complex" is speculative</strong>: The thinking trace predicts "GO:1902494 catalytic complex" and claims subunits "cooperate to stabilize the heme environment." While TDO is indeed a homotetramer (dimer of dimers), there is no evidence for GO:1902494 annotation. The homotetrameric assembly is well-established for TDO family members, but the "catalytic complex" framing implies a multi-protein complex rather than homo-oligomerization.</p>
+</li>
+<li>
+<p><strong>Speculative interaction partners</strong>: The thinking trace lists several hypothetical interaction partners: "Kynurenine formamidase likely associates functionally," "Hormone-sensitive lipase could modulate local lipid-derived NADPH production," and several Anopheles gene products (AGAP006020-PA, AGAP009091-PA, AGAP011158-PA, AGAP004500-PA, AGAP003887-PB) described as "regulatory or scaffolding factors." None of these interactions have experimental support. The interaction partners appear to be STRING database co-expression neighbors presented as functionally validated associations.</p>
+</li>
+<li>
+<p><strong>"Proximal enzymes likely associating to channel intermediates" is unsupported</strong>: The claim of substrate channeling between TDO and kynurenine formamidase has no experimental evidence in any organism, and is speculative.</p>
+</li>
+</ol>
+<p><strong>What is missing (completeness gaps)</strong>:</p>
+<ol>
+<li>
+<p><strong>Ommochrome biosynthesis and eye pigmentation completely absent</strong>: The most biologically distinctive function of insect TDO -- its role as the first enzyme in ommochrome pigment biosynthesis and its control of eye color (the vermilion phenotype) -- is not mentioned at all. This is the function that gives the gene its historical name and practical importance as a transformation marker. The GOA annotation GO:0006727 (ommochrome biosynthetic process) is present but BioReason does not address it.</p>
+</li>
+<li>
+<p><strong>Functional complementation of Drosophila vermilion absent</strong>: Besansky et al. (1997, PMID:9443379) demonstrated that A. gambiae TDO functionally rescues Drosophila vermilion eye color. This is direct experimental evidence for proper enzymatic function but is not referenced.</p>
+</li>
+<li>
+<p><strong>Blood meal processing absent</strong>: A critical aspect of TDO biology in hematophagous mosquitoes is processing the massive tryptophan load from blood meal hemoglobin digestion. Disruption of the kynurenine pathway causes midgut homeostasis dysfunction and reproductive costs (PMID:34999199). This organism-specific biology is entirely absent.</p>
+</li>
+<li>
+<p><strong>Malaria transmission link absent</strong>: The downstream product xanthurenic acid is a gametocyte-activating factor for Plasmodium parasites (PMID:11463462, PMID:16585514). TDO's role in the pathway that produces this malaria-relevant metabolite is a major aspect of its biological significance in A. gambiae but is not mentioned.</p>
+</li>
+<li>
+<p><strong>Ubiquitous tissue expression absent</strong>: Paglino et al. (2008, PMID:18687401) showed TDO mRNA is ubiquitously expressed across A. gambiae tissues, underscoring its metabolic importance beyond eye pigmentation. This is not mentioned.</p>
+</li>
+<li>
+<p><strong>Transformation marker utility absent</strong>: The gene's importance as a visible phenotypic marker for mosquito transgenesis (PMID:8969464) is a practical application but is absent.</p>
+</li>
+<li>
+<p><strong>No GO predictions listed</strong>: The MF, BP, and CC prediction sections are all empty despite the thinking trace discussing multiple GO terms. This appears to be a formatting or generation issue.</p>
+</li>
+</ol>
+<h2 id="notes-on-thinking-trace">Notes on thinking trace</h2>
+<p>The thinking trace is methodical in deriving molecular function from InterPro domain architecture. The deduction of heme binding and TDO activity from the domain signatures is sound. The description of the catalytic mechanism (heme-O2 adduct, indole ring cleavage) is biochemically accurate.</p>
+<p>However, the trace exhibits a characteristic BioReason failure mode: it builds an elaborate mechanistic narrative from domain architecture alone without consulting organism-specific literature. The result is a generic TDO description that could apply to any TDO from any organism. The unique biology of A. gambiae TDO -- ommochrome pigmentation, blood meal metabolism, malaria transmission, and transgenesis utility -- is entirely absent because these functions cannot be inferred from InterPro domains alone.</p>
+<p>The phosphotransferase "LOC123688" mentioned as an interaction partner is not a recognized A. gambiae gene identifier, suggesting confusion with a different organism's gene nomenclature.</p>
+<h2 id="comparison-with-interpro2go">Comparison with InterPro2GO</h2>
+<p>The InterPro2GO annotations provide:<br />
+- GO:0046872 (metal ion binding) from IPR037217</p>
+<p>BioReason correctly identifies TDO activity and heme binding from the domain architecture, going beyond what InterPro2GO captures. This is a case where BioReason adds genuine value by correctly interpreting the TDO-specific family signature (IPR004981). However, the organism-specific biological context is absent from both sources.</p>
+<p>The IBA annotations (GO:0004833, GO:0020037) and the UniRule-derived GO:0006727 (ommochrome biosynthesis) capture the protein's biology more accurately than BioReason's output, which misses the ommochrome pathway entirely despite it being the most distinctive biological role of insect TDO.</p>
+<h2 id="bioreason-reference-verification">BioReason reference verification</h2>
+<p>The BioReason trace contains no literature citations (no PMIDs). All functional inferences derive from InterPro domain annotations and the UniProt summary text. The "UniProt Summary" section in the BioReason output accurately reflects the actual UniProt record, so no fabrication is detected in this case (unlike some other BioReason outputs). The trace is honest in that it does not cite papers it has not read, but this means all organism-specific knowledge is absent.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O77457
+gene_symbol: TDO
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:7165
+  label: Anopheles gambiae
+description: &gt;-
+  TDO (Tryptophan 2,3-dioxygenase, AGAP002721) is the sole enzyme initiating
+  L-tryptophan degradation via the kynurenine pathway in Anopheles gambiae. It is
+  a heme-dependent dioxygenase that catalyzes the oxidative cleavage of the indole
+  ring of L-tryptophan to produce N-formylkynurenine, the first and rate-limiting
+  step of tryptophan catabolism. TDO is a homolog of the Drosophila vermilion gene
+  and is essential for ommochrome eye pigment biosynthesis in insects. The gene maps
+  to chromosome 2R (inside inversion 2Rb), encodes a 392 amino acid protein that
+  assembles as a homotetramer, and is ubiquitously expressed across tissues with
+  developmental regulation. Its enzymatic product feeds into the kynurenine pathway,
+  which in mosquitoes is critical for processing tryptophan from blood meals,
+  producing xanthurenic acid (a trigger of Plasmodium gametogenesis in the midgut),
+  and maintaining midgut homeostasis. The A. gambiae TDO cDNA functionally
+  complements Drosophila vermilion eye color mutants, confirming conserved function.
+  The gene also serves as a visible phenotypic marker for mosquito germline
+  transformation.
+
+existing_annotations:
+- term:
+    id: GO:0004833
+    label: L-tryptophan 2,3-dioxygenase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This IBA annotation is derived from phylogenetic inference, with supporting
+      evidence from Drosophila vermilion (FBgn0003965) and other TDO orthologs.
+      The A. gambiae protein shares 74% identity with Drosophila TDO and functional
+      complementation has been demonstrated experimentally.
+    action: ACCEPT
+    reason: &gt;-
+      TDO activity is the core molecular function of this protein. The phylogenetic
+      inference is strongly supported by sequence conservation (74% identity to
+      Drosophila), functional complementation of Drosophila vermilion mutants
+      (PMID:9443379), and direct biochemical characterization of recombinant
+      A. gambiae TDO showing Michaelis-Menten kinetics (PMID:18687401).
+    additional_reference_ids:
+      - PMID:9443379
+      - PMID:18687401
+    supported_by:
+      - reference_id: PMID:18687401
+        supporting_text: &#34;In the malaria vector Anopheles gambiae, tryptophan 2,3-dioxygenase (TDO) is the only enzyme able to initiate l-tryptophan degradation through the kynurenine pathway&#34;
+      - reference_id: PMID:9443379
+        supporting_text: &#34;The successful genetic complementation by this construct demonstrated both the proper function of the tryptophan oxygenase product&#34;
+      - reference_id: file:ANOGA/TDO/TDO-deep-research-bioreason.md
+        supporting_text: &#34;the active-site geometry and redox environment enable GO:0004833 tryptophan 2,3-dioxygenase activity&#34;
+
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This IBA annotation for heme binding is inferred from phylogenetic analysis
+      and supported by the conserved heme-binding residue (His-313 axial ligand)
+      and direct spectral analysis of the recombinant protein.
+    action: ACCEPT
+    reason: &gt;-
+      Heme binding is integral to TDO catalysis. Paglino et al. (2008) purified
+      recombinant A. gambiae TDO in its heme-ferric form and performed spectral
+      analyses confirming heme incorporation. The active-site histidine serving
+      as the proximal axial ligand for the heme iron is conserved.
+    additional_reference_ids:
+      - PMID:18687401
+    supported_by:
+      - reference_id: PMID:18687401
+        supporting_text: &#34;Spectral analyses showed that the enzyme was purified in its heme-ferric form&#34;
+
+- term:
+    id: GO:0004833
+    label: L-tryptophan 2,3-dioxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Redundant IEA annotation for TDO activity derived from combined automated
+      methods (ARBA, InterPro, RHEA, EC number, UniRule). Correct but redundant
+      with the IBA annotation above.
+    action: ACCEPT
+    reason: &gt;-
+      The annotation is correct. TDO activity is experimentally validated by
+      biochemical characterization (PMID:18687401) and functional complementation
+      (PMID:9443379). Redundancy with IBA is expected and acceptable.
+    supported_by:
+      - reference_id: PMID:18687401
+        supporting_text: &#34;TDO converts l-tryptophan to N-formylkynurenine by catalyzing the heme-dependent oxidative opening of the substrate indole ring&#34;
+
+- term:
+    id: GO:0006727
+    label: ommochrome biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This IEA annotation places TDO in the ommochrome biosynthetic pathway, derived
+      from UniRule mapping. TDO catalyzes the first committed step of ommochrome
+      biosynthesis by diverting tryptophan into the kynurenine pathway.
+    action: ACCEPT
+    reason: &gt;-
+      TDO is the first enzyme in the ommochrome biosynthetic pathway in insects.
+      The Drosophila vermilion mutant (TDO loss-of-function) lacks ommochrome eye
+      pigments. Functional complementation of vermilion by A. gambiae TDO confirms
+      its role in ommochrome biosynthesis (PMID:9443379). Multiple studies on
+      insect ommochrome pathways confirm TDO as the initiating step.
+    additional_reference_ids:
+      - PMID:9443379
+      - PMID:8969464
+    supported_by:
+      - reference_id: PMID:8969464
+        supporting_text: &#34;Since this gene is known to control adult eye color in other flies, its cloning from A. gambiae provides the basis for a dominant phenotypic marker for germline transformation&#34;
+      - reference_id: PMID:9443379
+        supporting_text: &#34;The chimeric construct, expressed transiently in vermilion (tryptophan oxygenase) mutants of Drosophila melanogaster, partially rescued adult eye color&#34;
+
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Redundant IEA annotation for heme binding from combined automated methods.
+      Correct but redundant with the IBA annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Correct. Heme binding is experimentally confirmed by spectral analysis of
+      recombinant A. gambiae TDO (PMID:18687401).
+    supported_by:
+      - reference_id: PMID:18687401
+        supporting_text: &#34;Spectral analyses showed that the enzyme was purified in its heme-ferric form&#34;
+
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This IEA annotation for metal ion binding is derived from InterPro domain
+      mapping (IPR037217, Tryptophan/Indoleamine 2,3-dioxygenase-like superfamily).
+      TDO binds iron as part of its heme prosthetic group.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Technically correct because TDO binds heme iron, but the term is overly
+      general. The more specific GO:0020037 (heme binding) already captures this
+      function accurately. Metal ion binding is not independently informative for
+      this protein.
+    supported_by:
+      - reference_id: PMID:18687401
+        supporting_text: &#34;Spectral analyses showed that the enzyme was purified in its heme-ferric form&#34;
+
+- term:
+    id: GO:0004833
+    label: L-tryptophan 2,3-dioxygenase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation for TDO activity based on manual transfer from Q17P71
+      (Aedes aegypti TDO) by curator judgment. Redundant with IBA and IEA
+      annotations but independently validated.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and well-supported. The ISS reference organism (Aedes aegypti) is a
+      closely related mosquito. Direct biochemical evidence exists for A. gambiae
+      TDO (PMID:18687401).
+    supported_by:
+      - reference_id: PMID:18687401
+        supporting_text: &#34;TDO converts l-tryptophan to N-formylkynurenine by catalyzing the heme-dependent oxidative opening of the substrate indole ring&#34;
+
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation for L-tryptophan catabolic process transferred from Aedes
+      aegypti TDO. TDO catalyzes the first step of tryptophan catabolism.
+    action: ACCEPT
+    reason: &gt;-
+      TDO is the sole enzyme initiating tryptophan catabolism in A. gambiae
+      (PMID:18687401). The annotation is appropriate as TDO commits tryptophan
+      irreversibly to catabolism. The term GO:0006569 is suitably general for
+      what TDO does (initiates catabolism) without over-specifying the downstream
+      fate of the carbon.
+    additional_reference_ids:
+      - PMID:18687401
+    supported_by:
+      - reference_id: PMID:18687401
+        supporting_text: &#34;In the malaria vector Anopheles gambiae, tryptophan 2,3-dioxygenase (TDO) is the only enzyme able to initiate l-tryptophan degradation through the kynurenine pathway&#34;
+
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation for heme binding transferred from Aedes aegypti TDO.
+      Redundant with IBA and IEA annotations but correct.
+    action: ACCEPT
+    reason: &gt;-
+      Correct. Heme binding is experimentally confirmed by spectral analysis
+      of recombinant A. gambiae TDO (PMID:18687401).
+    supported_by:
+      - reference_id: PMID:18687401
+        supporting_text: &#34;Spectral analyses showed that the enzyme was purified in its heme-ferric form&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:8969464
+  title: The tryptophan oxygenase gene of Anopheles gambiae.
+  findings:
+    - statement: The A. gambiae TDO gene was cloned and maps to chromosome 2R
+      supporting_text: &#34;The Anopheles gambiae gene encoding tryptophan oxygenase, a homolog of the Drosophila melanogaster vermilion gene, has been molecularly cloned and characterized&#34;
+    - statement: TDO encodes a 392 amino acid protein with 74% identity to Drosophila
+      supporting_text: &#34;Amino acid comparisons between the deduced protein and previously known tryptophan oxygenases revealed 74% identity between Anopheles and Drosophila&#34;
+    - statement: TDO transcript is developmentally regulated
+      supporting_text: &#34;Northern analysis detected a developmentally regulated transcript about 2 kb in length&#34;
+    - statement: TDO controls eye color and can serve as a transformation marker
+      supporting_text: &#34;Since this gene is known to control adult eye color in other flies, its cloning from A. gambiae provides the basis for a dominant phenotypic marker for germline transformation&#34;
+- id: PMID:9443379
+  title: The Anopheles gambiae tryptophan oxygenase gene expressed from a baculovirus promoter complements Drosophila melanogaster vermilion.
+  findings:
+    - statement: A. gambiae TDO functionally complements Drosophila vermilion eye color
+      supporting_text: &#34;The chimeric construct, expressed transiently in vermilion (tryptophan oxygenase) mutants of Drosophila melanogaster, partially rescued adult eye color&#34;
+    - statement: Demonstrates proper function of the A. gambiae TDO product
+      supporting_text: &#34;The successful genetic complementation by this construct demonstrated both the proper function of the tryptophan oxygenase product and the effectiveness of the ie-1 promoter in directing expression of foreign genes in live insects&#34;
+- id: PMID:11240635
+  title: Patterns of DNA sequence variation in chromosomally recognized taxa of Anopheles gambiae.
+  findings:
+    - statement: TDO locus inside inversion 2Rb shows introgressive hybridization between species
+      supporting_text: &#34;At the tryptophan oxygenase locus inside inversion 2Rb, variation was structured only by inversion orientation and not by taxonomic designation even between An. gambiae and An. arabiensis&#34;
+- id: PMID:12364791
+  title: The genome sequence of the malaria mosquito Anopheles gambiae.
+  findings:
+    - statement: Provides genomic context for AGAP002721 on chromosome 2R
+      supporting_text: &#34;The genome sequence of the malaria mosquito Anopheles gambiae&#34;
+- id: PMID:18687401
+  title: Purification and biochemical characterization of a recombinant Anopheles gambiae tryptophan 2,3-dioxygenase expressed in Escherichia coli.
+  findings:
+    - statement: TDO is the only enzyme initiating tryptophan degradation via the kynurenine pathway in A. gambiae
+      supporting_text: &#34;In the malaria vector Anopheles gambiae, tryptophan 2,3-dioxygenase (TDO) is the only enzyme able to initiate l-tryptophan degradation through the kynurenine pathway&#34;
+    - statement: TDO mRNA is ubiquitously expressed across tissues
+      supporting_text: &#34;a RT-PCR-based analysis of the tissue distribution of TDO mRNA in A. gambiae that revealed a ubiquitous expression of the gene&#34;
+    - statement: Recombinant TDO purified in heme-ferric form with Michaelis-Menten kinetics determined
+      supporting_text: &#34;Spectral analyses showed that the enzyme was purified in its heme-ferric form that was subsequently used to determining the Michaelis-Menten constants&#34;
+    - statement: Several kynurenines and tryptophan metabolites modulate TDO activity
+      supporting_text: &#34;The screening of a number of compounds as potential TDO modulators showed that several kynurenines and other Tryptophan-derived molecules interfere with the enzyme activity in vitro&#34;
+- id: PMID:34999199
+  title: Beyond the eye - Kynurenine pathway impairment causes midgut homeostasis dysfunction and survival and reproductive costs in blood-feeding mosquitoes.
+  findings:
+    - statement: Kynurenine pathway disruption impairs midgut homeostasis and reproduction in mosquitoes
+      supporting_text: &#34;Female mosquitoes with spontaneous and induced mutations in the orthologs of the genes encoding kynurenine hydroxylase in Aedes aegypti, Anopheles stephensi and Culex quinquefasciatus exhibited impaired survival and reproductive phenotypes that varied in type and severity among the species&#34;
+    - statement: Xanthurenic acid (KP end-product) rescues lethality from pathway disruption
+      supporting_text: &#34;Supplemental xanthurenic acid, a KP end-product, rescued lethality and limited microbiota proliferation in Ae. aegypti&#34;
+- id: PMID:35437328
+  title: Anopheline mosquitoes are protected against parasite infection by tryptophan catabolism in gut microbiota.
+  findings:
+    - statement: Gut microbiota catabolize 3-HK to protect against Plasmodium infection
+      supporting_text: &#34;3-HK impaired the structure of the peritrophic matrix and promoted Plasmodium berghei infection&#34;
+- id: PMID:16585514
+  title: Crystal structure of the Anopheles gambiae 3-hydroxykynurenine transaminase.
+  findings:
+    - statement: Xanthurenic acid plays a key role in Plasmodium gametogenesis in A. gambiae
+      supporting_text: &#34;In Anopheles gambiae, the vector for the most deadly malaria parasite Plasmodium falciparum, xanthurenic acid (XA) plays a key role in parasite gametogenesis and fertility&#34;
+- id: PMID:11463462
+  title: Both mosquito-derived xanthurenic acid and a host blood-derived factor regulate gametogenesis of Plasmodium in the midgut of the mosquito.
+  findings:
+    - statement: Xanthurenic acid is a gametocyte-activating factor for Plasmodium
+      supporting_text: &#34;Removal of both host and vector sources of GAF totally inhibited both exflagellation and ookinete production&#34;
+- id: file:ANOGA/TDO/TDO-deep-research-bioreason.md
+  title: BioReason-Pro SFT prediction for A. gambiae TDO
+  findings:
+    - statement: Domain architecture consistent with heme-dependent TDO
+      supporting_text: &#34;a core catalytic region that is further encompassed by IPR037217 from residues 27-359&#34;
+
+core_functions:
+- molecular_function:
+    id: GO:0004833
+    label: L-tryptophan 2,3-dioxygenase activity
+  description: &gt;-
+    TDO is a heme-dependent dioxygenase that catalyzes the oxidative cleavage of the
+    L-tryptophan indole ring to produce N-formylkynurenine. It is the sole enzyme
+    initiating tryptophan catabolism via the kynurenine pathway in A. gambiae.
+    Recombinant enzyme has been biochemically characterized with Michaelis-Menten
+    kinetics determined. The enzyme requires a physiological reductant and the
+    heme-ferric form is catalytically active after reduction.
+  directly_involved_in:
+    - id: GO:0006569
+      label: L-tryptophan catabolic process
+    - id: GO:0006727
+      label: ommochrome biosynthetic process
+  supported_by:
+    - reference_id: PMID:18687401
+      supporting_text: &#34;TDO converts l-tryptophan to N-formylkynurenine by catalyzing the heme-dependent oxidative opening of the substrate indole ring&#34;
+    - reference_id: PMID:9443379
+      supporting_text: &#34;The successful genetic complementation by this construct demonstrated both the proper function of the tryptophan oxygenase product&#34;
+
+proposed_new_terms: []
+
+suggested_questions:
+- question: &gt;-
+    Does A. gambiae TDO expression change in response to blood feeding, and if so,
+    what is the tissue-specific and temporal pattern of induction?
+- question: &gt;-
+    What are the kinetic parameters (Km, kcat) of A. gambiae TDO for L-tryptophan
+    under physiologically relevant reductant conditions?
+- question: &gt;-
+    Does TDO disruption in A. gambiae affect Plasmodium transmission by altering
+    xanthurenic acid levels in the midgut?
+
+suggested_experiments:
+- description: &gt;-
+    CRISPR knockout of TDO in A. gambiae to assess effects on eye pigmentation,
+    blood meal processing, survival, fecundity, and Plasmodium transmission.
+  hypothesis: &gt;-
+    TDO knockout will produce white/vermilion-like eyes, impair tryptophan
+    homeostasis after blood feeding, and alter Plasmodium development in the
+    midgut through changes in xanthurenic acid production.
+- description: &gt;-
+    Tissue-specific and blood meal-responsive transcriptomic profiling of TDO
+    and downstream kynurenine pathway genes in A. gambiae.
+  hypothesis: &gt;-
+    TDO expression is induced in the midgut following blood feeding to process
+    the tryptophan load from hemoglobin digestion.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dph2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dph2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A4QN59" target="_blank" class="term-link">
+                        A4QN59
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Danio rerio</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dph2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A4QN59" data-a="DESCRIPTION: Dph2 is a subunit of the Dph1-Dph2 heterodimeric c..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Dph2 is a subunit of the Dph1-Dph2 heterodimeric complex that catalyzes the first step of diphthamide biosynthesis, the transfer of a 3-amino-3-carboxypropyl (ACP) group from S-adenosyl-L-methionine to a conserved histidine of eukaryotic translation elongation factor 2 (eEF2). Dph2 binds a [4Fe-4S] cluster that facilitates reduction of the catalytic iron-sulfur cluster in the Dph1 subunit. Diphthamide is a unique post-translational modification of eEF2 that ensures translational fidelity and is the target of diphtheria toxin ADP-ribosylation. Loss of DPH2 function in humans causes diphthamide-deficiency syndrome, an autosomal recessive developmental disorder.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017183" target="_blank" class="term-link">
+                                    GO:0017183
+                                </a>
+                            </span>
+                            <span class="term-label">protein histidyl modification to diphthamide</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A4QN59" data-a="GO:0017183" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference from orthologs in yeast (DPH1, DPH2) and mouse correctly places dph2 in the diphthamide biosynthesis pathway. The DPH1-DPH2 heterodimer catalyzes the first step of diphthamide synthesis on eEF2, a pathway conserved from archaea to vertebrates.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32576952" target="_blank" class="term-link">
+                                        PMID:32576952
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The gene products DPH1 and DPH2 are components of a heterodimeric enzyme complex that mediates the first step of the posttranslational diphthamide modification on the nonredundant eukaryotic translation elongation factor 2 (eEF2)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017183" target="_blank" class="term-link">
+                                    GO:0017183
+                                </a>
+                            </span>
+                            <span class="term-label">protein histidyl modification to diphthamide</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A4QN59" data-a="GO:0017183" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined automated annotation from InterPro domain matches (IPR010014, IPR016435) and UniPathway correctly assigns diphthamide biosynthesis. Consistent with the well-characterized biochemical role of DPH2 family proteins.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20559380" target="_blank" class="term-link">
+                                        PMID:20559380
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Diphthamide biosynthesis requires an organic radical generated by an iron-sulphur enzyme</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090560" target="_blank" class="term-link">
+                                    GO:0090560
+                                </a>
+                            </span>
+                            <span class="term-label">2-(3-amino-3-carboxypropyl)histidine synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A4QN59" data-a="GO:0090560" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping from IPR016435 (Diphthamide synthesis DPH1/DPH2 family) assigns the ACP synthase activity with an implicit enables qualifier. However, Dph2 does not independently catalyze the reaction; the radical chemistry resides in the Dph1 subunit. The ISS annotation (below) correctly uses contributes_to. This IEA annotation over-annotates by implying Dph2 independently enables the activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IEA annotation assigns the full enables qualifier, but Dph2 only contributes to the complex activity. The ISS annotation with contributes_to qualifier is the correct representation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20559380" target="_blank" class="term-link">
+                                        PMID:20559380
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Diphthamide biosynthesis requires an organic radical generated by an iron-sulphur enzyme</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24422557" target="_blank" class="term-link">
+                                        PMID:24422557
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Yeast Dph1 and Dph2 form a complex (Dph1-Dph2) that is equivalent to the homodimer of PhDph2 and is sufficient to catalyze the first step in vitro in the presence of dithionite as the reductant</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120513" target="_blank" class="term-link">
+                                    GO:0120513
+                                </a>
+                            </span>
+                            <span class="term-label">2-(3-amino-3-carboxypropyl)histidine synthase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A4QN59" data-a="GO:0120513" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence similarity transfer from yeast DPH2 (P32461). Dph2 is a subunit of the Dph1-Dph2 heterodimer in eukaryotes, which together with Dph3 and NADH-dependent reductase forms the ACP synthase complex. Well supported by biochemical evidence in yeast and archaea.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24422557" target="_blank" class="term-link">
+                                        PMID:24422557
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Yeast Dph1 and Dph2 form a complex (Dph1-Dph2) that is equivalent to the homodimer of PhDph2 and is sufficient to catalyze the first step in vitro</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017183" target="_blank" class="term-link">
+                                    GO:0017183
+                                </a>
+                            </span>
+                            <span class="term-label">protein histidyl modification to diphthamide</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A4QN59" data-a="GO:0017183" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence similarity transfer from yeast DPH2 (P32461). This duplicates the IBA and IEA annotations for the same term but with ISS evidence. The annotation is correct as DPH2 is required for diphthamide biosynthesis.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32576952" target="_blank" class="term-link">
+                                        PMID:32576952
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The gene products DPH1 and DPH2 are components of a heterodimeric enzyme complex that mediates the first step of the posttranslational diphthamide modification on the nonredundant eukaryotic translation elongation factor 2 (eEF2)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    GO:0051539
+                                </a>
+                            </span>
+                            <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A4QN59" data-a="GO:0051539" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence similarity transfer from yeast DPH2 (P32461). The zebrafish Dph2 has three conserved cysteine residues (Cys89, Cys110, Cys341) that coordinate a [4Fe-4S] cluster, as annotated in UniProt by similarity. The Dph2 cluster facilitates reduction of the catalytic cluster in Dph1 rather than directly participating in radical chemistry.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34154323" target="_blank" class="term-link">
+                                        PMID:34154323
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">all radical S-adenosylmethionine (radical-SAM) enzymes, including the noncanonical radical-SAM enzyme diphthamide biosynthetic enzyme Dph1-Dph2, require at least one [4Fe-4S](Cys)3 cluster for activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090560" target="_blank" class="term-link">
+                                    GO:0090560
+                                </a>
+                            </span>
+                            <span class="term-label">2-(3-amino-3-carboxypropyl)histidine synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A4QN59" data-a="GO:0090560" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence similarity transfer from yeast DPH2 (P32461) with the correct contributes_to qualifier. Dph2 is required for ACP synthase activity as part of the Dph1-Dph2 complex but does not independently catalyze the radical SAM reaction. The contributes_to qualifier appropriately reflects that Dph1 houses the catalytic [4Fe-4S] cluster.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29590073" target="_blank" class="term-link">
+                                        PMID:29590073
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Diphthamide biosynthesis involves a carbon-carbon bond-forming reaction catalyzed by a radical S-adenosylmethionine (SAM) enzyme that cleaves a carbon-sulfur (C-S) bond in SAM to generate a 3-amino-3-carboxypropyl (ACP) radical</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24422557" target="_blank" class="term-link">
+                                        PMID:24422557
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Yeast Dph1 and Dph2 form a complex (Dph1-Dph2) that is equivalent to the homodimer of PhDph2 and is sufficient to catalyze the first step in vitro in the presence of dithionite as the reductant</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A4QN59" data-a="GO:0005737" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Dph2 functions in the cytoplasm where it forms a complex with Dph1 to modify cytoplasmic eEF2. The diphthamide biosynthesis machinery operates on eEF2 in the cytosol, consistent with its role in translation elongation. No transmembrane domains or signal peptides are present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is implied by the function of the Dph1-Dph2 complex on cytosolic eEF2 but was not explicitly annotated in GOA. The BioReason SFT analysis also identified cytoplasmic localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/dph2/dph2-deep-research-bioreason.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cellular component is dictated by where eEF2 resides and where ferredoxin-coupled redox partners operate. The adaptor must access cytosolic eEF2 and the cytosolic ferredoxin/reductase chain, supporting localization to the GO:0005737 cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Subunit of the Dph1-Dph2 heterodimer that catalyzes transfer of a 3-amino-3-carboxypropyl group from SAM to a conserved histidine of eEF2, the first committed step in diphthamide biosynthesis. Dph2 binds a [4Fe-4S] cluster that facilitates reduction of the catalytic cluster in Dph1, while Dph1 performs the radical SAM chemistry. The resulting diphthamide modification ensures translational reading frame fidelity.</h3>
+                <span class="vote-buttons" data-g="A4QN59" data-a="FUNCTION: Subunit of the Dph1-Dph2 heterodimer that catalyze..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                            4 iron, 4 sulfur cluster binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017183" target="_blank" class="term-link">
+                                protein histidyl modification to diphthamide
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120513" target="_blank" class="term-link">
+                            2-(3-amino-3-carboxypropyl)histidine synthase complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24422557" target="_blank" class="term-link">
+                                PMID:24422557
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Yeast Dph1 and Dph2 form a complex (Dph1-Dph2) that is equivalent to the homodimer of PhDph2 and is sufficient to catalyze the first step in vitro in the presence of dithionite as the reductant</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29590073" target="_blank" class="term-link">
+                                PMID:29590073
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Diphthamide biosynthesis involves a carbon-carbon bond-forming reaction catalyzed by a radical S-adenosylmethionine (SAM) enzyme that cleaves a carbon-sulfur (C-S) bond in SAM to generate a 3-amino-3-carboxypropyl (ACP) radical</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34154323" target="_blank" class="term-link">
+                                PMID:34154323
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">all radical S-adenosylmethionine (radical-SAM) enzymes, including the noncanonical radical-SAM enzyme diphthamide biosynthetic enzyme Dph1-Dph2, require at least one [4Fe-4S](Cys)3 cluster for activity</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20559380" target="_blank" class="term-link">
+                            PMID:20559380
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Diphthamide biosynthesis requires an organic radical generated by an iron-sulphur enzyme</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Dph2 enzyme in Pyrococcus horikoshii uses a [4Fe-4S] cluster to generate an organic radical from SAM for diphthamide biosynthesis</div>
+                        
+                        <div class="finding-text">"Diphthamide biosynthesis requires an organic radical generated by an iron-sulphur enzyme"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29590073" target="_blank" class="term-link">
+                            PMID:29590073
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Organometallic and radical intermediates reveal mechanism of diphthamide biosynthesis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The diphthamide biosynthetic enzyme generates an organometallic intermediate with an iron-carbon bond between ACP and the [4Fe-4S] cluster, followed by a product-like radical on eEF2</div>
+                        
+                        <div class="finding-text">"Diphthamide biosynthesis involves a carbon-carbon bond-forming reaction catalyzed by a radical S-adenosylmethionine (SAM) enzyme that cleaves a carbon-sulfur (C-S) bond in SAM to generate a 3-amino-3-carboxypropyl (ACP) radical"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24422557" target="_blank" class="term-link">
+                            PMID:24422557
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dph3 is an electron donor for Dph1-Dph2 in the first step of eukaryotic diphthamide biosynthesis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Dph3 (KTI11) serves as the physiological electron donor to reduce the [4Fe-4S] cluster in the Dph1-Dph2 complex</div>
+                        
+                        <div class="finding-text">"Yeast Dph1 and Dph2 form a complex (Dph1-Dph2) that is equivalent to the homodimer of PhDph2 and is sufficient to catalyze the first step in vitro in the presence of dithionite as the reductant"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34154323" target="_blank" class="term-link">
+                            PMID:34154323
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dph3 enables aerobic diphthamide biosynthesis by donating one iron atom to transform a [3Fe-4S] to a [4Fe-4S] cluster in Dph1-Dph2</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Dph3 donates an iron atom to restore a functional [4Fe-4S] cluster in the Dph1-Dph2 complex under aerobic conditions</div>
+                        
+                        <div class="finding-text">"all radical S-adenosylmethionine (radical-SAM) enzymes, including the noncanonical radical-SAM enzyme diphthamide biosynthetic enzyme Dph1-Dph2, require at least one [4Fe-4S](Cys)3 cluster for activity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32576952" target="_blank" class="term-link">
+                            PMID:32576952
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Diphthamide-deficiency syndrome -- a novel human developmental disorder and ribosomopathy</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic DPH2 mutations cause diphthamide-deficiency syndrome with intellectual disability, seizures, and developmental abnormalities</div>
+                        
+                        <div class="finding-text">"The gene products DPH1 and DPH2 are components of a heterodimeric enzyme complex that mediates the first step of the posttranslational diphthamide modification on the nonredundant eukaryotic translation elongation factor 2 (eEF2)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37675463" target="_blank" class="term-link">
+                            PMID:37675463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DPH1 and DPH2 variants that confer susceptibility to diphthamide deficiency syndrome in human cells and yeast models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DPH2 variants H105P and C341Y abolish diphthamide biosynthesis, confirmed in human cells and yeast functional assays</div>
+                        
+                        <div class="finding-text">"Ten additional human DPH1...and two DPH2 (H105P, C341Y) variants showed reduced functionality and hence are deficiency-susceptibility alleles"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38671004" target="_blank" class="term-link">
+                            PMID:38671004
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Diphthamide deficiency promotes association of eEF2 with p53 to induce p21 expression and neural crest defects</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Diphthamide deficiency causes eEF2 to dissociate from ribosomes and associate with p53, driving p21-mediated growth arrest and neural crest defects</div>
+                        
+                        <div class="finding-text">"DPH1 depletion facilitates dissociation of eEF2 from ribosomes and association with p53 to promote transcription of the cell cycle inhibitor p21, resulting in inhibited proliferation"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38097404" target="_blank" class="term-link">
+                            PMID:38097404
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Diphthamide -- a conserved modification of eEF2 with clinical relevance</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive review of diphthamide as a conserved eEF2 modification affecting translational fidelity, viral susceptibility, and human disease</div>
+                        
+                        <div class="finding-text">"Diphthamide, a complex modification on eukaryotic translation elongation factor 2 (eEF2), assures reading-frame fidelity during translation"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DANRE/dph2/dph2-deep-research-bioreason.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BioReason SFT reasoning trace for dph2 (Danio rerio)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BioReason SFT identifies dph2 as a nucleocytoplasmic adaptor for diphthamide biosynthesis that organizes the Dph1-Dph2-Dph3 complex</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is there direct experimental evidence for dph2 function in zebrafish, or are all functional assignments based on orthology to yeast and human DPH2?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A4QN59" data-a="Q: Is there direct experimental evidence for dph2 fun..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does zebrafish dph2 deficiency produce neural crest or craniofacial phenotypes analogous to those seen in mouse Dph1 knockin models?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A4QN59" data-a="Q: Does zebrafish dph2 deficiency produce neural cres..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the [4Fe-4S] cluster in zebrafish dph2 essential for its function, and does Dph3-mediated iron donation operate similarly in fish?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A4QN59" data-a="Q: Is the [4Fe-4S] cluster in zebrafish dph2 essentia..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> CRISPR-Cas9 knockout of dph2 in zebrafish embryos to assess developmental phenotypes, particularly craniofacial and neural crest derivatives, with comparison to dph1 mutants</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A4QN59" data-a="EXPERIMENT: CRISPR-Cas9 knockout of dph2 in zebrafish embryos ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vitro reconstitution of zebrafish Dph1-Dph2 complex to confirm ACP transferase activity and [4Fe-4S] cluster requirements using site-directed mutagenesis of the three conserved cysteine residues</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A4QN59" data-a="EXPERIMENT: In vitro reconstitution of zebrafish Dph1-Dph2 com..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dph2-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A4QN59" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code>---
+provider: bioreason-pro
+model: SFT
+source: huggingface.co/datasets/wanglab/protein_catalogue
+date: &#39;2026-04-04&#39;
+uniprot_id: A4QN59
+gene: dph2
+organism: Danio rerio (Zebrafish)
+---
+
+<span class="gu">##</span> Thinking Trace
+
+I begin with the InterPro architecture. Three overlapping family signatures—IPR016435 (Diphthamide synthesis DPH1/DPH2 family, residues 2–490), IPR010014 (Diphthamide synthesis DHP2 family, residues 20–485), and IPR016435 (DPH1/DPH2 family, residues 29–484)—span essentially the full polypeptide, indicating a conserved, non-enzymatic adaptor specialized for the diphthamide pathway. Within this scaffold, two homologous-superfamily modules are resolved: IPR042263 (DPH1/DPH2, domain 1, residues 35–126) and IPR042265 (DPH1/DPH2, domain 3, residues 264–366). Additional family-level matches (IPR016435 [54–377]) reinforce that the central body of the protein is devoted to this adaptor role rather than catalysis. The absence of catalytic domain signatures and the dominance of DPH1/DPH2-family scaffolding motifs argue that this protein’s primary molecular function is to bind other proteins and organize a redox-coupled transfer reaction rather than to perform the chemistry itself.
+</code></pre></div>
+
+<p>This domain layout causes a specific molecular function: it creates a multivalent platform that binds the radical-SAM enzyme DPH1 and the electron-delivery component DPH3, and positions the histidine target on eEF2. Such scaffolding necessarily entails GO:0005515 protein binding as a core activity. The DPH1/DPH2 adaptor stabilizes the DPH1 active site, aligns the [4Fe–4S]-dependent radical generation with the eEF2 histidine, and couples electron flow from NADH via cytosolic ferredoxin and ferredoxin reductase to the DPH1 radical chemistry. Because the adaptor does not house the catalytic iron–sulfur cluster or the radical chemistry, its contribution is to protein–protein recognition and spatial organization of the electron-transfer chain.</p>
+<p>From this molecular function, the biological process follows. By enabling the first step of diphthamide formation on eEF2—removal of the 3-amino-3-deoxy ribose on His1a and creation of a 3-(3-amino-3-carboxypropyl)histidine—the adaptor initiates a post-translational modification that tunes translation elongation fidelity and modulates susceptibility to ADP-ribosylating toxins. This places the protein in the diphthamide biosynthetic process (inferred as GO:0017183). In vertebrates, proper eEF2 modification influences tissue morphogenesis and extracellular matrix production; perturbation of this pathway can manifest as defects in skeletal and cartilage development, which rationalizes involvement in GO:0051216 cartilage development.</p>
+<p>The cellular component is dictated by where eEF2 resides and where ferredoxin-coupled redox partners operate. The adaptor must access cytosolic eEF2 and the cytosolic ferredoxin/reductase chain, supporting localization to the GO:0005737 cytoplasm. A nuclear pool is also plausible because eEF2 shuttles and certain assembly or quality-control steps can occur near chromatin-associated translation factors; the scaffold’s solubility and lack of transmembrane features are consistent with a nucleocytoplasmic distribution, including the GO:0005634 nucleus.</p>
+<p>Mechanistically, the adaptor forms a ternary complex with DPH1 and DPH3, recruits reduced ferredoxin generated by ferredoxin reductase (NADH-dependent), and docks eEF2 so that DPH1’s radical chemistry can proceed on His1a. Downstream enzymes—DPH5, DPH6, DPH7, and the amidoligase (Dph8/DnaJ family in some systems)—complete the maturation to diphthamide. The listed partners align with this model: DPH3 (electron carrier), DPH5/DPH6/DPH7 (later pathway enzymes), and diphthine–ammonia ligase (Dph8) for the final ligation/processing steps. Multiple eEF2 paralogs (eukaryotic translation elongation factor 2 and its like/tandem-duplicate variants) are the direct substrates that the adaptor presents to the radical machinery. A DnaJ/Hsp40 homolog likely assists folding or assembly of the complex, stabilizing the iron–sulfur enzyme and its scaffold during electron transfer cycles. Together, this architecture and partner set produce a controlled, redox-driven modification of eEF2 that impacts translational fidelity and, secondarily, developmental programs such as cartilage formation.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="n">Functional</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">nucleocytoplasmic</span><span class="w"> </span><span class="n">adaptor</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">organizes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">first</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">diphthamide</span><span class="w"> </span><span class="n">modification</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">histidine</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="k">translation</span><span class="w"> </span><span class="n">elongation</span><span class="w"> </span><span class="n">factor</span><span class="w"> </span><span class="mf">2.</span><span class="w"> </span><span class="n">It</span><span class="w"> </span><span class="n">binds</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">radical</span><span class="o">-</span><span class="n">generating</span><span class="w"> </span><span class="n">enzyme</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">ferredoxin</span><span class="o">-</span><span class="n">based</span><span class="w"> </span><span class="n">electron</span><span class="o">-</span><span class="n">delivery</span><span class="w"> </span><span class="k">system</span><span class="p">,</span><span class="w"> </span><span class="n">aligns</span><span class="w"> </span><span class="n">eEF2</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">precise</span><span class="w"> </span><span class="n">chemistry</span><span class="p">,</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">thereby</span><span class="w"> </span><span class="n">enables</span><span class="w"> </span><span class="n">formation</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">amino</span><span class="err">–</span><span class="n">aldehyde</span><span class="w"> </span><span class="n">side</span><span class="w"> </span><span class="n">chain</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">target</span><span class="w"> </span><span class="n">histidine</span><span class="p">.</span><span class="w"> </span><span class="k">By</span><span class="w"> </span><span class="n">ensuring</span><span class="w"> </span><span class="n">efficient</span><span class="w"> </span><span class="n">eEF2</span><span class="w"> </span><span class="n">modification</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">supports</span><span class="w"> </span><span class="n">accurate</span><span class="w"> </span><span class="k">translation</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">influences</span><span class="w"> </span><span class="n">developmental</span><span class="w"> </span><span class="n">programs</span><span class="p">,</span><span class="w"> </span><span class="n">including</span><span class="w"> </span><span class="n">cartilage</span><span class="w"> </span><span class="n">formation</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">UniProt</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">Required</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">first</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">diphthamide</span><span class="w"> </span><span class="n">biosynthesis</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">post</span><span class="o">-</span><span class="n">translational</span><span class="w"> </span><span class="n">modification</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">histidine</span><span class="w"> </span><span class="n">which</span><span class="w"> </span><span class="n">occurs</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">elongation</span><span class="w"> </span><span class="n">factor</span><span class="w"> </span><span class="mf">2.</span><span class="w"> </span><span class="n">DPH1</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">DPH2</span><span class="w"> </span><span class="n">together</span><span class="w"> </span><span class="n">assist</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">reaction</span><span class="w"> </span><span class="n">catalyzed</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">DPH1</span><span class="p">,</span><span class="w"> </span><span class="n">which</span><span class="w"> </span><span class="n">transfers</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="mi">3</span><span class="o">-</span><span class="n">amino</span><span class="o">-</span><span class="mi">3</span><span class="o">-</span><span class="n">deoxy</span><span class="w"> </span><span class="n">sugar</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">eEF2</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="w"> </span><span class="n">histidine</span><span class="w"> </span><span class="n">residue</span><span class="p">,</span><span class="w"> </span><span class="n">forming</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="mi">3</span><span class="o">-</span><span class="p">(</span><span class="mi">3</span><span class="o">-</span><span class="n">amino</span><span class="o">-</span><span class="mi">3</span><span class="o">-</span><span class="n">carboxypropyl</span><span class="p">)</span><span class="n">histidine</span><span class="w"> </span><span class="n">residue</span><span class="p">.</span><span class="w"> </span><span class="n">DPH1</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">radical</span><span class="o">-</span><span class="n">SAM</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">its</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="k">cycle</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">dependent</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">electron</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">NADH</span><span class="w"> </span><span class="n">via</span><span class="w"> </span><span class="n">FDXR</span><span class="w"> </span><span class="p">(</span><span class="n">ferredoxin</span><span class="w"> </span><span class="n">reductase</span><span class="p">)</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">FDX1</span><span class="w"> </span><span class="p">(</span><span class="n">ferredoxin</span><span class="p">).</span><span class="w"> </span><span class="n">DPH2</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">radical</span><span class="o">-</span><span class="n">SAM</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">but</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">reaction</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">probably</span><span class="w"> </span><span class="n">acts</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">binding</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">DPH1</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">eEF2</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">facilitate</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">reaction</span><span class="w"> </span><span class="p">(</span><span class="k">By</span><span class="w"> </span><span class="n">similarity</span><span class="p">).</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nl">IPR016435</span><span class="p">:</span><span class="w"> </span><span class="n">Diphthamide</span><span class="w"> </span><span class="n">synthesis</span><span class="w"> </span><span class="n">DPH1</span><span class="o">/</span><span class="n">DPH2</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">2-490</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR010014</span><span class="p">:</span><span class="w"> </span><span class="n">Diphthamide</span><span class="w"> </span><span class="n">synthesis</span><span class="w"> </span><span class="n">DHP2</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">20-485</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR016435</span><span class="p">:</span><span class="w"> </span><span class="n">Diphthamide</span><span class="w"> </span><span class="n">synthesis</span><span class="w"> </span><span class="n">DPH1</span><span class="o">/</span><span class="n">DPH2</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">29-484</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR016435</span><span class="p">:</span><span class="w"> </span><span class="n">Diphthamide</span><span class="w"> </span><span class="n">synthesis</span><span class="w"> </span><span class="n">DPH1</span><span class="o">/</span><span class="n">DPH2</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">33-366</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR042263</span><span class="p">:</span><span class="w"> </span><span class="n">Diphthamide</span><span class="w"> </span><span class="n">synthesis</span><span class="w"> </span><span class="n">DPH1</span><span class="o">/</span><span class="n">DPH2</span><span class="p">,</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">35-126</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR016435</span><span class="p">:</span><span class="w"> </span><span class="n">Diphthamide</span><span class="w"> </span><span class="n">synthesis</span><span class="w"> </span><span class="n">DPH1</span><span class="o">/</span><span class="n">DPH2</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">54-377</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR042265</span><span class="p">:</span><span class="w"> </span><span class="n">Diphthamide</span><span class="w"> </span><span class="n">synthesis</span><span class="w"> </span><span class="n">DPH1</span><span class="o">/</span><span class="n">DPH2</span><span class="p">,</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">264-366</span><span class="o">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="k">GO</span><span class="w"> </span><span class="n">Term</span><span class="w"> </span><span class="n">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="n">Molecular</span><span class="w"> </span><span class="k">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Biological</span><span class="w"> </span><span class="n">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Cellular</span><span class="w"> </span><span class="n">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dph2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A4QN59" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dph2-danio-rerio-research-notes">dph2 (Danio rerio) -- Research Notes</h1>
+<h2 id="gene-identity">Gene Identity</h2>
+<ul>
+<li>UniProt: A4QN59 (DPH2_DANRE)</li>
+<li>Full name: 2-(3-amino-3-carboxypropyl)histidine synthase subunit 2</li>
+<li>Synonyms: Diphthamide biosynthesis protein 2, Diphtheria toxin resistance protein 2</li>
+<li>Organism: Danio rerio (zebrafish)</li>
+<li>Chromosome 7</li>
+</ul>
+<h2 id="summary-of-function">Summary of Function</h2>
+<p>Dph2 is a subunit of the heterodimeric Dph1-Dph2 complex that catalyzes the first committed step in diphthamide biosynthesis: the transfer of a 3-amino-3-carboxypropyl (ACP) group from S-adenosyl-L-methionine (SAM) to a conserved histidine residue (His715 in mammals) of eukaryotic translation elongation factor 2 (eEF2). This is a unique post-translational modification found only on eEF2, conserved from archaea to humans.</p>
+<h2 id="biochemistry-and-mechanism">Biochemistry and Mechanism</h2>
+<p>The Dph1-Dph2 heterodimer is a noncanonical radical SAM enzyme. In archaea, the equivalent activity is performed by a Dph2 homodimer (e.g., Pyrococcus horikoshii PhDph2), whereas in eukaryotes a Dph1-Dph2 heterodimer carries out the reaction [PMID:20559380, "Diphthamide biosynthesis requires an organic radical generated by an iron-sulphur enzyme"].</p>
+<p>The catalytic mechanism involves the [4Fe-4S] cluster in Dph1 (not Dph2) attacking the gamma-carbon of methionine in SAM, generating an organometallic ACP-[4Fe-4S] intermediate and 5'-methylthioadenosine (MTA). In the presence of eEF2, homolytic cleavage of the Fe-C bond releases the ACP radical, which reacts with the target histidine [PMID:29590073, "organometallic and radical intermediates reveal mechanism of diphthamide biosynthesis"].</p>
+<p>Dph2 binds its own [4Fe-4S] cluster (at Cys89, Cys110, Cys341 in zebrafish, by similarity to yeast P32461). The Dph2 cluster does not perform the radical chemistry but instead facilitates the reduction of the catalytic [4Fe-4S] cluster in Dph1 [UniProt A4QN59, "Facilitates the reduction of the catalytic iron-sulfur cluster found in the dph1 subunit"].</p>
+<p>Dph3 (also known as KTI11) serves as the physiological electron donor for the Dph1-Dph2 complex, reducing the iron-sulfur cluster required for catalysis [PMID:24422557, "Dph3 is an electron donor for Dph1-Dph2 in the first step of eukaryotic diphthamide biosynthesis"]. Under aerobic conditions, Dph3 also donates an iron atom to convert a degraded [3Fe-4S] cluster back to a functional [4Fe-4S] cluster in the Dph1-Dph2 complex [PMID:34154323, "Dph3 Enables Aerobic Diphthamide Biosynthesis by Donating One Iron Atom to Transform a [3Fe-4S] to a [4Fe-4S] Cluster in Dph1-Dph2"].</p>
+<h2 id="pathway-context">Pathway Context</h2>
+<p>The full diphthamide biosynthesis pathway requires seven proteins (DPH1-DPH7):<br />
+- Step 1 (DPH1, DPH2, DPH3, DPH4): Transfer of ACP group from SAM to His715 of eEF2<br />
+- Step 2 (DPH5): Trimethylation of ACP-histidine<br />
+- Step 3 (DPH6, DPH7): Demethylation and amidation to form mature diphthamide</p>
+<p>Reactome pathway: R-DRE-5358493 "Synthesis of diphthamide-EEF2"</p>
+<h2 id="biological-significance">Biological Significance</h2>
+<p>Diphthamide modification of eEF2 ensures translational fidelity. Loss of diphthamide increases ribosomal frameshifting [PMID:38097404, "Diphthamide - a conserved modification of eEF2 with clinical relevance"]. The modification is also the target of bacterial ADP-ribosylating toxins including diphtheria toxin and Pseudomonas exotoxin A.</p>
+<h2 id="disease-and-developmental-relevance">Disease and Developmental Relevance</h2>
+<p>Biallelic loss-of-function variants in human DPH1 or DPH2 cause "diphthamide-deficiency syndrome," an autosomal recessive developmental disorder characterized by intellectual disability, seizures, short stature, craniofacial dysmorphism, and congenital heart defects [PMID:32576952, "Diphthamide-deficiency syndrome: a novel human developmental disorder and ribosomopathy"]. Specific DPH2 variants (H105P, C341Y) have been shown to abolish diphthamide biosynthesis in human cells and yeast models [PMID:37675463, "DPH1 and DPH2 variants that confer susceptibility to diphthamide deficiency syndrome in human cells and yeast models"].</p>
+<p>In mouse models, Dph1 deficiency promotes eEF2 dissociation from ribosomes and association with p53 to drive p21 expression and neural crest defects [PMID:38671004, "Diphthamide deficiency promotes association of eEF2 with p53 to induce p21 expression and neural crest defects"].</p>
+<h2 id="key-references">Key References</h2>
+<ul>
+<li>PMID:20559380 - Zhang et al. (2010) Nature. Radical mechanism of diphthamide biosynthesis.</li>
+<li>PMID:29590073 - Dong et al. (2018) Science. Organometallic and radical intermediates.</li>
+<li>PMID:24422557 - Dong et al. (2014) JACS. Dph3 as electron donor for Dph1-Dph2.</li>
+<li>PMID:34154323 - Dong et al. (2021) JACS. Dph3 iron atom donation for aerobic diphthamide biosynthesis.</li>
+<li>PMID:32576952 - Hawer et al. (2020) Eur J Hum Genet. Diphthamide-deficiency syndrome.</li>
+<li>PMID:37675463 - Hawer et al. (2023) Dis Model Mech. DPH1/DPH2 variant analysis.</li>
+<li>PMID:38671004 - Yu et al. (2024) Nat Commun. eEF2-p53 association and neural crest defects.</li>
+<li>PMID:38097404 - Hawer et al. (2024) Trends Mol Med. Diphthamide review with clinical relevance.</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dph2-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A4QN59" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-dph2-danio-rerio">BioReason-Pro SFT Review: dph2 (Danio rerio)</h1>
+<p>Source: dph2-deep-research-bioreason.md</p>
+<ul>
+<li><strong>Correctness</strong>: 3/5</li>
+<li><strong>Completeness</strong>: 4/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason SFT functional summary states:</p>
+<blockquote>
+<p>A nucleocytoplasmic adaptor that organizes the first step of the diphthamide modification on the histidine of translation elongation factor 2. It binds the radical-generating enzyme and the ferredoxin-based electron-delivery system, aligns eEF2 for precise chemistry, and thereby enables formation of the amino-aldehyde side chain on the target histidine. By ensuring efficient eEF2 modification, it supports accurate translation and influences developmental programs, including cartilage formation.</p>
+</blockquote>
+<p><strong>Correctly captured:</strong><br />
+- Dph2 participates in the first step of diphthamide modification on eEF2. This is the central and best-established function.<br />
+- The involvement of a radical-generating enzyme (Dph1) and electron delivery system is correctly noted.<br />
+- The connection between diphthamide and translational accuracy is supported by literature.</p>
+<p><strong>Errors and overstatements:</strong></p>
+<ol>
+<li>
+<p><strong>"non-enzymatic adaptor" framing is misleading.</strong> The thinking trace states the protein is "a conserved, non-enzymatic adaptor specialized for the diphthamide pathway" and claims "the absence of catalytic domain signatures" argues the protein's function is "to bind other proteins and organize a redox-coupled transfer reaction rather than to perform the chemistry itself." While it is true that the radical SAM chemistry resides primarily in Dph1, Dph2 does bind a [4Fe-4S] cluster (confirmed by three conserved cysteines and by similarity to yeast P32461) and contributes to the enzymatic activity of the complex. Calling it merely an "adaptor" undersells its biochemical role. The ISS annotation in GOA correctly uses <code>contributes_to</code> for the ACP synthase activity, which is more accurate than "adaptor."</p>
+</li>
+<li>
+<p><strong>"amino-aldehyde side chain" is incorrect chemistry.</strong> The product of the first step is a 3-(3-amino-3-carboxypropyl)histidine, not an amino-aldehyde. Diphthamide is an amide, not an aldehyde. This is a factual chemical error.</p>
+</li>
+<li>
+<p><strong>"cartilage formation" is weakly supported for dph2 specifically.</strong> The thinking trace infers GO:0051216 (cartilage development) based on general vertebrate diphthamide biology. While diphthamide deficiency does cause developmental defects including craniofacial features (PMID:32576952) and neural crest defects (PMID:38671004), the link to cartilage specifically has not been demonstrated for dph2, and the developmental phenotypes are better described as neural crest-related rather than cartilage-specific. This appears to be an over-annotation.</p>
+</li>
+<li>
+<p><strong>Nuclear localization claim is speculative.</strong> The trace suggests "A nuclear pool is also plausible because eEF2 shuttles" but provides no evidence for nuclear localization of Dph2 itself. There is no experimental or computational support for dph2 being in the nucleus. All characterized diphthamide biosynthesis occurs in the cytoplasm.</p>
+</li>
+<li>
+<p><strong>"protein binding" (GO:0005515) as "core activity" is unhelpful.</strong> The BioReason trace explicitly calls protein binding a core activity. Per curation guidelines, GO:0005515 is uninformative. The relevant molecular function is the specific contribution to ACP synthase activity and [4Fe-4S] cluster binding.</p>
+</li>
+</ol>
+<h2 id="comparison-with-interpro2go">Comparison with InterPro2GO</h2>
+<p>The InterPro2GO annotation (GO_REF:0000002) assigns:<br />
+- GO:0090560 (2-(3-amino-3-carboxypropyl)histidine synthase activity) from IPR016435</p>
+<p>The BioReason SFT functional summary covers essentially the same ground as what InterPro2GO provides: the protein is part of the diphthamide biosynthesis machinery. However, BioReason adds narrative context about the electron delivery system (Dph3, ferredoxin), the developmental consequences, and the complex architecture. These additions show some biological insight beyond simple domain-to-function mapping.</p>
+<p>Where BioReason diverges from InterPro2GO, it is sometimes wrong: the InterPro2GO annotation does not claim nuclear localization or cartilage development. BioReason also introduces the "adaptor" framing which, while not entirely wrong, misrepresents the enzymatic contribution that the ISS annotation correctly captures with the contributes_to qualifier.</p>
+<p>Overall, the BioReason SFT output provides a reasonable narrative summary that goes modestly beyond InterPro2GO recapitulation, but introduces several inaccuracies (chemical nomenclature, nuclear localization, cartilage claim) that reduce confidence. The core biological story -- Dph2 as a subunit of the diphthamide biosynthesis complex -- is correctly conveyed.</p>
+<h2 id="notes-on-thinking-trace">Notes on Thinking Trace</h2>
+<p>The thinking trace shows a structured domain-to-function reasoning approach: it reads the InterPro domains, infers molecular function, then biological process, then cellular component. This is methodical but leads to overconfidence in speculative inferences (nuclear localization from general eEF2 shuttling, cartilage development from vertebrate developmental phenotypes).</p>
+<p>The trace correctly identifies the key partners (DPH1, DPH3, DPH5-7, eEF2) and the electron transfer chain. It also correctly notes the [4Fe-4S] cluster involvement. However, the insistence that Dph2 is "non-enzymatic" and functions purely as an "adaptor" contradicts the evidence that Dph2 binds its own iron-sulfur cluster and contributes to the catalytic activity, as captured by the contributes_to qualifier in GOA.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A4QN59
+gene_symbol: dph2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:7955
+  label: Danio rerio
+description: &gt;-
+  Dph2 is a subunit of the Dph1-Dph2 heterodimeric complex that catalyzes the
+  first step of diphthamide biosynthesis, the transfer of a 3-amino-3-carboxypropyl
+  (ACP) group from S-adenosyl-L-methionine to a conserved histidine of eukaryotic
+  translation elongation factor 2 (eEF2). Dph2 binds a [4Fe-4S] cluster that
+  facilitates reduction of the catalytic iron-sulfur cluster in the Dph1 subunit.
+  Diphthamide is a unique post-translational modification of eEF2 that ensures
+  translational fidelity and is the target of diphtheria toxin ADP-ribosylation.
+  Loss of DPH2 function in humans causes diphthamide-deficiency syndrome, an
+  autosomal recessive developmental disorder.
+existing_annotations:
+- term:
+    id: GO:0017183
+    label: protein histidyl modification to diphthamide
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Phylogenetic inference from orthologs in yeast (DPH1, DPH2) and
+      mouse correctly places dph2 in the diphthamide biosynthesis pathway. The
+      DPH1-DPH2 heterodimer catalyzes the first step of diphthamide synthesis
+      on eEF2, a pathway conserved from archaea to vertebrates.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:32576952
+        supporting_text: &gt;-
+          The gene products DPH1 and DPH2 are components of a heterodimeric
+          enzyme complex that mediates the first step of the posttranslational
+          diphthamide modification on the nonredundant eukaryotic translation
+          elongation factor 2 (eEF2)
+- term:
+    id: GO:0017183
+    label: protein histidyl modification to diphthamide
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Combined automated annotation from InterPro domain matches
+      (IPR010014, IPR016435) and UniPathway correctly assigns diphthamide
+      biosynthesis. Consistent with the well-characterized biochemical role
+      of DPH2 family proteins.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:20559380
+        supporting_text: &gt;-
+          Diphthamide biosynthesis requires an organic radical generated by
+          an iron-sulphur enzyme
+- term:
+    id: GO:0090560
+    label: 2-(3-amino-3-carboxypropyl)histidine synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: InterPro2GO mapping from IPR016435 (Diphthamide synthesis DPH1/DPH2
+      family) assigns the ACP synthase activity with an implicit enables qualifier.
+      However, Dph2 does not independently catalyze the reaction; the radical
+      chemistry resides in the Dph1 subunit. The ISS annotation (below) correctly
+      uses contributes_to. This IEA annotation over-annotates by implying Dph2
+      independently enables the activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The IEA annotation assigns the full enables qualifier, but Dph2 only
+      contributes to the complex activity. The ISS annotation with contributes_to
+      qualifier is the correct representation.
+    supported_by:
+      - reference_id: PMID:20559380
+        supporting_text: &gt;-
+          Diphthamide biosynthesis requires an organic radical generated by
+          an iron-sulphur enzyme
+      - reference_id: PMID:24422557
+        supporting_text: &gt;-
+          Yeast Dph1 and Dph2 form a complex (Dph1-Dph2) that is equivalent
+          to the homodimer of PhDph2 and is sufficient to catalyze the first
+          step in vitro in the presence of dithionite as the reductant
+- term:
+    id: GO:0120513
+    label: 2-(3-amino-3-carboxypropyl)histidine synthase complex
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Sequence similarity transfer from yeast DPH2 (P32461). Dph2 is
+      a subunit of the Dph1-Dph2 heterodimer in eukaryotes, which together
+      with Dph3 and NADH-dependent reductase forms the ACP synthase complex.
+      Well supported by biochemical evidence in yeast and archaea.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:24422557
+        supporting_text: &gt;-
+          Yeast Dph1 and Dph2 form a complex (Dph1-Dph2) that is equivalent
+          to the homodimer of PhDph2 and is sufficient to catalyze the first
+          step in vitro
+- term:
+    id: GO:0017183
+    label: protein histidyl modification to diphthamide
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Sequence similarity transfer from yeast DPH2 (P32461). This
+      duplicates the IBA and IEA annotations for the same term but with ISS
+      evidence. The annotation is correct as DPH2 is required for diphthamide
+      biosynthesis.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:32576952
+        supporting_text: &gt;-
+          The gene products DPH1 and DPH2 are components of a heterodimeric
+          enzyme complex that mediates the first step of the posttranslational
+          diphthamide modification on the nonredundant eukaryotic translation
+          elongation factor 2 (eEF2)
+- term:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Sequence similarity transfer from yeast DPH2 (P32461). The
+      zebrafish Dph2 has three conserved cysteine residues (Cys89, Cys110,
+      Cys341) that coordinate a [4Fe-4S] cluster, as annotated in UniProt
+      by similarity. The Dph2 cluster facilitates reduction of the catalytic
+      cluster in Dph1 rather than directly participating in radical chemistry.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:34154323
+        supporting_text: &gt;-
+          all radical S-adenosylmethionine (radical-SAM) enzymes, including
+          the noncanonical radical-SAM enzyme diphthamide biosynthetic enzyme
+          Dph1-Dph2, require at least one [4Fe-4S](Cys)3 cluster for activity
+- term:
+    id: GO:0090560
+    label: 2-(3-amino-3-carboxypropyl)histidine synthase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: contributes_to
+  review:
+    summary: Sequence similarity transfer from yeast DPH2 (P32461) with
+      the correct contributes_to qualifier. Dph2 is required for ACP synthase
+      activity as part of the Dph1-Dph2 complex but does not independently
+      catalyze the radical SAM reaction. The contributes_to qualifier
+      appropriately reflects that Dph1 houses the catalytic [4Fe-4S] cluster.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:29590073
+        supporting_text: &gt;-
+          Diphthamide biosynthesis involves a carbon-carbon bond-forming reaction
+          catalyzed by a radical S-adenosylmethionine (SAM) enzyme that cleaves a
+          carbon-sulfur (C-S) bond in SAM to generate a 3-amino-3-carboxypropyl
+          (ACP) radical
+      - reference_id: PMID:24422557
+        supporting_text: &gt;-
+          Yeast Dph1 and Dph2 form a complex (Dph1-Dph2) that is equivalent
+          to the homodimer of PhDph2 and is sufficient to catalyze the first
+          step in vitro in the presence of dithionite as the reductant
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  review:
+    summary: Dph2 functions in the cytoplasm where it forms a complex with Dph1
+      to modify cytoplasmic eEF2. The diphthamide biosynthesis machinery operates
+      on eEF2 in the cytosol, consistent with its role in translation elongation.
+      No transmembrane domains or signal peptides are present.
+    action: NEW
+    reason: Cytoplasmic localization is implied by the function of the Dph1-Dph2
+      complex on cytosolic eEF2 but was not explicitly annotated in GOA. The
+      BioReason SFT analysis also identified cytoplasmic localization.
+    supported_by:
+      - reference_id: file:DANRE/dph2/dph2-deep-research-bioreason.md
+        supporting_text: &gt;-
+          The cellular component is dictated by where eEF2 resides and where
+          ferredoxin-coupled redox partners operate. The adaptor must access
+          cytosolic eEF2 and the cytosolic ferredoxin/reductase chain, supporting
+          localization to the GO:0005737 cytoplasm
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to
+    orthologs by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:20559380
+  title: Diphthamide biosynthesis requires an organic radical generated by an
+    iron-sulphur enzyme
+  full_text_unavailable: true
+  findings:
+    - statement: The Dph2 enzyme in Pyrococcus horikoshii uses a [4Fe-4S] cluster
+        to generate an organic radical from SAM for diphthamide biosynthesis
+      supporting_text: &gt;-
+        Diphthamide biosynthesis requires an organic radical generated by an
+        iron-sulphur enzyme
+      reference_section_type: ABSTRACT
+- id: PMID:29590073
+  title: Organometallic and radical intermediates reveal mechanism of diphthamide
+    biosynthesis
+  full_text_unavailable: true
+  findings:
+    - statement: The diphthamide biosynthetic enzyme generates an organometallic
+        intermediate with an iron-carbon bond between ACP and the [4Fe-4S] cluster,
+        followed by a product-like radical on eEF2
+      supporting_text: &gt;-
+        Diphthamide biosynthesis involves a carbon-carbon bond-forming reaction
+        catalyzed by a radical S-adenosylmethionine (SAM) enzyme that cleaves a
+        carbon-sulfur (C-S) bond in SAM to generate a 3-amino-3-carboxypropyl
+        (ACP) radical
+      reference_section_type: ABSTRACT
+- id: PMID:24422557
+  title: Dph3 is an electron donor for Dph1-Dph2 in the first step of eukaryotic
+    diphthamide biosynthesis
+  full_text_unavailable: true
+  findings:
+    - statement: Dph3 (KTI11) serves as the physiological electron donor to reduce
+        the [4Fe-4S] cluster in the Dph1-Dph2 complex
+      supporting_text: &gt;-
+        Yeast Dph1 and Dph2 form a complex (Dph1-Dph2) that is equivalent to
+        the homodimer of PhDph2 and is sufficient to catalyze the first step
+        in vitro in the presence of dithionite as the reductant
+      reference_section_type: ABSTRACT
+- id: PMID:34154323
+  title: Dph3 enables aerobic diphthamide biosynthesis by donating one iron atom to
+    transform a [3Fe-4S] to a [4Fe-4S] cluster in Dph1-Dph2
+  full_text_unavailable: true
+  findings:
+    - statement: Dph3 donates an iron atom to restore a functional [4Fe-4S] cluster
+        in the Dph1-Dph2 complex under aerobic conditions
+      supporting_text: &gt;-
+        all radical S-adenosylmethionine (radical-SAM) enzymes, including the
+        noncanonical radical-SAM enzyme diphthamide biosynthetic enzyme
+        Dph1-Dph2, require at least one [4Fe-4S](Cys)3 cluster for activity
+      reference_section_type: ABSTRACT
+- id: PMID:32576952
+  title: Diphthamide-deficiency syndrome -- a novel human developmental disorder and
+    ribosomopathy
+  full_text_unavailable: true
+  findings:
+    - statement: Biallelic DPH2 mutations cause diphthamide-deficiency syndrome with
+        intellectual disability, seizures, and developmental abnormalities
+      supporting_text: &gt;-
+        The gene products DPH1 and DPH2 are components of a heterodimeric
+        enzyme complex that mediates the first step of the posttranslational
+        diphthamide modification on the nonredundant eukaryotic translation
+        elongation factor 2 (eEF2)
+      reference_section_type: ABSTRACT
+- id: PMID:37675463
+  title: DPH1 and DPH2 variants that confer susceptibility to diphthamide deficiency
+    syndrome in human cells and yeast models
+  full_text_unavailable: true
+  findings:
+    - statement: DPH2 variants H105P and C341Y abolish diphthamide biosynthesis,
+        confirmed in human cells and yeast functional assays
+      supporting_text: &gt;-
+        Ten additional human DPH1...and two DPH2 (H105P, C341Y) variants
+        showed reduced functionality and hence are deficiency-susceptibility
+        alleles
+      reference_section_type: ABSTRACT
+- id: PMID:38671004
+  title: Diphthamide deficiency promotes association of eEF2 with p53 to induce p21
+    expression and neural crest defects
+  full_text_unavailable: true
+  findings:
+    - statement: Diphthamide deficiency causes eEF2 to dissociate from ribosomes and
+        associate with p53, driving p21-mediated growth arrest and neural crest defects
+      supporting_text: &gt;-
+        DPH1 depletion facilitates dissociation of eEF2 from ribosomes and
+        association with p53 to promote transcription of the cell cycle
+        inhibitor p21, resulting in inhibited proliferation
+      reference_section_type: ABSTRACT
+- id: PMID:38097404
+  title: Diphthamide -- a conserved modification of eEF2 with clinical relevance
+  full_text_unavailable: true
+  findings:
+    - statement: Comprehensive review of diphthamide as a conserved eEF2 modification
+        affecting translational fidelity, viral susceptibility, and human disease
+      supporting_text: &gt;-
+        Diphthamide, a complex modification on eukaryotic translation elongation
+        factor 2 (eEF2), assures reading-frame fidelity during translation
+      reference_section_type: ABSTRACT
+- id: file:DANRE/dph2/dph2-deep-research-bioreason.md
+  title: BioReason SFT reasoning trace for dph2 (Danio rerio)
+  findings:
+    - statement: BioReason SFT identifies dph2 as a nucleocytoplasmic adaptor for
+        diphthamide biosynthesis that organizes the Dph1-Dph2-Dph3 complex
+core_functions:
+  - description: &gt;-
+      Subunit of the Dph1-Dph2 heterodimer that catalyzes transfer of a
+      3-amino-3-carboxypropyl group from SAM to a conserved histidine of eEF2,
+      the first committed step in diphthamide biosynthesis. Dph2 binds a [4Fe-4S]
+      cluster that facilitates reduction of the catalytic cluster in Dph1, while
+      Dph1 performs the radical SAM chemistry. The resulting diphthamide
+      modification ensures translational reading frame fidelity.
+    molecular_function:
+      id: GO:0051539
+      label: 4 iron, 4 sulfur cluster binding
+    contributes_to_molecular_function:
+      id: GO:0090560
+      label: 2-(3-amino-3-carboxypropyl)histidine synthase activity
+    directly_involved_in:
+      - id: GO:0017183
+        label: protein histidyl modification to diphthamide
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    in_complex:
+      id: GO:0120513
+      label: 2-(3-amino-3-carboxypropyl)histidine synthase complex
+    supported_by:
+      - reference_id: PMID:24422557
+        supporting_text: &gt;-
+          Yeast Dph1 and Dph2 form a complex (Dph1-Dph2) that is equivalent
+          to the homodimer of PhDph2 and is sufficient to catalyze the first
+          step in vitro in the presence of dithionite as the reductant
+      - reference_id: PMID:29590073
+        supporting_text: &gt;-
+          Diphthamide biosynthesis involves a carbon-carbon bond-forming reaction
+          catalyzed by a radical S-adenosylmethionine (SAM) enzyme that cleaves a
+          carbon-sulfur (C-S) bond in SAM to generate a 3-amino-3-carboxypropyl
+          (ACP) radical
+      - reference_id: PMID:34154323
+        supporting_text: &gt;-
+          all radical S-adenosylmethionine (radical-SAM) enzymes, including
+          the noncanonical radical-SAM enzyme diphthamide biosynthetic enzyme
+          Dph1-Dph2, require at least one [4Fe-4S](Cys)3 cluster for activity
+suggested_questions:
+  - question: Is there direct experimental evidence for dph2 function in zebrafish,
+      or are all functional assignments based on orthology to yeast and human DPH2?
+  - question: Does zebrafish dph2 deficiency produce neural crest or craniofacial
+      phenotypes analogous to those seen in mouse Dph1 knockin models?
+  - question: Is the [4Fe-4S] cluster in zebrafish dph2 essential for its function,
+      and does Dph3-mediated iron donation operate similarly in fish?
+suggested_experiments:
+  - description: CRISPR-Cas9 knockout of dph2 in zebrafish embryos to assess
+      developmental phenotypes, particularly craniofacial and neural crest
+      derivatives, with comparison to dph1 mutants
+  - description: In vitro reconstitution of zebrafish Dph1-Dph2 complex to confirm
+      ACP transferase activity and [4Fe-4S] cluster requirements using
+      site-directed mutagenesis of the three conserved cysteine residues
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
