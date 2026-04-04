@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 : "${PROJECT_ID:?Set PROJECT_ID}"
-LOCATION="${LOCATION:-us-central1}"
+LOCATION="${LOCATION:-${REGION}}"
 AR_REPO="${AR_REPO:-bioreason-smoke}"
 IMAGE_NAME="${IMAGE_NAME:-bioreason-smoke}"
 TAG="${TAG:-$(date -u +%Y%m%d-%H%M%S)}"

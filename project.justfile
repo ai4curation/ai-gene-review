@@ -648,6 +648,28 @@ render-projects:
 render-project project:
     uv run ai-gene-review render-projects projects/{{project}}.md
 
+# ============== Prokaryotic Immunity Prediction ==============
+
+# Run the prokaryotic immunity prediction pipeline from the repo root
+prok-immunity-run input output="projects/prok-immunity-prediction/outputs/run" organism="ECOLI" taxon="NCBITaxon:83333" embedder="composition" extra="":
+    just --justfile projects/prok-immunity-prediction/justfile run {{input}} output={{output}} organism={{organism}} taxon={{taxon}} embedder={{embedder}} extra='{{extra}}'
+
+# Smoke-test the example proteome bundled with the project
+prok-immunity-run-example:
+    just --justfile projects/prok-immunity-prediction/justfile run-example
+
+# Run the same pipeline using ESM-2 embeddings
+prok-immunity-run-esm2 input output="projects/prok-immunity-prediction/outputs/esm2" organism="ECOLI" taxon="NCBITaxon:83333" extra="":
+    just --justfile projects/prok-immunity-prediction/justfile run-esm2 {{input}} output={{output}} organism={{organism}} taxon={{taxon}} extra='{{extra}}'
+
+# Export predicted immunity genes into the AIGR PredictionReview workflow
+prok-immunity-sync-aigr input output="projects/prok-immunity-prediction/outputs/aigr" organism="ECOLI" taxon="NCBITaxon:83333" embedder="composition" extra="":
+    just --justfile projects/prok-immunity-prediction/justfile sync-aigr {{input}} output={{output}} organism={{organism}} taxon={{taxon}} embedder={{embedder}} extra='{{extra}}'
+
+# Evaluate predictions against a normalized Mordret-style benchmark
+prok-immunity-evaluate predictions benchmark output="projects/prok-immunity-prediction/outputs/evaluation.json":
+    just --justfile projects/prok-immunity-prediction/justfile evaluate {{predictions}} {{benchmark}} output={{output}}
+
 # Render a single rule review YAML as HTML (automatically runs analysis first if needed)
 # DEPENDENCIES:
 #   - Requires {rule_id}-review.yaml with populated `entries` field (run sync-rule-review-single first)

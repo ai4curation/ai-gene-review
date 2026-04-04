@@ -80,8 +80,8 @@ If you prefer not to create `run.env`, these are the exact variables:
 ```bash
 export PROJECT_ID=test-project-covid-19-277821
 export PROJECT_NUMBER=1091817516808
-export LOCATION=us-central1
-export ALLOWED_LOCATION=regions/us-central1
+export LOCATION=${REGION}
+export ALLOWED_LOCATION=regions/${REGION}
 export PROVISIONING_MODEL=STANDARD
 export MACHINE_TYPE=a2-highgpu-1g
 export AR_REPO=bioreason-smoke

@@ -2431,6 +2431,9 @@ class PredictedTermTypeEnum(EnumDefinitionImpl):
     GO_CC = PermissibleValue(
         text="GO_CC",
         description="GO Cellular Component term")
+    DEFENSE_SYSTEM = PermissibleValue(
+        text="DEFENSE_SYSTEM",
+        description="Predicted prokaryotic defense or immunity system family")
 
     _defn = EnumDefinition(
         name="PredictedTermTypeEnum",
@@ -3100,4 +3103,3 @@ slots.PredictionReview_id = Slot(uri=GENE_REVIEW.id, name="PredictionReview_id",
 
 slots.PredictionReview_description = Slot(uri=DCTERMS.description, name="PredictionReview_description", curie=DCTERMS.curie('description'),
                    model_uri=GENE_REVIEW.PredictionReview_description, domain=PredictionReview, range=Optional[str])
-

@@ -1,0 +1,57 @@
+root := `git rev-parse --show-toplevel`
+project_dir := "{{root}}/projects/prok-immunity-prediction"
+module := "ai_gene_review.prok_immunity_prediction"
+
+default: help
+
+help:
+    @just --list
+
+run input output="outputs/run" organism="ECOLI" taxon="NCBITaxon:83333" embedder="composition" extra="":
+    cd "{{root}}" && uv run python -m {{module}} run \
+      --input "{{project_dir}}/{{input}}" \
+      --output-dir "{{project_dir}}/{{output}}" \
+      --family-config "{{project_dir}}/config/defense_families.yaml" \
+      --organism "{{organism}}" \
+      --taxon-id "{{taxon}}" \
+      --embedder "{{embedder}}" \
+      {{extra}}
+
+run-example:
+    just run data/example/example_proteome.faa output=outputs/example organism=ECOLI taxon=NCBITaxon:83333 extra="--gff {{project_dir}}/data/example/example_annotations.gff"
+
+run-esm2 input output="outputs/esm2" organism="ECOLI" taxon="NCBITaxon:83333" extra="":
+    cd "{{root}}" && uv run --with torch --with transformers python -m {{module}} run \
+      --input "{{project_dir}}/{{input}}" \
+      --output-dir "{{project_dir}}/{{output}}" \
+      --family-config "{{project_dir}}/config/defense_families.yaml" \
+      --organism "{{organism}}" \
+      --taxon-id "{{taxon}}" \
+      --embedder esm2 \
+      {{extra}}
+
+sync-aigr input output="outputs/aigr" organism="ECOLI" taxon="NCBITaxon:83333" embedder="composition" extra="":
+    cd "{{root}}" && uv run python -m {{module}} run \
+      --input "{{project_dir}}/{{input}}" \
+      --output-dir "{{project_dir}}/{{output}}" \
+      --family-config "{{project_dir}}/config/defense_families.yaml" \
+      --organism "{{organism}}" \
+      --taxon-id "{{taxon}}" \
+      --embedder "{{embedder}}" \
+      --export-aigr-root "{{root}}" \
+      {{extra}}
+
+normalize-benchmark input output protein_id_column label_column family_column="" novel_column="":
+    cd "{{root}}" && uv run python -m {{module}} normalize-benchmark \
+      --input "{{project_dir}}/{{input}}" \
+      --output "{{project_dir}}/{{output}}" \
+      --protein-id-column "{{protein_id_column}}" \
+      --label-column "{{label_column}}" \
+      {{ if family_column != "" { "--family-column \"" + family_column + "\"" } else { "" } }} \
+      {{ if novel_column != "" { "--novel-column \"" + novel_column + "\"" } else { "" } }}
+
+evaluate predictions benchmark output="outputs/evaluation.json":
+    cd "{{root}}" && uv run python -m {{module}} evaluate \
+      --predictions "{{project_dir}}/{{predictions}}" \
+      --benchmark "{{project_dir}}/{{benchmark}}" \
+      --output "{{project_dir}}/{{output}}"

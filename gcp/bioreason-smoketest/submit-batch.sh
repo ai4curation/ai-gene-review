@@ -6,7 +6,7 @@ TEMPLATE_PATH="${SCRIPT_DIR}/batch-job.template.json"
 RENDERED_PATH="${SCRIPT_DIR}/.rendered-batch-job.json"
 
 : "${PROJECT_ID:?Set PROJECT_ID}"
-LOCATION="${LOCATION:-us-central1}"
+LOCATION="${LOCATION:-${REGION}}"
 AR_REPO="${AR_REPO:-bioreason-smoke}"
 IMAGE_NAME="${IMAGE_NAME:-bioreason-smoke}"
 TAG="${TAG:-latest}"
@@ -22,7 +22,7 @@ OUTPUT_PREFIX="${OUTPUT_PREFIX:-outputs/${JOB_NAME}}"
 OUTPUT_GCS_PREFIX="${OUTPUT_GCS_PREFIX:-${BUCKET}/${OUTPUT_PREFIX}}"
 PROVISIONING_MODEL="${PROVISIONING_MODEL:-STANDARD}"
 MACHINE_TYPE="${MACHINE_TYPE:-a2-highgpu-1g}"
-ALLOWED_LOCATION="${ALLOWED_LOCATION:-regions/us-central1}"
+ALLOWED_LOCATION="${ALLOWED_LOCATION:-regions/${REGION}}"
 RENDER_ONLY="${RENDER_ONLY:-0}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 export LOCATION
@@ -52,7 +52,7 @@ replacements = {
     "__SERVICE_ACCOUNT__": os.environ["SERVICE_ACCOUNT"],
     "__PROVISIONING_MODEL__": os.environ.get("PROVISIONING_MODEL", "STANDARD"),
     "__MACHINE_TYPE__": os.environ.get("MACHINE_TYPE", "a2-highgpu-1g"),
-    "__ALLOWED_LOCATION__": os.environ.get("ALLOWED_LOCATION", "regions/us-central1"),
+    "__ALLOWED_LOCATION__": os.environ.get("ALLOWED_LOCATION", "regions/${REGION}"),
 }
 
 for needle, value in replacements.items():

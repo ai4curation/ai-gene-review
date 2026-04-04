@@ -92,6 +92,7 @@ class TermValidator:
             "RefSeq",  # RefSeq accession
             "ENSEMBL",  # Ensembl ID
             "EC",  # Enzyme Commission number
+            "DEFENSE",  # Project-local prokaryotic defense family IDs
             "PDB",  # Protein Data Bank
             "OMIM",  # Online Mendelian Inheritance in Man
             "TEMP",  # Temporary/placeholder identifiers
