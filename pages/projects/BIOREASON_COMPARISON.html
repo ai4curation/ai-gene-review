@@ -377,7 +377,7 @@
 <td>Evaluation of reasoning trace vs curated review (correctness/completeness scores + interpro2go comparison)</td>
 </tr>
 <tr>
-<td><code>{GENE}-bioreason-rl-predictions.yaml</code></td>
+<td><code>{GENE}-gogpt-leaf-predictions.yaml</code></td>
 <td>GO-GPT leaf terms as PredictionReview YAML</td>
 </tr>
 <tr>
@@ -682,7 +682,7 @@
 - <strong><a href="../../genes/SCHPO/Epe1/Epe1-ai-review.html">Epe1</a></strong> (SCHPO, 2/5): BioReason claims <em>"JmjC catalytic center dictates a lysine demethylase mechanism"</em> but <a href="../../genes/SCHPO/Epe1/Epe1-ai-review.html">Epe1</a> has degenerate active site residues (HVD instead of HXD, Tyr307 instead of catalytic His). No detectable demethylase activity in mass spec assays. Functions as anti-silencing factor through HP1/Swi6 binding.<br />
 - <strong><a href="../../genes/SCHPO/cts2/cts2-ai-review.html">cts2</a></strong> (SCHPO, 2/5): Called an active chitinase, but the protein lacks the essential catalytic glutamate and is likely catalytically dead.<br />
 - <strong><a href="../../genes/SCHPO/pmp20/pmp20-ai-review.html">pmp20</a></strong> (SCHPO, 1/5): Predicted as a peroxidase, but has lost its resolving cysteine and functions as a molecular chaperone.</p>
-<p>Notably, the BioReason paper highlights CFAP61 as a correctly identified pseudoenzyme, but this success does not generalize to our test set.</p>
+<p>Notably, the BioReason paper highlights <a href="../../genes/human/CFAP61/CFAP61-ai-review.html">CFAP61</a> as a correctly identified pseudoenzyme, but this success does not generalize to our test set.</p>
 <h3 id="2-localization-defaults-to-cytoplasm">2. Localization defaults to cytoplasm</h3>
 <p>When InterPro annotations lack transmembrane or signal peptide information, BioReason systematically defaults to cytoplasmic localization. This fails for:</p>
 <ul>
@@ -764,7 +764,7 @@
 <td>De novo predicted SBP2 as binding partner, validated by cryo-EM</td>
 </tr>
 <tr>
-<td>CFAP61</td>
+<td><a href="../../genes/human/CFAP61/CFAP61-ai-review.html">CFAP61</a></td>
 <td>Q8NHU2</td>
 <td>Fig. 6, S2.7</td>
 <td>Correctly identified pseudoenzyme scaffold despite catalytic domains</td>
@@ -783,8 +783,8 @@
 </tr>
 </tbody>
 </table>
-<h3 id="cfap61-vs-epe1-same-class-opposite-results">CFAP61 vs <a href="../../genes/SCHPO/Epe1/Epe1-ai-review.html">Epe1</a>: same class, opposite results</h3>
-<p>Both are pseudoenzymes with catalytic domain signatures. BioReason <strong>correctly</strong> identifies CFAP61 as non-enzymatic (paper's featured result) but <strong>fails</strong> on <a href="../../genes/SCHPO/Epe1/Epe1-ai-review.html">Epe1</a>, confidently calling it an active demethylase. This suggests pseudoenzyme detection is not systematic but case-dependent.</p>
+<h3 id="cfap61-vs-epe1-same-class-opposite-results"><a href="../../genes/human/CFAP61/CFAP61-ai-review.html">CFAP61</a> vs <a href="../../genes/SCHPO/Epe1/Epe1-ai-review.html">Epe1</a>: same class, opposite results</h3>
+<p>Both are pseudoenzymes with catalytic domain signatures. BioReason <strong>correctly</strong> identifies <a href="../../genes/human/CFAP61/CFAP61-ai-review.html">CFAP61</a> as non-enzymatic (paper's featured result) but <strong>fails</strong> on <a href="../../genes/SCHPO/Epe1/Epe1-ai-review.html">Epe1</a>, confidently calling it an active demethylase. This suggests pseudoenzyme detection is not systematic but case-dependent.</p>
 <h2 id="sft-vs-rl-comparison">SFT vs RL comparison</h2>
 <h3 id="paper-findings-27-evaluators-162-proteins">Paper findings (27 evaluators, 162 proteins)</h3>
 <ul>
@@ -806,6 +806,87 @@
 <li><strong>Overlap with AIGR</strong>: 7 of 1,211 genes. Low by design -- their test set is newly annotated, ours is deeply characterized.</li>
 <li>99 additional genes from their test set are being reviewed to expand overlap.</li>
 </ul>
+<h2 id="huggingface-protein_catalogue-analysis">HuggingFace protein_catalogue analysis</h2>
+<p>The HF dataset <a href="https://huggingface.co/datasets/wanglab/protein_catalogue"><code>wanglab/protein_catalogue</code></a> contains 223,214 proteins across 8,439 organisms (Apache-2.0). All entries are <strong>SFT model only</strong> (the <code>model</code> column is uniformly <code>SFT</code>). There is no RL equivalent.</p>
+<p>Local copy: <code>data/bioreason-hf/*.parquet</code> (3 shards, ~626MB total). Queryable with duckdb:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="s1">&#39;data/bioreason-hf/*.parquet&#39;</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">protein_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;P0A9K9&#39;</span>
+</code></pre></div>
+
+<h3 id="what-the-pipeline-actually-produces">What the pipeline actually produces</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Model</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO-GPT (<code>wanglab/gogpt</code>)</td>
+<td>Autoregressive transformer (ESM2 + organism)</td>
+<td>GO term hierarchy (F_max 0.65-0.70)</td>
+</tr>
+<tr>
+<td>BioReason-Pro SFT (<code>wanglab/bioreason-pro-sft</code>, 4B)</td>
+<td>Qwen3 fine-tuned on GPT-5-generated reasoning traces (124K examples)</td>
+<td><code>&lt;think&gt;</code> trace + functional summary. <em>"More hypothesis, more hallucinations"</em></td>
+</tr>
+<tr>
+<td>BioReason-Pro RL (<code>wanglab/bioreason-pro-rl</code>, 4B)</td>
+<td>Same base + GRPO (9.2K examples)</td>
+<td>Same format. <em>"More accurate, less mechanistically deep"</em>. Never fabricated InterPro</td>
+</tr>
+</tbody>
+</table>
+<h3 id="go-term-provenance-what-comes-from-where">GO term provenance: what comes from where</h3>
+<p>The web app shows "GO GPT" and "GO Leaf" panels regardless of SFT/RL selection. These are always <strong>GO-GPT predictions</strong> (the upstream model), not BioReason-Pro output. BioReason-Pro is fundamentally a narrative reasoning model -- it takes GO-GPT's GO terms as input and produces a reasoning trace + functional summary. It does not independently predict GO terms.</p>
+<p>The HF catalogue's structured GO section (at the end of the <code>generation</code> column) appears to be reformulated from the GO-GPT input, not independent predictions. ~97% of entries have this structured section; ~3% are truncated.</p>
+<p><strong>RL model GO predictions are not accessible anywhere.</strong> The web app shows GO-GPT (input), the HF catalogue is SFT only, and the RL reasoning trace does not emit its own GO terms.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>GO-GPT (input)</th>
+<th>BioReason SFT GO</th>
+<th>BioReason RL GO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Web app panels</td>
+<td>"GO GPT" + "GO Leaf"</td>
+<td>Not shown separately</td>
+<td>Not shown separately</td>
+</tr>
+<tr>
+<td>HF <code>protein_catalogue</code></td>
+<td>In <code>&lt;think&gt;</code> block</td>
+<td>Structured section at end</td>
+<td><strong>Not available</strong></td>
+</tr>
+<tr>
+<td>Scraped <code>-rl.md</code> files</td>
+<td>Full hierarchy in GO Terms section</td>
+<td>N/A</td>
+<td><strong>Not emitted</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="slyd-p0a9k9-cross-source-comparison"><a href="../../genes/ECOLI/SlyD/SlyD-ai-review.html">SlyD</a> (P0A9K9) cross-source comparison</h3>
+<p>We compared GO terms for <a href="../../genes/ECOLI/SlyD/SlyD-ai-review.html">SlyD</a> across three sources to understand the relationship between them:</p>
+<p><strong>Website SFT scrape</strong> (<code>SlyD-deep-research-bioreason.md</code>, 9 terms -- leaf-pruned):<br />
+<a href="http://amigo.geneontology.org/amigo/term/GO:0003755">GO:0003755</a> (PPIase activity), <a href="http://amigo.geneontology.org/amigo/term/GO:0016859">GO:0016859</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0140096">GO:0140096</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0016853">GO:0016853</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0003824">GO:0003824</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0006457">GO:0006457</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0005737">GO:0005737</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0005829">GO:0005829</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0005622">GO:0005622</a></p>
+<p><strong>Website RL scrape</strong> (<code>SlyD-deep-research-bioreason-rl.md</code>, 58 terms -- full GO-GPT with all ancestors):<br />
+Includes the above plus metal binding (<a href="http://amigo.geneontology.org/amigo/term/GO:0008270">GO:0008270</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0005507">GO:0005507</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0016151">GO:0016151</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0050897">GO:0050897</a>), unfolded protein binding (<a href="http://amigo.geneontology.org/amigo/term/GO:0051082">GO:0051082</a>), heat response (<a href="http://amigo.geneontology.org/amigo/term/GO:0009408">GO:0009408</a>), refolding (<a href="http://amigo.geneontology.org/amigo/term/GO:0042026">GO:0042026</a>), stabilization (<a href="http://amigo.geneontology.org/amigo/term/GO:0050821">GO:0050821</a>), and all ancestor terms up to root.</p>
+<p><strong>HF SFT catalogue</strong> (structured section, 13 terms):<br />
+<a href="http://amigo.geneontology.org/amigo/term/GO:0051082">GO:0051082</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0003755">GO:0003755</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0008270">GO:0008270</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0005507">GO:0005507</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0016151">GO:0016151</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0050897">GO:0050897</a> (MF);<br />
+<a href="http://amigo.geneontology.org/amigo/term/GO:0009408">GO:0009408</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0022417">GO:0022417</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0042026">GO:0042026</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0044008">GO:0044008</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0050821">GO:0050821</a>, <a href="http://amigo.geneontology.org/amigo/term/GO:0000413">GO:0000413</a> (BP);<br />
+<a href="http://amigo.geneontology.org/amigo/term/GO:0005829">GO:0005829</a> (CC)</p>
+<p><strong>Key finding</strong>: 12 of 13 HF SFT terms are contained in the RL website GO-GPT output. The one HF-only term (<a href="http://amigo.geneontology.org/amigo/term/GO:0044008">GO:0044008</a>, modulation by symbiont of host adenylate cyclase pathway) is a more specific descendant also present in the RL hierarchy. The website RL dump includes the full GO hierarchy (all ancestors up to root), while the HF SFT keeps leaf-ish terms. The website SFT scrape was pruned to very generic parent terms.</p>
+<p>This confirms all three sources derive from the same GO-GPT predictions, just pruned/presented differently. The HF catalogue is the most useful bulk source since it retains informative leaf terms without ancestor noise.</p>
+<h3 id="coverage-gaps">Coverage gaps</h3>
+<p>Notable proteins NOT in the 223K catalogue: <a href="../../genes/human/TP53/TP53-ai-review.html">TP53</a> (P04637), <a href="../../genes/human/EGFR/EGFR-ai-review.html">EGFR</a> (P00533), <a href="../../genes/human/NOTCH1/NOTCH1-ai-review.html">NOTCH1</a> (P46531), MTOR (P42345). Several well-known proteins that are present have truncated generations (cut off mid-sentence, never reaching the GO section): <a href="../../genes/human/MYC/MYC-ai-review.html">MYC</a> (P01106), <a href="../../genes/human/BCL2/BCL2-ai-review.html">BCL2</a> (P10415), <a href="../../genes/human/PTEN/PTEN-ai-review.html">PTEN</a> (P60484), CTNNB1 (P35222).</p>
     </div>
 
     <footer>
