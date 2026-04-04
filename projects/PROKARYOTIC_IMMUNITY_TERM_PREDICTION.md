@@ -1,40 +1,45 @@
-# Defense GO Wrapper
+# Prokaryotic Immunity Term Prediction
 
 ## Overview
 
-This project adds a small in-repo translation layer between prokaryotic defense-family prediction
-and AIGR/GO curation output.
+This project is about increasing automation for predicting precise biology-first GO terms for
+prokaryotic immunity systems.
 
-The immediate goal is not to annotate defense genes automatically end-to-end. The goal is to make
-family-level predictions usable in review by:
+The immediate unit here does not try to solve end-to-end annotation. It adds the missing translation
+layer between broad defense-system calls and review-ready term suggestions. In practice, the current
+source being translated is family-level output from the prokaryotic immunity predictor, which emits
+calls such as `CRISPR-Cas`, `restriction-modification`, `CBASS`, `Thoeris`, and `abortive infection`.
+
+The goal is to make those outputs usable for precise review by:
 
 - assigning stable internal family IDs
 - normalizing family labels and aliases
 - attaching explicit GO mapping policy per family
 - separating families that are safe to map automatically from families that still require curator review
 
-This keeps the prediction pipeline and the GO policy layer decoupled, while still making the two
-compose cleanly.
+This keeps immunity-term prediction centered on the biology while still allowing multiple upstream
+tools or predictors to plug into the same GO policy layer later.
 
 ## Why This Exists
 
-The predictor can often say that something is `CRISPR-Cas`, `restriction-modification`, `CBASS`,
-`Thoeris`, or `abortive infection`, but those labels are not yet a good direct input to GO curation.
+The current predictor can often say that something belongs to a broad defense family, but broad
+family labels are not yet a good direct input to GO curation.
 
 There are three different problems mixed together if we do not separate the layers:
 
 1. Family recognition
-2. Stable family identity and synonym handling
-3. GO translation policy
+2. Stable immunity-system identity and synonym handling
+3. Precise term-prediction policy
 
-Those should not live as ad hoc conditionals inside the predictor.
+Those should not live as ad hoc conditionals inside one particular predictor or one particular
+database parser.
 
-This project creates an extraction-ready wrapper in `src/ai_gene_review/defense_go/` that owns the
-second and third layers.
+This project creates an extraction-ready translation layer in `src/ai_gene_review/defense_go/` that
+owns the second and third layers.
 
 ## Design
 
-The wrapper currently consists of:
+The current term-prediction layer consists of:
 
 - `src/ai_gene_review/defense_go/models.py`
   Typed models for defense families, incoming family predictions, and GO mapping suggestions
@@ -45,13 +50,17 @@ The wrapper currently consists of:
 - `tests/test_defense_go.py`
   Focused tests for alias resolution, automatic mappings, unmapped families, and registry safety
 
-The wrapper API is intentionally narrow:
+The API is intentionally narrow:
 
-- predictor emits a family label plus optional confidence
-- wrapper resolves that to a stable family record
-- wrapper returns either:
+- an upstream tool emits a family label plus optional confidence
+- the translation layer resolves that to a stable family record
+- it returns either:
   - automatic GO suggestions, or
   - review-only notes saying why automatic mapping is not yet allowed
+
+Today, the intended upstream source is the prokaryotic immunity predictor branch. Later, the same
+layer could absorb outputs from DefenseFinder, PADLOC, CasFinder, or additional learned models
+without changing the downstream GO policy interface.
 
 ## Initial Stable Family IDs
 
@@ -88,8 +97,8 @@ family-wide automatic GO assignment in this repo.
 
 ## Integration Plan
 
-This project does not yet wire the wrapper into the prokaryotic immunity predictor branch. That is
-intentional.
+This project does not yet wire the term-prediction layer into the prokaryotic immunity predictor
+branch. That is intentional.
 
 The intended integration path is:
 
@@ -98,8 +107,8 @@ The intended integration path is:
 3. AIGR export code turns automatic mappings into review-ready term suggestions
 4. Review-only families remain visible to curators with explicit notes instead of silent omission
 
-Keeping those steps separate makes later extraction into a standalone repo possible, but does not
-force that split now.
+Keeping those steps separate makes the project biology-first while still leaving room to support
+multiple upstream predictors and databases later.
 
 ## Status
 
