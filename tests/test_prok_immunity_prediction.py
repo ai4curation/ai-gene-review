@@ -10,8 +10,14 @@ import yaml
 
 from ai_gene_review.prok_immunity_prediction.aigr_export import export_predictions_to_aigr
 from ai_gene_review.prok_immunity_prediction.classifier import classify_proteins, load_family_config
-from ai_gene_review.prok_immunity_prediction.evaluation import evaluate_predictions
+from ai_gene_review.prok_immunity_prediction.cross_reference import parse_defense_finder, parse_padloc
+from ai_gene_review.prok_immunity_prediction.evaluation import (
+    evaluate_predictions,
+    evaluate_predictions_against_database,
+    load_predictions_table,
+)
 from ai_gene_review.prok_immunity_prediction.io import prepare_analysis_inputs
+from ai_gene_review.prok_immunity_prediction.pipeline import run_pipeline
 from ai_gene_review.prok_immunity_prediction.models import ExternalHit
 
 
@@ -185,3 +191,168 @@ def test_evaluate_predictions_computes_basic_metrics(tmp_path: Path) -> None:
     assert metrics["recall"] == 1.0
     assert metrics["novel_recall"] == 1.0
     assert output_path.exists()
+
+
+def test_parse_defense_finder_systems_output(tmp_path: Path) -> None:
+    """DefenseFinder systems output should expand multi-protein systems."""
+    systems = tmp_path / "defense_finder_systems.tsv"
+    systems.write_text(
+        "\t".join(["sys_id", "type", "subtype", "protein_in_syst"]) + "\n"
+        + "\t".join(["sys_1", "CRISPR-Cas", "CAS_Class1-Subtype-I-E", "protA,protB"])
+        + "\n",
+        encoding="utf-8",
+    )
+    hits = parse_defense_finder(tmp_path)
+    assert [hit.protein_id for hit in hits] == ["protA", "protB"]
+    assert all(hit.system == "CRISPR-Cas" for hit in hits)
+
+
+def test_parse_defense_finder_alternate_system_columns(tmp_path: Path) -> None:
+    """DefenseFinder parsing should tolerate alternate systems-table headers."""
+    systems_path = tmp_path / "defense_finder_systems.tsv"
+    pd.DataFrame(
+        [
+            {
+                "system": "CBASS",
+                "subtype": "cbass_type_i",
+                "genes": "protC,protD",
+            }
+        ]
+    ).to_csv(systems_path, sep="\t", index=False)
+    hits = parse_defense_finder(tmp_path)
+    assert [hit.protein_id for hit in hits] == ["protC", "protD"]
+    assert all(hit.system == "CBASS" for hit in hits)
+
+
+def test_parse_padloc_csv_output(tmp_path: Path) -> None:
+    """PADLOC CSV output should map target names to ExternalHit rows."""
+    csv_path = tmp_path / "sample_padloc.csv"
+    pd.DataFrame(
+        [
+            {
+                "target.name": "protB",
+                "system": "CBASS",
+                "protein.name": "cyclase",
+            }
+        ]
+    ).to_csv(csv_path, index=False)
+    hits = parse_padloc(tmp_path)
+    assert len(hits) == 1
+    assert hits[0].protein_id == "protB"
+    assert hits[0].system == "CBASS"
+    assert hits[0].subtype == "cyclase"
+
+
+def test_run_pipeline_writes_outputs_with_database_dirs(tmp_path: Path) -> None:
+    """A full pipeline run should consume provided DefenseFinder/PADLOC directories."""
+    defensefinder_dir = tmp_path / "defensefinder"
+    defensefinder_dir.mkdir()
+    (defensefinder_dir / "defense_finder_systems.tsv").write_text(
+        "\t".join(["sys_id", "type", "subtype", "protein_in_syst"]) + "\n"
+        + "\t".join(["sys_1", "CRISPR-Cas", "CAS_Class1-Subtype-I-E", "protA"])
+        + "\n",
+        encoding="utf-8",
+    )
+
+    padloc_dir = tmp_path / "padloc"
+    padloc_dir.mkdir()
+    pd.DataFrame(
+        [
+            {
+                "target.name": "protB",
+                "system": "CBASS",
+                "protein.name": "cyclase",
+            }
+        ]
+    ).to_csv(padloc_dir / "sample_padloc.csv", index=False)
+
+    output_dir = tmp_path / "pipeline-output"
+    summary = run_pipeline(
+        input_path=EXAMPLE_FASTA,
+        output_dir=output_dir,
+        family_config_path=FAMILY_CONFIG,
+        organism_code="ECOLI",
+        taxon_id="NCBITaxon:83333",
+        gff_path=EXAMPLE_GFF,
+        embedder_name="composition",
+        defense_finder_dir=defensefinder_dir,
+        padloc_dir=padloc_dir,
+        run_external=False,
+        family_threshold=0.4,
+        novel_threshold=0.5,
+        neighborhood_window=5,
+    )
+    predictions = pd.read_csv(output_dir / "predictions.tsv", sep="\t")
+    assert summary["n_cross_reference_hits"] == 2
+    assert summary["n_known_family_predictions"] >= 2
+    assert set(predictions["predicted_family"]).issuperset({"CRISPR-Cas", "CBASS"})
+
+
+def test_evaluate_predictions_against_database_outputs_metrics(tmp_path: Path) -> None:
+    """Database comparison should compute metrics and emit a comparison TSV."""
+    predictions_path = tmp_path / "predictions.tsv"
+    pd.DataFrame(
+        [
+            {
+                "protein_id": "protA",
+                "predicted_family": "CRISPR-Cas",
+                "family_confidence": 0.98,
+                "predicted_novel": False,
+            },
+            {
+                "protein_id": "protB",
+                "predicted_family": "",
+                "family_confidence": 0.0,
+                "predicted_novel": False,
+            },
+            {
+                "protein_id": "protC",
+                "predicted_family": "CBASS",
+                "family_confidence": 0.66,
+                "predicted_novel": False,
+            },
+        ]
+    ).to_csv(predictions_path, sep="\t", index=False)
+
+    defensefinder_dir = tmp_path / "defensefinder"
+    defensefinder_dir.mkdir()
+    (defensefinder_dir / "defense_finder_systems.tsv").write_text(
+        "\t".join(["sys_id", "type", "subtype", "protein_in_syst"]) + "\n"
+        + "\t".join(["sys_1", "CRISPR-Cas", "CAS_Class1-Subtype-I-E", "protA"])
+        + "\n"
+        + "\t".join(["sys_2", "CBASS", "cbass_type_i", "protB"])
+        + "\n",
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "defensefinder-eval.json"
+
+    metrics = evaluate_predictions_against_database(
+        predictions_path=predictions_path,
+        database_dir=defensefinder_dir,
+        database="defensefinder",
+        family_config_path=FAMILY_CONFIG,
+        output_path=output_path,
+    )
+    assert metrics["database"] == "DefenseFinder"
+    assert metrics["true_positives"] == 1
+    assert metrics["false_positives"] == 1
+    assert metrics["false_negatives"] == 1
+    assert metrics["precision"] == 0.5
+    assert metrics["recall"] == 0.5
+    assert output_path.exists()
+    assert output_path.with_suffix(".comparison.tsv").exists()
+
+
+def test_load_predictions_table_defaults_predicted_novel(tmp_path: Path) -> None:
+    """Lean prediction exports should default predicted_novel to False."""
+    predictions_path = tmp_path / "predictions.tsv"
+    pd.DataFrame(
+        [
+            {
+                "protein_id": "protA",
+                "predicted_family": "CRISPR-Cas",
+            }
+        ]
+    ).to_csv(predictions_path, sep="\t", index=False)
+    predictions = load_predictions_table(predictions_path)
+    assert list(predictions["predicted_novel"]) == [False]

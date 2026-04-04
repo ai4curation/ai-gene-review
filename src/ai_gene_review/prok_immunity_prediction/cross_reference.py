@@ -77,8 +77,14 @@ def parse_defense_finder(output_dir: Path) -> list[ExternalHit]:
         with systems_path.open("r", encoding="utf-8") as handle:
             reader = csv.DictReader(handle, delimiter="\t")
             for row in reader:
-                proteins = split_protein_list(row.get("protein_in_syst", ""))
-                system = row.get("type", "") or row.get("subtype", "")
+                proteins = split_protein_list(
+                    first_present(
+                        row,
+                        ("protein_in_syst", "proteins", "genes", "gene_names", "protein_id"),
+                    )
+                    or ""
+                )
+                system = first_present(row, ("type", "system", "name", "subtype")) or ""
                 subtype = row.get("subtype") or None
                 for protein_id in proteins:
                     hits.append(

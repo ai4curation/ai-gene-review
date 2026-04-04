@@ -670,6 +670,14 @@ prok-immunity-sync-aigr input output="outputs/aigr" organism="ECOLI" taxon="NCBI
 prok-immunity-evaluate predictions benchmark output="outputs/evaluation.json":
     just --justfile projects/prok-immunity-prediction/justfile evaluate {{predictions}} {{benchmark}} {{output}}
 
+# Compare predictions against DefenseFinder output on the same proteome
+prok-immunity-evaluate-defensefinder predictions database_dir output="outputs/defensefinder-evaluation.json":
+    just --justfile projects/prok-immunity-prediction/justfile evaluate-defensefinder {{predictions}} {{database_dir}} {{output}}
+
+# Compare predictions against PADLOC output on the same proteome
+prok-immunity-evaluate-padloc predictions database_dir output="outputs/padloc-evaluation.json":
+    just --justfile projects/prok-immunity-prediction/justfile evaluate-padloc {{predictions}} {{database_dir}} {{output}}
+
 # Render a single rule review YAML as HTML (automatically runs analysis first if needed)
 # DEPENDENCIES:
 #   - Requires {rule_id}-review.yaml with populated `entries` field (run sync-rule-review-single first)

@@ -9,18 +9,28 @@ import typer
 
 from ai_gene_review.prok_immunity_prediction.evaluation import (
     evaluate_predictions,
+    evaluate_predictions_against_database,
     normalize_benchmark_table,
 )
 from ai_gene_review.prok_immunity_prediction.pipeline import run_pipeline
 
 app = typer.Typer(help="Predict prokaryotic immunity genes with PLM embeddings and defense databases.")
+DEFAULT_FAMILY_CONFIG = (
+    Path(__file__).resolve().parents[3]
+    / "projects/prok-immunity-prediction/config/defense_families.yaml"
+)
 
 
 @app.command("run")
 def run_command(
     input_path: Path = typer.Option(..., "--input", "-i", exists=True, dir_okay=False),
     output_dir: Path = typer.Option(..., "--output-dir", "-o"),
-    family_config: Path = typer.Option(..., "--family-config", exists=True, dir_okay=False),
+    family_config: Path = typer.Option(
+        DEFAULT_FAMILY_CONFIG,
+        "--family-config",
+        exists=True,
+        dir_okay=False,
+    ),
     organism_code: str = typer.Option(..., "--organism", "-g"),
     taxon_id: str = typer.Option("NCBITaxon:2", "--taxon-id"),
     gff_path: Path | None = typer.Option(None, "--gff", exists=True, dir_okay=False),
@@ -67,6 +77,30 @@ def evaluate_command(
 ) -> None:
     """Evaluate predictions against a normalized Mordret-style benchmark."""
     metrics = evaluate_predictions(predictions, benchmark, output)
+    typer.echo(json.dumps(metrics, indent=2))
+
+
+@app.command("evaluate-database")
+def evaluate_database_command(
+    predictions: Path = typer.Option(..., "--predictions", exists=True, dir_okay=False),
+    database: str = typer.Option(..., "--database"),
+    database_dir: Path = typer.Option(..., "--database-dir", exists=True, file_okay=False),
+    family_config: Path = typer.Option(
+        DEFAULT_FAMILY_CONFIG,
+        "--family-config",
+        exists=True,
+        dir_okay=False,
+    ),
+    output: Path = typer.Option(..., "--output", "-o"),
+) -> None:
+    """Evaluate predictions against DefenseFinder or PADLOC outputs."""
+    metrics = evaluate_predictions_against_database(
+        predictions_path=predictions,
+        database_dir=database_dir,
+        database=database,
+        family_config_path=family_config,
+        output_path=output,
+    )
     typer.echo(json.dumps(metrics, indent=2))
 
 
