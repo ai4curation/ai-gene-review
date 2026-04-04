@@ -43,7 +43,7 @@ We are generally NOT interested in the GO terms in this report. We know in advan
 | File | Content |
 |------|---------|
 | `{GENE}-deep-research-bioreason-{rl,sft}.md` | Raw RL web export (provenance) |
-| `{GENE}-bioreason-rl-predictions.yaml` | GO-GPT leaf terms as PredictionReview YAML |
+| `{GENE}-gogpt-leaf-predictions.yaml` | GO-GPT leaf terms as PredictionReview YAML (renamed from bioreason-rl-predictions.yaml) |
 | `{GENE}-bioreason-rl-review.md` | Evaluation of RL reasoning trace vs curated review |
 
 ## Reviewing a reasoning trace
