@@ -263,6 +263,8 @@ def check_best_practices_rules(
         skip_prefixes=[
             "GO_REF", "GO", "Reactome", "UniProt", "UniProtKB",
             "PDB", "EC", "TEMP", "ISBN", "RHEA", "file",
+            "curator_inference", "ComplexPortal", "HPA",
+            "PROSITE", "CHEBI", "PMC", "CONTACT_INFO",
         ],
         literal_bracket_patterns=[
             r"[^a-zA-Z\s]",  # keep brackets containing non-alpha chars: [2Fe-2S], [poly(A)+], [+21], [Ca2+]
