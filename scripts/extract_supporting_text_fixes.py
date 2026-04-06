@@ -32,8 +32,12 @@ SKIP_PREFIXES = {
 
 
 def check_file(filepath: Path):
-    with open(filepath) as f:
-        data = yaml.safe_load(f)
+    try:
+        with open(filepath) as f:
+            data = yaml.safe_load(f)
+    except yaml.YAMLError:
+        print(f"{filepath}\t\t\tYAML_ERROR\t0.00\t\t", file=sys.stderr)
+        return
     if not data:
         return
 
