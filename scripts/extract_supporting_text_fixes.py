@@ -75,7 +75,7 @@ def check_file(filepath: Path):
         else:
             status = "NO_MATCH"
 
-        print(f"{filepath}\t{path}\t{ref_id}\t{status}\t{sim:.2f}\t{text[:100]}\t{best[:100] if best else ''}")
+        print(f"{filepath}\t{path}\t{ref_id}\t{status}\t{sim:.2f}\t{text}\t{best if best else ''}")
 
 
 def main():
