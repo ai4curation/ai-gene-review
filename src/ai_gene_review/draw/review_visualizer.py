@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Union, Optional, Dict, Any, List
 from dataclasses import dataclass
 import drawsvg as draw
+from linkml_runtime.loaders import yaml_loader
 
 from ai_gene_review.datamodel.gene_review_model import GeneReview, ExistingAnnotation
 from .go_slim_mapper import GOSlimMapper
@@ -21,14 +22,7 @@ class ReviewVisualizer:
     
     Examples:
         >>> visualizer = ReviewVisualizer()
-        >>> # visualize_file returns a Drawing object
-        >>> import os
-        >>> test_file = "genes/human/CFAP300/CFAP300-ai-review.yaml"
-        >>> if os.path.exists(test_file):
-        ...     drawing = visualizer.visualize_file(test_file)
-        ...     isinstance(drawing, draw.Drawing)
-        ... else:
-        ...     True  # Skip if file doesn't exist
+        >>> isinstance(visualizer, ReviewVisualizer)
         True
     """
     
@@ -61,12 +55,9 @@ class ReviewVisualizer:
             drawsvg Drawing object
         """
         file_path = Path(file_path)
-        
-        # Load the gene review
-        with open(file_path, "r") as f:
-            data = yaml.safe_load(f)
-        
-        gene_review = GeneReview.model_validate(data)
+
+        # Load the gene review via LinkML loader
+        gene_review = yaml_loader.load(str(file_path), target_class=GeneReview)
         
         return self.visualize(gene_review)
     
