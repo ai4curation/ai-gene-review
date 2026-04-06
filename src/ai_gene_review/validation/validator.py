@@ -219,11 +219,11 @@ def validate_gene_review(
         # For debugging: include the exception type
         error_type = type(e).__name__
         tb = traceback.format_exc()
-        # Only show the last line of traceback to avoid clutter
-        last_tb_line = tb.strip().split("\n")[-1] if tb else ""
+        # Show enough traceback to diagnose the issue
+        last_tb_lines = "\n".join(tb.strip().split("\n")[-5:]) if tb else ""
         report.add_issue(
             ValidationSeverity.ERROR,
-            f"Validation error ({error_type}): {str(e)} - {last_tb_line}",
+            f"Validation error ({error_type}): {str(e)} - {last_tb_lines}",
             path=None,
         )
         return report
@@ -263,6 +263,8 @@ def check_best_practices_rules(
         skip_prefixes=[
             "GO_REF", "GO", "Reactome", "UniProt", "UniProtKB",
             "PDB", "EC", "TEMP", "ISBN", "RHEA", "file",
+            "curator_inference", "ComplexPortal", "HPA",
+            "PROSITE", "CHEBI", "PMC", "CONTACT_INFO",
         ],
         literal_bracket_patterns=[
             r"[^a-zA-Z\s]",  # keep brackets containing non-alpha chars: [2Fe-2S], [poly(A)+], [+21], [Ca2+]
