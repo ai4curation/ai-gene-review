@@ -35,11 +35,12 @@ def clean_best_match(text: str) -> str:
 def is_safe_replacement(old_text: str, new_text: str) -> bool:
     """Check if replacing old with new is safe.
 
-    Safe when old (after stripping editorial brackets/ellipsis) is a
-    substring of new, or vice versa. This catches truncation, bracket
-    artifacts, and minor suffix diffs — but rejects cases where the
-    best_match is a completely different sentence.
+    Uses SequenceMatcher on normalized text. Safe when the core content
+    overlaps >= 90% after stripping editorial brackets and punctuation.
+    Rejects cases where best_match is a fundamentally different sentence.
     """
+    from difflib import SequenceMatcher
+
     def normalize(t):
         t = re.sub(r"\[.*?\]", " ", t)
         t = re.sub(r"\.{2,}", " ", t)
@@ -48,7 +49,14 @@ def is_safe_replacement(old_text: str, new_text: str) -> bool:
 
     old_norm = normalize(old_text)
     new_norm = normalize(new_text)
-    return old_norm in new_norm or new_norm in old_norm
+
+    # Substring containment is always safe
+    if old_norm in new_norm or new_norm in old_norm:
+        return True
+
+    # Otherwise check sequence similarity
+    ratio = SequenceMatcher(None, old_norm, new_norm).ratio()
+    return ratio >= 0.90
 
 
 def load_fixes(report_path: Path) -> dict[str, list[dict]]:
@@ -66,22 +74,33 @@ def load_fixes(report_path: Path) -> dict[str, list[dict]]:
 
 
 def apply_fixes(filepath: Path, fix_rows: list[dict], dry_run: bool) -> int:
-    """Apply fixes to a YAML file. Returns number of replacements."""
+    """Apply fixes to a YAML file using YAML path navigation. Returns count."""
     with open(filepath) as f:
         data = yaml_rt.load(f)
 
     replacements = 0
 
     for row in fix_rows:
-        old_text = row["supporting_text"]
         new_text = clean_best_match(row["best_match"])
+        yaml_path = row["path"]
 
-        if not new_text or old_text == new_text:
+        if not new_text:
             continue
 
-        # Walk the data structure and find the matching supporting_text
-        replaced = _replace_in_data(data, old_text, new_text)
-        replacements += replaced
+        # Navigate to the supporting_text via the YAML path
+        # e.g. ".existing_annotations[1].review.supported_by[0]"
+        node = _navigate_path(data, yaml_path)
+        if node is None or "supporting_text" not in node:
+            continue
+
+        old_text = str(node["supporting_text"])
+        if old_text == new_text:
+            continue
+        if not is_safe_replacement(old_text, new_text):
+            continue
+
+        node["supporting_text"] = new_text
+        replacements += 1
 
     if replacements > 0 and not dry_run:
         with open(filepath, "w") as f:
@@ -90,22 +109,24 @@ def apply_fixes(filepath: Path, fix_rows: list[dict], dry_run: bool) -> int:
     return replacements
 
 
-def _replace_in_data(data, old_text: str, new_text: str) -> int:
-    """Recursively find and replace supporting_text values."""
-    count = 0
-    if isinstance(data, dict):
-        for key in list(data.keys()):
-            if key == "supporting_text":
-                val = str(data[key]) if data[key] else ""
-                if val == old_text:
-                    data[key] = new_text
-                    count += 1
+def _navigate_path(data, path: str):
+    """Navigate a dot-bracket path like '.existing_annotations[1].review.supported_by[0]'."""
+    import re
+    parts = re.findall(r'\.(\w+)|\[(\d+)\]', path)
+    node = data
+    for key, idx in parts:
+        if key:
+            if isinstance(node, dict) and key in node:
+                node = node[key]
             else:
-                count += _replace_in_data(data[key], old_text, new_text)
-    elif isinstance(data, list):
-        for item in data:
-            count += _replace_in_data(item, old_text, new_text)
-    return count
+                return None
+        elif idx:
+            i = int(idx)
+            if isinstance(node, list) and i < len(node):
+                node = node[i]
+            else:
+                return None
+    return node
 
 
 def main():
