@@ -268,6 +268,7 @@ def check_best_practices_rules(
         ],
         literal_bracket_patterns=[
             r"[^a-zA-Z\s]",  # keep brackets containing non-alpha chars: [2Fe-2S], [poly(A)+], [+21], [Ca2+]
+            r"^[A-Z]{2,5}$",  # keep short uppercase abbreviations: [MEK], [MAP], [ATP]
         ],
     )
 
