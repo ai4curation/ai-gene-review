@@ -29,16 +29,15 @@ from ai_gene_review.validation.validation_report import (
     ValidationSeverity,
     BatchValidationReport,
 )
-from ai_gene_review.validation.term_validator import TermValidator
-from ai_gene_review.validation.publication_validator import PublicationValidator
 
 # Import linkml-term-validator plugins for ontology term validation
 from linkml.validator import Validator as LinkMLValidator
-from linkml_term_validator.plugins import BindingValidationPlugin
-from ai_gene_review.validation.goa_validator import GOAValidator
-from ai_gene_review.validation.supporting_text_validator import (
-    SupportingTextSubstringValidator,
+from linkml_term_validator.plugins import BindingValidationPlugin, DynamicEnumPlugin
+from linkml_reference_validator.plugins.reference_validation_plugin import (
+    ReferenceValidationPlugin,
 )
+from linkml_reference_validator.models import ReferenceValidationConfig
+from ai_gene_review.validation.goa_validator import GOAValidator
 
 
 @contextmanager
@@ -184,7 +183,7 @@ def validate_gene_review(
                     message,
                     path=path,
                     validation_category="SchemaValidator",
-                    check_type="schema_validation"
+                    check_type="schema_validation",
                 )
 
         # Check best practices if enabled and no hard errors
@@ -192,7 +191,11 @@ def validate_gene_review(
             if progress_callback:
                 progress_callback("Best practices validation")
             check_best_practices_rules(
-                data, report, yaml_file_path if check_goa else None, check_supporting_text, progress_callback
+                data,
+                report,
+                yaml_file_path if check_goa else None,
+                check_supporting_text,
+                progress_callback,
             )
 
         return report
@@ -216,11 +219,11 @@ def validate_gene_review(
         # For debugging: include the exception type
         error_type = type(e).__name__
         tb = traceback.format_exc()
-        # Only show the last line of traceback to avoid clutter
-        last_tb_line = tb.strip().split("\n")[-1] if tb else ""
+        # Show enough traceback to diagnose the issue
+        last_tb_lines = "\n".join(tb.strip().split("\n")[-5:]) if tb else ""
         report.add_issue(
             ValidationSeverity.ERROR,
-            f"Validation error ({error_type}): {str(e)} - {last_tb_line}",
+            f"Validation error ({error_type}): {str(e)} - {last_tb_lines}",
             path=None,
         )
         return report
@@ -243,44 +246,62 @@ def check_best_practices_rules(
         progress_callback: Optional callback function to report progress steps
     """
     if progress_callback:
-        progress_callback("Validating ontology terms")
+        progress_callback("Validating ontology terms and references")
 
-    # Use linkml-term-validator plugins for term validation
-    # These provide three-tier caching (in-memory → file-based CSV → lazy OAK)
-    # and validate against dynamic enums defined in the schema
+    # Use LTV plugins for all term + reference validation:
+    # - BindingValidationPlugin: validates term labels against ontology
+    # - DynamicEnumPlugin: validates GO branch membership (MF/BP/CC)
+    # - ReferenceValidationPlugin: validates publication titles and supporting text quotes
     schema_path = get_schema_path()
-    cache_dir = schema_path.parent.parent.parent.parent / "cache"  # project root/cache
+    project_root = schema_path.parent.parent.parent.parent
+    cache_dir = project_root / "cache"
+    oak_config_path = project_root / "config" / "oak_config.yaml"
 
-    # Note: DynamicEnumPlugin is intentionally omitted here because:
-    # 1. It's very slow (~7s) as it queries OAK for all GO descendants on every run
-    # 2. GO branch validation is already handled by the legacy TermValidator below,
-    #    which uses a persistent pickle cache for descendants
-    # 3. BindingValidationPlugin handles label validation for all terms
-    #
-    # The oak_config.yaml file specifies which prefixes to skip (TEMP, PMID, etc.)
-    # to avoid 404 errors when trying to download non-existent ontologies
-    oak_config_path = schema_path.parent.parent.parent.parent / "config" / "oak_config.yaml"
-    term_validation_plugins = [
+    ref_config = ReferenceValidationConfig(
+        cache_dir=str(project_root / "publications"),
+        reference_base_dir=str(project_root / "genes"),
+        skip_prefixes=[
+            "GO_REF", "GO", "Reactome", "UniProt", "UniProtKB",
+            "PDB", "EC", "TEMP", "ISBN", "RHEA", "file",
+            "curator_inference", "ComplexPortal", "HPA",
+            "PROSITE", "CHEBI", "PMC", "CONTACT_INFO",
+        ],
+        literal_bracket_patterns=[
+            r"[^a-zA-Z\s]",  # keep brackets containing non-alpha chars: [2Fe-2S], [poly(A)+], [+21], [Ca2+]
+            r"^[A-Z]{2,5}$",  # keep short uppercase abbreviations: [MEK], [MAP], [ATP]
+        ],
+    )
+
+    dynamic_enum_plugin = DynamicEnumPlugin(
+        cache_dir=str(cache_dir),
+        oak_config_path=str(oak_config_path) if oak_config_path.exists() else None,
+    )
+
+    validation_plugins = [
         BindingValidationPlugin(
             validate_labels=True,
             cache_dir=str(cache_dir),
             oak_config_path=str(oak_config_path) if oak_config_path.exists() else None,
         ),
+        dynamic_enum_plugin,
+        ReferenceValidationPlugin(config=ref_config),
     ]
 
-    term_validator = LinkMLValidator(
+    ltv_validator = LinkMLValidator(
         schema=str(schema_path),
-        validation_plugins=term_validation_plugins,
+        validation_plugins=validation_plugins,
     )
 
-    # Validate the data using linkml-term-validator
-    term_report = term_validator.validate(data, target_class="GeneReview")
+    # Validate the data using all LTV plugins
+    ltv_report = ltv_validator.validate(data, target_class="GeneReview")
 
-    # Process results from linkml-term-validator
-    if term_report and term_report.results:
-        for result in term_report.results:
+    # Process results from LTV plugins
+    if ltv_report and ltv_report.results:
+        for result in ltv_report.results:
             message = result.message if hasattr(result, "message") else str(result)
-            severity_str = result.severity.name if hasattr(result, "severity") else "ERROR"
+            severity_str = (
+                result.severity.name if hasattr(result, "severity") else "ERROR"
+            )
 
             # Map severity
             if severity_str == "WARNING":
@@ -294,111 +315,54 @@ def check_best_practices_rules(
                 severity,
                 message,
                 path=result.source_path if hasattr(result, "source_path") else None,
-                validation_category="TermValidator",
-                check_type="term_validation"
+                validation_category="LTVValidator",
+                check_type="ltv_validation",
             )
 
-    # GO branch validation for core_functions
-    # This is needed because linkml-term-validator's BindingValidationPlugin skips
-    # dynamic enums (those with reachable_from), expecting DynamicEnumPlugin to handle
-    # them. But DynamicEnumPlugin only checks direct slot ranges, not bindings.
-    # So bindings referencing dynamic enums are not validated by either plugin.
-    # TODO: Fix this gap in linkml-term-validator library
-    legacy_term_validator = TermValidator()
-    core_function_results = legacy_term_validator.validate_terms_in_core_functions(data)
-    for result in core_function_results:
-        if not result.is_valid and result.error_message:
-            # Only report branch errors (label mismatches are already handled by BindingValidationPlugin)
-            if "branch but should be in" in result.error_message:
-                report.add_issue(
-                    ValidationSeverity.ERROR,
-                    result.error_message,
-                    path=result.path,
-                    validation_category="TermValidator",
-                    check_type="go_branch_validation"
-                )
-
-    # Check for obsolete terms and unrecognized prefixes using persistent cache only (no OAK fallback)
-    # This avoids triggering OAK downloads for obsolete checking
-    legacy_validator = TermValidator()
-    legacy_validator._load_persistent_cache()  # Ensure cache is loaded
-
-    # Use the legacy validator's EXCLUDED_PREFIXES set to avoid duplication
-    # This includes PMID, PMC, DOI, UniProt, PDB, EC, Reactome, etc.
-    SKIP_PREFIX_VALIDATION = legacy_validator.EXCLUDED_PREFIXES
-
-    # Extract all term IDs from the data
-    def extract_term_ids(obj: Any, path: str = "") -> List[Tuple[str, str, bool]]:
-        """Extract (term_id, path, is_known_prefix) tuples from nested data."""
-        results = []
-        if isinstance(obj, dict):
-            if "id" in obj and isinstance(obj["id"], str) and ":" in obj["id"]:
-                term_id = obj["id"]
-                prefix = term_id.split(":")[0]
-                # Skip non-ontology prefixes
-                if prefix not in SKIP_PREFIX_VALIDATION:
-                    is_known = prefix in legacy_validator.ONTOLOGY_MAP
-                    results.append((term_id, path, is_known))
-            for key, value in obj.items():
-                new_path = f"{path}.{key}" if path else key
-                results.extend(extract_term_ids(value, new_path))
-        elif isinstance(obj, list):
-            for i, item in enumerate(obj):
-                results.extend(extract_term_ids(item, f"{path}[{i}]"))
-        return results
-
-    for term_id, path, is_known_prefix in extract_term_ids(data):
-        prefix = term_id.split(":")[0]
-
-        # Check for unrecognized prefixes
-        if not is_known_prefix:
-            report.add_issue(
-                ValidationSeverity.ERROR,
-                f"Unrecognized identifier prefix '{prefix}' in {term_id}. Valid ontology prefixes are: {', '.join(sorted(legacy_validator.ONTOLOGY_MAP.keys()))}",
-                path=path,
-                validation_category="TermValidator",
-                check_type="unrecognized_prefix"
-            )
-            continue  # Skip further checks for unknown prefixes
-
-        # Only check persistent cache for obsolete status
-        if term_id in legacy_validator._persistent_cache:
-            if legacy_validator._persistent_cache[term_id].get("is_obsolete", False):
-                report.add_issue(
-                    ValidationSeverity.WARNING,
-                    f"Term {term_id} is obsolete",
-                    path=path,
-                    suggestion="Consider using a non-obsolete term",
-                    validation_category="TermValidator",
-                    check_type="obsolete_term"
-                )
-
-    if progress_callback:
-        progress_callback("Validating publications")
-
-    # Validate publication references
-    pub_validator = PublicationValidator()
-    pub_results = pub_validator.validate_publications_in_data(data)
-
-    for pub_result in pub_results:
-        if not pub_result.is_valid:
-            # Determine severity based on the error
-            if pub_result.correct_title is None:
-                # Could not find publication - this is a warning since it might be a network issue
-                severity = ValidationSeverity.WARNING
-                suggestion = "Check if PMID is correct or fetch the publication"
-            else:
-                # Title mismatch - this is an error
-                severity = ValidationSeverity.ERROR
-                suggestion = f"Use correct title: '{pub_result.correct_title}'"
-
-            report.add_issue(
-                severity,
-                pub_result.error_message
-                or f"Invalid publication: PMID:{pub_result.pmid}",
-                path=pub_result.path,
-                suggestion=suggestion,
-            )
+    # Validate GO branch membership for bindings in core_functions.
+    # BindingValidationPlugin skips dynamic enums (reachable_from),
+    # and DynamicEnumPlugin only checks direct slot ranges, not bindings.
+    # So we use DynamicEnumPlugin's expanded_enums to check bindings here.
+    _BINDING_CHECKS: List[Tuple[str, str, str]] = [
+        ("molecular_function", "GOMolecularActivityEnum", "molecular_function"),
+        (
+            "contributes_to_molecular_function",
+            "GOMolecularActivityEnum",
+            "molecular_function",
+        ),
+        ("directly_involved_in", "GOBiologicalProcessEnum", "biological_process"),
+        ("locations", "GOCellularLocationEnum", "cellular_component"),
+        ("in_complex", "GOProteinContainingComplexEnum", "protein-containing complex"),
+    ]
+    expanded = dynamic_enum_plugin.expanded_enums
+    if expanded and "core_functions" in data and data["core_functions"]:
+        for i, cf in enumerate(data["core_functions"]):
+            if not isinstance(cf, dict):
+                continue
+            for field, enum_name, branch_label in _BINDING_CHECKS:
+                values = cf.get(field)
+                if values is None:
+                    continue
+                # Normalize to list (in_complex and molecular_function are single-valued)
+                if isinstance(values, dict):
+                    values = [values]
+                if not isinstance(values, list):
+                    continue
+                if enum_name not in expanded:
+                    continue
+                valid_ids = expanded[enum_name]
+                for j, val in enumerate(values):
+                    if isinstance(val, dict) and "id" in val:
+                        term_id = val["id"]
+                        if term_id not in valid_ids:
+                            idx = f"[{j}]" if isinstance(cf.get(field), list) else ""
+                            report.add_issue(
+                                ValidationSeverity.ERROR,
+                                f"Term {term_id} ({val.get('label', '?')}) is not in the {branch_label} branch (expected {enum_name})",
+                                path=f"core_functions[{i}].{field}{idx}.id",
+                                validation_category="LTVValidator",
+                                check_type="go_branch_validation",
+                            )
     # Check for TODO in description
     if "description" in data and "TODO" in str(data["description"]):
         report.add_issue(
@@ -407,7 +371,7 @@ def check_best_practices_rules(
             path="description",
             suggestion="Complete the gene description",
             validation_category="BestPractices",
-            check_type="todo_placeholder"
+            check_type="todo_placeholder",
         )
 
     # Check for missing references
@@ -418,7 +382,7 @@ def check_best_practices_rules(
             path="references",
             suggestion="Add relevant literature references",
             validation_category="BestPractices",
-            check_type="missing_references"
+            check_type="missing_references",
         )
 
     # Check that all original_reference_ids in annotations point to valid references
@@ -471,7 +435,7 @@ def check_best_practices_rules(
                     path=path,
                     suggestion=f"Ensure the file exists at: genes/{file_path_str} or {file_path_str}",
                     validation_category="ReferenceValidator",
-                    check_type="file_not_found"
+                    check_type="file_not_found",
                 )
                 return
 
@@ -482,7 +446,7 @@ def check_best_practices_rules(
                     path=path,
                     suggestion="File references must point to actual files, not directories",
                     validation_category="ReferenceValidator",
-                    check_type="file_is_directory"
+                    check_type="file_is_directory",
                 )
 
     # Check file: references in main references section
@@ -490,7 +454,7 @@ def check_best_practices_rules(
         for i, ref in enumerate(data["references"]):
             if isinstance(ref, dict) and "id" in ref:
                 validate_file_reference(ref["id"], f"references[{i}].id")
-                
+
                 # Also check findings.supported_by in references
                 findings = ref.get("findings", [])
                 for j, finding in enumerate(findings):
@@ -500,7 +464,7 @@ def check_best_practices_rules(
                             if isinstance(sb, dict) and "reference_id" in sb:
                                 validate_file_reference(
                                     sb["reference_id"],
-                                    f"references[{i}].findings[{j}].supported_by[{k}].reference_id"
+                                    f"references[{i}].findings[{j}].supported_by[{k}].reference_id",
                                 )
 
     # Check for PENDING annotations (placeholder state that should be resolved)
@@ -514,7 +478,11 @@ def check_best_practices_rules(
                     pending_count += 1
                     if len(pending_examples) < 3:  # Collect first 3 examples
                         term = annotation.get("term", {})
-                        term_label = term.get("label", "unknown") if isinstance(term, dict) else "unknown"
+                        term_label = (
+                            term.get("label", "unknown")
+                            if isinstance(term, dict)
+                            else "unknown"
+                        )
                         pending_examples.append(f"{term_label}")
 
         if pending_count > 0:
@@ -527,7 +495,7 @@ def check_best_practices_rules(
                 path="existing_annotations",
                 suggestion="Complete the review by resolving PENDING annotations",
                 validation_category="BestPractices",
-                check_type="pending_annotations"
+                check_type="pending_annotations",
             )
 
     # Check for review-term-consistency: all annotations to the same term should have the same action
@@ -585,7 +553,11 @@ def check_best_practices_rules(
                         # If all NEW annotations have supporting evidence, exclude them from inconsistency check
                         if new_annotations_valid:
                             # Filter out NEW actions and recheck
-                            non_new_actions = set(action for _, action, _ in actions_list if action != "NEW")
+                            non_new_actions = set(
+                                action
+                                for _, action, _ in actions_list
+                                if action != "NEW"
+                            )
                             if len(non_new_actions) <= 1:
                                 # No inconsistency among non-NEW annotations
                                 continue
@@ -601,7 +573,9 @@ def check_best_practices_rules(
                     # Build a summary of the conflicting actions
                     action_summary = []
                     for action in sorted(unique_actions):
-                        evidence_codes = [ec for _, a, ec in actions_list if a == action]
+                        evidence_codes = [
+                            ec for _, a, ec in actions_list if a == action
+                        ]
                         action_summary.append(f"{action} ({', '.join(evidence_codes)})")
 
                     report.add_issue(
@@ -610,9 +584,9 @@ def check_best_practices_rules(
                         path="existing_annotations",
                         suggestion="All annotations to the same term should have consistent review actions, regardless of evidence type",
                         validation_category="BestPractices",
-                        check_type="inconsistent_review_actions"
+                        check_type="inconsistent_review_actions",
                     )
-    
+
     # Check for usage of deep research results (including falcon, gemini, etc.)
     if "existing_annotations" in data and data["existing_annotations"]:
         # Check if any annotation uses ANY research files (pattern: *research*.md)
@@ -628,7 +602,11 @@ def check_best_practices_rules(
                             ref_id = sb["reference_id"]
                             # Check if this references ANY research file (pattern: *research*.md)
                             # This includes deep-research, falcon-research, gemini-research, etc.
-                            if ref_id.startswith("file:") and "research" in ref_id and ref_id.endswith(".md"):
+                            if (
+                                ref_id.startswith("file:")
+                                and "research" in ref_id
+                                and ref_id.endswith(".md")
+                            ):
                                 has_research_support = True
                                 break
                     if has_research_support:
@@ -641,7 +619,9 @@ def check_best_practices_rules(
                 research_files = list(yaml_file.parent.glob("*research*.md"))
                 if research_files:
                     # Found research files but NONE are referenced
-                    research_file_names = [f.name for f in research_files[:3]]  # Show up to 3 examples
+                    research_file_names = [
+                        f.name for f in research_files[:3]
+                    ]  # Show up to 3 examples
                     examples = ", ".join(research_file_names)
                     if len(research_files) > 3:
                         examples += f" and {len(research_files) - 3} more"
@@ -652,7 +632,7 @@ def check_best_practices_rules(
                         path="existing_annotations",
                         suggestion="Consider using deep research findings to support annotation decisions where relevant",
                         validation_category="BestPractices",
-                        check_type="no_deep_research_results"
+                        check_type="no_deep_research_results",
                     )
 
     # Check for missing core functions
@@ -663,7 +643,7 @@ def check_best_practices_rules(
             path="core_functions",
             suggestion="Define the core molecular functions of the gene",
             validation_category="BestPractices",
-            check_type="missing_core_functions"
+            check_type="missing_core_functions",
         )
     else:
         # Validate that core function terms are properly supported
@@ -697,13 +677,18 @@ def check_best_practices_rules(
                             replacements = review.get("proposed_replacement_terms", [])
                             if replacements:
                                 for replacement in replacements:
-                                    if isinstance(replacement, dict) and "id" in replacement:
-                                        proposed_replacement_terms.add(replacement["id"])
-        
+                                    if (
+                                        isinstance(replacement, dict)
+                                        and "id" in replacement
+                                    ):
+                                        proposed_replacement_terms.add(
+                                            replacement["id"]
+                                        )
+
         # Second pass: identify terms that should NOT be used
         # A term should not be used ONLY if:
         # 1. It has at least one MODIFY action AND
-        # 2. It has NO ACCEPT actions AND  
+        # 2. It has NO ACCEPT actions AND
         # 3. It's not a proposed replacement for something else
         modified_terms = set()
         if "existing_annotations" in data and data["existing_annotations"]:
@@ -712,17 +697,19 @@ def check_best_practices_rules(
                     review = annotation.get("review", {})
                     if isinstance(review, dict):
                         action = review.get("action")
-                        
+
                         if action == "MODIFY":
                             term = annotation.get("term", {})
                             if isinstance(term, dict) and "id" in term:
                                 term_id = term["id"]
                                 # Only mark as "should not use" if it's not accepted elsewhere
                                 # and not a proposed replacement
-                                if (term_id not in accepted_terms and 
-                                    term_id not in proposed_replacement_terms):
+                                if (
+                                    term_id not in accepted_terms
+                                    and term_id not in proposed_replacement_terms
+                                ):
                                     modified_terms.add(term_id)
-        
+
         # Collect all GO terms used in core_functions for cross-checking
         core_function_terms = set()
 
@@ -737,9 +724,11 @@ def check_best_practices_rules(
                     core_function_terms.add(term_id)
 
                     # Check if this term is from accepted annotations, NEW annotations, or proposed replacements
-                    is_from_annotations = (term_id in accepted_terms or
-                                         term_id in new_annotation_terms or
-                                         term_id in proposed_replacement_terms)
+                    is_from_annotations = (
+                        term_id in accepted_terms
+                        or term_id in new_annotation_terms
+                        or term_id in proposed_replacement_terms
+                    )
 
                     # Check if it has supported_by references
                     supported_by = core_func.get("supported_by", [])
@@ -750,7 +739,7 @@ def check_best_practices_rules(
                         if isinstance(sb, dict) and "reference_id" in sb:
                             validate_file_reference(
                                 sb["reference_id"],
-                                f"core_functions[{i}].supported_by[{j}].reference_id"
+                                f"core_functions[{i}].supported_by[{j}].reference_id",
                             )
 
                     # If neither condition is met, it's an error
@@ -770,9 +759,9 @@ def check_best_practices_rules(
                             path=f"core_functions[{i}].molecular_function",
                             suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
                             validation_category="BestPractices",
-                            check_type="core_function_molecular_function_not_in_annotations"
+                            check_type="core_function_molecular_function_not_in_annotations",
                         )
-                
+
                 # Check locations field (should be CC terms)
                 locations = core_func.get("locations", [])
                 for j, location in enumerate(locations):
@@ -792,9 +781,11 @@ def check_best_practices_rules(
                             continue
 
                         # Check if this term is from accepted annotations, NEW annotations, or proposed replacements
-                        is_from_annotations = (loc_id in accepted_terms or
-                                             loc_id in new_annotation_terms or
-                                             loc_id in proposed_replacement_terms)
+                        is_from_annotations = (
+                            loc_id in accepted_terms
+                            or loc_id in new_annotation_terms
+                            or loc_id in proposed_replacement_terms
+                        )
 
                         # Locations don't have their own supported_by, they rely on the core function's supported_by
                         # So check if the core function has supported_by
@@ -818,9 +809,9 @@ def check_best_practices_rules(
                                 path=f"core_functions[{i}].locations[{j}]",
                                 suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
                                 validation_category="BestPractices",
-                                check_type="core_function_location_not_in_annotations"
+                                check_type="core_function_location_not_in_annotations",
                             )
-                
+
                 # Check directly_involved_in field (should be BP terms)
                 directly_involved = core_func.get("directly_involved_in", [])
                 for j, process in enumerate(directly_involved):
@@ -830,9 +821,11 @@ def check_best_practices_rules(
                         core_function_terms.add(proc_id)
 
                         # Check if this term is from accepted annotations, NEW annotations, or proposed replacements
-                        is_from_annotations = (proc_id in accepted_terms or
-                                             proc_id in new_annotation_terms or
-                                             proc_id in proposed_replacement_terms)
+                        is_from_annotations = (
+                            proc_id in accepted_terms
+                            or proc_id in new_annotation_terms
+                            or proc_id in proposed_replacement_terms
+                        )
 
                         # Check if the core function has supported_by
                         supported_by = core_func.get("supported_by", [])
@@ -855,7 +848,7 @@ def check_best_practices_rules(
                                 path=f"core_functions[{i}].directly_involved_in[{j}]",
                                 suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
                                 validation_category="BestPractices",
-                                check_type="core_function_process_not_in_annotations"
+                                check_type="core_function_process_not_in_annotations",
                             )
 
                 # Check in_complex field
@@ -866,9 +859,11 @@ def check_best_practices_rules(
                     core_function_terms.add(complex_id)
 
                     # Check if this term is from accepted annotations, NEW annotations, or proposed replacements
-                    is_from_annotations = (complex_id in accepted_terms or
-                                         complex_id in new_annotation_terms or
-                                         complex_id in proposed_replacement_terms)
+                    is_from_annotations = (
+                        complex_id in accepted_terms
+                        or complex_id in new_annotation_terms
+                        or complex_id in proposed_replacement_terms
+                    )
 
                     # Check if the core function has supported_by
                     supported_by = core_func.get("supported_by", [])
@@ -903,7 +898,7 @@ def check_best_practices_rules(
                         if isinstance(sb, dict) and "reference_id" in sb:
                             validate_file_reference(
                                 sb["reference_id"],
-                                f"existing_annotations[{i}].review.supported_by[{j}].reference_id"
+                                f"existing_annotations[{i}].review.supported_by[{j}].reference_id",
                             )
 
     # Check for ACCEPT annotations with PMIDs lacking supported_by
@@ -926,30 +921,44 @@ def check_best_practices_rules(
                             if yaml_file is not None:
                                 # Look relative to the YAML file's project root
                                 project_root = yaml_file.parent
-                                while project_root.parent != project_root and not (project_root / "publications").exists():
+                                while (
+                                    project_root.parent != project_root
+                                    and not (project_root / "publications").exists()
+                                ):
                                     project_root = project_root.parent
-                                pub_file = project_root / "publications" / f"PMID_{pmid_number}.md"
+                                pub_file = (
+                                    project_root
+                                    / "publications"
+                                    / f"PMID_{pmid_number}.md"
+                                )
                             else:
-                                pub_file = Path("publications") / f"PMID_{pmid_number}.md"
-                            
+                                pub_file = (
+                                    Path("publications") / f"PMID_{pmid_number}.md"
+                                )
+
                             # Check if full text is available in the publication file
                             full_text_available = False
                             if pub_file.exists():
                                 try:
                                     import yaml as yaml_lib
-                                    with open(pub_file, 'r') as f:
+
+                                    with open(pub_file, "r") as f:
                                         content = f.read()
                                         # Extract frontmatter between --- markers
-                                        if content.startswith('---'):
-                                            end_marker = content.find('---', 3)
+                                        if content.startswith("---"):
+                                            end_marker = content.find("---", 3)
                                             if end_marker != -1:
                                                 frontmatter = content[3:end_marker]
-                                                pub_data = yaml_lib.safe_load(frontmatter)
-                                                full_text_available = pub_data.get('full_text_available', False)
+                                                pub_data = yaml_lib.safe_load(
+                                                    frontmatter
+                                                )
+                                                full_text_available = pub_data.get(
+                                                    "full_text_available", False
+                                                )
                                 except Exception:
                                     # If we can't parse the file, assume no full text
                                     pass
-                            
+
                             # Only warn if full text is available
                             if full_text_available:
                                 report.add_issue(
@@ -1062,117 +1071,8 @@ def check_best_practices_rules(
                     suggestion="Consider updating evidence types to match GOA file",
                 )
 
-    # DEPRECATED: Validate supporting_text using fuzzy matching (kept for comparison)
-    # This validator has false positives - use SupportingTextSubstringValidator instead
-    # DISABLED: No longer run by default as it's slower and less accurate than substring matching
-    # To re-enable, uncomment the code below
-    # if check_supporting_text and "existing_annotations" in data:
-    #     if progress_callback:
-    #         progress_callback("Validating supporting text (fuzzy - deprecated)")
-    #     st_validator = SupportingTextValidator()
-    #     st_report = st_validator.validate_data(data)
-    #
-    #     if not st_report.is_valid:
-    #         # Report invalid supporting texts
-    #         for st_result in st_report.results:
-    #             if not st_result.is_valid:
-    #                 severity = ValidationSeverity.WARNING
-    #
-    #                 # Check if this is a PMID finding without supporting_text
-    #                 if "PMID reference" in (
-    #                     st_result.error_message or ""
-    #                 ) and "without supporting_text" in (st_result.error_message or ""):
-    #                     # Always WARNING for missing supporting_text in PMID findings
-    #                     severity = ValidationSeverity.WARNING
-    #                 elif st_result.similarity_score < 0.5:
-    #                     # Very low similarity suggests incorrect reference
-    #                     severity = ValidationSeverity.ERROR
-    #
-    #                 report.add_issue(
-    #                     severity,
-    #                     st_result.error_message
-    #                     or "Supporting text not found in referenced publication",
-    #                     path=st_result.annotation_path,
-    #                     suggestion=st_result.suggested_fix,
-    #                     validation_category="SupportingTextValidator",
-    #                     check_type="supporting_text_not_found"
-    #                 )
-
-    # Validate supporting_text using deterministic substring matching
-    if check_supporting_text and "existing_annotations" in data:
-        if progress_callback:
-            progress_callback("Validating supporting text (substring matching)")
-        substring_validator = SupportingTextSubstringValidator()
-        substring_report = substring_validator.validate_data(data)
-
-        if not substring_report.is_valid:
-            # Report invalid supporting texts using substring validation
-            for st_result in substring_report.results:
-                if not st_result.is_valid:
-                    error_msg = st_result.error_message or "Supporting text not found in referenced publication"
-
-                    # Distinguish between missing supporting_text (WARNING) vs incorrect quote (ERROR)
-                    # Missing supporting_text is a recommendation, not a requirement
-                    if "without supporting_text" in error_msg:
-                        severity = ValidationSeverity.WARNING
-                    else:
-                        # Actual quote that doesn't match source is an error
-                        severity = ValidationSeverity.ERROR
-
-                    report.add_issue(
-                        severity,
-                        f"[Substring] {error_msg}",
-                        path=st_result.annotation_path,
-                        suggestion=st_result.suggested_fix,
-                        validation_category="SupportingTextSubstringValidator",
-                        check_type="supporting_text_substring_not_found"
-                    )
-
-        # Report coverage statistics separately for findings and annotations
-        if substring_report.total_findings > 0:
-            findings_coverage = substring_report.findings_coverage_rate
-            if findings_coverage < 50:
-                report.add_issue(
-                    ValidationSeverity.INFO,
-                    f"Only {findings_coverage:.1f}% of reference findings have supporting_text",
-                    path="references",
-                    suggestion="Consider adding supporting_text to more findings for better documentation",
-                    validation_category="SupportingTextSubstringValidator",
-                    check_type="low_findings_supporting_text_coverage"
-                )
-
-        if substring_report.total_annotations > 0:
-            annotations_coverage = substring_report.annotations_coverage_rate
-            if annotations_coverage < 50:
-                # Use WARNING (not INFO) if coverage is 0% - that's a significant gap
-                severity = ValidationSeverity.WARNING if annotations_coverage == 0 else ValidationSeverity.INFO
-                report.add_issue(
-                    severity,
-                    f"Only {annotations_coverage:.1f}% of existing annotations have supporting_text",
-                    path="existing_annotations",
-                    suggestion="Consider adding supporting_text to more annotations for better documentation",
-                    validation_category="SupportingTextSubstringValidator",
-                    check_type="low_annotations_supporting_text_coverage"
-                )
-
-        # Stricter check: if PMIDs have available full text, we expect supporting_text
-        if substring_report.annotations_with_validatable_refs > 0:
-            validatable_coverage = substring_report.validatable_annotations_coverage_rate
-            if validatable_coverage < 100:
-                # This is a WARNING - we have the publications, so supporting_text should be present
-                num_missing = (
-                    substring_report.annotations_with_validatable_refs
-                    - substring_report.validatable_annotations_with_supporting_text
-                )
-                report.add_issue(
-                    ValidationSeverity.WARNING,
-                    f"{num_missing} annotation(s) have PMID references with cached full text but no supporting_text "
-                    f"({validatable_coverage:.1f}% coverage)",
-                    path="existing_annotations",
-                    suggestion="Add supporting_text with quotes from publications to document evidence",
-                    validation_category="SupportingTextSubstringValidator",
-                    check_type="missing_supporting_text_for_validatable_refs"
-                )
+    # Supporting text and publication title validation is now handled by
+    # ReferenceValidationPlugin (linkml-reference-validator) in the LTV plugin list above.
 
 
 def validate_multiple_files(
@@ -1221,7 +1121,14 @@ def validate_multiple_files(
     batch_report = BatchValidationReport()
 
     if show_progress and len(yaml_files) > 1:
-        from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeElapsedColumn
+        from rich.progress import (
+            Progress,
+            SpinnerColumn,
+            TextColumn,
+            BarColumn,
+            TaskProgressColumn,
+            TimeElapsedColumn,
+        )
 
         with Progress(
             SpinnerColumn(),
@@ -1235,11 +1142,15 @@ def validate_multiple_files(
 
             for yaml_file in yaml_files:
                 yaml_file_path = Path(yaml_file)
-                progress.update(main_task, description=f"Validating {yaml_file_path.name}")
+                progress.update(
+                    main_task, description=f"Validating {yaml_file_path.name}"
+                )
 
                 # Create a callback to show sub-steps for this file
                 def step_callback(step: str):
-                    progress.update(main_task, description=f"{yaml_file_path.name}: {step}")
+                    progress.update(
+                        main_task, description=f"{yaml_file_path.name}: {step}"
+                    )
 
                 report = validate_gene_review(
                     yaml_file_path,
@@ -1368,86 +1279,54 @@ def validate_rule_review(
                     message,
                     path=path,
                     validation_category="SchemaValidator",
-                    check_type="schema_validation"
+                    check_type="schema_validation",
                 )
 
-        # Validate publications if enabled and no hard schema errors
+        # Validate publications and supporting text using ReferenceValidationPlugin
         if check_publications and not report.has_errors:
             if progress_callback:
-                progress_callback("Validating publications")
+                progress_callback("Validating publications and supporting text")
 
-            pub_validator = PublicationValidator()
-            pub_results = pub_validator.validate_publications_in_data(data)
-
-            for pub_result in pub_results:
-                if not pub_result.is_valid:
-                    if pub_result.correct_title is None:
-                        severity = ValidationSeverity.WARNING
-                        suggestion = "Check if PMID is correct or fetch the publication"
-                    else:
-                        severity = ValidationSeverity.ERROR
-                        suggestion = f"Use correct title: '{pub_result.correct_title}'"
-
+            ref_config = ReferenceValidationConfig(
+                cache_dir=str(Path("publications")),
+                skip_prefixes=[
+                    "GO_REF", "GO", "Reactome", "UniProt", "UniProtKB",
+                    "PDB", "EC", "TEMP", "ISBN", "RHEA", "file",
+                ],
+                literal_bracket_patterns=[
+                    r"[^a-zA-Z\s]",
+                ],
+            )
+            ref_plugin = ReferenceValidationPlugin(config=ref_config)
+            ref_validator = LinkMLValidator(
+                schema=str(schema_path or get_schema_path()),
+                validation_plugins=[ref_plugin],
+            )
+            ref_report = ref_validator.validate(data, target_class="RuleReview")
+            if ref_report and ref_report.results:
+                for result in ref_report.results:
+                    message = (
+                        result.message if hasattr(result, "message") else str(result)
+                    )
+                    severity_str = (
+                        result.severity.name if hasattr(result, "severity") else "ERROR"
+                    )
+                    severity = (
+                        ValidationSeverity.WARNING
+                        if severity_str == "WARNING"
+                        else ValidationSeverity.INFO
+                        if severity_str == "INFO"
+                        else ValidationSeverity.ERROR
+                    )
                     report.add_issue(
                         severity,
-                        pub_result.error_message
-                        or f"Invalid publication: PMID:{pub_result.pmid}",
-                        path=pub_result.path,
-                        suggestion=suggestion,
-                        validation_category="PublicationValidator",
-                        check_type="publication_title_mismatch"
+                        message,
+                        path=result.source_path
+                        if hasattr(result, "source_path")
+                        else None,
+                        validation_category="LTVValidator",
+                        check_type="ltv_validation",
                     )
-
-        # Validate supporting_text in supported_by field (top-level and nested in assessments)
-        if check_publications and not report.has_errors:
-            if progress_callback:
-                progress_callback("Validating supporting text")
-
-            st_validator = SupportingTextSubstringValidator()
-
-            # Helper to validate a supported_by list
-            def validate_supported_by_list(items: list, path_prefix: str):
-                for i, item in enumerate(items):
-                    if not isinstance(item, dict):
-                        continue
-                    ref_id = item.get("reference_id", "")
-                    supporting_text = item.get("supporting_text", "")
-
-                    if supporting_text and ref_id:
-                        st_result = st_validator.validate_supporting_text_against_reference(
-                            supporting_text=supporting_text,
-                            reference_id=ref_id,
-                            annotation_path=f"{path_prefix}[{i}]",
-                            yaml_data=data
-                        )
-
-                        if st_result and not st_result.is_valid:
-                            report.add_issue(
-                                ValidationSeverity.ERROR,
-                                st_result.error_message or f"Supporting text not found in {ref_id}",
-                                path=f"{path_prefix}[{i}].supporting_text",
-                                suggestion=st_result.suggested_fix,
-                                validation_category="SupportingTextSubstringValidator",
-                                check_type="supporting_text_substring_not_found"
-                            )
-
-            # Validate top-level supported_by
-            if "supported_by" in data:
-                validate_supported_by_list(data.get("supported_by", []), "supported_by")
-
-            # Validate nested supported_by in assessment objects
-            assessment_fields = [
-                "parsimony", "literature_support", "condition_overlap",
-                "go_specificity", "taxonomic_scope"
-            ]
-            for field in assessment_fields:
-                if field in data and isinstance(data[field], dict):
-                    assessment = data[field]
-                    if "supported_by" in assessment:
-                        validate_supported_by_list(
-                            assessment.get("supported_by", []),
-                            f"{field}.supported_by"
-                        )
 
         return report
 

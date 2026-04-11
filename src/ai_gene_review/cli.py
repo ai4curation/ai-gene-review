@@ -1127,7 +1127,7 @@ def mark_invalid_pmids(
         ai-gene-review mark-invalid-pmids genes/human/JAK1/JAK1-ai-review.yaml PMID:34521819
         ai-gene-review mark-invalid-pmids test.yaml 34521819 12345 --output updated.yaml
     """
-    from ai_gene_review.validation.publication_validator import mark_invalid_pmids
+    from ai_gene_review.utils.pmid_utils import mark_invalid_pmids
 
     yaml_file = Path(yaml_file)
 
