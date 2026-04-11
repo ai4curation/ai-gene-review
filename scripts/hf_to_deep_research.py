@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convert HF protein_catalogue entries to deep-research-bioreason.md files.
+"""Convert HF protein_catalogue entries to deep-research-bioreason-sft.md files.
 
 Usage:
     python scripts/hf_to_deep_research.py --protein-id P0A9K9 --gene SlyD --species ECOLI
@@ -98,7 +98,7 @@ def format_go_section(go_text: str) -> str:
 
 
 def generate_md(protein_id: str, gene_symbol: str, species_code: str) -> str:
-    """Generate deep-research-bioreason.md content from HF catalogue."""
+    """Generate deep-research-bioreason-sft.md content from HF catalogue."""
     con = duckdb.connect(str(DB_PATH), read_only=True)
     row = con.execute(
         "SELECT * FROM protein_catalogue WHERE protein_id = ?", [protein_id]
@@ -175,7 +175,7 @@ def main():
                 parts = line.split("\t")
                 protein_id, gene_symbol, species_code = parts[0], parts[1], parts[2]
                 outdir = Path(args.output_dir) / species_code / gene_symbol
-                outpath = outdir / f"{gene_symbol}-deep-research-bioreason.md"
+                outpath = outdir / f"{gene_symbol}-deep-research-bioreason-sft.md"
                 if outpath.exists():
                     print(f"  SKIP {outpath} (already exists)")
                     continue
@@ -185,7 +185,7 @@ def main():
                 print(f"  WROTE {outpath}")
     elif args.protein_id and args.gene and args.species:
         outdir = Path(args.output_dir) / args.species / args.gene
-        outpath = outdir / f"{args.gene}-deep-research-bioreason.md"
+        outpath = outdir / f"{args.gene}-deep-research-bioreason-sft.md"
         md = generate_md(args.protein_id, args.gene, args.species)
         outdir.mkdir(parents=True, exist_ok=True)
         outpath.write_text(md)

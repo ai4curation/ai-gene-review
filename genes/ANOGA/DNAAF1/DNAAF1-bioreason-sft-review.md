@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: DNAAF1 (ANOGA)
 
-Source: DNAAF1-deep-research-bioreason.md
+Source: DNAAF1-deep-research-bioreason-sft.md
 
 - **Correctness**: 1/5
 - **Completeness**: 1/5

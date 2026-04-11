@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: bcp (Escherichia coli K12)
 
-Source: bcp-deep-research-bioreason.md
+Source: bcp-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

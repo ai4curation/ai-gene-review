@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: thiL (METJA)
 
-Source: thiL-deep-research-bioreason.md
+Source: thiL-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

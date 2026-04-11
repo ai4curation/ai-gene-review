@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: F2rl2 (Mus musculus)
 
-Source: F2rl2-deep-research-bioreason.md
+Source: F2rl2-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

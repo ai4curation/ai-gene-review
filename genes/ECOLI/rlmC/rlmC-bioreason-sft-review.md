@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: rlmC (Escherichia coli K12)
 
-Source: rlmC-deep-research-bioreason.md
+Source: rlmC-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

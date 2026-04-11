@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: fen1 (Danio rerio)
 
-Source: fen1-deep-research-bioreason.md
+Source: fen1-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: NEK3 (Arabidopsis thaliana)
 
-Source: NEK3-deep-research-bioreason.md
+Source: NEK3-deep-research-bioreason-sft.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

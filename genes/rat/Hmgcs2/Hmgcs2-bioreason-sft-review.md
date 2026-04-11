@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: Hmgcs2 (rat)
 
-Source: Hmgcs2-deep-research-bioreason.md
+Source: Hmgcs2-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

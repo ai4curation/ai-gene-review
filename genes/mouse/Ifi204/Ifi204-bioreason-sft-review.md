@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: Ifi204 (Mus musculus)
 
-Source: Ifi204-deep-research-bioreason.md
+Source: Ifi204-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: Sstr5 (Rattus norvegicus)
 
-Source: Sstr5-deep-research-bioreason.md
+Source: Sstr5-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5
