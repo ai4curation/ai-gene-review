@@ -328,6 +328,23 @@ class SupportingTextValidator:
                             except Exception as e:
                                 print(f"Error loading UniProt file for {uniprot_id}: {e}")
 
+        # Also try searching by aliases (e.g., directory named by alias rather than gene_symbol)
+        if yaml_data:
+            for alias in yaml_data.get("aliases", []):
+                for species_dir in self.gene_dir.iterdir():
+                    if species_dir.is_dir():
+                        gene_path = species_dir / alias
+                        if gene_path.exists():
+                            uniprot_file = gene_path / f"{alias}-uniprot.txt"
+                            if uniprot_file.exists():
+                                try:
+                                    with open(uniprot_file, "r", encoding="utf-8") as f:
+                                        content = f.read()
+                                        self.cached_uniprot_files[uniprot_id] = content
+                                        return content
+                                except Exception as e:
+                                    print(f"Error loading UniProt file for {uniprot_id}: {e}")
+
         # Also try searching by UniProt ID directly in case it's used as the gene folder name
         for species_dir in self.gene_dir.iterdir():
             if species_dir.is_dir():
