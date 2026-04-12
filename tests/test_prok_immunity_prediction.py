@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -394,3 +395,120 @@ def test_root_cli_exposes_prok_immunity_run_command(tmp_path: Path) -> None:
     )
     assert result.exit_code == 0, result.stdout
     assert (output_dir / "predictions.tsv").exists()
+
+
+def test_root_cli_exposes_prok_immunity_evaluation_commands(tmp_path: Path) -> None:
+    """The main CLI should route benchmark and database evaluation commands."""
+    predictions_path = tmp_path / "predictions.tsv"
+    raw_benchmark_path = tmp_path / "raw-benchmark.csv"
+    normalized_benchmark_path = tmp_path / "normalized-benchmark.tsv"
+    evaluation_output_path = tmp_path / "evaluation.json"
+    database_output_path = tmp_path / "defensefinder-evaluation.json"
+
+    pd.DataFrame(
+        [
+            {
+                "protein_id": "protA",
+                "predicted_family": "CRISPR-Cas",
+                "family_confidence": 0.99,
+                "predicted_novel": False,
+            },
+            {
+                "protein_id": "protB",
+                "predicted_family": "",
+                "family_confidence": 0.0,
+                "predicted_novel": False,
+            },
+            {
+                "protein_id": "protC",
+                "predicted_family": "",
+                "family_confidence": 0.0,
+                "predicted_novel": True,
+            },
+        ]
+    ).to_csv(predictions_path, sep="\t", index=False)
+    pd.DataFrame(
+        [
+            {"protein": "protA", "label": "defense", "family": "CRISPR-Cas", "novel": "false"},
+            {"protein": "protC", "label": "defense", "family": "", "novel": "true"},
+            {"protein": "protD", "label": "negative", "family": "", "novel": "false"},
+        ]
+    ).to_csv(raw_benchmark_path, index=False)
+
+    defensefinder_dir = tmp_path / "defensefinder"
+    defensefinder_dir.mkdir()
+    (defensefinder_dir / "defense_finder_systems.tsv").write_text(
+        "\t".join(["sys_id", "type", "subtype", "protein_in_syst"]) + "\n"
+        + "\t".join(["sys_1", "CRISPR-Cas", "CAS_Class1-Subtype-I-E", "protA"])
+        + "\n"
+        + "\t".join(["sys_2", "CBASS", "cbass_type_i", "protB"])
+        + "\n",
+        encoding="utf-8",
+    )
+
+    normalize_result = RUNNER.invoke(
+        root_cli_app,
+        [
+            "prok-immunity",
+            "normalize-benchmark",
+            "--input",
+            str(raw_benchmark_path),
+            "--output",
+            str(normalized_benchmark_path),
+            "--protein-id-column",
+            "protein",
+            "--label-column",
+            "label",
+            "--family-column",
+            "family",
+            "--novel-column",
+            "novel",
+        ],
+    )
+    assert normalize_result.exit_code == 0, normalize_result.stdout
+    assert normalized_benchmark_path.exists()
+
+    evaluate_result = RUNNER.invoke(
+        root_cli_app,
+        [
+            "prok-immunity",
+            "evaluate",
+            "--predictions",
+            str(predictions_path),
+            "--benchmark",
+            str(normalized_benchmark_path),
+            "--output",
+            str(evaluation_output_path),
+        ],
+    )
+    assert evaluate_result.exit_code == 0, evaluate_result.stdout
+    assert evaluation_output_path.exists()
+    evaluation_metrics = json.loads(evaluate_result.stdout)
+    assert evaluation_metrics["precision"] == 1.0
+    assert evaluation_metrics["recall"] == 1.0
+    assert evaluation_metrics["novel_recall"] == 1.0
+
+    database_result = RUNNER.invoke(
+        root_cli_app,
+        [
+            "prok-immunity",
+            "evaluate-database",
+            "--predictions",
+            str(predictions_path),
+            "--database",
+            "DefenseFinder",
+            "--database-dir",
+            str(defensefinder_dir),
+            "--family-config",
+            str(FAMILY_CONFIG),
+            "--output",
+            str(database_output_path),
+        ],
+    )
+    assert database_result.exit_code == 0, database_result.stdout
+    assert database_output_path.exists()
+    assert database_output_path.with_suffix(".comparison.tsv").exists()
+    database_metrics = json.loads(database_result.stdout)
+    assert database_metrics["database"] == "DefenseFinder"
+    assert database_metrics["precision"] == 0.5
+    assert database_metrics["recall"] == 0.5
