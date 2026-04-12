@@ -315,6 +315,17 @@ def check_best_practices_rules(
             else:
                 severity = ValidationSeverity.ERROR
 
+            # Downgrade supporting_text substring-match failures from ERROR to
+            # WARNING. These are data quality issues (the supporting_text should
+            # be a verbatim quote) but not validity issues (the annotation is
+            # still well-formed). --strict mode escalates warnings back to errors.
+            if severity == ValidationSeverity.ERROR and (
+                "Text part not found as substring" in message
+                or "No content available for reference" in message
+                or "Could not fetch reference" in message
+            ):
+                severity = ValidationSeverity.WARNING
+
             report.add_issue(
                 severity,
                 message,
