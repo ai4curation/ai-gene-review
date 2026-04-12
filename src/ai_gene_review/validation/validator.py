@@ -296,8 +296,29 @@ def check_best_practices_rules(
         validation_plugins=validation_plugins,
     )
 
+    # Prepare data for LTV validation. Remove supporting_text from supported_by
+    # entries where full_text_unavailable=true so LRV doesn't strictly check
+    # them. This lets curators honestly declare "I don't have full text, so
+    # this quote is from an abstract and may be weaker, or is absent entirely"
+    # without failing validation. The annotation itself is still reviewed.
+    def _strip_unavailable_supporting_text(obj: Any) -> None:
+        if isinstance(obj, dict):
+            if "supported_by" in obj and isinstance(obj["supported_by"], list):
+                for sb in obj["supported_by"]:
+                    if isinstance(sb, dict) and sb.get("full_text_unavailable"):
+                        sb.pop("supporting_text", None)
+            for v in obj.values():
+                _strip_unavailable_supporting_text(v)
+        elif isinstance(obj, list):
+            for item in obj:
+                _strip_unavailable_supporting_text(item)
+
+    import copy
+    ltv_data = copy.deepcopy(data)
+    _strip_unavailable_supporting_text(ltv_data)
+
     # Validate the data using all LTV plugins
-    ltv_report = ltv_validator.validate(data, target_class="GeneReview")
+    ltv_report = ltv_validator.validate(ltv_data, target_class="GeneReview")
 
     # Process results from LTV plugins
     if ltv_report and ltv_report.results:
