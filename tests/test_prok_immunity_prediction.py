@@ -7,7 +7,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import yaml
+from typer.testing import CliRunner
 
+from ai_gene_review.cli import app as root_cli_app
 from ai_gene_review.prok_immunity_prediction.aigr_export import export_predictions_to_aigr
 from ai_gene_review.prok_immunity_prediction.classifier import classify_proteins, load_family_config
 from ai_gene_review.prok_immunity_prediction.cross_reference import parse_defense_finder, parse_padloc
@@ -25,6 +27,7 @@ PROJECT_DIR = Path("projects/prok-immunity-prediction")
 EXAMPLE_FASTA = PROJECT_DIR / "data/example/example_proteome.faa"
 EXAMPLE_GFF = PROJECT_DIR / "data/example/example_annotations.gff"
 FAMILY_CONFIG = PROJECT_DIR / "config/defense_families.yaml"
+RUNNER = CliRunner()
 
 
 def test_prepare_analysis_inputs_parses_example_proteome(tmp_path: Path) -> None:
@@ -356,3 +359,38 @@ def test_load_predictions_table_defaults_predicted_novel(tmp_path: Path) -> None
     ).to_csv(predictions_path, sep="\t", index=False)
     predictions = load_predictions_table(predictions_path)
     assert list(predictions["predicted_novel"]) == [False]
+
+
+def test_root_cli_exposes_prok_immunity_run_command(tmp_path: Path) -> None:
+    """The main ai-gene-review CLI should expose the immunity pipeline subcommands."""
+    output_dir = tmp_path / "cli-output"
+    result = RUNNER.invoke(
+        root_cli_app,
+        [
+            "prok-immunity",
+            "run",
+            "--input",
+            str(EXAMPLE_FASTA),
+            "--output-dir",
+            str(output_dir),
+            "--family-config",
+            str(FAMILY_CONFIG),
+            "--organism",
+            "ECOLI",
+            "--taxon-id",
+            "NCBITaxon:83333",
+            "--gff",
+            str(EXAMPLE_GFF),
+            "--embedder",
+            "composition",
+            "--skip-external",
+            "--family-threshold",
+            "0.4",
+            "--novel-threshold",
+            "0.5",
+            "--neighborhood-window",
+            "5",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    assert (output_dir / "predictions.tsv").exists()

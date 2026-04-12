@@ -26,8 +26,14 @@ from ai_gene_review.validation import (
 from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.validator import get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
+from ai_gene_review.prok_immunity_prediction.cli import app as prok_immunity_app
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
+app.add_typer(
+    prok_immunity_app,
+    name="prok-immunity",
+    help="Predict prokaryotic immunity genes and evaluate benchmark/database outputs.",
+)
 
 
 @app.command()
