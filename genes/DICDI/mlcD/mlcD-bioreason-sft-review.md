@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: mlcD (Dictyostelium discoideum)
 
-Source: mlcD-deep-research-bioreason.md
+Source: mlcD-deep-research-bioreason-sft.md
 
 - **Correctness**: 2/5
 - **Completeness**: 3/5

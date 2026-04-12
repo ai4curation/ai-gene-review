@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: Rv3660c (MYCTU)
 
-Source: Rv3660c-deep-research-bioreason.md
+Source: Rv3660c-deep-research-bioreason-sft.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

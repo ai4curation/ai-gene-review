@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: NPAC (ANOGA)
 
-Source: NPAC-deep-research-bioreason.md
+Source: NPAC-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

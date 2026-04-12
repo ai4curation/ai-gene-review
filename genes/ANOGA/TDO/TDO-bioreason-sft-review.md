@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: TDO (ANOGA)
 
-Source: TDO-deep-research-bioreason.md
+Source: TDO-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 2/5

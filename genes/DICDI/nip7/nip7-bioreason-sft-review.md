@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: nip7 (DICDI)
 
-Source: nip7-deep-research-bioreason.md
+Source: nip7-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

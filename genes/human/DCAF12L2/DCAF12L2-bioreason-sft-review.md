@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: DCAF12L2 (human)
 
-Source: DCAF12L2-deep-research-bioreason.md
+Source: DCAF12L2-deep-research-bioreason-sft.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

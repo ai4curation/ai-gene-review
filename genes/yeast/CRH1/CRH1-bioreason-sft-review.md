@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: CRH1 (Saccharomyces cerevisiae)
 
-Source: CRH1-deep-research-bioreason.md
+Source: CRH1-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

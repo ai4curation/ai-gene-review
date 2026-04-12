@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: lon-8 (Caenorhabditis elegans)
 
-Source: lon-8-deep-research-bioreason.md
+Source: lon-8-deep-research-bioreason-sft.md
 
 - **Correctness**: 2/5
 - **Completeness**: 3/5

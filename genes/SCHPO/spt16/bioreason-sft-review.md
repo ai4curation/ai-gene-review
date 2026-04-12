@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: spt16 (S. pombe)
 
-Source: spt16-deep-research-bioreason.md
+Source: spt16-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

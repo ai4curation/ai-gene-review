@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: Ghr (Rattus norvegicus)
 
-Source: Ghr-deep-research-bioreason.md
+Source: Ghr-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

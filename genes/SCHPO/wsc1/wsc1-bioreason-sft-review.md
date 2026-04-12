@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: wsc1 (Schizosaccharomyces pombe)
 
-Source: wsc1-deep-research-bioreason.md
+Source: wsc1-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

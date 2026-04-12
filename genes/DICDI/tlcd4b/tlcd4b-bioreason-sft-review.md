@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: tlcd4b (Dictyostelium discoideum)
 
-Source: tlcd4b-deep-research-bioreason.md
+Source: tlcd4b-deep-research-bioreason-sft.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

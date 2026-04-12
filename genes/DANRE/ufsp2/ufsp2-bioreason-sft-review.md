@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: ufsp2 (DANRE)
 
-Source: ufsp2-deep-research-bioreason.md
+Source: ufsp2-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

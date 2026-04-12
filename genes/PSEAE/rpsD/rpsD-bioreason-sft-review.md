@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: rpsD (PSEAE)
 
-Source: rpsD-deep-research-bioreason.md
+Source: rpsD-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

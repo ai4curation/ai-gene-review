@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: nadX (Methanocaldococcus jannaschii)
 
-Source: nadX-deep-research-bioreason.md
+Source: nadX-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 4/5
