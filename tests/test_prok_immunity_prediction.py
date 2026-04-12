@@ -512,3 +512,28 @@ def test_root_cli_exposes_prok_immunity_evaluation_commands(tmp_path: Path) -> N
     assert database_metrics["database"] == "DefenseFinder"
     assert database_metrics["precision"] == 0.5
     assert database_metrics["recall"] == 0.5
+
+
+def test_readme_advertised_root_prok_immunity_commands_match_help() -> None:
+    """README-advertised root CLI entrypoints should remain discoverable in help output."""
+    readme_text = Path("README.md").read_text(encoding="utf-8")
+    advertised_lines = [
+        line.strip()
+        for line in readme_text.splitlines()
+        if line.strip().startswith("uv run ai-gene-review prok-immunity ")
+    ]
+
+    assert advertised_lines, "README should advertise root prok-immunity commands"
+
+    advertised_tokens = {line.split()[4] for line in advertised_lines}
+    assert "--help" in advertised_tokens
+
+    root_help = RUNNER.invoke(root_cli_app, ["--help"])
+    assert root_help.exit_code == 0, root_help.stdout
+    assert "prok-immunity" in root_help.stdout
+
+    prok_help = RUNNER.invoke(root_cli_app, ["prok-immunity", "--help"])
+    assert prok_help.exit_code == 0, prok_help.stdout
+
+    for subcommand in sorted(advertised_tokens - {"--help"}):
+        assert subcommand in prok_help.stdout
