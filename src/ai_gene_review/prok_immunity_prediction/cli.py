@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Callable, TypeVar
 
 import typer
 
@@ -19,6 +20,16 @@ DEFAULT_FAMILY_CONFIG = (
     Path(__file__).resolve().parents[3]
     / "projects/prok-immunity-prediction/config/defense_families.yaml"
 )
+T = TypeVar("T")
+
+
+def run_with_cli_error_handling(action: Callable[[], T]) -> T:
+    """Run a CLI action and surface expected user errors without a traceback."""
+    try:
+        return action()
+    except (FileNotFoundError, KeyError, RuntimeError, ValueError) as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
 
 
 @app.command("run")
@@ -47,24 +58,26 @@ def run_command(
     neighborhood_window: int = typer.Option(10, "--neighborhood-window"),
 ) -> None:
     """Run the full immunity-gene prediction workflow."""
-    summary = run_pipeline(
-        input_path=input_path,
-        output_dir=output_dir,
-        family_config_path=family_config,
-        organism_code=organism_code,
-        taxon_id=taxon_id,
-        gff_path=gff_path,
-        embedder_name=embedder,
-        model_name=model_name,
-        prodigal_mode=prodigal_mode,
-        defense_finder_dir=defense_finder_dir,
-        padloc_dir=padloc_dir,
-        casfinder_dir=casfinder_dir,
-        run_external=run_external,
-        export_aigr_root=export_aigr_root,
-        family_threshold=family_threshold,
-        novel_threshold=novel_threshold,
-        neighborhood_window=neighborhood_window,
+    summary = run_with_cli_error_handling(
+        lambda: run_pipeline(
+            input_path=input_path,
+            output_dir=output_dir,
+            family_config_path=family_config,
+            organism_code=organism_code,
+            taxon_id=taxon_id,
+            gff_path=gff_path,
+            embedder_name=embedder,
+            model_name=model_name,
+            prodigal_mode=prodigal_mode,
+            defense_finder_dir=defense_finder_dir,
+            padloc_dir=padloc_dir,
+            casfinder_dir=casfinder_dir,
+            run_external=run_external,
+            export_aigr_root=export_aigr_root,
+            family_threshold=family_threshold,
+            novel_threshold=novel_threshold,
+            neighborhood_window=neighborhood_window,
+        )
     )
     typer.echo(json.dumps(summary, indent=2))
 
@@ -76,7 +89,7 @@ def evaluate_command(
     output: Path = typer.Option(..., "--output", "-o"),
 ) -> None:
     """Evaluate predictions against a normalized Mordret-style benchmark."""
-    metrics = evaluate_predictions(predictions, benchmark, output)
+    metrics = run_with_cli_error_handling(lambda: evaluate_predictions(predictions, benchmark, output))
     typer.echo(json.dumps(metrics, indent=2))
 
 
@@ -94,12 +107,14 @@ def evaluate_database_command(
     output: Path = typer.Option(..., "--output", "-o"),
 ) -> None:
     """Evaluate predictions against DefenseFinder or PADLOC outputs."""
-    metrics = evaluate_predictions_against_database(
-        predictions_path=predictions,
-        database_dir=database_dir,
-        database=database,
-        family_config_path=family_config,
-        output_path=output,
+    metrics = run_with_cli_error_handling(
+        lambda: evaluate_predictions_against_database(
+            predictions_path=predictions,
+            database_dir=database_dir,
+            database=database,
+            family_config_path=family_config,
+            output_path=output,
+        )
     )
     typer.echo(json.dumps(metrics, indent=2))
 
@@ -114,13 +129,15 @@ def normalize_benchmark_command(
     novel_column: str | None = typer.Option(None, "--novel-column"),
 ) -> None:
     """Normalize a raw Mordret supplement table into project format."""
-    normalized = normalize_benchmark_table(
-        input_path=input_path,
-        output_path=output_path,
-        protein_id_column=protein_id_column,
-        label_column=label_column,
-        family_column=family_column,
-        novel_column=novel_column,
+    normalized = run_with_cli_error_handling(
+        lambda: normalize_benchmark_table(
+            input_path=input_path,
+            output_path=output_path,
+            protein_id_column=protein_id_column,
+            label_column=label_column,
+            family_column=family_column,
+            novel_column=novel_column,
+        )
     )
     typer.echo(str(normalized))
 

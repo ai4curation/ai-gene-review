@@ -9,6 +9,12 @@ from pathlib import Path
 
 from ai_gene_review.prok_immunity_prediction.models import ExternalHit, PreparedProteome
 
+EXTERNAL_OUTPUT_EXPECTATIONS: dict[str, tuple[str, tuple[str, ...]]] = {
+    "defensefinder": ("DefenseFinder", ("defense_finder_systems.tsv", "defense_finder_genes.tsv")),
+    "padloc": ("PADLOC", ("*_padloc.csv",)),
+    "casfinder": ("CasFinder", ("best_solution.tsv",)),
+}
+
 
 def run_defense_finder(prepared: PreparedProteome, output_dir: Path) -> list[ExternalHit]:
     """Run DefenseFinder when available and parse hits."""
@@ -192,16 +198,19 @@ def gather_cross_reference_hits(
     hits: list[ExternalHit] = []
 
     if defense_finder_dir:
+        validate_external_output_dir(defense_finder_dir, "defensefinder")
         hits.extend(parse_defense_finder(defense_finder_dir))
     elif run_missing:
         hits.extend(run_defense_finder(prepared, output_dir / "defensefinder"))
 
     if padloc_dir:
+        validate_external_output_dir(padloc_dir, "padloc")
         hits.extend(parse_padloc(padloc_dir))
     elif run_missing:
         hits.extend(run_padloc(prepared, output_dir / "padloc"))
 
     if casfinder_dir:
+        validate_external_output_dir(casfinder_dir, "casfinder")
         hits.extend(parse_casfinder(casfinder_dir))
     elif run_missing:
         hits.extend(run_casfinder(prepared, output_dir / "casfinder"))
@@ -225,3 +234,16 @@ def first_present(row: dict[str, str], keys: tuple[str, ...]) -> str | None:
         if value:
             return value
     return None
+
+
+def validate_external_output_dir(output_dir: Path, tool_key: str) -> None:
+    """Ensure a user-supplied tool output directory contains recognizable result files."""
+    tool_name, patterns = EXTERNAL_OUTPUT_EXPECTATIONS[tool_key]
+    matches = {path for pattern in patterns for path in output_dir.glob(pattern)}
+    if matches:
+        return
+
+    expected = ", ".join(patterns)
+    raise ValueError(
+        f"{tool_name} output directory '{output_dir}' does not contain expected result files: {expected}"
+    )

@@ -514,6 +514,88 @@ def test_root_cli_exposes_prok_immunity_evaluation_commands(tmp_path: Path) -> N
     assert database_metrics["recall"] == 0.5
 
 
+def test_root_cli_run_rejects_empty_defensefinder_dir(tmp_path: Path) -> None:
+    """User-supplied DefenseFinder dirs should fail fast when expected files are missing."""
+    output_dir = tmp_path / "cli-output"
+    empty_defensefinder_dir = tmp_path / "empty-defensefinder"
+    empty_defensefinder_dir.mkdir()
+
+    result = RUNNER.invoke(
+        root_cli_app,
+        [
+            "prok-immunity",
+            "run",
+            "--input",
+            str(EXAMPLE_FASTA),
+            "--output-dir",
+            str(output_dir),
+            "--family-config",
+            str(FAMILY_CONFIG),
+            "--organism",
+            "ECOLI",
+            "--taxon-id",
+            "NCBITaxon:83333",
+            "--gff",
+            str(EXAMPLE_GFF),
+            "--embedder",
+            "composition",
+            "--skip-external",
+            "--defense-finder-dir",
+            str(empty_defensefinder_dir),
+        ],
+    )
+
+    combined_output = result.stdout + getattr(result, "stderr", "")
+    assert result.exit_code == 1
+    assert "DefenseFinder output directory" in combined_output
+    assert "defense_finder_systems.tsv" in combined_output
+    assert "Traceback" not in combined_output
+
+
+def test_root_cli_evaluate_database_rejects_empty_defensefinder_dir(tmp_path: Path) -> None:
+    """Database evaluation should fail fast on directories with no recognizable outputs."""
+    predictions_path = tmp_path / "predictions.tsv"
+    empty_defensefinder_dir = tmp_path / "empty-defensefinder"
+    output_path = tmp_path / "evaluation.json"
+
+    pd.DataFrame(
+        [
+            {
+                "protein_id": "protA",
+                "predicted_family": "CRISPR-Cas",
+                "family_confidence": 0.99,
+                "predicted_novel": False,
+            }
+        ]
+    ).to_csv(predictions_path, sep="\t", index=False)
+    empty_defensefinder_dir.mkdir()
+
+    result = RUNNER.invoke(
+        root_cli_app,
+        [
+            "prok-immunity",
+            "evaluate-database",
+            "--predictions",
+            str(predictions_path),
+            "--database",
+            "DefenseFinder",
+            "--database-dir",
+            str(empty_defensefinder_dir),
+            "--family-config",
+            str(FAMILY_CONFIG),
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    combined_output = result.stdout + getattr(result, "stderr", "")
+    assert result.exit_code == 1
+    assert "DefenseFinder output directory" in combined_output
+    assert "defense_finder_systems.tsv" in combined_output
+    assert not output_path.exists()
+    assert "Traceback" not in combined_output
+
+
 def test_readme_advertised_root_prok_immunity_commands_match_help() -> None:
     """README-advertised root CLI entrypoints should remain discoverable in help output."""
     readme_text = Path("README.md").read_text(encoding="utf-8")

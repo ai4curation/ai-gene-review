@@ -9,7 +9,11 @@ from typing import Callable
 import pandas as pd
 
 from ai_gene_review.prok_immunity_prediction.classifier import canonicalize_family, load_family_config
-from ai_gene_review.prok_immunity_prediction.cross_reference import parse_defense_finder, parse_padloc
+from ai_gene_review.prok_immunity_prediction.cross_reference import (
+    parse_defense_finder,
+    parse_padloc,
+    validate_external_output_dir,
+)
 from ai_gene_review.prok_immunity_prediction.models import ExternalHit
 
 DATABASE_PARSERS: dict[str, tuple[str, Callable[[Path], list[ExternalHit]]]] = {
@@ -144,6 +148,7 @@ def evaluate_predictions_against_database(
         valid = ", ".join(sorted(DATABASE_PARSERS))
         raise ValueError(f"Unsupported database '{database}'. Expected one of: {valid}")
 
+    validate_external_output_dir(database_dir, normalized_database)
     database_label, parser = DATABASE_PARSERS[normalized_database]
     reference_hits = parser(database_dir)
     return evaluate_predictions_against_reference_hits(
