@@ -48,6 +48,19 @@ just stats                # Generate HTML report
 just stats-open           # Generate and open in browser
 ```
 
+### Prokaryotic Immunity CLI
+
+The prokaryotic immunity pipeline is available from the main CLI:
+
+```bash
+uv run ai-gene-review prok-immunity --help
+uv run ai-gene-review prok-immunity run --input projects/prok-immunity-prediction/data/example/example_proteome.faa --output-dir /tmp/prok-immunity --organism ECOLI --taxon-id NCBITaxon:83333 --gff projects/prok-immunity-prediction/data/example/example_annotations.gff --embedder composition --skip-external
+uv run ai-gene-review prok-immunity evaluate --predictions /tmp/prok-immunity/predictions.tsv --benchmark /path/to/normalized-benchmark.tsv --output /tmp/prok-immunity/evaluation.json
+uv run ai-gene-review prok-immunity evaluate-database --predictions /tmp/prok-immunity/predictions.tsv --database DefenseFinder --database-dir /path/to/defensefinder-output --output /tmp/prok-immunity/defensefinder-evaluation.json
+```
+
+Project-specific pipeline notes and `just` targets live in `projects/prok-immunity-prediction/README.md`.
+
 ## Workflow Overview
 
 1. **Fetch Gene Data**: Download UniProt records and GO annotations
