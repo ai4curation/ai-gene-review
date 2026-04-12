@@ -265,6 +265,10 @@ def check_best_practices_rules(
             "PDB", "EC", "TEMP", "ISBN", "RHEA", "file",
             "curator_inference", "ComplexPortal", "HPA",
             "PROSITE", "CHEBI", "PMC", "CONTACT_INFO",
+            "inference",  # inference:curator_inference etc.
+            "InterPro",  # InterPro:IPR... ids
+            "thesis",  # thesis:AuthorYearTitle for non-PMID theses
+            "unindexed",  # unindexed:authorYearTitle for papers not yet in PubMed
         ],
         literal_bracket_patterns=[
             r"[^a-zA-Z\s]",  # keep brackets containing non-alpha chars: [2Fe-2S], [poly(A)+], [+21], [Ca2+]
