@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: fan-1 (Caenorhabditis elegans)
 
-Source: fan-1-deep-research-bioreason.md
+Source: fan-1-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: dph2 (Danio rerio)
 
-Source: dph2-deep-research-bioreason.md
+Source: dph2-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 4/5

@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: rdgBbeta (Drosophila melanogaster)
 
-Source: rdgBbeta-deep-research-bioreason.md
+Source: rdgBbeta-deep-research-bioreason-sft.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

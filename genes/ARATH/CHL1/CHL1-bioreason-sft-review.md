@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: CHL1 (Arabidopsis thaliana)
 
-Source: CHL1-deep-research-bioreason.md
+Source: CHL1-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: clpP2 (Mycobacterium tuberculosis)
 
-Source: clpP2-deep-research-bioreason.md
+Source: clpP2-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

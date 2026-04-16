@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: At1g67980 (Arabidopsis thaliana)
 
-Source: At1g67980-deep-research-bioreason.md
+Source: At1g67980-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

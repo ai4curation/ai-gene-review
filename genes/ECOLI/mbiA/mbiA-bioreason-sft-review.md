@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: mbiA (E. coli K12)
 
-Source: mbiA-deep-research-bioreason.md
+Source: mbiA-deep-research-bioreason-sft.md
 
 - **Correctness**: 0/5
 - **Completeness**: 0/5

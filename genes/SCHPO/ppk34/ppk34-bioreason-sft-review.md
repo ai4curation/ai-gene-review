@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: ppk34 / ckk2 (Schizosaccharomyces pombe)
 
-Source: ppk34-deep-research-bioreason.md
+Source: ppk34-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

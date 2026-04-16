@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: secF (PSEAE)
 
-Source: secF-deep-research-bioreason.md
+Source: secF-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

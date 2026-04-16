@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: aldo-1 (Caenorhabditis elegans)
 
-Source: aldo-1-deep-research-bioreason.md
+Source: aldo-1-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

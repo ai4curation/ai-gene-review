@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: YGR117C (Saccharomyces cerevisiae)
 
-Source: YGR117C-deep-research-bioreason.md
+Source: YGR117C-deep-research-bioreason-sft.md
 
 - **Correctness**: 1/5
 - **Completeness**: 1/5

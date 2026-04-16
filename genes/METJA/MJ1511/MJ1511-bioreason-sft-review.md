@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: MJ1511 (Methanocaldococcus jannaschii)
 
-Source: MJ1511-deep-research-bioreason.md
+Source: MJ1511-deep-research-bioreason-sft.md
 
 - **Correctness**: 1/5
 - **Completeness**: 2/5

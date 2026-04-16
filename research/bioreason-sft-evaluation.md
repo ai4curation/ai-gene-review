@@ -9,7 +9,7 @@ Branch: `feat/bioreason-hf-catalogue`
 ## Methods
 
 For each protein:
-1. Extract SFT generation from HF catalogue → `{GENE}-deep-research-bioreason.md`
+1. Extract SFT generation from HF catalogue → `{GENE}-deep-research-bioreason-sft.md`
 2. Fetch UniProt/GOA via `just fetch-gene`
 3. Deep literature research → `{GENE}-notes.md`
 4. Complete expert review → `{GENE}-ai-review.yaml`

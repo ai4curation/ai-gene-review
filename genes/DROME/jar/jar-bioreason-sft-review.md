@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: jar (Drosophila melanogaster)
 
-Source: jar-deep-research-bioreason.md
+Source: jar-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

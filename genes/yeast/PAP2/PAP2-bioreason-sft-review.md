@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: PAP2 (Saccharomyces cerevisiae)
 
-Source: PAP2-deep-research-bioreason.md
+Source: PAP2-deep-research-bioreason-sft.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

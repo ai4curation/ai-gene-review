@@ -1,6 +1,6 @@
 # BioReason-Pro SFT Review: STAU2 (human)
 
-Source: STAU2-deep-research-bioreason.md
+Source: STAU2-deep-research-bioreason-sft.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5
