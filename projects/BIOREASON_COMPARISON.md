@@ -7,6 +7,8 @@ sidecars:
 
 Systematic evaluation of BioReason-Pro functional summaries and reasoning traces (Fallahpour et al. 2026, [doi:10.64898/2026.03.19.712954](https://doi.org/10.64898/2026.03.19.712954)) against expert-curated AIGR gene reviews.
 
+**Paper drafts** based on this project live in [`BIOREASON_COMPARISON/article/`](BIOREASON_COMPARISON/article/): see [`manuscript.md`](BIOREASON_COMPARISON/article/manuscript.md) for the full manuscript draft (intended for ISMB 2026 Function-COSI), plus [`abstract.md`](BIOREASON_COMPARISON/article/abstract.md) (long-form) and [`short-abstract.md`](BIOREASON_COMPARISON/article/short-abstract.md) (250 words).
+
 ## Methods
 
 We downloaded the reports for selected genes from https://app.bioreason.net/ (there is no API yet so this cannot be done in bulk). We assigned an AI agent to review this, and compare them with both existing pipelines (e.g. interpro2go), and also with the complete AI gene review.
