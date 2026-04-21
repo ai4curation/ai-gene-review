@@ -302,6 +302,47 @@ These are especially useful for AIGR because the papers themselves signal uncert
 - `TTC28`: PN places it as an HSP70-HSP90 joint cochaperone, but the current AIGR review treats it as a mitotic scaffold
 - `MEX3B`: RING-family UPS placement may be real but needs distinction between family membership and core proteostasis role
 
+### Existing-review rereview examples
+
+On the `83`-gene existing-review queue, the useful distinction was not just the
+pipeline label but whether the PN-projected term was actually a better GO
+assertion than the current AIGR review. In practice,
+`more_specific_than_existing_goa` is a projection label, not a guarantee that
+the PN term remains the most specific biologically defensible choice after
+manual rereview.
+
+- `BCAP31` (`more_specific_than_existing_goa`): accepted `GO:0036503 ERAD pathway`.
+  This is a good positive-control case where the PN mapping is exact and the
+  biology holds up. The current review already supported direct ERAD
+  participation, and the rereview added the pathway term because BCAP31 helps
+  handle retrotranslocation of ERAD substrates rather than only acting in a
+  looser ER-stress or regulatory context.
+- `EDF1` (`new_to_goa`): PN suggested `GO:0002181 cytoplasmic translation`,
+  `GO:0006412 translation`, and `GO:0006515 protein quality control for
+  misfolded or incompletely synthesized proteins`. Only `GO:0006515` survived
+  conservative rereview. The broad translation terms were not added because the
+  best-supported biology is collided-ribosome surveillance and
+  ribosome-associated quality control rather than generic translation.
+- `TOMM20` (`more_specific_than_existing_goa` in the queue): rejected. The PN
+  mitochondrial mapping propagates the group-level `Protein import` bucket to
+  `GO:0017038 protein import`, but the current AIGR review already uses the
+  route-specific mitochondrial import term `GO:0030150 protein import into
+  mitochondrial matrix`. At the gene-review level, the PN suggestion was
+  broader rather than more specific.
+- `HSPA8` (`more_specific_than_existing_goa` in the queue): rejected. The PN
+  `GO:0035973 aggrephagy` projection comes from a selective-autophagy-receptor
+  path, whereas the current review already captures HSPA8's direct and much
+  better supported CMA biology with `GO:0061684 chaperone-mediated autophagy`
+  and `GO:0061740 protein targeting to lysosome involved in chaperone-mediated
+  autophagy`. HSPA8 clearly participates in proteostasis and aggregate handling,
+  but that did not justify promoting it to aggrephagy here.
+- `RAB7A` (`more_specific_than_existing_goa` in the queue): rejected on
+  conservative rereview. PN projected `GO:0061909 autophagosome-lysosome
+  fusion`, but the local evidence base is mixed, and mammalian knockout work
+  supports a stronger role in post-fusion autolysosome maturation than in the
+  fusion step itself. That was not strong enough to add the more specific term
+  to the human review.
+
 ## Priority Review Targets
 
 See [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv).
