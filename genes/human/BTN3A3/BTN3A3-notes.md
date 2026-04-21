@@ -1,13 +1,14 @@
-# BTF3 (BTN3A3) Gene Review Notes
+# BTN3A3 Gene Review Notes
 
 ## Review Completed: 2025-11-16
 
 ### Key Findings
 
-**Gene Identity Issue:**
-- The gene symbol BTF3 is actually a synonym for BTN3A3 (Butyrophilin subfamily 3 member A3)
+**Gene Symbol Note:**
+- Primary gene symbol: BTN3A3
 - UniProt ID: O00478
-- The primary gene symbol should be BTN3A3, not BTF3
+- `BTF3` appears as a synonym in some resources, but refers here to BTN3A3 rather than the unrelated transcription factor gene BTF3
+
 
 ### Annotation Review Summary
 
