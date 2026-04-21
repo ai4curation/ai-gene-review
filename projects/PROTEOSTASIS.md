@@ -41,9 +41,12 @@ At present that archive contains two workbook versions plus three manuscripts:
 - [Survey of the Human PN MS2 ALP.pdf](PROTEOSTASIS/references/Survey%20of%20the%20Human%20PN%20MS2%20ALP.pdf)
 - [Survey of the Human PN MS3 UPS.pdf](PROTEOSTASIS/references/Survey%20of%20the%20Human%20PN%20MS3%20UPS.pdf)
 
-The current mapping and projection work in this project is based on the
-**Human Proteostasis Network Annotation 2.0** workbook together with three
-Proteostasis Consortium survey manuscripts:
+The project currently tracks both workbook versions. The curated PN-to-GO
+mapping YAMLs are being aligned to the newer **Proteostasis Network Annotation
+4.3.11** workbook, while many of the baseline counts and older generated
+reports in this document still refer to the earlier **Human Proteostasis
+Network Annotation 2.0** release together with the same three Proteostasis
+Consortium survey manuscripts:
 
 - `MS1` introduces the overall PN framework and covers translation, folding,
   transport, and organelle-specific proteostasis systems.
@@ -54,14 +57,15 @@ Proteostasis Consortium survey manuscripts:
 
 The `2024-04-15` workbook matches the supplementary annotation release cited in
 the manuscript data-availability sections. The newer `2026-04-17` workbook is
-archived locally for comparison, re-mapping, and future reruns.
+archived locally and is now the target source for mapping migration and future
+reruns.
 
 ## Source Files
 
 | File | Role in this project | Notes |
 |------|-----------------------|-------|
-| [Human-Proteostasis-Network-2.0-2024-0415-1-e1e497a1e8cd5a06.xlsx](PROTEOSTASIS/references/Human-Proteostasis-Network-2.0-2024-0415-1-e1e497a1e8cd5a06.xlsx) | Primary workbook for current mapping and projection runs | `3774` annotation rows, `2989` unique genes |
-| [Proteostasis Network Annotation 4.3.11 ~ 2026-0417.xlsx](PROTEOSTASIS/references/Proteostasis%20Network%20Annotation%204.3.11%20~%202026-0417.xlsx) | Newer comparison workbook | `4000` annotation rows, `3123` unique genes; `REF1..REF8` contain title/site-style references rather than structured PMIDs |
+| [Human-Proteostasis-Network-2.0-2024-0415-1-e1e497a1e8cd5a06.xlsx](PROTEOSTASIS/references/Human-Proteostasis-Network-2.0-2024-0415-1-e1e497a1e8cd5a06.xlsx) | Baseline workbook for earlier counts and reports | `3774` annotation rows, `2989` unique genes |
+| [Proteostasis Network Annotation 4.3.11 ~ 2026-0417.xlsx](PROTEOSTASIS/references/Proteostasis%20Network%20Annotation%204.3.11%20~%202026-0417.xlsx) | Current mapping-migration target workbook | `4000` annotation rows, `3123` unique genes; `REF1..REF8` contain title/site-style references rather than structured PMIDs |
 | [Survey of the Human PN MS1 Translation Folding Transport.pdf](PROTEOSTASIS/references/Survey%20of%20the%20Human%20PN%20MS1%20Translation%20Folding%20Transport.pdf) | Manuscript context for translation, folding, transport, and organelle proteostasis | Defines the overall PN framing |
 | [Survey of the Human PN MS2 ALP.pdf](PROTEOSTASIS/references/Survey%20of%20the%20Human%20PN%20MS2%20ALP.pdf) | Manuscript context for ALP | Best row-level note/reference support in the 2024 workbook |
 | [Survey of the Human PN MS3 UPS.pdf](PROTEOSTASIS/references/Survey%20of%20the%20Human%20PN%20MS3%20UPS.pdf) | Manuscript context for UPS | Explains the domain-heavy inclusion logic for UPS |
