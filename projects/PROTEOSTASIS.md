@@ -9,6 +9,7 @@ sidecars:
   mapping_sets_dir: PROTEOSTASIS/mappings
   tests_dir: PROTEOSTASIS/tests
   reports_dir: PROTEOSTASIS/reports
+  references_dir: PROTEOSTASIS/references
   upb_genes: UNFOLDED_PROTEIN_BINDING/genes.csv
 related_projects:
   - UNFOLDED_PROTEIN_BINDING.md
@@ -17,6 +18,7 @@ related_projects:
   - ER_PHAGY.md
 external_sources:
   - Human Proteostasis Network Annotation 2.0 workbook (release 2024-04-15)
+  - Proteostasis Network Annotation 4.3.11 workbook (release 2026-04-17)
   - Survey of the Human PN MS1 Translation Folding Transport
   - Survey of the Human PN MS2 ALP
   - Survey of the Human PN MS3 UPS
@@ -29,20 +31,40 @@ Proteostasis is used here in the broad systems sense: the cellular machinery tha
 supports protein synthesis, folding, trafficking, quality control, sequestration,
 and degradation.
 
-The source resource analyzed in this project is the **Human Proteostasis Network
-Annotation 2.0** workbook together with three Proteostasis Consortium survey
-manuscripts:
+The core source set for this project is a local archive of Proteostasis
+Consortium workbooks and survey manuscripts in [PROTEOSTASIS/references](PROTEOSTASIS/references).
+At present that archive contains two workbook versions plus three manuscripts:
+
+- [Human-Proteostasis-Network-2.0-2024-0415-1-e1e497a1e8cd5a06.xlsx](PROTEOSTASIS/references/Human-Proteostasis-Network-2.0-2024-0415-1-e1e497a1e8cd5a06.xlsx)
+- [Proteostasis Network Annotation 4.3.11 ~ 2026-0417.xlsx](PROTEOSTASIS/references/Proteostasis%20Network%20Annotation%204.3.11%20~%202026-0417.xlsx)
+- [Survey of the Human PN MS1 Translation Folding Transport.pdf](PROTEOSTASIS/references/Survey%20of%20the%20Human%20PN%20MS1%20Translation%20Folding%20Transport.pdf)
+- [Survey of the Human PN MS2 ALP.pdf](PROTEOSTASIS/references/Survey%20of%20the%20Human%20PN%20MS2%20ALP.pdf)
+- [Survey of the Human PN MS3 UPS.pdf](PROTEOSTASIS/references/Survey%20of%20the%20Human%20PN%20MS3%20UPS.pdf)
+
+The current mapping and projection work in this project is based on the
+**Human Proteostasis Network Annotation 2.0** workbook together with three
+Proteostasis Consortium survey manuscripts:
 
 - `MS1` introduces the overall PN framework and covers translation, folding,
   transport, and organelle-specific proteostasis systems.
 - `MS2` covers the autophagy-lysosome pathway (`ALP`) and provides the most
-  detailed row-level notes and references in the current release.
+  detailed row-level notes and references in the `2024-04-15` workbook.
 - `MS3` covers the ubiquitin-proteasome system (`UPS`) and explains the
   domain-heavy inclusion and classification logic used for that branch.
 
-The workbook used here is the `2024-04-15` PN release downloaded from the
-Proteostasis Consortium PN annotation site, matching the supplementary
-annotation release cited in the manuscript data-availability sections.
+The `2024-04-15` workbook matches the supplementary annotation release cited in
+the manuscript data-availability sections. The newer `2026-04-17` workbook is
+archived locally for comparison, re-mapping, and future reruns.
+
+## Source Files
+
+| File | Role in this project | Notes |
+|------|-----------------------|-------|
+| [Human-Proteostasis-Network-2.0-2024-0415-1-e1e497a1e8cd5a06.xlsx](PROTEOSTASIS/references/Human-Proteostasis-Network-2.0-2024-0415-1-e1e497a1e8cd5a06.xlsx) | Primary workbook for current mapping and projection runs | `3774` annotation rows, `2989` unique genes |
+| [Proteostasis Network Annotation 4.3.11 ~ 2026-0417.xlsx](PROTEOSTASIS/references/Proteostasis%20Network%20Annotation%204.3.11%20~%202026-0417.xlsx) | Newer comparison workbook | `4000` annotation rows, `3123` unique genes; `REF1..REF8` contain title/site-style references rather than structured PMIDs |
+| [Survey of the Human PN MS1 Translation Folding Transport.pdf](PROTEOSTASIS/references/Survey%20of%20the%20Human%20PN%20MS1%20Translation%20Folding%20Transport.pdf) | Manuscript context for translation, folding, transport, and organelle proteostasis | Defines the overall PN framing |
+| [Survey of the Human PN MS2 ALP.pdf](PROTEOSTASIS/references/Survey%20of%20the%20Human%20PN%20MS2%20ALP.pdf) | Manuscript context for ALP | Best row-level note/reference support in the 2024 workbook |
+| [Survey of the Human PN MS3 UPS.pdf](PROTEOSTASIS/references/Survey%20of%20the%20Human%20PN%20MS3%20UPS.pdf) | Manuscript context for UPS | Explains the domain-heavy inclusion logic for UPS |
 
 ## Overview
 
@@ -66,6 +88,7 @@ Within this project:
 See:
 
 - [Priority genes](PROTEOSTASIS/priority_genes.tsv)
+- [Reference archive](PROTEOSTASIS/references)
 - [ALP mapping set](PROTEOSTASIS/mappings/autophagy_lysosome_pathway.yaml)
 - [Chaperone mapping set](PROTEOSTASIS/mappings/chaperone_systems.yaml)
 - [ER proteostasis mapping set](PROTEOSTASIS/mappings/er_proteostasis.yaml)
@@ -82,6 +105,9 @@ See:
 - [ER-phagy project](ER_PHAGY.md)
 
 ## What The PN Resource Actually Contains
+
+Unless noted otherwise, the counts in this section refer to the
+`2024-04-15` workbook used for the current mapping and projection pass.
 
 The workbook is a row-per-role annotation table, not a gene-centered review file.
 
