@@ -1,200 +1,341 @@
 ---
+title: Human Proteostasis Network
 species: [human]
+status: SCOPING
+priority: high
+scope: Full Proteostasis Consortium workbook and manuscripts; unfolded protein binding is a sub-use case
+sidecars:
+  priority_genes: PROTEOSTASIS/priority_genes.tsv
+  mapping_sets_dir: PROTEOSTASIS/mappings
+  tests_dir: PROTEOSTASIS/tests
+  reports_dir: PROTEOSTASIS/reports
+  upb_genes: UNFOLDED_PROTEIN_BINDING/genes.csv
+related_projects:
+  - UNFOLDED_PROTEIN_BINDING.md
+  - RIBOSOME_QUALITY_CONTROL.md
+  - INTEGRATED_STRESS_RESPONSE.md
+  - ER_PHAGY.md
+external_sources:
+  - Human Proteostasis Network Annotation 2.0 workbook (release 2024-04-15)
+  - Survey of the Human PN MS1 Translation Folding Transport
+  - Survey of the Human PN MS2 ALP
+  - Survey of the Human PN MS3 UPS
 ---
 # Human Proteostasis Network Project
 
-## Working Premise
+## Background
 
-The Proteostasis Consortium workbook and survey manuscripts define a manually curated taxonomy of
-the human proteostasis network (PN). This project uses that taxonomy as a systems scaffold for GO
-review and project planning, not as direct GO annotation truth.
+Proteostasis is used here in the broad systems sense: the cellular machinery that
+supports protein synthesis, folding, trafficking, quality control, sequestration,
+and degradation.
 
-Existing GO annotations, primary literature, and local gene review YAMLs remain the basis for
-annotation decisions. The PN dataset is most useful for scoping, prioritization, branch-aware
-comparison, and identifying roles that may be missing or underrepresented in GO.
+The source resource analyzed in this project is the **Human Proteostasis Network
+Annotation 2.0** workbook together with three Proteostasis Consortium survey
+manuscripts:
 
-## Immediate Conclusions From Initial Triage
+- `MS1` introduces the overall PN framework and covers translation, folding,
+  transport, and organelle-specific proteostasis systems.
+- `MS2` covers the autophagy-lysosome pathway (`ALP`) and provides the most
+  detailed row-level notes and references in the current release.
+- `MS3` covers the ubiquitin-proteasome system (`UPS`) and explains the
+  domain-heavy inclusion and classification logic used for that branch.
 
-| Finding | Status | Notes |
-|---------|--------|-------|
-| Human UPB overlap with PN workbook | 33/33 genes | All human genes from `UNFOLDED_PROTEIN_BINDING` are present in the PN workbook |
-| UPB vs PN consistency | 29/33 straightforward | Most corrected UPB calls fit the PN classification cleanly |
-| Boundary cases | 4 genes | `AHSA1`, `AIP`, `GRPEL1`, `PTGES3` are proteostasis components but are broader than direct unfolded-protein binding |
-| Added value beyond GOA | Real but uneven | Strongest value is curated systems placement and some cross-branch roles, not direct GO term replacement |
+The workbook used here is the `2024-04-15` PN release downloaded from the
+Proteostasis Consortium PN annotation site, matching the supplementary
+annotation release cited in the manuscript data-availability sections.
 
-## Data Sources
+## Overview
 
-- Human Proteostasis Network 2.0 workbook
-- Survey manuscripts:
-  - `Survey of the Human PN MS1 Translation Folding Transport`
-  - `Survey of the Human PN MS2 ALP`
-  - `Survey of the Human PN MS3 UPS`
-- Existing GOA files and `*-ai-review.yaml` files in `genes/human/*`
-- Existing `UNFOLDED_PROTEIN_BINDING` project as the overlap-first seed set
+The Proteostasis Consortium workbook and papers define a curated human proteostasis
+membership and role taxonomy. They do **not** define a GO-ready annotation set.
 
-## How To Use The PN Data
+This project asks three main questions:
 
-1. Use the PN workbook as a curated proteostasis universe for prioritizing genes and interpreting
-   large gene sets.
-2. Use `Branch/Class/Group/Type/Subtype` to cluster genes by proteostasis role before doing
-   detailed GO review.
-3. Use workbook-only placements as candidate review leads:
-   `check whether GOA is missing this biology`, not `import this as GO`.
-4. Use multi-branch assignments to find proteostasis hubs that are likely to expose cross-system
-   annotation issues.
-5. Use the manuscripts to understand inclusion logic, scope boundaries, and why some branches are
-   intentionally broader than strict quality-control biology.
+- What biological claims do the PN annotations actually make?
+- Which PN statements are close to GO terms, which imply ontology gaps, and which
+  are better treated as systems metadata?
+- Which workbook entries look especially useful, curious, or suspect in the
+  context of AIGR?
 
-Do not use the PN data as if it were:
+Within this project:
 
-- a direct GO annotation source
-- sufficient evidence on its own for MF/BP assertions
-- proof that a gene has direct unfolded-protein-binding or chaperone activity
+- the PN resource provides systems architecture and candidate roles
+- unfolded protein binding is treated as one mechanistic subdomain within proteostasis
+- AIGR uses PN as a scaffold, a QA source, and a prioritization layer
 
-## Workflow
+See:
 
-### Phase 1: Overlap-First Seed Set
+- [Priority genes](PROTEOSTASIS/priority_genes.tsv)
+- [ALP mapping set](PROTEOSTASIS/mappings/autophagy_lysosome_pathway.yaml)
+- [Chaperone mapping set](PROTEOSTASIS/mappings/chaperone_systems.yaml)
+- [ER proteostasis mapping set](PROTEOSTASIS/mappings/er_proteostasis.yaml)
+- [Mitochondrial proteostasis mapping set](PROTEOSTASIS/mappings/mitochondrial_proteostasis.yaml)
+- [Nuclear proteostasis mapping set](PROTEOSTASIS/mappings/nuclear_proteostasis.yaml)
+- [PN regulation mapping set](PROTEOSTASIS/mappings/pn_regulation.yaml)
+- [Translation mapping set](PROTEOSTASIS/mappings/translation.yaml)
+- [Project-local tests](PROTEOSTASIS/tests)
+- [Project-local reports](PROTEOSTASIS/reports)
+- [UPB gene list](UNFOLDED_PROTEIN_BINDING/genes.csv)
+- [Unfolded Protein Binding project](UNFOLDED_PROTEIN_BINDING.md)
+- [Ribosome Quality Control project](RIBOSOME_QUALITY_CONTROL.md)
+- [Integrated Stress Response project](INTEGRATED_STRESS_RESPONSE.md)
+- [ER-phagy project](ER_PHAGY.md)
 
-Start with the 33 human genes already reviewed in `UNFOLDED_PROTEIN_BINDING`.
+## What The PN Resource Actually Contains
 
-For each gene, compare:
+The workbook is a row-per-role annotation table, not a gene-centered review file.
 
-- existing GOA annotations
-- current local review YAML
-- corrected UPB interpretation
-- PN Branch/Class/Group/Type/Subtype placement
+- `2989` unique genes
+- `3774` annotation rows
+- `312` genes with cross-branch annotations
+- `274` genes with multiple annotations within one branch
+- `2403` genes with a single annotation
 
-Record one of four outcomes:
+The custom hierarchy has:
 
-- `already_captured`: the corrected GO interpretation is already reflected in GOA or local review
-- `candidate_missing_role`: the PN resource suggests a biologically plausible role not captured in GOA
-- `pn_only_context`: the PN resource adds systems context but not a clean GO-annotatable role
-- `scope_boundary_case`: the gene belongs in proteostasis broadly, but direct UPB/chaperone annotation would be too broad
+- `9` Branches
+- `32` Classes
+- `253` Groups
+- `562` Types
+- `385` Subtypes
 
-First-pass priority genes:
+This is their own vocabulary:
 
-- `HSPA1A`, `HSPA8`
-- `DNAJB1`, `DNAJB6`
-- `CLU`
-- `SYVN1`, `UGGT1`
-- `GRPEL1`
-- `AHSA1`, `PTGES3`
+- the workbook contains **no GO IDs or explicit GO term mappings**
+- the papers explicitly describe the PN hierarchy as a taxonomy that **complements** structured vocabularies such as GO
+- the manuscripts say GO, Reactome, KEGG, UniProt, and InterPro were used as **inputs** for building preliminary lists, not as the target representation
 
-These genes are the highest-yield set because they cover core chaperones, holdases,
-chaperone-mediated autophagy, ER quality control, NEF biology, and HSP90-system boundary cases.
+### Evidence Shape By Branch
 
-### Phase 2: Core Chaperone And Folding Modules
+The current release is uneven by design.
 
-Expand from the overlap set into nearby PN modules:
+| Branch set | What is present in the workbook | What it means for reuse |
+|------------|----------------------------------|--------------------------|
+| ALP | Per-row notes for `1003/1003` rows and references for `1001/1003` rows | Best-supported branch for row-level reuse and audit |
+| UPS | Principal domains for `1528/1528` rows and auxiliary domains for `1521/1528` rows | Strong domain/family scaffold, but weaker row-level functional justification in this release |
+| Other 7 branches | No row-level notes, no row-level references, no domain columns | Useful as curated membership/context, but not ready to import into GO as-is |
 
-- HSP70 system
-- J-domain co-chaperones
-- small HSPs / holdases
-- HSP90 system
-- CCT/TRiC and prefoldins
-- nucleotide exchange factors and foldase/holdase handoff factors
+### What Each Level Means
 
-Main questions:
+The hierarchy is semantically mixed, which is the main reason it does not map cleanly to GO.
 
-- Is the core MF already captured precisely in GO?
-- Does the PN classification reveal missing pathway context or secondary roles?
-- Does the UPB review logic generalize cleanly to nearby family members?
+| PN level | What it usually encodes | Relation to GO |
+|----------|--------------------------|----------------|
+| Branch | Localization or top-level pathway membership | BP/CC hybrid, not a GO class |
+| Class | Function in proteostasis, except ALP where it is a stage of autophagy | MF/BP hybrid |
+| Group | System, complex, pathway module, or mechanistic bucket | Sometimes GO-like, often not |
+| Type | More specific mechanistic role, family, or complex membership | May correspond to MF, BP, CC, or family metadata |
+| Subtype | Structural family, domain class, or finer mechanistic subdivision | Often outside GO scope |
 
-### Phase 3: Proteostasis Boundary Modules
+Examples by level:
 
-Review the modules most likely to produce over-annotation if handled naively:
+- `Branch`
+  - `Cytonuclear proteostasis`
+  - `ER proteostasis`
+  - `Autophagy-Lysosome Pathway`
+  - `Ubiquitin Proteasome System`
+- `Class`
+  - `Chaperone`
+  - `Protein transport`
+  - `Autophagophore initiation and elongation`
+  - `E3 ubiquitin and UBL ligases`
+- `Group`
+  - `HSP70 system`
+  - `TRAP complex component`
+  - `Class 3 PI3K complex 1, direct`
+  - `CRL family`
+- `Type`
+  - `HSP70 nucleotide exchange factor`
+  - `J-domain containing HSP70 cochaperone`
+  - `Modulator of class 3 PI3K complex 1 activity`
+  - `BTB`
+- `Subtype`
+  - `BAG domain family`
+  - `KCTD type`
+  - `WD40`
+  - many rows have no subtype
 
-- ER glycoproteostasis and ER quality-control sensors
-- ERAD / retrotranslocation / p97-associated systems
-- chaperone-mediated autophagy and CASA interfaces
-- transport factors and organelle-specific QC machinery
+Fully expanded examples:
 
-Goal:
+- `BAG1`
+  - `Cytonuclear proteostasis -> Chaperone -> HSP70 system -> HSP70 nucleotide exchange factor -> BAG domain family`
+- `STAT1`
+  - `Autophagy-Lysosome Pathway -> Autophagy gene expression -> Transcriptional repressor`
+- `KCTD11`
+  - `Ubiquitin Proteasome System -> E3 ubiquitin and UBL ligases -> CRL family -> BTB -> KCTD type`
 
-Separate direct chaperones and foldases from sensors, adaptors, transport factors, and degradation
-machinery that are proteostasis-relevant but not equivalent to unfolded-protein binding.
+These are informative for humans, but they are not all GO terms and they are not all the same kind of thing.
 
-### Phase 4: Multi-Branch Hub Analysis
+## Relationship To GO
 
-Prioritize PN components that appear in multiple branches or with multiple distinct annotations.
+### Explicit GO mapping
 
-These genes are especially useful for:
+There is essentially none in the released workbook.
 
-- cross-branch consistency checks
-- finding non-core vs core annotations
-- building project summaries that show how proteostasis subsystems connect
+- I searched the workbook for `GO:` and `Gene Ontology` strings and found none.
+- The row schema is PN-native: `Branch/Class/Group/Type/Subtype`, plus optional notes, references, and UPS domain fields.
+- The papers cite GO as a source database used to build candidate lists, especially for ALP, not as a field embedded back into the final annotation table.
 
-Initial hub-like examples to explore after the UPB overlap set:
+### Implicit GO mapping
 
-- `VCP`
-- `HSPA8`
-- `SQSTM1`
-- `SYVN1`
-- `CLU`
+There is a lot of **implicit** overlap with GO, but it is inconsistent in kind.
 
-### Phase 5: Ontology-Gap Capture
+Some PN rows look close to GO:
 
-Track ontology gaps separately from routine curation.
+- `TRAP complex component`
+- `Class 3 PI3K complex 1 component`
+- `HSP70 nucleotide exchange factor`
+- `Ribosome-associated QC`
 
-Known gaps already exposed by the UPB project:
+But many PN labels are not GO-ready assertions:
 
-- holdase chaperone activity
-- misfolded protein sensor activity
-- co-chaperone MF representation
+- family labels like `BAG domain family`
+- domain labels like `WD40` or `TPR domain containing`
+- branch-local staging labels like `Autophagophore initiation and elongation`
+- inclusive UPS buckets like `RING`, `BTB`, `DCAF`, `MEX3`
 
-Rule:
+So the right reading is:
 
-Do not let NTR work block routine gene review. Standard review should continue while gap cases are
-captured in a separate project section.
+- the PN taxonomy is biologically meaningful
+- some rows are close to GO MF/BP/CC concepts
+- many rows are module, family, or pathway-context labels rather than GO-annotatable facts
 
-### Phase 6: Project Deliverables
+## Strategy For Bringing PN Into GO
 
-- `PROTEOSTASIS.md` as the project overview and synthesis document
-- branch-specific priority gene lists
-- a PN-vs-GOA consistency table
-- a candidate missing-role table
-- a small ontology-gap registry
-- a final synthesis explaining how PN taxonomy and GO annotations complement each other
+This section is independent of AIGR workflow.
 
-## Suggested Working Tables
+### 1. Separate membership from GO assertion
 
-These do not need to exist yet, but they are the right artifacts to create early:
+A PN row first tells us:
 
-- `projects/PROTEOSTASIS/pn_upb_overlap_human.tsv`
-- `projects/PROTEOSTASIS/priority_genes.tsv`
-- `projects/PROTEOSTASIS/candidate_missing_roles.tsv`
-- `projects/PROTEOSTASIS/ontology_gaps.md`
+- this gene belongs in proteostasis
+- the authors place it in a particular proteostasis module
 
-Recommended columns for the overlap table:
+It does **not** automatically tell us:
 
-- `gene_symbol`
-- `pn_branch`
-- `pn_class`
-- `pn_group`
-- `upb_corrected_call`
-- `goa_status`
-- `verdict`
-- `notes`
+- the correct GO aspect
+- the exact GO term
+- whether the role is core vs contextual
+- whether the evidence is strong enough for manual GO curation
 
-## Initial Biological Framing
+### 2. Tag each row by provenance
 
-This project should treat unfolded-protein binding as one mechanistic slice of proteostasis, not as
-the definition of proteostasis itself.
+At minimum, rows should be split into:
 
-That means:
+- `entity_based_literature_supported`
+- `domain_based_family_inference`
+- `ALP_note_backed`
+- `UPS_domain_backed`
+- `cross_branch_context_only`
 
-- the UPB project supplies mechanistic precision
-- the PN workbook supplies systems architecture
-- the most informative work will come from genes that sit at the interface between chaperoning,
-  transport, autophagy, ER quality control, and ubiquitin-mediated turnover
+This is the biggest determinant of whether a row is GO-ready, prediction-like, or just useful context.
 
-## Current Status
+### 3. Decompose each PN row into candidate GO semantics
 
-- [x] Create dedicated branch and worktree for `PROTEOSTASIS.md`
-- [x] Review PN workbook structure and manuscript framing
-- [x] Confirm complete overlap of the 33 human UPB genes with the PN workbook
-- [x] Check first-pass consistency of corrected UPB calls against PN placement
-- [ ] Create first overlap table for the 33 human genes
-- [ ] Expand to branch seeds outside the 33-gene overlap set
-- [ ] Capture candidate missing GO roles suggested by PN-only placements
-- [ ] Draft a first branch-by-branch synthesis
+Each row should be classified into one of four buckets:
+
+1. `exact_or_near_GO`
+   Example: complex component, transport process, clear enzymatic role.
+2. `GO_with_context_loss`
+   Example: a GO term exists but loses the proteostasis-system framing.
+3. `ontology_gap`
+   Example: the biology is real but current GO lacks a clean term or term family.
+4. `non_GO_metadata`
+   Example: family/domain/subtype labels that should stay as supporting metadata.
+
+### 4. Curate by branch, not all at once
+
+The branches are not equally reusable.
+
+- Start with ALP rows that have notes and references.
+- Use non-ALP/non-UPS branches to identify likely GO-compatible roles and obvious positive controls.
+- Treat UPS as a mixed case: many rows are probably best handled as prediction candidates or review leads until branch-specific evidence is inspected.
+
+### 5. Keep domain-based rows conservative
+
+The papers explicitly flag domain-based inclusions and borderline cases.
+
+Concrete examples:
+
+- `HSPA12A` and `HSPA12B` are included as HSP70-family PN components even though MS1 says their proteostasis functions are not yet known.
+- UPS authors explicitly say they aimed to be inclusive and that domain weight is debatable in some cases.
+
+These should not be imported into GO as manual curation without independent evidence.
+
+### 6. Expect ontology-gap work
+
+The PN resource reinforces that GO has missing or awkward coverage around:
+
+- holdase chaperoning
+- sensor/adaptor roles in quality control
+- co-chaperone mechanistic MF space
+- proteostasis-system context that mixes process and molecular role
+
+## AIGR Triage Opportunities
+
+The PN resource is useful inside AIGR primarily as a **triage and QA layer**.
+
+### High-value positive controls
+
+These are cases where PN and existing AIGR work largely agree and help validate the framework:
+
+- `CRYAA`, `CRYAB`: PN small-HSP placement agrees with the UPB/holdase interpretation
+- `SSR1`, `SSR2`: PN `TRAP complex component` fits existing ER protein-targeting/translocation GO work
+- `EDF1`: PN ribosome-associated QC placement is consistent with the current AIGR review
+- `KCTD11`: PN CRL/BTB placement matches the current AIGR view of a Cul3 adaptor
+
+### Context-specific but plausible PN rows
+
+These are probably real, but should be treated as non-core or secondary until checked carefully:
+
+- `STAT1`: ALP transcriptional repressor role based on `ULK1` promoter regulation
+- `BIRC6`: ALP docking/fusion regulator role on top of its core UPS E2/E3 biology
+- `CIAO1`: UPS `DCAF` placement on top of its stronger Fe-S assembly/chaperone identity
+
+### Domain- or family-driven caution cases
+
+These are especially useful for AIGR because the papers themselves signal uncertainty or inclusivity:
+
+- `HSPA12A`, `HSPA12B`: included as HSP70 PN components despite admitted lack of clear proteostasis function
+- `AARSD1`: dual placement as `HSP90 cochaperone` and `tRNA synthetase`
+- `BAG6`: split across GET-pathway transport and UPS; MS1 explicitly distinguishes it from canonical BAG-domain NEFs
+- `TTC28`: PN places it as an HSP70-HSP90 joint cochaperone, but the current AIGR review treats it as a mitotic scaffold
+- `MEX3B`: RING-family UPS placement may be real but needs distinction between family membership and core proteostasis role
+
+## Priority Review Targets
+
+See [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv).
+
+Recommended first-pass jobs:
+
+1. `BTF3`: fetch and review the true human `BTF3` gene (`P20290`) as the PN
+   nascent-polypeptide-associated complex component.
+2. `HSPA12A` and `HSPA12B`: fetch and review as explicit domain-based PN inclusions.
+3. `AARSD1`: review the dual chaperone/translation placement.
+4. `BAG6`: review as a multi-branch boundary case connecting transport, UBL biology, and proteostasis.
+5. `TTC28`: explicitly test the PN cochaperone claim against the existing mitosis-focused review.
+
+## PN-vs-UPB Comparison
+
+- all `33/33` human UPB genes are present in the PN workbook
+- most of those genes are consistent with PN placement at a coarse level
+- the best bridge cases are the small HSPs, HSP70/J-domain systems, and the QC boundary genes
+
+The UPB project is the best place to reason about:
+
+- direct unfolded-protein binding
+- holdase vs foldase vs co-chaperone distinctions
+- GO MF correction and ontology-gap pressure
+
+The PN project is broader:
+
+- define the proteostasis universe
+- understand the authors' own annotation model
+- identify GO-compatible vs non-GO-compatible PN statements
+- use PN to drive AIGR QA and job selection
+
+## Next Steps
+
+- Create a row-level PN-to-GO mapping table with provenance tags.
+- Audit the highest-priority genes in [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv).
+- Separate PN roles that belong in GO from roles better treated as prediction review inputs or systems metadata.

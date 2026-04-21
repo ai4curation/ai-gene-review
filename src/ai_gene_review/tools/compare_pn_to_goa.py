@@ -31,7 +31,7 @@ from rapidfuzz import fuzz
 from ai_gene_review.validation.goa_validator import GOAAnnotation, GOAValidator
 
 DEFAULT_WORKBOOK_SHEET = "dense"
-DEFAULT_OUTPUT_DIR = Path("reports/proteostasis")
+DEFAULT_OUTPUT_DIR = Path("projects/PROTEOSTASIS/reports/pn_goa")
 ALLOWED_SHORT_TOKENS = {"er", "ub", "ubl", "vcp"}
 STOPWORDS = {
     "a",

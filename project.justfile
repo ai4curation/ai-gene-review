@@ -211,13 +211,6 @@ term-deep-research-cyberian concept *args="":
 term-deep-research-codex concept *args="":
     uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian --extra-args --param agent_type=codex {{args}}
 
-# Compare Proteostasis Consortium workbook rows to local human GOA files
-# Example:
-#   just pn-goa-report ~/Downloads/Human-Proteostasis-Network-2.0-2024-0415-1-e1e497a1e8cd5a06.xlsx
-#   just pn-goa-report ~/Downloads/Human-Proteostasis-Network-2.0-2024-0415-1-e1e497a1e8cd5a06.xlsx --gene HSPA8 --gene CLU
-pn-goa-report workbook output_dir="reports/proteostasis" *args="":
-    uv run python -m ai_gene_review.tools.compare_pn_to_goa --workbook "{{workbook}}" --gene-root genes/human --output-dir "{{output_dir}}" {{args}}
-
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
     uv run ai-gene-review fetch-pmid {{pmid}} --output-dir {{output_dir}}
