@@ -1,0 +1,4 @@
+# NaBBL1_candidate_FOX1_0 Notes
+
+- The full preprint redefines **BBLa** as **NicGS**, the BBL-family enzyme that imposes stereoselective late-pathway chemistry in the nicotine synthase cascade, and supports that assignment with product-bound structural data. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "BBLa = NicGS, an (S)-nicotine glucoside synthase that drives pathway stereoselectivity"; "BBLa/NicGS was solved with FAD and with (S)-nicotine glucoside product"]
+- For FOX1_0, that means the open question is paralog identity within the BBL family, not whether a BBL-like late oxidase matters in the pathway. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "For the NICAT project, this paper is therefore strongest for pathway-role assignment and weakest for exact paralog/accession resolution."]
