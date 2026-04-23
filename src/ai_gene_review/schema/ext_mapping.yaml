@@ -1,0 +1,193 @@
+id: https://ai4curation.io/ai-gene-review/schema/ext_mapping
+name: ext_mapping
+title: External Mapping Schema
+description: >-
+  Sidecar LinkML schema for curated mappings from external source strings
+  (such as Proteostasis Network path codes) to GO terms.
+
+  This schema is intentionally lightweight. Source-side values remain plain
+  strings so they can track project-specific codes or serialized path strings,
+  while the GO target is modeled as an id/label tuple so linkml-term-validator can
+  validate the GO identifier and label.
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  extmap: https://ai4curation.io/ai-gene-review/ext_mapping/
+  GO: http://purl.obolibrary.org/obo/GO_
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+
+imports:
+  - linkml:types
+
+default_prefix: extmap
+default_range: string
+
+slots:
+  id:
+    identifier: true
+  label:
+    required: true
+    slot_uri: rdfs:label
+    description: Human-readable label for the mapping record.
+  subject_code:
+    range: string
+    required: true
+    description: >-
+      Source-side mapping string. This may be a project-specific code or a
+      serialized path string.
+  subject_level:
+    range: SourceHierarchyLevelEnum
+    required: true
+    description: Level of the mapped source-side term within its source hierarchy.
+  target_term:
+    range: GOTerm
+    inlined: true
+    required: true
+    description: GO target term, represented as an id/label tuple.
+    bindings:
+      - binds_value_of: id
+        range: GOTermEnum
+        obligation_level: REQUIRED
+  mapping_scope:
+    range: MappingScopeEnum
+    required: true
+    description: >-
+      Scope of the mapping. `exact` is a direct semantic match.
+      `ok_for_propagation_to_go` is acceptable for GO propagation even if not
+      strictly exact.
+  conditions:
+    range: MappingCondition
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Optional source-side context requirements. A mapping can be constrained to
+      cases where an ancestor or surrounding code is also present.
+  rationale:
+    range: string
+    required: true
+    description: Human-authored explanation for why the mapping is appropriate.
+  notes:
+    range: string
+    description: Supplementary notes or caveats.
+  references:
+    range: string
+    multivalued: true
+    description: Supporting manuscript IDs, PMIDs, workbook IDs, or local file refs.
+  representative_genes:
+    range: string
+    multivalued: true
+    description: >-
+      Representative source genes that illustrate what the external bucket
+      means in practice. These are explanatory examples, not an exhaustive
+      membership list.
+  mappings:
+    range: ExternalMapping
+    multivalued: true
+    inlined_as_list: true
+    description: Curated mappings contained in this mapping set file.
+  unmapped_subjects:
+    range: UnmappedSubject
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Source-side entries that have been reviewed but are not yet mapped to GO.
+      Keep these separate from completed mappings so GO validation remains
+      strict for actual mapping records.
+  condition_level:
+    range: SourceHierarchyLevelEnum
+    required: true
+    description: Hierarchy level of the required context code.
+  condition_code:
+    range: string
+    required: true
+    description: Required context string at the specified hierarchy level.
+
+classes:
+  GOTerm:
+    description: A GO term represented as an id/label pair.
+    slots:
+      - id
+      - label
+    slot_usage:
+      id:
+        description: GO CURIE for the mapped target term.
+      label:
+        description: GO label for the mapped target term.
+        required: true
+
+  MappingCondition:
+    description: >-
+      Optional condition that must be true on the source side for the mapping to
+      apply.
+    slots:
+      - condition_level
+      - condition_code
+
+  ExternalMappingSet:
+    tree_root: true
+    description: >-
+      A grouped set of curated external mappings, typically organized by branch,
+      topic, or review batch.
+    slots:
+      - id
+      - label
+      - references
+      - notes
+      - mappings
+      - unmapped_subjects
+
+  ExternalMapping:
+    description: >-
+      Curated mapping from an external source string to a GO term, with optional
+      source-side context requirements.
+    slots:
+      - subject_code
+      - subject_level
+      - target_term
+      - mapping_scope
+      - representative_genes
+      - conditions
+      - rationale
+      - references
+      - notes
+
+  UnmappedSubject:
+    description: >-
+      A reviewed source-side subject that is intentionally not yet mapped to GO.
+      Use this to track explicit non-maps or deferred mappings without relaxing
+      the requirements for completed mapping records.
+    slots:
+      - subject_code
+      - subject_level
+      - conditions
+      - rationale
+      - references
+      - notes
+
+enums:
+  SourceHierarchyLevelEnum:
+    description: Supported source hierarchy levels.
+    permissible_values:
+      branch: {}
+      class: {}
+      group: {}
+      type: {}
+      subtype: {}
+
+  MappingScopeEnum:
+    description: Curated mapping scope.
+    permissible_values:
+      exact: {}
+      ok_for_propagation_to_go: {}
+
+  GOTermEnum:
+    description: A term in the GO ontology.
+    reachable_from:
+      source_nodes:
+        - GO:0003674
+        - GO:0008150
+        - GO:0005575
+      is_direct: false
+      include_self: true
+      relationship_types:
+        - rdfs:subClassOf
