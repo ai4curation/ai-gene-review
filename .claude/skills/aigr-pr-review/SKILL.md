@@ -12,7 +12,7 @@ Use this skill when reviewing AIGR pull requests or drafting review feedback abo
 gene review YAML, GO annotation decisions, evidence support, or UniProt-backed summaries.
 
 Use the repository's existing guidance and agents where appropriate, especially
-`CLAUDE.md` and `.claude/agents/annotation-reviewer.md`.
+`CLAUDE.md` and `.claude/skills/annotation-reviewer/SKILL.md`.
 
 ## Trust Validation
 
