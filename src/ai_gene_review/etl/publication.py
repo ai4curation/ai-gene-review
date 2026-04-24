@@ -257,18 +257,14 @@ def doi_to_pmid(doi: str) -> Optional[str]:
         >>> # doi_to_pmid("10.1038/s41431-018-0141-z")
         >>> # '29727692'
     """
-    try:
-        handle = Entrez.esearch(db="pubmed", term=f"{doi}[DOI]", retmax=1)
-        record = Entrez.read(handle)
-        handle.close()
+    handle = Entrez.esearch(db="pubmed", term=f"{doi}[DOI]", retmax=1)
+    record = Entrez.read(handle)
+    handle.close()
 
-        id_list = record.get("IdList", [])
-        if id_list:
-            return str(id_list[0])
-        return None
-    except Exception as e:
-        print(f"Error resolving DOI {doi} to PMID: {e}")
-        return None
+    id_list = record.get("IdList", [])
+    if id_list:
+        return str(id_list[0])
+    return None
 
 
 def convert_doi_publication(

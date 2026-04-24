@@ -11,6 +11,7 @@ from ai_gene_review.etl.publication import (
 )
 
 
+@pytest.mark.integration
 def test_doi_to_pmid_returns_none_for_unfound():
     """doi_to_pmid should return None for a DOI that can't be resolved."""
     result = doi_to_pmid("10.9999/nonexistent-fake-doi-xyz")
