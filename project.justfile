@@ -1,5 +1,12 @@
 ## Add your own just recipes here. This is imported by the main justfile.
 
+# ============ Validation tool paths ============
+schema_path := "src/ai_gene_review/schema/gene_review.yaml"
+oak_config := "conf/oak_config.yaml"
+ref_validator_config := "conf/reference_validator_config.yaml"
+term_validator := "scripts/run_term_validator.sh"
+ref_validator := "scripts/run_reference_validator.sh"
+
 all: validate-all test
 
 # Sync Claude Code commands into Codex custom prompts (namespaced).
@@ -270,6 +277,51 @@ fix-labels *args="":
         # Default to dry run
         uv run python src/ai_gene_review/tools/fix_labels.py --dry-run {{args}}
     fi
+
+# Schema-only validation (fast, structure check)
+[group('QC')]
+validate-schema file:
+    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview {{file}}
+
+# Schema validation for all gene review files
+[group('QC')]
+validate-schema-all:
+    #!/usr/bin/env bash
+    set -e
+    for f in genes/*/*/*-ai-review.yaml; do
+        echo "Validating: $f"
+        uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f"
+    done
+
+# Term validation (ontology labels + dynamic enum membership)
+[group('QC')]
+validate-terms file:
+    {{term_validator}} validate-data {{file}} -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
+
+# Term validation for all gene review files
+[group('QC')]
+validate-terms-all:
+    #!/usr/bin/env bash
+    set -e
+    for f in genes/*/*/*-ai-review.yaml; do
+        echo "Validating terms: $f"
+        {{term_validator}} validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
+    done
+
+# Reference validation (publication titles + supporting text snippets)
+[group('QC')]
+validate-references file:
+    {{ref_validator}} validate data {{file}} --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+
+# Reference validation for all gene review files
+[group('QC')]
+validate-references-all:
+    #!/usr/bin/env bash
+    set -e
+    for f in genes/*/*/*-ai-review.yaml; do
+        echo "Validating references: $f"
+        {{ref_validator}} validate data "$f" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+    done
 
 validate-files files:
     uv run ai-gene-review validate {{files}}
