@@ -3,8 +3,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from ai_gene_review.etl.publication_refresh import log_pmc_failure, load_pmc_candidates
 
 

@@ -4,7 +4,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-import yaml
 
 from ai_gene_review.etl.publication import (
     doi_to_pmid,
