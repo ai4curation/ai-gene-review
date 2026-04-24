@@ -5,6 +5,7 @@ name: Post Review Agent
 # 2. Replies in review threads when clarification is needed
 # 3. Creates issues for larger cross-gene or tooling follow-up work
 
+
 on:
   schedule:
     - cron: "0 8 * * *"
@@ -26,21 +27,17 @@ on:
         type: string
       model:
         description: "Claude model to use"
-        default: claude-opus-4-5-20251101
+        default: claude-opus-4-7
         type: choice
         options:
-          - claude-sonnet-4-5-20250929
+          - claude-sonnet-4-6
           - claude-haiku-4-5-20251001
-          - claude-opus-4-5-20251101
-          - claude-opus-4-1-20250805
-          - claude-sonnet-4-20250514
-          - claude-opus-4-20250514
-          - claude-3-7-sonnet-20250219
-          - claude-3-haiku-20240307
+          - claude-opus-4-7
 
 jobs:
   post-review:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: write
       pull-requests: write
@@ -50,43 +47,34 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
 
       - name: Install python tools
         run: uv sync
 
       - name: Install just
-        run: uv tool install rust-just
+        run: |
+          uv tool install rust-just
+          uv sync
 
       - name: Run Post Review Agent
         id: post-review-agent
-        uses: anthropics/claude-code-action@beta
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GITHUB_TOKEN: ${{ github.token }}
+        uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          model: ${{ inputs.model }}
-          allowed_tools: "Bash(*),mcp__ols_mcp__search_all_ontologies,mcp__ols_mcp__get_terms_from_ontology"
-          mcp_config: |
-            {
-              "mcpServers": {
-                "ols": {
-                  "command": "uvx",
-                  "args": [
-                    "ols-mcp"
-                  ]
-                }
-              }
-            }
-          additional_permissions: |
-            actions: read
-          direct_prompt: |
+          show_full_output: true
+
+          claude_args: |
+            --dangerously-skip-permissions
+            --mcp-config '{"mcpServers": {"ols": {"command": "uvx", "args": ["ols-mcp"]}}}'
+            --model ${{ inputs.model || 'claude-opus-4-7' }}
+
+          prompt: |
             # AIGR Post Review Agent Task
 
             You are a post-review agent for the AI Gene Review (AIGR) repository.
@@ -278,7 +266,7 @@ jobs:
             List affected genes/files/workflows if known.
 
             ## Proposed action
-            Describe the larger fix." 
+            Describe the larger fix."
             ```
 
             ## Step 4: Summary
