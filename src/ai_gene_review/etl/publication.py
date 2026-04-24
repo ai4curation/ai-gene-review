@@ -241,6 +241,110 @@ def extract_pmid(pmid_str: str) -> str:
     return pmid.strip()
 
 
+def doi_to_pmid(doi: str) -> Optional[str]:
+    """Resolve a DOI to a PMID using NCBI Entrez API.
+
+    Uses the ESearch API to look up a DOI in PubMed.
+
+    Args:
+        doi: DOI string (e.g., "10.1038/s41431-018-0141-z")
+
+    Returns:
+        PMID string if found, None otherwise
+
+    Example:
+        >>> # Network-dependent example:
+        >>> # doi_to_pmid("10.1038/s41431-018-0141-z")
+        >>> # '29727692'
+    """
+    try:
+        handle = Entrez.esearch(db="pubmed", term=f"{doi}[DOI]", retmax=1)
+        record = Entrez.read(handle)
+        handle.close()
+
+        id_list = record.get("IdList", [])
+        if id_list:
+            return str(id_list[0])
+        return None
+    except Exception as e:
+        print(f"Error resolving DOI {doi} to PMID: {e}")
+        return None
+
+
+def convert_doi_publication(
+    doi_file: Path,
+    publications_dir: Path,
+    pmid: Optional[str] = None,
+) -> bool:
+    """Convert a DOI-keyed publication file to PMID-keyed format.
+
+    Reads the legacy DOI file (reference_id/content_type schema), resolves
+    the DOI to a PMID if not provided, creates a new PMID-keyed file in
+    the standard schema (pmid/full_text_available), and removes the DOI file.
+
+    Args:
+        doi_file: Path to the DOI-keyed markdown file
+        publications_dir: Directory containing publications
+        pmid: Pre-resolved PMID (skips DOI lookup if provided)
+
+    Returns:
+        True if conversion succeeded, False otherwise
+    """
+    content = doi_file.read_text()
+
+    # Parse frontmatter
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        print(f"Warning: Could not parse frontmatter in {doi_file.name}")
+        return False
+
+    frontmatter = yaml.safe_load(parts[1])
+    doi = frontmatter.get("doi", "")
+
+    # Resolve PMID if not provided
+    if pmid is None:
+        pmid = doi_to_pmid(doi)
+        if pmid is None:
+            print(f"Could not resolve DOI {doi} to PMID")
+            return False
+
+    # Check if PMID file already exists
+    pmid_file = publications_dir / f"PMID_{pmid}.md"
+    if pmid_file.exists():
+        print(f"PMID file already exists: {pmid_file.name}, skipping conversion")
+        return False
+
+    # Build a Publication in the standard schema
+    content_type = frontmatter.get("content_type", "unavailable")
+    full_text_available = content_type not in ("unavailable", "abstract_only")
+
+    # Extract abstract from body if present
+    body = parts[2]
+    abstract = ""
+    if "## Content" in body:
+        abstract_section = body.split("## Content", 1)[1].strip()
+        if abstract_section:
+            abstract = abstract_section
+    if not abstract:
+        abstract = "No abstract available."
+
+    pub = Publication(
+        pmid=pmid,
+        title=frontmatter.get("title", "Unknown title"),
+        authors=frontmatter.get("authors", []),
+        journal=frontmatter.get("journal", "Unknown journal"),
+        year=str(frontmatter.get("year", "Unknown")),
+        abstract=abstract,
+        doi=doi,
+        full_text_available=full_text_available,
+    )
+
+    pmid_file.write_text(pub.to_markdown())
+    doi_file.unlink()
+    print(f"Converted {doi_file.name} -> {pmid_file.name}")
+    return True
+
+
 def get_cached_title(
     pmid: str, cache_dir: Path = Path("publications")
 ) -> Optional[str]:
