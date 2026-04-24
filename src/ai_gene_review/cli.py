@@ -11,6 +11,8 @@ from linkml_data_qc.analyzer import ComplianceAnalyzer
 from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
     cache_publications,
+    convert_doi_publication,
+    doi_to_pmid,
     extract_pmids_from_yaml,
 )
 from ai_gene_review.etl.publication_refresh import (
@@ -1287,6 +1289,79 @@ def refresh_publications(
         typer.echo(f"Success rate: {success_rate:.1f}%")
 
     typer.echo("\nRefresh complete!")
+
+
+@app.command()
+def convert_doi_publications(
+    publications_dir: Annotated[
+        Path, typer.Option("--dir", help="Publications directory")
+    ] = Path("publications"),
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Show what would be converted without making changes")
+    ] = False,
+    delay: Annotated[
+        float, typer.Option("--delay", "-d", help="Delay between DOI lookups in seconds")
+    ] = 0.5,
+):
+    """Convert DOI-keyed publication files to PMID-keyed format.
+
+    Finds all DOI_*.md files in the publications directory, resolves each DOI
+    to a PMID via NCBI Entrez, and creates standard PMID-keyed files. The
+    original DOI files are removed after successful conversion.
+
+    Examples:
+        ai-gene-review convert-doi-publications
+        ai-gene-review convert-doi-publications --dry-run
+        ai-gene-review convert-doi-publications --dir ./publications --delay 1.0
+    """
+    import time
+    import yaml
+
+    doi_files = sorted(publications_dir.glob("DOI_*.md"))
+
+    if not doi_files:
+        typer.echo("No DOI-keyed publication files found.")
+        return
+
+    typer.echo(f"Found {len(doi_files)} DOI-keyed publication files.")
+
+    if dry_run:
+        for f in doi_files:
+            typer.echo(f"  Would convert: {f.name}")
+        return
+
+    converted = 0
+    failed = 0
+    skipped = 0
+
+    for i, doi_file in enumerate(doi_files):
+        if i > 0:
+            time.sleep(delay)
+
+        typer.echo(f"[{i + 1}/{len(doi_files)}] {doi_file.name}...")
+        result = convert_doi_publication(doi_file, publications_dir)
+
+        if result:
+            converted += 1
+        elif not doi_file.exists():
+            # File was removed by conversion
+            converted += 1
+        else:
+            # Check if it was skipped (PMID file exists) vs failed (no PMID found)
+            content = doi_file.read_text()
+            parts = content.split("---", 2)
+            if len(parts) >= 3:
+                fm = yaml.safe_load(parts[1])
+                doi = fm.get("doi", "")
+                resolved = doi_to_pmid(doi)
+                if resolved and (publications_dir / f"PMID_{resolved}.md").exists():
+                    skipped += 1
+                else:
+                    failed += 1
+            else:
+                failed += 1
+
+    typer.echo(f"\nConversion complete: {converted} converted, {skipped} skipped (PMID exists), {failed} failed")
 
 
 @app.command()
