@@ -19,6 +19,7 @@ from ai_gene_review.etl.publication_refresh import (
     find_pmc_candidates,
     refetch_publications,
     get_refresh_summary,
+    find_active_review_pmids,
 )
 from ai_gene_review.validation import (
     validate_gene_review,
@@ -1362,6 +1363,73 @@ def convert_doi_publications(
                 failed += 1
 
     typer.echo(f"\nConversion complete: {converted} converted, {skipped} skipped (PMID exists), {failed} failed")
+
+
+@app.command()
+def refresh_publications_active(
+    genes_dir: Annotated[
+        Path, typer.Option("--genes-dir", help="Genes directory")
+    ] = Path("genes"),
+    publications_dir: Annotated[
+        Path, typer.Option("--dir", help="Publications directory")
+    ] = Path("publications"),
+    force: Annotated[
+        bool, typer.Option("--force", "-f", help="Force re-download even if cached")
+    ] = False,
+    delay: Annotated[
+        float, typer.Option("--delay", "-d", help="Delay between requests")
+    ] = 0.5,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Show what would be refreshed without fetching")
+    ] = False,
+):
+    """Refresh publication stubs for genes under active review.
+
+    Finds gene reviews with status IN_PROGRESS or DRAFT, collects all
+    referenced PMIDs, and refreshes any that are missing or lack full text.
+
+    Examples:
+        ai-gene-review refresh-publications-active
+        ai-gene-review refresh-publications-active --dry-run
+        ai-gene-review refresh-publications-active --force --delay 1.0
+    """
+    typer.echo("Scanning for active gene reviews (IN_PROGRESS, DRAFT)...")
+
+    result = find_active_review_pmids(genes_dir)
+
+    if not result["reviews"]:
+        typer.echo("No active reviews found.")
+        return
+
+    typer.echo(f"Found {len(result['reviews'])} active reviews with {len(result['pmids'])} unique PMIDs")
+
+    for r in result["reviews"]:
+        typer.echo(f"  {r['organism']}/{r['gene']} ({r['status']}) - {r['pmid_count']} PMIDs")
+
+    if dry_run:
+        missing = []
+        stubs = []
+        cached = []
+        for pmid in result["pmids"]:
+            pub_file = publications_dir / f"PMID_{pmid}.md"
+            if not pub_file.exists():
+                missing.append(pmid)
+            elif force:
+                stubs.append(pmid)
+            else:
+                content = pub_file.read_text()
+                if "full_text_available: false" in content or "full_text_available: true" not in content:
+                    stubs.append(pmid)
+                else:
+                    cached.append(pmid)
+
+        typer.echo(f"\n  Missing (need fetch): {len(missing)}")
+        typer.echo(f"  Stubs (need refresh): {len(stubs)}")
+        typer.echo(f"  Cached (have full text): {len(cached)}")
+        return
+
+    success_count = cache_publications(result["pmids"], publications_dir, force, delay)
+    typer.echo(f"\nRefreshed {success_count}/{len(result['pmids'])} publications for active reviews")
 
 
 @app.command()

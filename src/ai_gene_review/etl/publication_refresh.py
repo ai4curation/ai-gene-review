@@ -38,7 +38,7 @@ import yaml
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
-from .publication import cache_publication
+from .publication import cache_publication, extract_pmids_from_yaml
 
 
 def find_pmc_candidates(
@@ -267,4 +267,78 @@ def get_refresh_summary(
         "need_refresh": len(candidates),
         "estimated_success": int(len(candidates) * 0.9),
         "success_rate_estimate": 0.9,
+    }
+
+
+def find_active_review_pmids(
+    genes_dir: Path = Path("genes"),
+    active_statuses: Optional[tuple] = None,
+) -> Dict[str, Any]:
+    """Find all PMIDs referenced by gene reviews under active review.
+
+    Scans gene review YAML files for those with status IN_PROGRESS or DRAFT,
+    and collects all PMIDs referenced in their annotations and references.
+
+    Args:
+        genes_dir: Root directory containing organism/gene subdirectories
+        active_statuses: Tuple of status values to consider active.
+            Defaults to ("IN_PROGRESS", "DRAFT").
+
+    Returns:
+        Dictionary with:
+        - pmids: Deduplicated sorted list of PMID strings
+        - reviews: List of dicts with gene, organism, status, pmid_count
+
+    Examples:
+        >>> import tempfile, yaml
+        >>> from pathlib import Path
+        >>> with tempfile.TemporaryDirectory() as tmpdir:
+        ...     genes_dir = Path(tmpdir)
+        ...     gene_dir = genes_dir / "human" / "TP53"
+        ...     gene_dir.mkdir(parents=True)
+        ...     review = {"id": "P04637", "gene_symbol": "TP53", "status": "IN_PROGRESS", "references": [{"id": "PMID:12345"}]}
+        ...     _ = open(gene_dir / "TP53-ai-review.yaml", "w").write(yaml.dump(review))
+        ...     result = find_active_review_pmids(genes_dir)
+        ...     result["pmids"]
+        ['12345']
+    """
+    if active_statuses is None:
+        active_statuses = ("IN_PROGRESS", "DRAFT")
+
+    all_pmids: set[str] = set()
+    reviews: List[Dict[str, Any]] = []
+
+    for review_file in sorted(genes_dir.glob("*/*/*.yaml")):
+        if not review_file.name.endswith("-ai-review.yaml"):
+            continue
+
+        with open(review_file) as f:
+            data = yaml.safe_load(f)
+
+        if not data:
+            continue
+
+        status = data.get("status", "")
+        if status not in active_statuses:
+            continue
+
+        pmids = extract_pmids_from_yaml(review_file)
+        all_pmids.update(pmids)
+
+        # Derive organism and gene from path: genes/<organism>/<gene>/<gene>-ai-review.yaml
+        parts = review_file.parts
+        gene_idx = len(genes_dir.parts)
+        organism = parts[gene_idx] if len(parts) > gene_idx else "unknown"
+        gene = parts[gene_idx + 1] if len(parts) > gene_idx + 1 else "unknown"
+
+        reviews.append({
+            "gene": gene,
+            "organism": organism,
+            "status": status,
+            "pmid_count": len(pmids),
+        })
+
+    return {
+        "pmids": sorted(all_pmids),
+        "reviews": reviews,
     }
