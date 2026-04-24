@@ -1,24 +1,27 @@
-# Q93IY1 / SCO5104 / OsaC - Notes
+# Q93IY1 / SCO5104 - Notes
 
 ## Identity
 
 - UniProt: Q93IY1 (unreviewed TrEMBL entry)
-- Gene: SCO5104 (ordered locus name), also known as **OsaC** (osmoregulation gene C)
+- Gene: SCO5104 (ordered locus name)
+- **NOT OsaC** - OsaC is SCO5747. SCO5104 is an OsaC-like paralogue.
 - Organism: *Streptomyces coelicolor* A3(2) (strain ATCC BAA-471 / M145)
 - NCBI TaxID: 100226
 - 880 amino acids, predicted PE level 4
 
 ## Key Publication
 
-The primary characterization of this protein comes from:
-
 [PMID:19154327 "Osmoregulation in Streptomyces coelicolor: modulation of SigB activity by OsaC"]
-- This paper identifies SCO5104 as **OsaC**, a member of a novel family of regulatory proteins
-- OsaC is required to return *osaB* and *sigB* expression back to constitutive levels after osmotic stress
-- Domain architecture: N-terminal kinase domain (anti-sigma factor-like) → PAS domains → GAF domain → C-terminal phosphatase domain
-- The N-terminal domain functions as a **SigB anti-sigma factor** (sigma factor antagonist)
-- Co-purification experiments confirm association of OsaC with SigB
-- OsaC(ΔPho) lacking C-terminal phosphatase domain and OsaC(N92A) with kinase domain substitution were used to dissect function
+- This paper characterizes OsaC (SCO5747) and lists SCO5104 as one of four *S. coelicolor* genes with related domain composition
+- **SCO5104 mutants showed NO observable phenotype under hyperosmotic conditions** (from full text, results not shown)
+- The characterized OsaC (SCO5747) is required to return *osaB* and *sigB* expression back to constitutive levels after osmotic stress
+- OsaC domain architecture: N-terminal kinase domain (anti-sigma factor-like) → PAS domains → GAF domain → C-terminal phosphatase domain
+- OsaC N-terminal domain functions as a **SigB anti-sigma factor** (sigma factor antagonist)
+- Co-purification experiments confirm association of OsaC with SigB (demonstrated for SCO5747, not SCO5104)
+
+## CORRECTION NOTE (from deep research)
+
+Initial review incorrectly identified SCO5104 as OsaC. Deep research (Falcon) clarified that OsaC = SCO5747, and SCO5104 is a paralogue with no observed osmotic stress phenotype. The osmotic stress response annotation was removed and other annotations were made more conservative.
 
 ## Domain Architecture (from UniProt/InterPro)
 
