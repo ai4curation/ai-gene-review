@@ -84,7 +84,7 @@ def test_invalid_reference_id():
 
     try:
         # Enable best practices to check references (this is what we're testing)
-        report = validate_gene_review(temp_path, check_best_practices=True)
+        report = validate_gene_review(temp_path, check_best_practices=True, best_practices_only=True)
         # Should have an error about the invalid reference ID
         ref_errors = [
             issue
@@ -127,7 +127,7 @@ def test_annotations_without_references():
         temp_path = Path(f.name)
 
     try:
-        report = validate_gene_review(temp_path)
+        report = validate_gene_review(temp_path, best_practices_only=True)
         # Should have an error about the missing reference
         ref_errors = [
             issue

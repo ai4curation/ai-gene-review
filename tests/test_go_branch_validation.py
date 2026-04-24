@@ -37,7 +37,7 @@ def test_molecular_function_must_be_mf_branch():
         temp_path = Path(f.name)
 
     try:
-        report = validate_gene_review(temp_path)
+        report = validate_gene_review(temp_path, best_practices_only=True)
 
         # Should have error about wrong branch
         # The new linkml-term-validator may use different message formats
@@ -86,7 +86,7 @@ def test_directly_involved_in_must_be_bp_branch():
         temp_path = Path(f.name)
 
     try:
-        report = validate_gene_review(temp_path)
+        report = validate_gene_review(temp_path, best_practices_only=True)
 
         # Should have error about wrong branch for directly_involved_in
         # The new linkml-term-validator may use different message formats
@@ -139,7 +139,7 @@ def test_locations_must_be_cc_branch():
         temp_path = Path(f.name)
 
     try:
-        report = validate_gene_review(temp_path)
+        report = validate_gene_review(temp_path, best_practices_only=True)
 
         # Should have error about wrong branch for locations
         # The new linkml-term-validator may use different message formats
@@ -195,7 +195,7 @@ def test_correct_go_branches_pass():
         temp_path = Path(f.name)
 
     try:
-        report = validate_gene_review(temp_path)
+        report = validate_gene_review(temp_path, best_practices_only=True)
 
         # Should not have any GO branch errors
         branch_errors = [

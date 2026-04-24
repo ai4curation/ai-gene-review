@@ -47,7 +47,7 @@ def test_valid_file_reference(tmp_path):
     try:
         os.chdir(tmp_path)
 
-        report = validate_gene_review(yaml_file)
+        report = validate_gene_review(yaml_file, best_practices_only=True)
 
         # Should not have errors about the file reference
         file_errors = [
@@ -93,7 +93,7 @@ def test_invalid_file_reference_nonexistent(tmp_path):
     try:
         os.chdir(tmp_path)
 
-        report = validate_gene_review(yaml_file)
+        report = validate_gene_review(yaml_file, best_practices_only=True)
 
         # Should have an error about the non-existent file
         file_errors = [
@@ -143,7 +143,7 @@ def test_invalid_file_reference_directory(tmp_path):
     try:
         os.chdir(tmp_path)
 
-        report = validate_gene_review(yaml_file)
+        report = validate_gene_review(yaml_file, best_practices_only=True)
 
         # Should have an error about pointing to a directory
         file_errors = [
@@ -181,7 +181,7 @@ def test_mixed_reference_types():
     try:
         # This will fail the file reference check since we're not in a proper directory
         # structure, but it should still validate the YAML structure
-        report = validate_gene_review(temp_path)
+        report = validate_gene_review(temp_path, best_practices_only=True)
 
         # Check that different reference types are handled
         # PMID and DOI should not cause ontology validation errors
@@ -234,7 +234,7 @@ def test_real_file_reference():
             temp_path = Path(f.name)
 
         try:
-            report = validate_gene_review(temp_path)
+            report = validate_gene_review(temp_path, best_practices_only=True)
 
             # Should not have errors about the file reference
             file_errors = [

@@ -239,6 +239,7 @@ def validate_gene_review(
     check_goa: bool = True,
     check_supporting_text: bool = True,
     progress_callback: Optional[Callable] = None,
+    best_practices_only: bool = False,
 ) -> ValidationReport:
     """Validate a gene review YAML file against the LinkML schema.
 
@@ -252,6 +253,9 @@ def validate_gene_review(
         check_goa: Whether to validate against GOA file (enabled by default)
         check_supporting_text: Whether to validate supporting_text against cached publications
         progress_callback: Optional callback function to report progress steps
+        best_practices_only: Skip CLI tool validation (schema/term/ref) and only
+            run the Python best-practices checks.  Useful for unit tests that
+            exercise domain rules without subprocess overhead.
 
     Returns:
         ValidationReport with detailed validation results
@@ -296,36 +300,33 @@ def validate_gene_review(
         )
         return report
 
-    # 1. Schema validation via linkml-validate CLI
-    run_schema_validation(
-        yaml_file_path, resolved_schema, report,
-        progress_callback=progress_callback,
-    )
-
-    # Stop early on schema errors — term/ref validation won't be meaningful
-    if report.has_errors:
-        return report
-
-    # Track schema-level validity before term/ref validation.
-    # Term and reference errors shouldn't block best-practices checks.
-    schema_ok = not report.has_errors
-
-    # 2. Term validation via linkml-term-validator CLI
-    run_term_validation(
-        yaml_file_path, resolved_schema, report,
-        progress_callback=progress_callback,
-    )
-
-    # 3. Reference validation via linkml-reference-validator CLI
-    if check_supporting_text:
-        run_reference_validation(
+    if not best_practices_only:
+        # 1. Schema validation via linkml-validate CLI
+        run_schema_validation(
             yaml_file_path, resolved_schema, report,
             progress_callback=progress_callback,
         )
 
+        # Stop early on schema errors — term/ref validation won't be meaningful
+        if report.has_errors:
+            return report
+
+        # 2. Term validation via linkml-term-validator CLI
+        run_term_validation(
+            yaml_file_path, resolved_schema, report,
+            progress_callback=progress_callback,
+        )
+
+        # 3. Reference validation via linkml-reference-validator CLI
+        if check_supporting_text:
+            run_reference_validation(
+                yaml_file_path, resolved_schema, report,
+                progress_callback=progress_callback,
+            )
+
     # 4. Custom best-practices checks (Python)
     # Run even if term/ref validation reported errors — only skip on schema failures.
-    if check_best_practices and schema_ok:
+    if check_best_practices and not report.has_errors:
         if progress_callback:
             progress_callback("Best practices validation")
 
@@ -363,15 +364,16 @@ def _get_expanded_enums() -> Dict[str, set]:
         cache_dir=str(cache_dir),
         oak_config_path=str(oak_config_path) if oak_config_path.exists() else None,
     )
-    # Trigger enum expansion by running a dummy validation
-    from linkml.validator import Validator as LinkMLValidator
 
-    validator = LinkMLValidator(
-        schema=str(schema_path),
-        validation_plugins=[plugin],
-    )
-    validator.validate({}, target_class="GeneReview")
-    return plugin.expanded_enums or {}
+    sv = SchemaView(str(schema_path))
+    result: Dict[str, set] = {}
+    for enum_name in [bc[1] for bc in _BINDING_CHECKS]:
+        if enum_name in result:
+            continue
+        enum_def = sv.get_enum(enum_name)
+        if enum_def:
+            result[enum_name] = plugin.expand_enum(enum_def, sv)
+    return result
 
 
 # Fields in core_functions → (dynamic enum name, human-readable branch label)

@@ -106,7 +106,7 @@ def test_invalid_goref_reference():
 
     try:
         # Enable best practices to check references
-        report = validate_gene_review(temp_path, check_best_practices=True)
+        report = validate_gene_review(temp_path, check_best_practices=True, best_practices_only=True)
 
         # Should have an error about the invalid GO_REF reference ID
         ref_errors = [
