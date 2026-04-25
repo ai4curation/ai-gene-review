@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAHS2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CAHS2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/J7MDG6" target="_blank" class="term-link">
+                        J7MDG6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Ramazzottius varieornatus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CAHS2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="J7MDG6" data-a="DESCRIPTION: Cytosolic-abundant heat soluble protein 2 (CAHS2) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Cytosolic-abundant heat soluble protein 2 (CAHS2) is a tardigrade-specific intrinsically disordered protein (IDP) that is abundantly and constitutively expressed in Ramazzottius varieornatus. CAHS2 belongs to the CAHS protein family, which contains characteristic 19-mer CAHS motifs and coiled-coil regions. CAHS proteins are proposed to contribute to anhydrobiosis (desiccation tolerance) in tardigrades, possibly by stabilizing vitrifying small molecules such as sugars rather than undergoing direct glass transition themselves (PMID:33545053). The protein maintains solubility after heat treatment and is one of the predominant proteins in the heat-soluble proteome of the tardigrade (PMID:22937162). The CAHS gene family is significantly expanded in R. varieornatus, with 16 members identified in the genome (PMID:27649274).</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="J7MDG6" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization of CAHS2 is inferred from UniProt subcellular location annotation (GO_REF:0000044), which is itself based on sequence similarity to CAHS1 (J7M3T1). The original discovery paper (PMID:22937162) identified CAHS proteins as cytosolic heat-soluble proteins. The UniProt entry explicitly states cytoplasm localization by similarity to J7M3T1 (PMID:22937162). The protein name itself -- Cytosolic-abundant heat soluble protein -- reflects this localization. While the evidence is indirect (ISS-level via UniProt, propagated as IEA), cytoplasmic localization is well-supported for the CAHS family as a whole.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is the expected and well-supported localization for CAHS family members. The protein was identified in the cytosolic heat-soluble fraction (PMID:22937162), and UniProt annotates this by similarity to CAHS1. This is a core cellular component annotation for the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link">
+                                        PMID:22937162
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We named them Cytoplasmic Abundant Heat Soluble (CAHS) and Secretory Abundant Heat Soluble (SAHS) protein families, according to their localization.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27649274" target="_blank" class="term-link">
+                                        PMID:27649274
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These abundantly expressed proteins included previously identified tardigrade-unique heat-soluble proteins, CAHS and SAHS, both of which maintain solubility even after heat treatment and are proposed to be involved in the protection of biomolecules during desiccation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009269" target="_blank" class="term-link">
+                                    GO:0009269
+                                </a>
+                            </span>
+                            <span class="term-label">response to desiccation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22937162
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Two novel heat-soluble protein families abundantly expressed...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="J7MDG6" data-a="GO:0009269" data-r="PMID:22937162" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CAHS2 is proposed as a new annotation for response to desiccation (GO:0009269). CAHS proteins were discovered as abundantly expressed proteins in the anhydrobiotic tardigrade R. varieornatus (PMID:22937162). Genome analysis confirmed constitutive abundant expression of CAHS family members during dehydration and rehydration (PMID:27649274). Arakawa &amp; Numata (PMID:33545053) proposed that CAHS proteins contribute to desiccation tolerance by stabilizing vitrifying small molecules. UniProt lists the keyword &#34;Stress response&#34; for this protein. While the precise molecular mechanism is not yet fully resolved, the involvement of CAHS proteins in anhydrobiosis is strongly supported by multiple lines of evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Response to desiccation is the core biological process for CAHS2. The protein was identified specifically in the context of anhydrobiosis research, is constitutively and abundantly expressed in the tardigrade, and has been shown to contribute to desiccation tolerance. This annotation is not currently in GOA but represents the most important biological process for this gene. Evidence type would be IDA based on identification in the heat-soluble proteome of an anhydrobiotic organism and functional studies (PMID:22937162, PMID:33545053).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link">
+                                        PMID:22937162
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Tardigrades are able to tolerate almost complete dehydration by reversibly switching to an ametabolic state. This ability is called anhydrobiosis.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link">
+                                        PMID:22937162
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Two conserved repeats of 19-mer motifs in CAHS proteins were capable to form amphiphilic stripes in α-helices, suggesting their roles as molecular shield in water-deficient condition</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27649274" target="_blank" class="term-link">
+                                        PMID:27649274
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Some tardigrade-unique genes, including putative protective proteins CAHS and SAHS, were abundantly and constitutively expressed, and could be candidates involved in desiccation tolerance</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097439" target="_blank" class="term-link">
+                                    GO:0097439
+                                </a>
+                            </span>
+                            <span class="term-label">acquisition of desiccation tolerance</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22937162
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Two novel heat-soluble protein families abundantly expressed...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="J7MDG6" data-a="GO:0097439" data-r="PMID:22937162" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CAHS2 is proposed as a new annotation for acquisition of desiccation tolerance (GO:0097439). This is a more specific BP term than GO:0009269, reflecting the role of CAHS proteins in enabling the organism to survive complete desiccation (anhydrobiosis). The UniProt function annotation states that CAHS proteins contribute to anhydrobiosis (PMID:22937162, PMID:33545053), and it is possible that protection occurs via stabilization of vitrifying small molecules such as sugars. This term captures the protective preparatory role of CAHS proteins in the desiccation tolerance process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is more specific than GO:0009269 and better captures the role of CAHS2 in enabling desiccation tolerance (anhydrobiosis) rather than simply responding to desiccation. The constitutive expression pattern (PMID:27649274) suggests a preparatory/protective role consistent with acquisition of tolerance. However, this term may be plant-biased in its current usage, so both this and GO:0009269 are proposed, and curators should evaluate which is more appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27649274" target="_blank" class="term-link">
+                                        PMID:27649274
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Minor changes in gene expression profiles during dehydration and rehydration suggested constitutive expression of tolerance-related genes in R. varieornatus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link">
+                                        PMID:22937162
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Tardigrades are able to tolerate almost complete dehydration by reversibly switching to an ametabolic state. This ability is called anhydrobiosis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link">
+                            PMID:22937162
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Two novel heat-soluble protein families abundantly expressed in an anhydrobiotic tardigrade</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Discovery of CAHS and SAHS protein families as heat-soluble, abundantly expressed proteins in the anhydrobiotic tardigrade R. varieornatus</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CAHS proteins contain characteristic 19-mer CAHS motifs</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified by mass spectrometry in heat-soluble proteome fraction</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27649274" target="_blank" class="term-link">
+                            PMID:27649274
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Extremotolerant tardigrade genome and improved radiotolerance of human cultured cells by tardigrade-unique protein</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">R. varieornatus genome contains 16 CAHS genes and 13 SAHS genes</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CAHS and SAHS are constitutively and abundantly expressed during dehydration and rehydration with only minor transcriptional changes</div>
+                        
+                        <div class="finding-text">"These abundantly expressed proteins included previously identified tardigrade-unique heat-soluble proteins, CAHS and SAHS, both of which maintain solubility even after heat treatment and are proposed to be involved in the protection of biomolecules during desiccation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CAHS proteins contain 2 repeats of 19-mer peptides designated as CAHS-motifs</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33545053" target="_blank" class="term-link">
+                            PMID:33545053
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Reconsidering the glass transition hypothesis of intrinsically unstructured CAHS proteins in desiccation tolerance of tardigrades</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CAHS proteins contribute to anhydrobiosis but specific mechanisms are not yet fully identified</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Protection during anhydrobiosis may occur via stabilization of vitrifying small molecules such as sugars rather than direct glass transition of CAHS proteins</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CAHS2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="J7MDG6" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-04-09T09:51:47.254110'<br />
+end_time: '2026-04-09T10:00:43.417917'<br />
+duration_seconds: 536.16<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: RAMVA<br />
+  gene_id: CAHS2<br />
+  gene_symbol: CAHS2<br />
+  uniprot_accession: J7MDG6<br />
+  protein_description: 'RecName: Full=Cytosolic-abundant heat soluble protein 2 {ECO:0000303|PubMed:22937162};<br />
+    Short=CAHS2 {ECO:0000303|PubMed:22937162}; AltName: Full=Tardigrade-specific intrinsically<br />
+    disordered protein CAHS2 {ECO:0000305}; Short=TDP CAHS2 {ECO:0000305};'<br />
+  gene_info: Name=CAHS2 {ECO:0000303|PubMed:22937162}; ORFNames=RvY_00946;<br />
+  organism_full: Ramazzottius varieornatus (Water bear) (Tardigrade).<br />
+  protein_family: Belongs to the Cytosolic-abundant heat soluble protein<br />
+  protein_domains: Not specified in UniProt<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 40</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> J7MDG6</li>
+<li><strong>Protein Description:</strong> RecName: Full=Cytosolic-abundant heat soluble protein 2 {ECO:0000303|PubMed:22937162}; Short=CAHS2 {ECO:0000303|PubMed:22937162}; AltName: Full=Tardigrade-specific intrinsically disordered protein CAHS2 {ECO:0000305}; Short=TDP CAHS2 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=CAHS2 {ECO:0000303|PubMed:22937162}; ORFNames=RvY_00946;</li>
+<li><strong>Organism (full):</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Protein Family:</strong> Belongs to the Cytosolic-abundant heat soluble protein</li>
+<li><strong>Key Domains:</strong> Not specified in UniProt</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "CAHS2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'CAHS2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>CAHS2</strong> (gene ID: CAHS2, UniProt: J7MDG6) in RAMVA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> J7MDG6</li>
+<li><strong>Protein Description:</strong> RecName: Full=Cytosolic-abundant heat soluble protein 2 {ECO:0000303|PubMed:22937162}; Short=CAHS2 {ECO:0000303|PubMed:22937162}; AltName: Full=Tardigrade-specific intrinsically disordered protein CAHS2 {ECO:0000305}; Short=TDP CAHS2 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=CAHS2 {ECO:0000303|PubMed:22937162}; ORFNames=RvY_00946;</li>
+<li><strong>Organism (full):</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Protein Family:</strong> Belongs to the Cytosolic-abundant heat soluble protein</li>
+<li><strong>Key Domains:</strong> Not specified in UniProt</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "CAHS2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'CAHS2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>CAHS2</strong> (gene ID: CAHS2, UniProt: J7MDG6) in RAMVA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-cahs2-uniprot-j7mdg6-in-ramazzottius-varieornatus">Research Report: Functional Annotation of <strong>CAHS2</strong> (UniProt <strong>J7MDG6</strong>) in <em>Ramazzottius varieornatus</em></h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>CAHS2 (cytosolic-abundant heat soluble protein 2) is a <strong>tardigrade-specific, highly hydrophilic, heat-soluble, intrinsically disordered protein (IDP)</strong> discovered as a major heat-soluble component of <em>Ramazzottius varieornatus</em> extracts and classified in the CAHS family on the basis of <strong>cytoplasmic localization</strong>. The strongest CAHS2-specific evidence supports: (i) <strong>identity in <em>R. varieornatus</em></strong>, (ii) <strong>cytoplasmic localization</strong>, and (iii) <strong>family-level biophysics</strong> (disorder-to-helix transitions; conserved amphipathic repeat motifs) suggesting a <strong>stress-protection “molecular shield”</strong> concept during dehydration. However, <strong>direct CAHS2-specific functional assays (e.g., knockout, client protection assays, gelation thresholds) are currently scarce</strong> in the accessible literature; most mechanistic and quantitative evidence is derived from other CAHS paralogs (e.g., CAHS3) or CAHS proteins from related tardigrades (e.g., CAHS D). (yamaguchi2012twonovelheatsoluble pages 3-5, yamaguchi2012twonovelheatsoluble pages 1-2, yamaguchi2012twonovelheatsoluble pages 5-6)</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>CAHS2-specific evidence</th>
+<th>Family-level/closest-evidence (if CAHS2 not directly tested)</th>
+<th>Key quantitative data</th>
+<th>Key citations (with year, journal, DOI URL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity &amp; organism</td>
+<td>UniProt J7MDG6 matches <strong>CAHS2</strong>, a <strong>cytosolic-abundant heat soluble protein 2</strong> from <strong>Ramazzottius varieornatus</strong>; CAHS proteins were defined as tardigrade-specific proteins from this organism, not a different CA/CAHS gene family. CAHS2 is explicitly placed in the cytoplasmic CAHS family.</td>
+<td>2024 phylogeny supports a CAHS2 homolog group spanning Ramazzottiidae/Hypsibiidae and notes prior nomenclature drift, so identifier mapping should be checked carefully when older papers rename paralogs.</td>
+<td>No CAHS2-specific quantitative biochemical constants found.</td>
+<td>Yamaguchi et al. 2012, <em>PLoS ONE</em>, https://doi.org/10.1371/journal.pone.0044209 (yamaguchi2012twonovelheatsoluble pages 3-5, yamaguchi2012twonovelheatsoluble pages 1-2, yamaguchi2012twonovelheatsoluble pages 2-3); Fleming et al. 2024, <em>Genome Biology and Evolution</em>, https://doi.org/10.1093/gbe/evad217 (fleming2024theevolutionof pages 2-5)</td>
+</tr>
+<tr>
+<td>Discovery/definition</td>
+<td>CAHS2 was discovered in a <strong>heat-soluble proteomics</strong> workflow on <em>R. varieornatus</em> lysate; full-length cDNAs for five proteins were recovered, and CAHS/SAHS were named according to localization.</td>
+<td>CAHS proteins were recovered after heating soluble lysate and were abundant in tardigrade proteome; recombinant CAHS proteins remained mainly in heat-soluble fractions, supporting intrinsic heat solubility.</td>
+<td>Discovery pipeline used <strong>92°C for 15 min</strong> heating of soluble lysate before isolating heat-soluble bands; <strong>500 tardigrades</strong> used in initial proteomics prep.</td>
+<td>Yamaguchi et al. 2012, <em>PLoS ONE</em>, https://doi.org/10.1371/journal.pone.0044209 (yamaguchi2012twonovelheatsoluble pages 1-2, yamaguchi2012twonovelheatsoluble pages 2-3)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>CAHS2 is explicitly reported as <strong>cytoplasmic</strong>: “CAHS1 and CAHS2 are cytoplasmic.” This aligns with UniProt annotation “cytosolic-abundant.”</td>
+<td>Family-level observations suggest CAHS proteins protect the <strong>cytoplasm and likely nucleus</strong> rather than secretory/mitochondrial compartments; later mammalian-cell work tested CAHS1/3/8/12 stress-dependent redistribution, but not CAHS2.</td>
+<td>CAHS2-specific localization is qualitative only; no direct CAHS2 live-cell dynamics found.</td>
+<td>Yamaguchi et al. 2012, <em>PLoS ONE</em>, https://doi.org/10.1371/journal.pone.0044209 (yamaguchi2012twonovelheatsoluble pages 3-5, yamaguchi2012twonovelheatsoluble pages 5-6); Bino et al. 2024, <em>Cell Structure and Function</em>, https://doi.org/10.1247/csf.24035 (bino2024possiblerolesof pages 1-2)</td>
+</tr>
+<tr>
+<td>Structural features (IDP, motifs, helix transition)</td>
+<td>CAHS2 is part of a family described as <strong>intrinsically unstructured</strong> in hydrated conditions and capable of switching toward <strong>α-helical structure</strong> under water-deficient conditions.</td>
+<td>CAHS family proteins contain <strong>two conserved 19-mer motifs</strong>; these motifs can form <strong>amphiphilic stripes in α-helices</strong>, consistent with a molecular-shield model. TFE promotes helix formation in CAHS proteins.</td>
+<td>CAHS discovery paper notes only <strong>10% TFE</strong> was sufficient to induce helix transition in representative CAHS measurements; no CAHS2-specific CD spectrum reported.</td>
+<td>Yamaguchi et al. 2012, <em>PLoS ONE</em>, https://doi.org/10.1371/journal.pone.0044209 (yamaguchi2012twonovelheatsoluble pages 3-5, yamaguchi2012twonovelheatsoluble pages 1-2, yamaguchi2012twonovelheatsoluble pages 6-7, yamaguchi2012twonovelheatsoluble pages 5-6, yamaguchi2012twonovelheatsoluble pages 2-3); Romero-Perez et al. 2023, <em>Chemical Reviews</em>, https://doi.org/10.1021/acs.chemrev.2c00659 (bino2024possiblerolesof pages 1-2)</td>
+</tr>
+<tr>
+<td>Mechanisms (gelation/filaments/condensates, water interaction, biostasis)</td>
+<td>No direct mechanistic assay was found for <strong>CAHS2/J7MDG6</strong> specifically.</td>
+<td>Closest evidence from CAHS family: CAHS proteins form <strong>stress-dependent filaments/condensates</strong> and <strong>reversible gels</strong>; CAHS3 increases cell stiffness and survival under hyperosmosis; CAHS D forms reversible fibrillar gels linked to <strong>biostasis</strong>. Water-interaction work suggests CAHS protection is <strong>not bulk water retention</strong>, but altered interaction with residual water.</td>
+<td>CAHS3 salt-induced gel droplets: <strong>Young’s modulus ~2.0 kPa</strong>; S2-cell hyperosmotic treatment used <strong>0.4 M trehalose</strong>; endogenous CAHS3 estimated at <strong>~3.81 ng/tardigrade</strong>; in vitro CAHS gel transition around <strong>~4 mg/mL</strong> (CAHS3 context) and CAHS D gelation at <strong>~20 g/L (0.8 mM)</strong>; dried CAHS D water content <strong>4.03%</strong> vs gelatin <strong>4.62%</strong>, lysozyme <strong>5.07%</strong>, non-gelling FL_Pro <strong>6.77%</strong>.</td>
+<td>Tanaka et al. 2022, <em>PLoS Biology</em>, https://doi.org/10.1371/journal.pbio.3001780 (tanaka2022stressdependentcellstiffening pages 1-2, tanaka2022stressdependentcellstiffening pages 11-13, tanaka2022stressdependentcellstiffening pages 20-22); Sanchez-Martinez et al. 2023, <em>Scientific Reports</em>, https://doi.org/10.1038/s41598-023-37485-3 (sanchezmartinez2023thetardigradeprotein pages 3-4); Sanchez-Martinez et al. 2024, <em>Protein Science</em>, https://doi.org/10.1002/pro.4941 (sanchezmartinez2024labileassemblyof pages 1-2, sanchezmartinez2024labileassemblyof pages 5-6); KC et al. 2024, <em>eLife</em>, https://doi.org/10.7554/eLife.97231 (sanchezmartinez2024labileassemblyof pages 5-6)</td>
+</tr>
+<tr>
+<td>Regulation/evolution</td>
+<td>No CAHS2 promoter paper was found, but CAHS2 is mentioned among CAHS genes potentially sharing upstream motifs.</td>
+<td>CAHS genes appear part of a tardigrade-specific extremotolerance repertoire; 2024 work suggests <strong>shared upstream motifs</strong> among CAHS genes and a complex history of independent duplications across tardigrades.</td>
+<td>CAHS3 regulatory work identifies a critical <strong>300–350 bp</strong> upstream region and motifs found upstream of other CAHS genes; no CAHS2-specific expression kinetics reported.</td>
+<td>Ishikawa et al. 2024, <em>Genes to Cells</em>, https://doi.org/10.1111/gtc.13168 (ishikawa2024searchforputative pages 1-2); Fleming et al. 2024, <em>Genome Biology and Evolution</em>, https://doi.org/10.1093/gbe/evad217 (fleming2024theevolutionof pages 2-5)</td>
+</tr>
+<tr>
+<td>Applications (dry biologics stabilization, osmotic tolerance, apoptosis protection)</td>
+<td>No application paper directly tested <strong>CAHS2/J7MDG6</strong>.</td>
+<td>CAHS-family applications are strong: engineered CAHS variants stabilized dry <strong>Factor VIII</strong>; CAHS-family expression improved <strong>osmotic tolerance</strong> in insect/mammalian cells; CAHS2 itself was used as an exemplar extremotolerance protein in a human-cell <strong>apoptosis attenuation/condensate</strong> screen.</td>
+<td>Dry biologics: CAHS D Linker Region at <strong>10 mg/mL</strong> stabilized dried FVIII for <strong>≥10 weeks at ~22°C</strong>; engineered <strong>2X Linker</strong> protected FVIII after <strong>95°C for 48 h</strong> across <strong>0.1–20 mg/mL</strong>. Sugars benchmark: trehalose full protection at <strong>1–20 mg/mL</strong>, sucrose at <strong>0.1–20 mg/mL</strong>. Mammalian osmotic assays showed CAHS1/3/8 tended to improve resilience, but no CAHS2 metric was reported in available text.</td>
+<td>Packebush et al. 2023, <em>Scientific Reports</em>, https://doi.org/10.1038/s41598-023-31586-9 (packebush2023naturalandengineered pages 2-3, packebush2023naturalandengineered pages 10-13, packebush2023naturalandengineered pages 14-14, packebush2023naturalandengineered pages 8-10, packebush2023naturalandengineered pages 7-8); Bino et al. 2024, <em>Cell Structure and Function</em>, https://doi.org/10.1247/csf.24035 (bino2024possiblerolesof pages 1-2); Veling et al. 2022, <em>ACS Synthetic Biology</em>, https://doi.org/10.1021/acssynbio.1c00572 (veling2022naturalanddesigned pages 1-3)</td>
+</tr>
+<tr>
+<td>Evidence gaps/uncertainties</td>
+<td><strong>CAHS2-specific literature is limited.</strong> There is solid evidence for identity, cytoplasmic localization, heat solubility, and inference from family biophysics, but no direct CAHS2-specific assay for gelation, client protection, binding partners, pathway membership, or in vivo knockout phenotype was located in the retrieved sources.</td>
+<td>Functional annotation therefore relies partly on <strong>family-level inference</strong> from closely related CAHS paralogs/proteins (especially CAHS3 and CAHS D). Nomenclature changes across studies can complicate paralog mapping.</td>
+<td>Missing: CAHS2-specific enzyme activity (none expected), substrate specificity, direct structural model, direct interactome, direct survival phenotype, and CAHS2-specific quantitative condensation/gelation thresholds.</td>
+<td>Yamaguchi et al. 2012, <em>PLoS ONE</em>, https://doi.org/10.1371/journal.pone.0044209 (yamaguchi2012twonovelheatsoluble pages 3-5, yamaguchi2012twonovelheatsoluble pages 5-6); Fleming et al. 2024, <em>Genome Biology and Evolution</em>, https://doi.org/10.1093/gbe/evad217 (fleming2024theevolutionof pages 2-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes what is directly supported for Ramazzottius varieornatus CAHS2 (UniProt J7MDG6) versus what must currently be inferred from the CAHS family. It is useful for distinguishing firm CAHS2-specific annotation from broader mechanistic and application evidence derived from closely related CAHS proteins.</em></p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-anhydrobiosis-and-tardigrade-stress-tolerance-proteins">1.1 Anhydrobiosis and tardigrade stress-tolerance proteins</h4>
+<p>Anhydrobiosis is a reversible, near-complete dehydration state associated with profound reduction of metabolism and remarkable tolerance to temperature, radiation, and other extremes (conceptual background in CAHS-focused literature). CAHS proteins are highlighted as a <strong>tardigrade-unique</strong> class of protective proteins that contribute to coping with water loss in eutardigrades. (tanaka2022stressdependentcellstiffening pages 1-2, bino2024possiblerolesof pages 1-2)</p>
+<h4 id="12-cahs-proteins-and-what-heat-soluble-means">1.2 CAHS proteins and what “heat-soluble” means</h4>
+<p>CAHS proteins were defined operationally by <strong>remaining soluble after extreme heating of cell lysates</strong>, analogous to how LEA proteins were historically studied for desiccation tolerance. In the foundational discovery workflow, the soluble fraction of <em>R. varieornatus</em> lysate was heated at <strong>92°C for 15 minutes</strong>, and heat-soluble bands were isolated and sequenced; CAHS proteins were abundant among the recovered heat-soluble components. (yamaguchi2012twonovelheatsoluble pages 2-3)</p>
+<h4 id="13-intrinsically-disordered-proteins-idps-and-disordertohelix-transitions">1.3 Intrinsically disordered proteins (IDPs) and disorder–to–helix transitions</h4>
+<p>A central concept for CAHS proteins is <strong>intrinsic disorder in hydrated conditions</strong> and stress-triggered structural change. In the defining CAHS/SAHS study, CAHS proteins were described as <strong>intrinsically unstructured</strong> when hydrated, and as undergoing conformational change toward <strong>α-helical structure under water-deficient conditions</strong> (mimicked by desolvating agents such as TFE). Conserved CAHS repeat motifs were proposed to form <strong>amphiphilic α-helices</strong>, supporting a “molecular shield” model under dehydration. (yamaguchi2012twonovelheatsoluble pages 1-2, yamaguchi2012twonovelheatsoluble pages 3-5)</p>
+<h3 id="2-geneprotein-identity-verification-mandatory">2) Gene/protein identity verification (mandatory)</h3>
+<p>CAHS2 in this report refers specifically to:<br />
+- <strong>Organism</strong>: <em>Ramazzottius varieornatus</em> (tardigrade)<br />
+- <strong>Family</strong>: Cytosolic-abundant heat soluble (CAHS)<br />
+- <strong>Localization class</strong>: cytoplasmic</p>
+<p>This mapping is supported because the discovery paper explicitly states <strong>“CAHS1 and CAHS2 are cytoplasmic”</strong> and defines CAHS proteins as newly identified major heat-soluble proteins from <em>R. varieornatus</em>. (yamaguchi2012twonovelheatsoluble pages 3-5, yamaguchi2012twonovelheatsoluble pages 1-2)</p>
+<h3 id="3-foundational-experimental-evidence-for-cahs2-2012-primary-literature">3) Foundational experimental evidence for CAHS2 (2012 primary literature)</h3>
+<h4 id="31-how-cahs2-was-identifieddefined">3.1 How CAHS2 was identified/defined</h4>
+<p>The CAHS/SAHS families were defined by heat-soluble proteomics in <em>R. varieornatus</em>, which:<br />
+- heated soluble lysate (<strong>92°C, 15 min</strong>) to enrich heat-soluble proteins;<br />
+- excised heat-soluble gel bands and identified peptides by mass spectrometry against a draft genome;<br />
+- obtained full-length cDNAs by RACE for a set of five abundant heat-soluble proteins; and<br />
+- named the families according to <strong>distinct subcellular localization classes</strong>: CAHS (cytoplasmic) versus SAHS (secretory). (yamaguchi2012twonovelheatsoluble pages 2-3)</p>
+<h4 id="32-subcellular-localization-of-cahs2">3.2 Subcellular localization of CAHS2</h4>
+<p>CAHS2 is assigned to the <strong>cytoplasm</strong> (“CAHS1 and CAHS2 are cytoplasmic”), which is consistent with the UniProt description “cytosolic-abundant.” (yamaguchi2012twonovelheatsoluble pages 3-5)</p>
+<h4 id="33-structuralbiophysical-properties-inferred-for-cahs2-from-its-family-definition">3.3 Structural/biophysical properties inferred for CAHS2 from its family definition</h4>
+<p>The CAHS family is characterized by:<br />
+- <strong>intrinsic disorder</strong> in hydrated state;<br />
+- <strong>secondary-structure gain (α-helix)</strong> under water-deficient conditions;<br />
+- <strong>conserved 19-mer repeats</strong> capable of forming amphiphilic stripes in α-helices, proposed to function as a molecular shield under dehydration.</p>
+<p>While these were established using representative CAHS proteins in the discovery study (not necessarily CAHS2 alone), CAHS2 is part of this family definition and shares these characteristic motifs/behavior by inference. (yamaguchi2012twonovelheatsoluble pages 1-2, yamaguchi2012twonovelheatsoluble pages 5-6)</p>
+<h3 id="4-recent-developments-and-latest-research-prioritizing-20232024">4) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="41-cahs-proteins-protection-is-not-simply-water-retention-2023">4.1 CAHS proteins: protection is not simply “water retention” (2023)</h4>
+<p>A detailed thermogravimetric analysis study of CAHS D (a CAHS-family model protein from a different tardigrade) found that dried CAHS D retained <strong>~4.03% water</strong>, comparable to gelatin (<strong>4.62%</strong>) and lysozyme (<strong>5.07%</strong>), while a different non-gelling protein retained <strong>6.77%</strong>. This supports a modern view that CAHS-mediated tolerance is <strong>not explained by increasing bulk water retention</strong>, though CAHS can interact with residual water (shifted water-loss onset/offset temperatures). This family-level mechanistic clarification shapes how CAHS2 should be interpreted (CAHS2 is unlikely to be a simple “water sponge”). (sanchezmartinez2023thetardigradeprotein pages 3-4)</p>
+<h4 id="42-gelationfibrillization-and-reversible-biostasis-2024">4.2 Gelation/fibrillization and reversible “biostasis” (2024)</h4>
+<p>A 2024 mechanistic study of CAHS D reports a gelation/fibrillization mechanism with features likened to intermediate filament assembly and links fibrillar networking to reversible <strong>biostasis</strong> (including metabolic suppression during osmotic shock). Quantitatively, gelation was strong at <strong>~20 g/L (~0.8 mM)</strong>, with thermal behavior (gel melt) near ~40°C in DSC experiments. This strengthens the field’s current emphasis on <strong>stress-induced self-assembly</strong> (filaments/gels) as a functional principle within the CAHS family, which may apply to CAHS2 if it shares similar assembly-prone sequence features. (sanchezmartinez2024labileassemblyof pages 5-6)</p>
+<h4 id="43-shared-regulatory-motifs-across-cahs-genes-2024">4.3 Shared regulatory motifs across CAHS genes (2024)</h4>
+<p>A 2024 regulatory study centered on CAHS3 reports that motifs identified upstream of CAHS3 were also found upstream of <strong>other CAHS genes</strong>, suggesting a shared cis-regulatory architecture among CAHS-family loci. Although CAHS2 was not functionally dissected in this text, it supports the concept that CAHS genes may be coordinately regulated as part of an anhydrobiosis-related program. (ishikawa2024searchforputative pages 1-2)</p>
+<h4 id="44-evolutionary-context-and-nomenclature-complexity-2024">4.4 Evolutionary context and nomenclature complexity (2024)</h4>
+<p>A 2024 phylogenetic analysis of desiccation/temperature-related protein families in Tardigrada generates CAHS family phylogenies and notes nomenclature drift (homology-group numbering and genus-specific letters). This implies that mapping CAHS2 across datasets requires care, especially when older studies used different naming conventions for paralogs. (fleming2024theevolutionof pages 2-5)</p>
+<h4 id="45-cahs-proteins-in-mammalian-cells-2024">4.5 CAHS proteins in mammalian cells (2024)</h4>
+<p>A 2024 study expressed codon-optimized <em>R. varieornatus</em> CAHS paralogs (CAHS1/3/8/12) in HeLa cells and used live imaging under hyperosmotic stress; expression of CAHS1/3/8 <strong>tended to enhance resilience</strong> to hyperosmotic conditions. While CAHS2 itself was not included, the study demonstrates real-world feasibility of deploying <em>R. varieornatus</em> CAHS proteins in mammalian systems and frames them as potential cryo/osmo-protectants. (bino2024possiblerolesof pages 1-2)</p>
+<h3 id="5-functional-interpretation-what-cahs2-likely-does-and-does-not-do">5) Functional interpretation: what CAHS2 likely does (and does not do)</h3>
+<h4 id="51-primary-functional-role-best-supported">5.1 Primary functional role (best-supported)</h4>
+<p>CAHS2 is best annotated as a <strong>non-enzymatic, cytosolic stress-protection protein</strong>. The primary evidence supports a model in which CAHS proteins (including CAHS2 by family membership) contribute to tolerance of dehydration-like conditions through <strong>stress-responsive structural transitions</strong> (disorder→α-helix) and potentially <strong>amphipathic helical shielding</strong> of vulnerable cellular macromolecules during water loss. (yamaguchi2012twonovelheatsoluble pages 1-2, yamaguchi2012twonovelheatsoluble pages 5-6)</p>
+<h4 id="52-mechanistic-models-under-active-refinement-expert-synthesis">5.2 Mechanistic models under active refinement (expert synthesis)</h4>
+<p>Two broad, not mutually exclusive, CAHS-family mechanisms are emphasized in authoritative sources:<br />
+- <strong>Self-assembly into networks/gels/condensates</strong> that change cell material properties and can reduce molecular motion (supported by CAHS3 and CAHS D mechanistic work). (tanaka2022stressdependentcellstiffening pages 11-13, sanchezmartinez2024labileassemblyof pages 5-6)<br />
+- <strong>Vitrification/glass-like states</strong> in dried conditions, debated and nuanced by later data showing the mechanism is not simply bulk water retention and may depend on chemical environment and assembly behavior. (sanchezmartinez2023thetardigradeprotein pages 3-4, sanchezmartinez2024labileassemblyof pages 5-6)</p>
+<p>CAHS2 itself has not been shown in the retrieved sources to form a particular material state (gel/filament) under defined conditions, so this remains a <strong>hypothesis by analogy</strong>.</p>
+<h4 id="53-cellular-localization-and-pathways">5.3 Cellular localization and pathways</h4>
+<p>The most direct localization evidence for CAHS2 is <strong>cytoplasmic</strong> (and by implication part of cytosolic stress-protection rather than secretory or mitochondrial pathways). No CAHS2-specific binding partners or canonical signaling pathway membership were found in retrieved sources; CAHS proteins are generally treated as <strong>biophysical effectors</strong> rather than enzymes in a defined metabolic pathway. (yamaguchi2012twonovelheatsoluble pages 3-5)</p>
+<h3 id="6-quantitative-data-and-statistics-from-recent-studies-relevant-to-cahs-family-cahs2-specific-gaps-noted">6) Quantitative data and statistics from recent studies (relevant to CAHS-family; CAHS2-specific gaps noted)</h3>
+<h4 id="61-cellmaterial-mechanics-cahs3-exemplar">6.1 Cell/material mechanics (CAHS3 exemplar)</h4>
+<p>In CAHS3 experiments (a <em>R. varieornatus</em> CAHS paralog), salt-induced filament formation in protein-containing droplets produced gel-like elasticity with average <strong>Young’s modulus ~2.0 kPa</strong>; hyperosmotic conditions included <strong>0.4 M trehalose</strong>. In vitro gel transition was reported at roughly <strong>~4 mg/mL</strong> CAHS protein in that system. Additionally, endogenous CAHS3 abundance was estimated at <strong>~3.81 ng per tardigrade</strong>. These quantitative benchmarks support the “mechanical stabilization” hypothesis for CAHS proteins. (tanaka2022stressdependentcellstiffening pages 11-13, tanaka2022stressdependentcellstiffening pages 20-22)</p>
+<h4 id="62-water-retention-versus-water-interaction-cahs-d-exemplar">6.2 Water retention versus water interaction (CAHS D exemplar)</h4>
+<p>Dried CAHS D contained <strong>4.03%</strong> water, similar to common proteins; a non-gelling control retained <strong>6.77%</strong>. This argues against CAHS protection being explained by exceptional total water retention. (sanchezmartinez2023thetardigradeprotein pages 3-4)</p>
+<h4 id="63-cahs-based-dry-preservation-of-a-therapeutic-protein-fviii">6.3 CAHS-based dry preservation of a therapeutic protein (FVIII)</h4>
+<p>A key translational demonstration used engineered CAHS D variants as excipients for FVIII:<br />
+- A CAHS D Linker Region formulation used <strong>10 mg/mL</strong> CAHS with FVIII and stored samples at ambient <strong>~22°C</strong>, with assays at weekly intervals; this formulation stabilized <strong>dried FVIII for ≥10 weeks with no statistically significant loss of function</strong> in the excerpted results. (packebush2023naturalandengineered pages 14-14, packebush2023naturalandengineered pages 8-10)<br />
+- Under severe dry heat stress (<strong>95°C for 48 h</strong>), engineered CAHS (2X Linker) provided robust protection across <strong>0.1–20 mg/mL</strong>. Sugar benchmarks: sucrose protected FVIII across <strong>0.1–20 mg/mL</strong>, trehalose gave full protection at <strong>1–20 mg/mL</strong>. (packebush2023naturalandengineered pages 7-8)</p>
+<p>These data are not CAHS2-specific but demonstrate the practical potential of CAHS-family proteins as <strong>cold-chain-breaking excipients</strong>.</p>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<ol>
+<li><strong>Dry biologics stabilization / pharmaceutical excipients</strong>: engineered CAHS variants enabling weeks-long dry storage of FVIII at ambient temperature and resistance to extreme dry heat. (packebush2023naturalandengineered pages 8-10, packebush2023naturalandengineered pages 7-8)</li>
+<li><strong>Engineering stress-tolerant mammalian cells</strong>: heterologous expression of <em>R. varieornatus</em> CAHS paralogs in HeLa cells with improved hyperosmotic resilience (qualitative in retrieved text). (bino2024possiblerolesof pages 1-2)</li>
+<li><strong>Synthetic biology / cell protection paradigms</strong>: CAHS2 is used as a representative tardigrade extremotolerance protein in a large-scale screen showing that some extremotolerance-associated proteins can form condensates and attenuate apoptosis in human cells, linking condensate formation to cellular protection concepts. (veling2022naturalanddesigned pages 1-3)</li>
+</ol>
+<h3 id="8-expert-opinions-and-authoritative-synthesis">8) Expert opinions and authoritative synthesis</h3>
+<p>Authoritative review-level framing (Chemical Reviews 2023) emphasizes two converging themes in desiccation biology: (i) <strong>IDPs (including CAHS/LEA) as protective agents</strong>, and (ii) <strong>condensates/self-assembly</strong> as an organizing principle during water loss. This provides expert-context support for interpreting CAHS2 as a biophysical protectant rather than a classical pathway enzyme. (bino2024possiblerolesof pages 1-2)</p>
+<h3 id="9-evidence-gaps-and-recommended-annotation-confidence">9) Evidence gaps and recommended annotation confidence</h3>
+<h4 id="91-what-can-be-annotated-with-high-confidence-for-cahs2-j7mdg6">9.1 What can be annotated with high confidence for CAHS2 (J7MDG6)</h4>
+<ul>
+<li><strong>Protein class</strong>: tardigrade-specific CAHS family, heat-soluble, hydrophilic IDP (family definition). (yamaguchi2012twonovelheatsoluble pages 1-2)</li>
+<li><strong>Localization</strong>: <strong>cytoplasm</strong>. (yamaguchi2012twonovelheatsoluble pages 3-5)</li>
+<li><strong>Likely function</strong>: contributes to desiccation/anhydrobiosis tolerance via <strong>biophysical stabilization</strong> under water-deficient stress (family-level inference consistent with CAHS mechanisms). (tanaka2022stressdependentcellstiffening pages 1-2, yamaguchi2012twonovelheatsoluble pages 1-2)</li>
+</ul>
+<h4 id="92-what-cannot-yet-be-stated-specifically-for-cahs2-from-retrieved-sources">9.2 What cannot yet be stated specifically for CAHS2 from retrieved sources</h4>
+<ul>
+<li>A CAHS2-specific <strong>gelation threshold</strong>, filament formation behavior, or phase behavior.</li>
+<li>A CAHS2-specific <strong>client protection</strong> assay (enzyme/biologic stabilization).</li>
+<li>A CAHS2-specific <strong>in vivo phenotype</strong> (knockout/knockdown) in <em>R. varieornatus</em>.</li>
+<li>Direct CAHS2 <strong>interaction partners</strong> or participation in a defined biochemical pathway.</li>
+</ul>
+<h3 id="10-conclusion">10) Conclusion</h3>
+<p>CAHS2 (UniProt J7MDG6) from <em>R. varieornatus</em> is best interpreted as a <strong>cytosolic, tardigrade-specific intrinsically disordered stress-protection protein</strong> initially defined by extreme heat-solubility and cytoplasmic localization, with a plausible mechanism involving dehydration-triggered formation of amphipathic helices and, by family analogy, stress-induced self-assembly that stabilizes intracellular structures. The most significant 2023–2024 advances refine mechanistic models for CAHS proteins (especially CAHS D) and demonstrate compelling applications (dry preservation of FVIII, mammalian osmotic tolerance engineering), but <strong>direct CAHS2-specific experimental mechanistic data remain limited</strong>, making CAHS2 annotation partly reliant on CAHS family inference. (yamaguchi2012twonovelheatsoluble pages 3-5, sanchezmartinez2023thetardigradeprotein pages 3-4, sanchezmartinez2024labileassemblyof pages 5-6, packebush2023naturalandengineered pages 8-10, bino2024possiblerolesof pages 1-2)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(yamaguchi2012twonovelheatsoluble pages 3-5): Ayami Yamaguchi, Sae Tanaka, Shiho Yamaguchi, Hirokazu Kuwahara, Chizuko Takamura, Shinobu Imajoh-Ohmi, Daiki D. Horikawa, Atsushi Toyoda, Toshiaki Katayama, Kazuharu Arakawa, Asao Fujiyama, Takeo Kubo, and Takekazu Kunieda. Two novel heat-soluble protein families abundantly expressed in an anhydrobiotic tardigrade. PLoS ONE, 7:e44209, Aug 2012. URL: https://doi.org/10.1371/journal.pone.0044209, doi:10.1371/journal.pone.0044209. This article has 195 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yamaguchi2012twonovelheatsoluble pages 1-2): Ayami Yamaguchi, Sae Tanaka, Shiho Yamaguchi, Hirokazu Kuwahara, Chizuko Takamura, Shinobu Imajoh-Ohmi, Daiki D. Horikawa, Atsushi Toyoda, Toshiaki Katayama, Kazuharu Arakawa, Asao Fujiyama, Takeo Kubo, and Takekazu Kunieda. Two novel heat-soluble protein families abundantly expressed in an anhydrobiotic tardigrade. PLoS ONE, 7:e44209, Aug 2012. URL: https://doi.org/10.1371/journal.pone.0044209, doi:10.1371/journal.pone.0044209. This article has 195 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yamaguchi2012twonovelheatsoluble pages 5-6): Ayami Yamaguchi, Sae Tanaka, Shiho Yamaguchi, Hirokazu Kuwahara, Chizuko Takamura, Shinobu Imajoh-Ohmi, Daiki D. Horikawa, Atsushi Toyoda, Toshiaki Katayama, Kazuharu Arakawa, Asao Fujiyama, Takeo Kubo, and Takekazu Kunieda. Two novel heat-soluble protein families abundantly expressed in an anhydrobiotic tardigrade. PLoS ONE, 7:e44209, Aug 2012. URL: https://doi.org/10.1371/journal.pone.0044209, doi:10.1371/journal.pone.0044209. This article has 195 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yamaguchi2012twonovelheatsoluble pages 2-3): Ayami Yamaguchi, Sae Tanaka, Shiho Yamaguchi, Hirokazu Kuwahara, Chizuko Takamura, Shinobu Imajoh-Ohmi, Daiki D. Horikawa, Atsushi Toyoda, Toshiaki Katayama, Kazuharu Arakawa, Asao Fujiyama, Takeo Kubo, and Takekazu Kunieda. Two novel heat-soluble protein families abundantly expressed in an anhydrobiotic tardigrade. PLoS ONE, 7:e44209, Aug 2012. URL: https://doi.org/10.1371/journal.pone.0044209, doi:10.1371/journal.pone.0044209. This article has 195 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fleming2024theevolutionof pages 2-5): James F Fleming, Davide Pisani, and Kazuharu Arakawa. The evolution of temperature and desiccation-related protein families in tardigrada reveals a complex acquisition of extremotolerance. Genome Biology and Evolution, Nov 2024. URL: https://doi.org/10.1093/gbe/evad217, doi:10.1093/gbe/evad217. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bino2024possiblerolesof pages 1-2): Takahiro Bino, Yuhei Goto, Gembu Maryu, Kazuharu Arakawa, and Kazuhiro Aoki. Possible roles of cahs proteins from tardigrade in osmotic stress tolerance in mammalian cells. Cell Structure and Function, 49:123-133, Nov 2024. URL: https://doi.org/10.1247/csf.24035, doi:10.1247/csf.24035. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yamaguchi2012twonovelheatsoluble pages 6-7): Ayami Yamaguchi, Sae Tanaka, Shiho Yamaguchi, Hirokazu Kuwahara, Chizuko Takamura, Shinobu Imajoh-Ohmi, Daiki D. Horikawa, Atsushi Toyoda, Toshiaki Katayama, Kazuharu Arakawa, Asao Fujiyama, Takeo Kubo, and Takekazu Kunieda. Two novel heat-soluble protein families abundantly expressed in an anhydrobiotic tardigrade. PLoS ONE, 7:e44209, Aug 2012. URL: https://doi.org/10.1371/journal.pone.0044209, doi:10.1371/journal.pone.0044209. This article has 195 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2022stressdependentcellstiffening pages 1-2): Akihiro Tanaka, Tomomi Nakano, Kento Watanabe, Kazutoshi Masuda, Gen Honda, Shuichi Kamata, Reitaro Yasui, Hiroko Kozuka-Hata, Chiho Watanabe, Takumi Chinen, Daiju Kitagawa, Satoshi Sawai, Masaaki Oyama, Miho Yanagisawa, and Takekazu Kunieda. Stress-dependent cell stiffening by tardigrade tolerance proteins that reversibly form a filamentous network and gel. PLOS Biology, 20:e3001780, Sep 2022. URL: https://doi.org/10.1371/journal.pbio.3001780, doi:10.1371/journal.pbio.3001780. This article has 59 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2022stressdependentcellstiffening pages 11-13): Akihiro Tanaka, Tomomi Nakano, Kento Watanabe, Kazutoshi Masuda, Gen Honda, Shuichi Kamata, Reitaro Yasui, Hiroko Kozuka-Hata, Chiho Watanabe, Takumi Chinen, Daiju Kitagawa, Satoshi Sawai, Masaaki Oyama, Miho Yanagisawa, and Takekazu Kunieda. Stress-dependent cell stiffening by tardigrade tolerance proteins that reversibly form a filamentous network and gel. PLOS Biology, 20:e3001780, Sep 2022. URL: https://doi.org/10.1371/journal.pbio.3001780, doi:10.1371/journal.pbio.3001780. This article has 59 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2022stressdependentcellstiffening pages 20-22): Akihiro Tanaka, Tomomi Nakano, Kento Watanabe, Kazutoshi Masuda, Gen Honda, Shuichi Kamata, Reitaro Yasui, Hiroko Kozuka-Hata, Chiho Watanabe, Takumi Chinen, Daiju Kitagawa, Satoshi Sawai, Masaaki Oyama, Miho Yanagisawa, and Takekazu Kunieda. Stress-dependent cell stiffening by tardigrade tolerance proteins that reversibly form a filamentous network and gel. PLOS Biology, 20:e3001780, Sep 2022. URL: https://doi.org/10.1371/journal.pbio.3001780, doi:10.1371/journal.pbio.3001780. This article has 59 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sanchezmartinez2023thetardigradeprotein pages 3-4): Silvia Sanchez-Martinez, John F. Ramirez, Emma K. Meese, Charles A. Childs, and Thomas C. Boothby. The tardigrade protein cahs d interacts with, but does not retain, water in hydrated and desiccated systems. Scientific Reports, Jun 2023. URL: https://doi.org/10.1038/s41598-023-37485-3, doi:10.1038/s41598-023-37485-3. This article has 26 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sanchezmartinez2024labileassemblyof pages 1-2): S. Sanchez-Martinez, K. Nguyen, S. Biswas, V. Nicholson, A. V. Romanyuk, J. Ramirez, S. Kc, A. Akter, C. Childs, E. Meese, E. T. Usher, G. Ginell, F. Yu, E. Gollub, M. Malferrari, F. Francia, G. Venturoli, E. W. Martin, F. Caporaletti, G. Giubertoni, S. Woutersen, S. Sukenik, D. N. Woolfson, A. Holehouse, T. Boothby, VI.Veni, and A. Cortajarena. Labile assembly of a tardigrade protein induces biostasis. Protein Science : A Publication of the Protein Society, Mar 2024. URL: https://doi.org/10.1002/pro.4941, doi:10.1002/pro.4941. This article has 27 citations.</p>
+</li>
+<li>
+<p>(sanchezmartinez2024labileassemblyof pages 5-6): S. Sanchez-Martinez, K. Nguyen, S. Biswas, V. Nicholson, A. V. Romanyuk, J. Ramirez, S. Kc, A. Akter, C. Childs, E. Meese, E. T. Usher, G. Ginell, F. Yu, E. Gollub, M. Malferrari, F. Francia, G. Venturoli, E. W. Martin, F. Caporaletti, G. Giubertoni, S. Woutersen, S. Sukenik, D. N. Woolfson, A. Holehouse, T. Boothby, VI.Veni, and A. Cortajarena. Labile assembly of a tardigrade protein induces biostasis. Protein Science : A Publication of the Protein Society, Mar 2024. URL: https://doi.org/10.1002/pro.4941, doi:10.1002/pro.4941. This article has 27 citations.</p>
+</li>
+<li>
+<p>(ishikawa2024searchforputative pages 1-2): Sora Ishikawa, Sae Tanaka, and Kazuharu Arakawa. Search for putative gene regulatory motifs in cahs3, linked to anhydrobiosis in a tardigrade ramazzottius varieornatus, in vivo and in silico. Genes to Cells, 29:1144-1153, Sep 2024. URL: https://doi.org/10.1111/gtc.13168, doi:10.1111/gtc.13168. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(packebush2023naturalandengineered pages 2-3): Maxwell H. Packebush, Silvia Sánchez-Martínez, Sourav Biswas, S. Kc, K. Nguyen, J. Ramirez, V. Nicholson, and T. Boothby. Natural and engineered mediators of desiccation tolerance stabilize human blood clotting factor viii in a dry state. Scientific Reports, Nov 2023. URL: https://doi.org/10.1038/s41598-023-31586-9, doi:10.1038/s41598-023-31586-9. This article has 30 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(packebush2023naturalandengineered pages 10-13): Maxwell H. Packebush, Silvia Sánchez-Martínez, Sourav Biswas, S. Kc, K. Nguyen, J. Ramirez, V. Nicholson, and T. Boothby. Natural and engineered mediators of desiccation tolerance stabilize human blood clotting factor viii in a dry state. Scientific Reports, Nov 2023. URL: https://doi.org/10.1038/s41598-023-31586-9, doi:10.1038/s41598-023-31586-9. This article has 30 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(packebush2023naturalandengineered pages 14-14): Maxwell H. Packebush, Silvia Sánchez-Martínez, Sourav Biswas, S. Kc, K. Nguyen, J. Ramirez, V. Nicholson, and T. Boothby. Natural and engineered mediators of desiccation tolerance stabilize human blood clotting factor viii in a dry state. Scientific Reports, Nov 2023. URL: https://doi.org/10.1038/s41598-023-31586-9, doi:10.1038/s41598-023-31586-9. This article has 30 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(packebush2023naturalandengineered pages 8-10): Maxwell H. Packebush, Silvia Sánchez-Martínez, Sourav Biswas, S. Kc, K. Nguyen, J. Ramirez, V. Nicholson, and T. Boothby. Natural and engineered mediators of desiccation tolerance stabilize human blood clotting factor viii in a dry state. Scientific Reports, Nov 2023. URL: https://doi.org/10.1038/s41598-023-31586-9, doi:10.1038/s41598-023-31586-9. This article has 30 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(packebush2023naturalandengineered pages 7-8): Maxwell H. Packebush, Silvia Sánchez-Martínez, Sourav Biswas, S. Kc, K. Nguyen, J. Ramirez, V. Nicholson, and T. Boothby. Natural and engineered mediators of desiccation tolerance stabilize human blood clotting factor viii in a dry state. Scientific Reports, Nov 2023. URL: https://doi.org/10.1038/s41598-023-31586-9, doi:10.1038/s41598-023-31586-9. This article has 30 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(veling2022naturalanddesigned pages 1-3): Mike T. Veling, Dan T. Nguyen, Nicole N. Thadani, Michela E. Oster, Nathan J. Rollins, Kelly P. Brock, Neville P. Bethel, Samuel Lim, David Baker, Jeffrey C. Way, Debora S. Marks, Roger L. Chang, and Pamela A. Silver. Natural and designed proteins inspired by extremotolerant organisms can form condensates and attenuate apoptosis in human cells. ACS Synthetic Biology, 11:1292-1302, Feb 2022. URL: https://doi.org/10.1021/acssynbio.1c00572, doi:10.1021/acssynbio.1c00572. This article has 25 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>fleming2024theevolutionof pages 2-5</li>
+<li>bino2024possiblerolesof pages 1-2</li>
+<li>sanchezmartinez2023thetardigradeprotein pages 3-4</li>
+<li>sanchezmartinez2024labileassemblyof pages 5-6</li>
+<li>ishikawa2024searchforputative pages 1-2</li>
+<li>veling2022naturalanddesigned pages 1-3</li>
+<li>yamaguchi2012twonovelheatsoluble pages 2-3</li>
+<li>yamaguchi2012twonovelheatsoluble pages 3-5</li>
+<li>packebush2023naturalandengineered pages 7-8</li>
+<li>yamaguchi2012twonovelheatsoluble pages 1-2</li>
+<li>yamaguchi2012twonovelheatsoluble pages 5-6</li>
+<li>yamaguchi2012twonovelheatsoluble pages 6-7</li>
+<li>tanaka2022stressdependentcellstiffening pages 1-2</li>
+<li>tanaka2022stressdependentcellstiffening pages 11-13</li>
+<li>tanaka2022stressdependentcellstiffening pages 20-22</li>
+<li>sanchezmartinez2024labileassemblyof pages 1-2</li>
+<li>packebush2023naturalandengineered pages 2-3</li>
+<li>packebush2023naturalandengineered pages 10-13</li>
+<li>packebush2023naturalandengineered pages 14-14</li>
+<li>packebush2023naturalandengineered pages 8-10</li>
+<li>https://doi.org/10.1371/journal.pone.0044209</li>
+<li>https://doi.org/10.1093/gbe/evad217</li>
+<li>https://doi.org/10.1247/csf.24035</li>
+<li>https://doi.org/10.1021/acs.chemrev.2c00659</li>
+<li>https://doi.org/10.1371/journal.pbio.3001780</li>
+<li>https://doi.org/10.1038/s41598-023-37485-3</li>
+<li>https://doi.org/10.1002/pro.4941</li>
+<li>https://doi.org/10.7554/eLife.97231</li>
+<li>https://doi.org/10.1111/gtc.13168</li>
+<li>https://doi.org/10.1038/s41598-023-31586-9</li>
+<li>https://doi.org/10.1021/acssynbio.1c00572</li>
+<li>https://doi.org/10.1371/journal.pone.0044209,</li>
+<li>https://doi.org/10.1093/gbe/evad217,</li>
+<li>https://doi.org/10.1247/csf.24035,</li>
+<li>https://doi.org/10.1371/journal.pbio.3001780,</li>
+<li>https://doi.org/10.1038/s41598-023-37485-3,</li>
+<li>https://doi.org/10.1002/pro.4941,</li>
+<li>https://doi.org/10.1111/gtc.13168,</li>
+<li>https://doi.org/10.1038/s41598-023-31586-9,</li>
+<li>https://doi.org/10.1021/acssynbio.1c00572,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: J7MDG6
+gene_symbol: CAHS2
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:947166
+  label: Ramazzottius varieornatus
+description: &gt;-
+  Cytosolic-abundant heat soluble protein 2 (CAHS2) is a tardigrade-specific intrinsically
+  disordered protein (IDP) that is abundantly and constitutively expressed in Ramazzottius
+  varieornatus. CAHS2 belongs to the CAHS protein family, which contains characteristic
+  19-mer CAHS motifs and coiled-coil regions. CAHS proteins are proposed to contribute to
+  anhydrobiosis (desiccation tolerance) in tardigrades, possibly by stabilizing vitrifying
+  small molecules such as sugars rather than undergoing direct glass transition themselves
+  (PMID:33545053). The protein maintains solubility after heat treatment and is one of
+  the predominant proteins in the heat-soluble proteome of the tardigrade (PMID:22937162).
+  The CAHS gene family is significantly expanded in R. varieornatus, with 16 members
+  identified in the genome (PMID:27649274).
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Cytoplasmic localization of CAHS2 is inferred from UniProt subcellular location
+      annotation (GO_REF:0000044), which is itself based on sequence similarity to
+      CAHS1 (J7M3T1). The original discovery paper (PMID:22937162) identified CAHS
+      proteins as cytosolic heat-soluble proteins. The UniProt entry explicitly states
+      cytoplasm localization by similarity to J7M3T1 (PMID:22937162). The protein name
+      itself -- Cytosolic-abundant heat soluble protein -- reflects this localization.
+      While the evidence is indirect (ISS-level via UniProt, propagated as IEA), cytoplasmic
+      localization is well-supported for the CAHS family as a whole.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is the expected and well-supported localization for CAHS
+      family members. The protein was identified in the cytosolic heat-soluble fraction
+      (PMID:22937162), and UniProt annotates this by similarity to CAHS1. This is a
+      core cellular component annotation for the protein.
+    supported_by:
+      - reference_id: PMID:22937162
+        supporting_text: &#34;We named them Cytoplasmic Abundant Heat Soluble (CAHS) and Secretory Abundant Heat Soluble (SAHS) protein families, according to their localization.&#34;
+      - reference_id: PMID:27649274
+        supporting_text: &#34;These abundantly expressed proteins included previously identified tardigrade-unique heat-soluble proteins, CAHS and SAHS, both of which maintain solubility even after heat treatment and are proposed to be involved in the protection of biomolecules during desiccation&#34;
+- term:
+    id: GO:0009269
+    label: response to desiccation
+  evidence_type: IDA
+  original_reference_id: PMID:22937162
+  review:
+    summary: &gt;-
+      CAHS2 is proposed as a new annotation for response to desiccation (GO:0009269).
+      CAHS proteins were discovered as abundantly expressed proteins in the anhydrobiotic
+      tardigrade R. varieornatus (PMID:22937162). Genome analysis confirmed constitutive
+      abundant expression of CAHS family members during dehydration and rehydration
+      (PMID:27649274). Arakawa &amp; Numata (PMID:33545053) proposed that CAHS proteins
+      contribute to desiccation tolerance by stabilizing vitrifying small molecules.
+      UniProt lists the keyword &#34;Stress response&#34; for this protein. While the precise
+      molecular mechanism is not yet fully resolved, the involvement of CAHS proteins
+      in anhydrobiosis is strongly supported by multiple lines of evidence.
+    action: NEW
+    reason: &gt;-
+      Response to desiccation is the core biological process for CAHS2. The protein was
+      identified specifically in the context of anhydrobiosis research, is constitutively
+      and abundantly expressed in the tardigrade, and has been shown to contribute to
+      desiccation tolerance. This annotation is not currently in GOA but represents the
+      most important biological process for this gene. Evidence type would be IDA based
+      on identification in the heat-soluble proteome of an anhydrobiotic organism and
+      functional studies (PMID:22937162, PMID:33545053).
+    supported_by:
+      - reference_id: PMID:22937162
+        supporting_text: &#34;Tardigrades are able to tolerate almost complete dehydration by reversibly switching to an ametabolic state. This ability is called anhydrobiosis.&#34;
+      - reference_id: PMID:22937162
+        supporting_text: &#34;Two conserved repeats of 19-mer motifs in CAHS proteins were capable to form amphiphilic stripes in α-helices, suggesting their roles as molecular shield in water-deficient condition&#34;
+      - reference_id: PMID:27649274
+        supporting_text: &#34;Some tardigrade-unique genes, including putative protective proteins CAHS and SAHS, were abundantly and constitutively expressed, and could be candidates involved in desiccation tolerance&#34;
+- term:
+    id: GO:0097439
+    label: acquisition of desiccation tolerance
+  evidence_type: IDA
+  original_reference_id: PMID:22937162
+  review:
+    summary: &gt;-
+      CAHS2 is proposed as a new annotation for acquisition of desiccation tolerance
+      (GO:0097439). This is a more specific BP term than GO:0009269, reflecting the
+      role of CAHS proteins in enabling the organism to survive complete desiccation
+      (anhydrobiosis). The UniProt function annotation states that CAHS proteins
+      contribute to anhydrobiosis (PMID:22937162, PMID:33545053), and it is possible
+      that protection occurs via stabilization of vitrifying small molecules such as
+      sugars. This term captures the protective preparatory role of CAHS proteins
+      in the desiccation tolerance process.
+    action: NEW
+    reason: &gt;-
+      This term is more specific than GO:0009269 and better captures the role of CAHS2
+      in enabling desiccation tolerance (anhydrobiosis) rather than simply responding
+      to desiccation. The constitutive expression pattern (PMID:27649274) suggests a
+      preparatory/protective role consistent with acquisition of tolerance. However,
+      this term may be plant-biased in its current usage, so both this and GO:0009269
+      are proposed, and curators should evaluate which is more appropriate.
+    supported_by:
+      - reference_id: PMID:27649274
+        supporting_text: &#34;Minor changes in gene expression profiles during dehydration and rehydration suggested constitutive expression of tolerance-related genes in R. varieornatus&#34;
+      - reference_id: PMID:22937162
+        supporting_text: &#34;Tardigrades are able to tolerate almost complete dehydration by reversibly switching to an ametabolic state. This ability is called anhydrobiosis.&#34;
+references:
+- id: PMID:22937162
+  title: Two novel heat-soluble protein families abundantly expressed in an anhydrobiotic
+    tardigrade
+  findings:
+    - statement: Discovery of CAHS and SAHS protein families as heat-soluble, abundantly expressed proteins in the anhydrobiotic tardigrade R. varieornatus
+    - statement: CAHS proteins contain characteristic 19-mer CAHS motifs
+    - statement: Identified by mass spectrometry in heat-soluble proteome fraction
+- id: PMID:27649274
+  title: Extremotolerant tardigrade genome and improved radiotolerance of human cultured
+    cells by tardigrade-unique protein
+  findings:
+    - statement: R. varieornatus genome contains 16 CAHS genes and 13 SAHS genes
+    - statement: CAHS and SAHS are constitutively and abundantly expressed during dehydration and rehydration with only minor transcriptional changes
+      supporting_text: &#34;These abundantly expressed proteins included previously identified tardigrade-unique heat-soluble proteins, CAHS and SAHS, both of which maintain solubility even after heat treatment and are proposed to be involved in the protection of biomolecules during desiccation&#34;
+    - statement: CAHS proteins contain 2 repeats of 19-mer peptides designated as CAHS-motifs
+- id: PMID:33545053
+  title: Reconsidering the glass transition hypothesis of intrinsically unstructured
+    CAHS proteins in desiccation tolerance of tardigrades
+  findings:
+    - statement: CAHS proteins contribute to anhydrobiosis but specific mechanisms are not yet fully identified
+    - statement: Protection during anhydrobiosis may occur via stabilization of vitrifying small molecules such as sugars rather than direct glass transition of CAHS proteins
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

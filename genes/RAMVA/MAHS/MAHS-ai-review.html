@@ -1,0 +1,2534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAHS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MAHS</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A1D1V3Z0" target="_blank" class="term-link">
+                        A0A1D1V3Z0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Ramazzottius varieornatus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MAHS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="DESCRIPTION: Mitochondrial-abundant heat-soluble (MAHS) protein..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Mitochondrial-abundant heat-soluble (MAHS) protein is a tardigrade-unique heat-soluble protein that localizes to mitochondria and acts as a molecular shield under water-deficient conditions. MAHS contains a predicted mitochondrial transit peptide (residues 1-73) and a conserved MAHS motif (residues 126-143) that forms a predicted amphipathic helix. The protein is highly hydrophilic and retains solubility after heat treatment. When expressed in human cells, MAHS-GFP localizes to mitochondria and improves hyperosmotic tolerance, consistent with a protective role analogous to LEA proteins but without sequence similarity to any known protein family. MAHS is part of a tardigrade-specific repertoire of heat-soluble proteins (alongside CAHS and SAHS) that together cover most cellular compartments, suggesting a coordinated strategy for desiccation tolerance (anhydrobiosis) in tardigrades.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IEA annotation of MAHS to mitochondrion (GO:0005739) is based on UniProtKB subcellular location mapping (GO_REF:0000044). This is strongly supported by experimental evidence from Tanaka et al. 2015 (PMID:25675104), who demonstrated mitochondrial localization of MAHS-GFP fusion protein in human HEp-2 cells. The protein also has a predicted N-terminal mitochondrial transit peptide (residues 1-73). Although the IEA evidence code is weaker than the available experimental evidence, the annotation itself is correct and well-supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial localization is experimentally demonstrated. The protein has a predicted 73-residue mitochondrial transit peptide. Three independent prediction programs (TargetP, WoLF PSORT, MitoProt2) predict mitochondrial localization. UniProt records experimental subcellular location as &#34;Mitochondrion&#34; with ECO:0000269|PubMed:25675104. The protein is highly hydrophilic (GRAVY score -0.77), suggesting matrix localization rather than membrane integration.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Two of them, MAHS and ATPM1, showed mitochondrial localization (Fig. 4a, S3 Fig.).</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The MAHS protein contained a predicted long mitochondrial targeting peptide at the N-terminus and the resultant putative mature form was highly hydrophilic (GRAVY score of-0.77) like RvLEAM protein (Fig. 4c).</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MAHS-green fluorescent protein fusion protein localized in human mitochondria and was heat-soluble in vitro, though no sequence similarity with other known proteins was found, and one region was conserved among tardigrades.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009269" target="_blank" class="term-link">
+                                    GO:0009269
+                                </a>
+                            </span>
+                            <span class="term-label">response to desiccation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25675104
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Novel mitochondria-targeted heat-soluble proteins identified...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="GO:0009269" data-r="PMID:25675104" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MAHS is a heat-soluble protein identified from the anhydrobiotic tardigrade R. varieornatus, an organism that tolerates almost complete dehydration. The protein is proposed to act as a molecular shield in water-deficient conditions (UniProt function annotation). The conserved MAHS motif forms a predicted amphipathic helix, similar to LEA proteins involved in desiccation tolerance. While MAHS improves hyperosmotic tolerance when expressed in human cells (PMID:25675104), the direct evidence for its role in desiccation response in the native tardigrade organism is primarily contextual (abundant expression in an anhydrobiotic species, mitochondrial protective role inferred from structural similarity to LEA proteins and osmotic tolerance assays).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is not currently in the GOA set but is strongly supported by the biological context. MAHS is identified as a protective protein in an anhydrobiotic organism, its amphipathic helix structure parallels that of LEA proteins known to function in desiccation tolerance, and it improves cellular tolerance to water stress. The term GO:0009269 (response to desiccation) is appropriate as the broader biological process. Evidence type would be IMP based on the osmotic tolerance assays as a proxy for water stress.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The identified repertoire of tardigrade-unique heat-soluble proteins will provide important clues to the desiccation tolerant mechanism in tardigrades.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">tardigrade mitochondria contain at least two types of heat-soluble proteins that might have protective roles in water-deficient environments.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006970" target="_blank" class="term-link">
+                                    GO:0006970
+                                </a>
+                            </span>
+                            <span class="term-label">response to osmotic stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25675104
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Novel mitochondria-targeted heat-soluble proteins identified...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="GO:0006970" data-r="PMID:25675104" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tanaka et al. 2015 (PMID:25675104) demonstrated that expression of MAHS in human HEp-2 cells significantly improved hyperosmotic tolerance. Cells expressing MAHS showed increased metabolic activity at 150 mM and 200 mM supplemental sucrose compared to untransfected controls, with the best improvement (~20%) at 200 mM sucrose. This provides direct experimental evidence for involvement in response to osmotic stress.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is not in the GOA set but is directly supported by experimental evidence. The osmotic tolerance assay in PMID:25675104 provides functional evidence that MAHS participates in the response to osmotic stress. Evidence type would be IDA based on the gain-of-function assay in human cells.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">cells expressing MAHS also had significantly increased metabolic activities at 150 mM and 200 mM sucrose. The best improvement by MAHS (~20%) was observed at 200 mM sucrose, which is close to the EC50 value (179 mM) of untransfected cells (Fig. 5).</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The results suggested that mitochondrial heat-soluble proteins of tardigrades, even non-LEA protein like MAHS, improve the tolerability of human cells to hyperosmotic stress.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050821" target="_blank" class="term-link">
+                                    GO:0050821
+                                </a>
+                            </span>
+                            <span class="term-label">protein stabilization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25675104
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Novel mitochondria-targeted heat-soluble proteins identified...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="GO:0050821" data-r="PMID:25675104" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MAHS is proposed to function as a molecular shield, preventing undesirable aggregation of proteins under water-deficient conditions, analogous to LEA proteins. The conserved MAHS motif forms a predicted amphipathic helix consistent with molecular shielding activity. However, direct protein stabilization activity has not been demonstrated experimentally for MAHS itself -- the molecular shield function is inferred from structural analogy with LEA proteins and the osmotic tolerance phenotype.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a reasonable inference from the structural similarity to LEA proteins and the molecular shield hypothesis described in UniProt and PMID:25675104. The amphipathic helix in the MAHS motif is consistent with the mechanism described for LEA proteins. However, direct biochemical evidence of protein stabilization by MAHS is lacking. This annotation would be appropriate with ISS or IKR evidence based on analogy to LEA proteins, but should be considered cautiously as the molecular shield mechanism is still hypothetical for MAHS.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In LEA proteins, the amphipathic helix is suggested to be important for loose interactions with other macromolecules to prevent undesirable aggregation or conformational changes of proteins and liposomes, so-called &#39;molecular shielding&#39; [38,39].</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sequence comparison among putative tardigrade MAHS proteins revealed a conserved region in the middle of the protein (S4 Fig.), and this region was partially predicted to form an alpha-helix by PORTER predication software (Fig. 4c-d), potentially with an amphipathic property (Fig. 4e), implying that MAHS proteins have a role similar to that of LEA proteins in anhydrobiosis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MAHS is a tardigrade-unique mitochondrial heat-soluble protein that acts as a molecular shield to protect mitochondrial macromolecules during water-deficient conditions (anhydrobiosis). It contains a conserved amphipathic helix motif and improves osmotic tolerance when expressed in human cells. MAHS works alongside RvLEAM (a mitochondrial LEA protein) to protect mitochondrial integrity during desiccation.</h3>
+                <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="FUNCTION: MAHS is a tardigrade-unique mitochondrial heat-sol..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009269" target="_blank" class="term-link">
+                                response to desiccation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006970" target="_blank" class="term-link">
+                                response to osmotic stress
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                PMID:25675104
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">cells expressing MAHS also had significantly increased metabolic activities at 150 mM and 200 mM sucrose. The best improvement by MAHS (~20%) was observed at 200 mM sucrose, which is close to the EC50 value (179 mM) of untransfected cells (Fig. 5).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                PMID:25675104
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">MAHS-green fluorescent protein fusion protein localized in human mitochondria and was heat-soluble in vitro, though no sequence similarity with other known proteins was found, and one region was conserved among tardigrades.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                            PMID:25675104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic Tardigrade improve osmotic tolerance of human cells</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MAHS-GFP fusion protein localizes to mitochondria in human cells</div>
+                        
+                        <div class="finding-text">"Two of them, MAHS and ATPM1, showed mitochondrial localization (Fig. 4a, S3 Fig.)."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MAHS protein is heat-soluble in vitro</div>
+                        
+                        <div class="finding-text">"Although purified MAHS protein was recovered in the soluble fraction after heat treatment, the heat-treated MAHS protein showed relatively slower migration in sodium dodecyl sulphate-polyacrylamide gel electrophoresis (Fig. 4b), indicating a possible conformational change induced by heat treatment."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MAHS expression improves hyperosmotic tolerance of human HEp-2 cells</div>
+                        
+                        <div class="finding-text">"cells expressing MAHS also had significantly increased metabolic activities at 150 mM and 200 mM sucrose. The best improvement by MAHS (~20%) was observed at 200 mM sucrose, which is close to the EC50 value (179 mM) of untransfected cells (Fig. 5)."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MAHS motif (conserved in tardigrades) forms a predicted amphipathic helix</div>
+                        
+                        <div class="finding-text">"Sequence comparison among putative tardigrade MAHS proteins revealed a conserved region in the middle of the protein (S4 Fig.), and this region was partially predicted to form an alpha-helix by PORTER predication software (Fig. 4c-d), potentially with an amphipathic property (Fig. 4e), implying that MAHS proteins have a role similar to that of LEA proteins in anhydrobiosis."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MAHS has no sequence similarity to known protein families including LEA proteins</div>
+                        
+                        <div class="finding-text">"A BLASTP search in non-redundant (nr) database retrieved no sequences, and TBLASTN searches in EST/TSA databases retrieved only two sequences of other tardigrades (e-value &lt; 1); one from the EST database of Hypsibius dujardini and the other from the TSA database of Milnesium tardigradum. No LEA proteins were retrieved in the search and also no LEA-like motif was found by either a InterProScan search or manual inspection."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MAHS is part of a tardigrade-unique heat-soluble protein repertoire</div>
+                        
+                        <div class="finding-text">"To date, three tardigrade-unique heat-soluble protein families have been identified, MAHS, CAHS, and SAHS. Their subcellular localizations are mutually exclusive and together they cover most cellular components: MAHS in the mitochondria, CAHS in the cytoplasm and nucleus, and SAHS in the extracellular space and secretory organelles."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27649274" target="_blank" class="term-link">
+                            PMID:27649274
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Extremotolerant tardigrade genome and improved radiotolerance of human cultured cells by tardigrade-unique protein</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides the genome sequence for R. varieornatus (YOKOZUNA-1 strain)</div>
+                        
+                        <div class="finding-text">"Extremotolerant tardigrade genome and improved radiotolerance of human cultured cells by tardigrade-unique protein."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does MAHS directly interact with mitochondrial proteins or lipids to exert its protective effect, or does it act through a more general biophysical mechanism?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="Q: Does MAHS directly interact with mitochondrial pro..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is MAHS expression specifically induced by desiccation stress in R. varieornatus, or is it constitutively expressed?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="Q: Is MAHS expression specifically induced by desicca..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does MAHS function synergistically with RvLEAM in mitochondrial protection during anhydrobiosis?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="Q: Does MAHS function synergistically with RvLEAM in ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Would a GO term for molecular shield activity or intrinsically disordered protein chaperone activity be appropriate for proteins like MAHS and LEA proteins?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="Q: Would a GO term for molecular shield activity or i..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vitro protein aggregation protection assays to test whether MAHS directly prevents protein aggregation under desiccation or osmotic stress conditions.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MAHS functions as a molecular shield that prevents protein aggregation under water-deficient conditions, similar to LEA proteins.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="EXPERIMENT: In vitro protein aggregation protection assays to ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Liposome protection assays to determine whether MAHS protects mitochondrial membranes from desiccation-induced damage.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MAHS may protect mitochondrial membrane integrity during desiccation, complementing the protein-protective role of RvLEAM.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="EXPERIMENT: Liposome protection assays to determine whether MA..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> RNAi or CRISPR knockdown of MAHS in R. varieornatus to test effects on anhydrobiotic survival.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of MAHS reduces desiccation tolerance in tardigrades, particularly affecting mitochondrial integrity during anhydrobiosis.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="EXPERIMENT: RNAi or CRISPR knockdown of MAHS in R. varieornatu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation or crosslinking mass spectrometry to identify MAHS interaction partners in mitochondria.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MAHS interacts with specific mitochondrial proteins or membrane components to exert its protective function.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="EXPERIMENT: Co-immunoprecipitation or crosslinking mass spectr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structural characterization (NMR or CD spectroscopy) of MAHS under different hydration states to confirm amphipathic helix formation in the MAHS motif.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The MAHS motif undergoes a conformational transition to amphipathic helix under water-deficient conditions, enabling molecular shield activity.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A1D1V3Z0" data-a="EXPERIMENT: Structural characterization (NMR or CD spectroscop..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MAHS-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A1D1V3Z0" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-04-09T09:51:47.254103'<br />
+end_time: '2026-04-09T10:04:47.551490'<br />
+duration_seconds: 780.3<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: RAMVA<br />
+  gene_id: MAHS<br />
+  gene_symbol: MAHS<br />
+  uniprot_accession: A0A1D1V3Z0<br />
+  protein_description: 'RecName: Full=Mitochondrial-abundant heat soluble protein<br />
+    {ECO:0000303|PubMed:25675104}; Short=MAHS {ECO:0000303|PubMed:25675104}; Flags:<br />
+    Precursor;'<br />
+  gene_info: Name=MAHS {ECO:0000303|PubMed:25675104}; ORFNames=RvY_05157;<br />
+  organism_full: Ramazzottius varieornatus (Water bear) (Tardigrade).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: Not specified in UniProt<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 42</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A0A1D1V3Z0</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mitochondrial-abundant heat soluble protein {ECO:0000303|PubMed:25675104}; Short=MAHS {ECO:0000303|PubMed:25675104}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=MAHS {ECO:0000303|PubMed:25675104}; ORFNames=RvY_05157;</li>
+<li><strong>Organism (full):</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Not specified in UniProt</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "MAHS" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'MAHS' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>MAHS</strong> (gene ID: MAHS, UniProt: A0A1D1V3Z0) in RAMVA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A0A1D1V3Z0</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mitochondrial-abundant heat soluble protein {ECO:0000303|PubMed:25675104}; Short=MAHS {ECO:0000303|PubMed:25675104}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=MAHS {ECO:0000303|PubMed:25675104}; ORFNames=RvY_05157;</li>
+<li><strong>Organism (full):</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Not specified in UniProt</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "MAHS" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'MAHS' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>MAHS</strong> (gene ID: MAHS, UniProt: A0A1D1V3Z0) in RAMVA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-mahs-mitochondrial-abundant-heat-soluble-protein-in-ramazzottius-varieornatus-uniprot-a0a1d1v3z0">Research report: MAHS (mitochondrial-abundant heat-soluble protein) in <em>Ramazzottius varieornatus</em> (UniProt A0A1D1V3Z0)</h2>
+<h3 id="0-target-verification-critical-disambiguation">0) Target verification (critical disambiguation)</h3>
+<p>The symbol <strong>MAHS</strong> in this report refers specifically to the <strong>mitochondrial-abundant heat-soluble protein (MAHS)</strong> from the tardigrade <strong>Ramazzottius varieornatus</strong> (water bear), matching the UniProt description for accession <strong>A0A1D1V3Z0</strong> (precursor; “Mitochondrial-abundant heat soluble protein”). MAHS was originally described as a <strong>novel mitochondria-targeted heat-soluble protein family</strong> from <em>R. varieornatus</em> that lacks detectable homology to known protein families, but includes a conserved “MAHS motif” among tardigrades. (tanaka2015novelmitochondriatargetedheatsoluble pages 1-2, tanaka2015novelmitochondriatargetedheatsoluble pages 10-11, hesgrove2020thebiologyof pages 2-3)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-anhydrobiosis-and-heat-soluble-proteins">1.1 Anhydrobiosis and heat-soluble proteins</h4>
+<p><strong>Anhydrobiosis</strong> is a reversible <strong>ametabolic</strong> state induced by extreme dehydration. Tardigrades can survive near-complete water loss by entering this state. (tanaka2015novelmitochondriatargetedheatsoluble pages 1-2)</p>
+<p>“<strong>Heat-soluble proteins</strong>” in this context are typically <strong>highly hydrophilic</strong> proteins that remain soluble after boiling; classical examples are <strong>LEA (late embryogenesis abundant)</strong> proteins, which are often intrinsically unstructured in solution and implicated in dehydration tolerance. Mechanistic models proposed for LEA-like protectants include weak, non-specific interactions (“<strong>molecular shielding</strong>”) that reduce protein aggregation and stabilize membranes during dehydration/rehydration transitions. (tanaka2015novelmitochondriatargetedheatsoluble pages 1-2, tanaka2015novelmitochondriatargetedheatsoluble pages 10-11)</p>
+<h4 id="12-tardigrade-disordered-proteins-tdps-and-mahs-definition">1.2 Tardigrade disordered proteins (TDPs) and MAHS definition</h4>
+<p>A major modern framework is that tardigrades encode <strong>tardigrade disordered proteins (TDPs)</strong>—three families of <strong>tardigrade-unique intrinsically disordered proteins</strong>: <strong>CAHS</strong> (cytoplasmic abundant heat-soluble), <strong>SAHS</strong> (secretory abundant heat-soluble), and <strong>MAHS</strong> (mitochondrial abundant heat-soluble). These proteins are “heat-soluble” and are either constitutively abundant or enriched in response to desiccation, with experimental evidence (across systems) supporting roles in abiotic stress tolerance. (hesgrove2020thebiologyof pages 1-2)</p>
+<p>MAHS proteins are described as having: (i) an <strong>N-terminal mitochondrial targeting/signal peptide</strong>, (ii) a conserved <strong>18-mer MAHS motif</strong> predicted to form an <strong>amphipathic helix</strong>, and (iii) a predicted disorder architecture with a more ordered N-terminus (~100 aa) and a highly disordered C-terminus (~150 aa). (hesgrove2020thebiologyof pages 2-3)</p>
+<h3 id="2-geneprotein-features-and-evolutionary-context">2) Gene/protein features and evolutionary context</h3>
+<h4 id="21-copy-number-genomic-context-in-r-varieornatus">2.1 Copy number / genomic context in <em>R. varieornatus</em></h4>
+<p>In comparative genomics of tardigrades, MAHS is presented as far less expanded than CAHS/SAHS and appears as a <strong>single-copy/single-locus</strong> family member in the analyzed differential-expression summary (“MAHS (1 of 1)”), consistent with UniProt’s single gene entry context for <em>R. varieornatus</em>. (yoshida2017comparativegenomicsof pages 13-14)</p>
+<h4 id="22-distribution-across-tardigrada-2024-update">2.2 Distribution across Tardigrada (2024 update)</h4>
+<p>A 2024 phylogenomic analysis treating MAHS as a desiccation/temperature-related family supports that MAHS is <strong>tardigrade-restricted</strong> and largely <strong>confined to Eutardigrada</strong>, with a dynamic history of duplication and loss in different lineages. Importantly, the study highlights that a Milnesium “MAHS-like” sequence <strong>lacks the canonical mitochondrial targeting peptide</strong> seen in “true” MAHS, calling functional equivalence into question. (fleming2024theevolutionof pages 6-7)</p>
+<h3 id="3-subcellular-localization-and-primary-function">3) Subcellular localization and primary function</h3>
+<h4 id="31-mitochondrial-localization-experimental">3.1 Mitochondrial localization (experimental)</h4>
+<p>MAHS was identified as a mitochondria-targeted, heat-soluble protein from <em>R. varieornatus</em>. In the original characterization, a <strong>MAHS–GFP fusion</strong> localized to <strong>human mitochondria</strong> (co-localizing with mitochondrial staining), supporting the idea that MAHS contains functional targeting information and can associate with mitochondria in heterologous systems. (tanaka2015novelmitochondriatargetedheatsoluble pages 2-4, tanaka2015novelmitochondriatargetedheatsoluble media fec15661)</p>
+<h4 id="32-what-is-mahss-primary-function">3.2 What is MAHS’s primary function?</h4>
+<p>MAHS is <strong>not an enzyme</strong> with a known catalytic reaction; rather, it is best-supported as a <strong>stress-protective mitochondrial-localized protein</strong>. The strongest functional evidence comes from heterologous expression experiments showing improved survival/viability under stress conditions (Section 5). (tanaka2015novelmitochondriatargetedheatsoluble pages 10-11, rolsma2024thetardigradederivedmitochondrial pages 1-2)</p>
+<p>Mechanistically, authoritative synthesis proposes that MAHS may act as a <strong>membrane stabilizer</strong> during dehydration/rehydration by preventing deleterious phase transitions and transient defects (“holes”) that arise when desiccated membranes rehydrate non-uniformly. In this model, MAHS helices help keep membranes in a more uniform, liquid-crystalline-like state and thereby maintain mitochondrial integrity. A second hypothesized contribution is mitochondrial remodeling that reduces cristae surface area/volume and potentially reduces ROS production during stress; these remain testable models rather than settled mechanisms. (hesgrove2020thebiologyof pages 3-7)</p>
+<h3 id="4-recent-developments-and-latest-research-prioritizing-20232024">4) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="41-new-experimental-tool-enabling-in-tardigrade-studies-2023">4.1 New experimental tool enabling in-tardigrade studies (2023)</h4>
+<p>A major practical advance is <strong>TardiVec</strong>, an <strong>in vivo transient expression system</strong> using promoters from <em>R. varieornatus</em> that enables microinjection-based expression of GFP-fused proteins and indicators for <strong>live imaging</strong> in eutardigrades. This addresses a key bottleneck in testing tissue specificity and in vivo dynamics of tardigrade proteins (including MAHS) in their native context. (tanaka2023invivoexpression pages 1-2)</p>
+<h4 id="42-nondomain-biopolymer-framing-2023">4.2 Nondomain biopolymer framing (2023)</h4>
+<p>A 2023 review highlights MAHS (with CAHS and Dsup) as an example of a <strong>“nondomain”</strong> (domain-poor) intrinsically disordered biopolymer whose function is difficult to infer from conserved domains, and emphasizes that functional validation in vivo is increasingly feasible with emerging tardigrade genetic tools. (arakawa2023nondomainbiopolymersflexible pages 6-8)</p>
+<h4 id="43-evolutionary-resolution-and-nomenclature-pressure-2024">4.3 Evolutionary resolution and nomenclature pressure (2024)</h4>
+<p>A 2024 evolutionary analysis explicitly includes MAHS phylogenies among key extremotolerance families and concludes that MAHS evolution is characterized by repeated duplications/losses and sampling-driven nomenclature limitations; it also underscores the diagnostic importance of the mitochondrial targeting peptide for canonical MAHS. (fleming2024theevolutionof pages 6-7, fleming2024theevolutionof pages 7-9)</p>
+<h4 id="44-translational-application-in-human-stem-cells-2024">4.4 Translational application in human stem cells (2024)</h4>
+<p>A 2024 Scientific Reports study provides the most application-forward evidence for MAHS: <strong>stable MAHS expression in human adipose-derived stem cells (ASCs)</strong> improves survival/viability across several clinically relevant stressors (Section 5). (rolsma2024thetardigradederivedmitochondrial pages 1-2, rolsma2024thetardigradederivedmitochondrial pages 5-7)</p>
+<h3 id="5-current-applications-and-real-world-implementations-mahs-centered">5) Current applications and real-world implementations (MAHS-centered)</h3>
+<h4 id="51-mammalian-cell-engineering-for-stress-tolerance-2015-2024">5.1 Mammalian cell engineering for stress tolerance (2015 → 2024)</h4>
+<p><strong>Human epithelial cells (HEp-2; discovery-era functional assay):</strong> MAHS expressed stably in human cells improved recovery of metabolic activity after hyperosmotic stress (48 h exposure), with statistically significant improvements at 150–200 mM sucrose and a maximal reported improvement of ~20% at 200 mM (near the control EC50). This supports a deployable “mitochondrial protectant” concept for transient stress exposures. (tanaka2015novelmitochondriatargetedheatsoluble pages 10-11, tanaka2015novelmitochondriatargetedheatsoluble media 45193d5e)</p>
+<p><strong>Human adipose-derived stem cells (ASCs; regenerative medicine workflow relevance):</strong> MAHS transgenesis improved resistance to multiple stressors that commonly reduce therapeutic cell potency:<br />
+- Up to <strong>61% increased survival</strong> after <strong>72 h</strong> incubation in PBS with 20% media (nutrient/metabolic stress). (rolsma2024thetardigradederivedmitochondrial pages 1-2)<br />
+- <strong>14–49% increased survival</strong> after up to <strong>72 h</strong> exposure to up to <strong>3.5% DMSO</strong> (cryoprotectant toxicity proxy). (rolsma2024thetardigradederivedmitochondrial pages 1-2)<br />
+- Up to <strong>39% improved viability</strong> after injection through clinically relevant <strong>27-, 32-, and 34-gauge</strong> needles (shear stress during cell delivery). (rolsma2024thetardigradederivedmitochondrial pages 1-2)</p>
+<p>However, MAHS did <strong>not</strong> substitute for cryoprotectant-free freezing and was reported to reduce freezing resistance in that ASC system, indicating that MAHS’s protective scope may be context- and stressor-specific. (rolsma2024thetardigradederivedmitochondrial pages 12-13)</p>
+<h4 id="52-industrial-biotechnology-microbial-chassis-emerging">5.2 Industrial biotechnology / microbial chassis (emerging)</h4>
+<p>Expression of MAHS (along with other tardigrade proteins) has been tested in yeast, where MAHS improved tolerance to <strong>acute</strong> heat shock and hyperosmotic stress but not chronic stress exposures, suggesting potential targeted utility for industrial processes with transient stress spikes rather than long-duration stress. (lopez2025expressingintrinsicallydisorderedtardigrade pages 5-8)</p>
+<h3 id="6-expert-opinions-and-analysis-authoritative-synthesis">6) Expert opinions and analysis (authoritative synthesis)</h3>
+<h4 id="61-consensus-points-from-authoritative-reviews">6.1 Consensus points from authoritative reviews</h4>
+<p>A central expert view is that MAHS belongs to a broader strategy in anhydrobiotes: accumulating high levels of <strong>intrinsically disordered, heat-soluble proteins</strong> that can remain soluble under conditions that denature typical globular proteins and can transition into protective conformations/assemblies under drying/osmotic stress. MAHS is positioned as the <strong>mitochondrial</strong> counterpart to CAHS (intracellular/cytosolic) and SAHS (secretory/extracellular). (hesgrove2020thebiologyof pages 1-2, hesgrove2020thebiologyof pages 2-3)</p>
+<h4 id="62-what-remains-uncertain-critical-appraisal">6.2 What remains uncertain (critical appraisal)</h4>
+<p>Despite clear mitochondrial localization and repeated demonstrations of heterologous protective effects, MAHS’s <strong>direct molecular targets</strong> (e.g., specific mitochondrial inner membrane lipids, proteins, cristae architecture components) remain insufficiently resolved. Mechanistic models (membrane phase stabilization; ROS modulation via cristae remodeling) are plausible but not yet definitive. (hesgrove2020thebiologyof pages 3-7)</p>
+<p>Additionally, translational work highlights safety and control considerations: sustained expression of an intrinsically disordered stress protein may alter differentiation or metabolism (as seen with osteogenesis/adipogenesis shifts in ASCs), suggesting that dose/timing (e.g., mRNA-based transient delivery) may be important for real-world adoption. (rolsma2024thetardigradederivedmitochondrial pages 12-13)</p>
+<h3 id="7-relevant-statistics-and-data-highlights">7) Relevant statistics and data highlights</h3>
+<p>Key quantitative results directly attributable to MAHS expression include:<br />
+- <strong>~20% maximal improvement</strong> in metabolic activity recovery of MAHS-expressing HEp-2 cells at <strong>200 mM sucrose</strong> in a hyperosmotic challenge assay (48 h exposure). (tanaka2015novelmitochondriatargetedheatsoluble pages 10-11, tanaka2015novelmitochondriatargetedheatsoluble media 45193d5e)<br />
+- In human ASCs, MAHS expression produced up to <strong>61% increased survival</strong> under nutrient stress, <strong>14–49% increased survival</strong> under DMSO exposure, and up to <strong>39% improved viability</strong> after needle injection shear (27–34G). (rolsma2024thetardigradederivedmitochondrial pages 1-2)<br />
+- MAHS-ASCs showed altered differentiation markers: alkaline phosphatase activity increased ~74% after 14 days in osteogenic media and adipogenic lipid area decreased up to ~10% under adipogenic induction (with partial rescue by high glucose), indicating systemic metabolic/differentiation impacts that matter for application design. (rolsma2024thetardigradederivedmitochondrial pages 1-2, rolsma2024thetardigradederivedmitochondrial pages 7-10)</p>
+<h3 id="8-evidence-map-of-key-sources-with-dates-and-urls">8) Evidence map of key sources (with dates and URLs)</h3>
+<p>The following table consolidates the most MAHS-relevant sources, emphasizing 2024 work while anchoring core claims in primary discovery literature.</p>
+<table>
+<thead>
+<tr>
+<th>Citation</th>
+<th>Pub. date</th>
+<th>Title</th>
+<th>Journal</th>
+<th>Main MAHS-related findings</th>
+<th>Experimental system</th>
+<th>Key quantitative results</th>
+<th>URL / DOI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tanaka et al., 2015 (tanaka2015novelmitochondriatargetedheatsoluble pages 1-2, tanaka2015novelmitochondriatargetedheatsoluble pages 10-11, tanaka2015novelmitochondriatargetedheatsoluble pages 2-4)</td>
+<td>Feb 2015</td>
+<td><em>Novel Mitochondria-Targeted Heat-Soluble Proteins Identified in the Anhydrobiotic Tardigrade Improve Osmotic Tolerance of Human Cells</em></td>
+<td>PLOS ONE</td>
+<td>Discovery paper for <strong>MAHS</strong> in <em>Ramazzottius varieornatus</em>; defines MAHS as a novel <strong>mitochondria-targeted, heat-soluble</strong> tardigrade protein family with no clear homology to known protein families; MAHS-GFP localizes to mitochondria in human cells; proposed protective mechanism involves hydrophilic/amphipathic helix-mediated molecular shielding of mitochondrial macromolecules/membranes.</td>
+<td>Bioinformatic prediction; GFP-fusion localization in HEp-2/HEK293T cells; stable MAHS expression in HEp-2 cells; hyperosmotic stress assay.</td>
+<td>MAHS expression significantly increased metabolic activity at <strong>150 mM</strong> and <strong>200 mM sucrose</strong>; maximal improvement reported at <strong>~20% at 200 mM sucrose</strong> after 48 h stress/recovery.</td>
+<td>https://doi.org/10.1371/journal.pone.0118272</td>
+</tr>
+<tr>
+<td>Yoshida et al., 2017 (yoshida2017comparativegenomicsof pages 13-14)</td>
+<td>Jul 2017</td>
+<td><em>Comparative genomics of the tardigrades Hypsibius dujardini and Ramazzottius varieornatus</em></td>
+<td>PLOS Biology</td>
+<td>Comparative genomics places MAHS among tardigrade stress-protection gene families; supports that MAHS is much less expanded than CAHS/SAHS in tardigrades and is represented as a <strong>single-copy/single-locus family member</strong> in the analyzed dataset.</td>
+<td>Comparative genomics and transcriptomics across <em>H. dujardini</em> and <em>R. varieornatus</em>.</td>
+<td>Differential-expression summary lists <strong>MAHS (1 of 1)</strong>, contrasted with larger CAHS/SAHS family counts.</td>
+<td>https://doi.org/10.1371/journal.pbio.2002266</td>
+</tr>
+<tr>
+<td>Hesgrove &amp; Boothby, 2020 (hesgrove2020thebiologyof pages 2-3, hesgrove2020thebiologyof pages 3-7)</td>
+<td>Nov 2020</td>
+<td><em>The biology of tardigrade disordered proteins in extreme stress tolerance</em></td>
+<td>Cell Communication and Signaling</td>
+<td>Review classifying MAHS as one of the tardigrade disordered protein (TDP) families; summarizes MAHS features: N-terminal mitochondrial signal peptide, conserved MAHS motif, predicted disorder with helix-forming capacity, mitochondrial localization, and hypothesized membrane/cristae protection during drying and rehydration.</td>
+<td>Review of ex vivo mammalian-cell expression, tardigrade ultrastructure, and bioinformatic disorder analyses.</td>
+<td>No new primary quantitative measurements; synthesizes prior evidence that MAHS expression protects human cells from loss of metabolic activity under hyperosmotic stress.</td>
+<td>https://doi.org/10.1186/s12964-020-00670-2</td>
+</tr>
+<tr>
+<td>Neves et al., 2022 (fleming2024theevolutionof pages 6-7)</td>
+<td>May 2022</td>
+<td><em>Differential expression profiling of heat stressed tardigrades reveals major shift in the transcriptome</em></td>
+<td>Comparative Biochemistry and Physiology Part A</td>
+<td>Transcriptomic study of heat stress in tardigrades noting MAHS among eutardigrade-specific stress-related protein families considered in expression analyses; useful as contextual evidence that MAHS belongs to the broader heat/desiccation response repertoire.</td>
+<td>RNA-seq differential expression under heat stress.</td>
+<td>Excerpt gives no MAHS-specific numeric effect size.</td>
+<td>https://doi.org/10.1016/j.cbpa.2022.111169</td>
+</tr>
+<tr>
+<td>Rolsma et al., 2024 (rolsma2024thetardigradederivedmitochondrial pages 2-3, rolsma2024thetardigradederivedmitochondrial pages 10-12, rolsma2024thetardigradederivedmitochondrial pages 1-2)</td>
+<td>May 2024</td>
+<td><em>The tardigrade-derived mitochondrial abundant heat soluble protein improves adipose-derived stem cell survival against representative stressors</em></td>
+<td>Scientific Reports</td>
+<td>Most directly relevant recent application study; transgenic MAHS expression in human adipose-derived stem cells improves survival against metabolic/nutrient stress, DMSO exposure, and injection shear; supports MAHS as a candidate cell-engineering tool for regenerative medicine.</td>
+<td>Lentiviral MAHS expression in human adipose-derived stem cells; viability, DMSO, PBS starvation, needle-injection, and differentiation assays.</td>
+<td>Up to <strong>61%</strong> increased survival after <strong>72 h</strong> in PBS + 20% media; <strong>14–49%</strong> higher survival after up to <strong>72 h</strong> with up to <strong>3.5% DMSO</strong>; up to <strong>39%</strong> improved viability after injection through <strong>27-, 32-, and 34-gauge</strong> needles; alkaline phosphatase increased <strong>74%</strong> after 14 days osteogenic induction; adipogenic lipid area decreased by up to <strong>10%</strong> but rescued by glucose supplementation.</td>
+<td>https://doi.org/10.1038/s41598-024-62693-w</td>
+</tr>
+<tr>
+<td>Galas et al., 2024 (galas2024acomparativeultrastructure pages 2-4, galas2024acomparativeultrastructure pages 1-2)</td>
+<td>Jun 2024</td>
+<td><em>A comparative ultrastructure study of the tardigrade Ramazzottius varieornatus in the hydrated state, after desiccation and during the process of rehydration</em></td>
+<td>PLOS ONE</td>
+<td>Provides recent cellular/ultrastructural context for <em>R. varieornatus</em> anhydrobiosis; cites MAHS alongside CAHS, SAHS, and RvLEAM as heat-soluble IDPs involved in maintaining cellular structures during desiccation, but does <strong>not</strong> directly localize MAHS ultrastructurally.</td>
+<td>Transmission electron microscopy of hydrated, tun, and early rehydration animals.</td>
+<td>Methods include <strong>5 animals per condition</strong> and early rehydration at <strong>5 and 15 min</strong>; no MAHS-specific quantitative function reported.</td>
+<td>https://doi.org/10.1371/journal.pone.0302552</td>
+</tr>
+<tr>
+<td>Sadowska-Bartosz &amp; Bartosz, 2024 (sadowskabartosz2024antioxidantdefensein pages 9-10)</td>
+<td>Aug 2024</td>
+<td><em>Antioxidant Defense in the Toughest Animals on the Earth: Its Contribution to the Extreme Resistance of Tardigrades</em></td>
+<td>International Journal of Molecular Sciences</td>
+<td>Review situating MAHS with CAHS/SAHS as tardigrade-unique heat-soluble proteins proposed to support anhydrobiosis and other stress resistance; notes broader mechanistic hypotheses, including possible RNA-chaperone-like roles discussed for tardigrade-unique proteins.</td>
+<td>Review/synthesis.</td>
+<td>No MAHS-specific new quantitative data.</td>
+<td>https://doi.org/10.3390/ijms25158393</td>
+</tr>
+<tr>
+<td>Fleming et al., 2024 (fleming2024theevolutionof pages 6-7, fleming2024theevolutionof pages 11-13)</td>
+<td>Nov 2024</td>
+<td><em>The Evolution of Temperature and Desiccation-Related Protein Families in Tardigrada Reveals a Complex Acquisition of Extremotolerance</em></td>
+<td>Genome Biology and Evolution</td>
+<td>Key recent evolutionary analysis of MAHS; supports MAHS as a tardigrade-specific protein family largely restricted to <strong>Eutardigrada</strong>, with evidence for a single ancestral copy followed by lineage-specific duplications/losses; highlights that canonical MAHS proteins carry a mitochondrial targeting peptide, whereas a Milnesium MAHS-like sequence lacks this feature.</td>
+<td>Comparative phylogenomics across tardigrade taxa using HMM/BLAST-based family identification and phylogenetic reconstruction.</td>
+<td>Across taxa sampled, authors identified <strong>8 MAHS</strong> sequences (vs <strong>74 CAHS</strong> and <strong>29 SAHS</strong>), underscoring the comparatively small MAHS family.</td>
+<td>https://doi.org/10.1093/gbe/evad217</td>
+</tr>
+<tr>
+<td>López et al., 2025 (lopez2025expressingintrinsicallydisorderedtardigrade pages 5-8)</td>
+<td>Jun 2025</td>
+<td><em>Expressing intrinsically-disordered tardigrade proteins has positive effects on acute but not chronic stress tolerance in Saccharomyces cerevisiae</em></td>
+<td>PLOS ONE</td>
+<td>Post-2024 extension showing MAHS can function in yeast; MAHS localizes appropriately and improves tolerance to <strong>acute</strong> heat and hyperosmotic stress but not chronic stress, supporting transient-protection applications and reinforcing a likely membrane/mitochondrial protection role.</td>
+<td>Heterologous MAHS expression in <em>S. cerevisiae</em> with GFP localization, heat shock, hyperosmolarity, desiccation, and chronic stress assays.</td>
+<td>Qualitative results in excerpt: MAHS was the “<strong>lone survivor at 50°C</strong>” among tested constructs in acute heat shock; no exact percentage values provided in excerpt.</td>
+<td>https://doi.org/10.1371/journal.pone.0325682</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main primary and review sources relevant to MAHS from </em>Ramazzottius varieornatus<em>, emphasizing recent 2024 work while anchoring the field in the 2015 discovery study. It highlights what each paper contributes on MAHS identity, localization, mechanism, evolutionary context, and current applications.</em></p>
+<h3 id="9-figures-visual-evidence">9) Figures (visual evidence)</h3>
+<p>Confocal microscopy showing <strong>MAHS–GFP co-localization with mitochondria</strong> and bar-plot data showing <strong>improved metabolic activity under hyperosmotic stress</strong> were retrieved from the Tanaka et al. (2015) study. (tanaka2015novelmitochondriatargetedheatsoluble media fec15661, tanaka2015novelmitochondriatargetedheatsoluble media 45193d5e)</p>
+<h3 id="10-summary-functional-annotation-for-a0a1d1v3z0-mahs">10) Summary functional annotation (for A0A1D1V3Z0 / MAHS)</h3>
+<ul>
+<li><strong>Molecular type:</strong> tardigrade-unique, heat-soluble, likely intrinsically disordered stress protein; not a known enzyme. (tanaka2015novelmitochondriatargetedheatsoluble pages 10-11, hesgrove2020thebiologyof pages 2-3)</li>
+<li><strong>Primary function (best-supported):</strong> mitochondrial-localized stress protection, plausibly via membrane stabilization during dehydration/hyperosmotic stress and/or during desiccation/rehydration transitions (hypothesis supported by models; function supported by heterologous stress-tolerance assays). (tanaka2015novelmitochondriatargetedheatsoluble pages 10-11, hesgrove2020thebiologyof pages 3-7)</li>
+<li><strong>Localization:</strong> mitochondria (demonstrated by MAHS–GFP in mammalian cells; family-defining N-terminal mitochondrial targeting peptide in canonical MAHS). (tanaka2015novelmitochondriatargetedheatsoluble pages 2-4, tanaka2015novelmitochondriatargetedheatsoluble media fec15661, fleming2024theevolutionof pages 6-7)</li>
+<li><strong>Pathway context:</strong> not assigned to a canonical signaling pathway; best understood as part of the tardigrade stress-protection toolkit contributing to anhydrobiosis and cross-tolerance to other insults. (hesgrove2020thebiologyof pages 1-2, sadowskabartosz2024antioxidantdefensein pages 7-9)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(tanaka2015novelmitochondriatargetedheatsoluble pages 1-2): Sae Tanaka, Junko Tanaka, Yoshihiro Miwa, Daiki D. Horikawa, Toshiaki Katayama, Kazuharu Arakawa, Atsushi Toyoda, Takeo Kubo, and Takekazu Kunieda. Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic tardigrade improve osmotic tolerance of human cells. PLoS ONE, 10:e0118272, Feb 2015. URL: https://doi.org/10.1371/journal.pone.0118272, doi:10.1371/journal.pone.0118272. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2015novelmitochondriatargetedheatsoluble pages 10-11): Sae Tanaka, Junko Tanaka, Yoshihiro Miwa, Daiki D. Horikawa, Toshiaki Katayama, Kazuharu Arakawa, Atsushi Toyoda, Takeo Kubo, and Takekazu Kunieda. Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic tardigrade improve osmotic tolerance of human cells. PLoS ONE, 10:e0118272, Feb 2015. URL: https://doi.org/10.1371/journal.pone.0118272, doi:10.1371/journal.pone.0118272. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hesgrove2020thebiologyof pages 2-3): Cherie Hesgrove and Thomas C. Boothby. The biology of tardigrade disordered proteins in extreme stress tolerance. Cell Communication and Signaling, Nov 2020. URL: https://doi.org/10.1186/s12964-020-00670-2, doi:10.1186/s12964-020-00670-2. This article has 121 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hesgrove2020thebiologyof pages 1-2): Cherie Hesgrove and Thomas C. Boothby. The biology of tardigrade disordered proteins in extreme stress tolerance. Cell Communication and Signaling, Nov 2020. URL: https://doi.org/10.1186/s12964-020-00670-2, doi:10.1186/s12964-020-00670-2. This article has 121 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yoshida2017comparativegenomicsof pages 13-14): Yuki Yoshida, Georgios Koutsovoulos, Dominik R. Laetsch, Lewis Stevens, Sujai Kumar, Daiki D. Horikawa, Kyoko Ishino, Shiori Komine, Takekazu Kunieda, Masaru Tomita, Mark Blaxter, and Kazuharu Arakawa. Comparative genomics of the tardigrades hypsibius dujardini and ramazzottius varieornatus. PLOS Biology, 15:e2002266, Jul 2017. URL: https://doi.org/10.1371/journal.pbio.2002266, doi:10.1371/journal.pbio.2002266. This article has 245 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fleming2024theevolutionof pages 6-7): James F Fleming, Davide Pisani, and Kazuharu Arakawa. The evolution of temperature and desiccation-related protein families in tardigrada reveals a complex acquisition of extremotolerance. Genome Biology and Evolution, Nov 2024. URL: https://doi.org/10.1093/gbe/evad217, doi:10.1093/gbe/evad217. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2015novelmitochondriatargetedheatsoluble pages 2-4): Sae Tanaka, Junko Tanaka, Yoshihiro Miwa, Daiki D. Horikawa, Toshiaki Katayama, Kazuharu Arakawa, Atsushi Toyoda, Takeo Kubo, and Takekazu Kunieda. Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic tardigrade improve osmotic tolerance of human cells. PLoS ONE, 10:e0118272, Feb 2015. URL: https://doi.org/10.1371/journal.pone.0118272, doi:10.1371/journal.pone.0118272. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2015novelmitochondriatargetedheatsoluble media fec15661): Sae Tanaka, Junko Tanaka, Yoshihiro Miwa, Daiki D. Horikawa, Toshiaki Katayama, Kazuharu Arakawa, Atsushi Toyoda, Takeo Kubo, and Takekazu Kunieda. Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic tardigrade improve osmotic tolerance of human cells. PLoS ONE, 10:e0118272, Feb 2015. URL: https://doi.org/10.1371/journal.pone.0118272, doi:10.1371/journal.pone.0118272. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rolsma2024thetardigradederivedmitochondrial pages 1-2): Jordan L. Rolsma, William Darch, Nicholas C. Higgins, and Joshua T. Morgan. The tardigrade-derived mitochondrial abundant heat soluble protein improves adipose-derived stem cell survival against representative stressors. Scientific Reports, May 2024. URL: https://doi.org/10.1038/s41598-024-62693-w, doi:10.1038/s41598-024-62693-w. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hesgrove2020thebiologyof pages 3-7): Cherie Hesgrove and Thomas C. Boothby. The biology of tardigrade disordered proteins in extreme stress tolerance. Cell Communication and Signaling, Nov 2020. URL: https://doi.org/10.1186/s12964-020-00670-2, doi:10.1186/s12964-020-00670-2. This article has 121 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2023invivoexpression pages 1-2): Sae Tanaka, Kazuhiro Aoki, and Kazuharu Arakawa. In vivo expression vector derived from anhydrobiotic tardigrade genome enables live imaging in eutardigrada. Proceedings of the National Academy of Sciences, Jan 2023. URL: https://doi.org/10.1073/pnas.2216739120, doi:10.1073/pnas.2216739120. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arakawa2023nondomainbiopolymersflexible pages 6-8): Kazuharu Arakawa, Tetsuro Hirose, Toshifumi Inada, Takuhiro Ito, Toshie Kai, Masaaki Oyama, Yukihide Tomari, Takao Yoda, and Shinichi Nakagawa. Nondomain biopolymers: flexible molecular strategies to acquire biological functions. Genes to Cells, 28:539-552, May 2023. URL: https://doi.org/10.1111/gtc.13050, doi:10.1111/gtc.13050. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fleming2024theevolutionof pages 7-9): James F Fleming, Davide Pisani, and Kazuharu Arakawa. The evolution of temperature and desiccation-related protein families in tardigrada reveals a complex acquisition of extremotolerance. Genome Biology and Evolution, Nov 2024. URL: https://doi.org/10.1093/gbe/evad217, doi:10.1093/gbe/evad217. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rolsma2024thetardigradederivedmitochondrial pages 5-7): Jordan L. Rolsma, William Darch, Nicholas C. Higgins, and Joshua T. Morgan. The tardigrade-derived mitochondrial abundant heat soluble protein improves adipose-derived stem cell survival against representative stressors. Scientific Reports, May 2024. URL: https://doi.org/10.1038/s41598-024-62693-w, doi:10.1038/s41598-024-62693-w. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2015novelmitochondriatargetedheatsoluble media 45193d5e): Sae Tanaka, Junko Tanaka, Yoshihiro Miwa, Daiki D. Horikawa, Toshiaki Katayama, Kazuharu Arakawa, Atsushi Toyoda, Takeo Kubo, and Takekazu Kunieda. Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic tardigrade improve osmotic tolerance of human cells. PLoS ONE, 10:e0118272, Feb 2015. URL: https://doi.org/10.1371/journal.pone.0118272, doi:10.1371/journal.pone.0118272. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rolsma2024thetardigradederivedmitochondrial pages 12-13): Jordan L. Rolsma, William Darch, Nicholas C. Higgins, and Joshua T. Morgan. The tardigrade-derived mitochondrial abundant heat soluble protein improves adipose-derived stem cell survival against representative stressors. Scientific Reports, May 2024. URL: https://doi.org/10.1038/s41598-024-62693-w, doi:10.1038/s41598-024-62693-w. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lopez2025expressingintrinsicallydisorderedtardigrade pages 5-8): Mario León López, Ian Wheeldon, and Joshua T. Morgan. Expressing intrinsically-disordered tardigrade proteins has positive effects on acute but not chronic stress tolerance in saccharomyces cerevisiae. PLOS One, 20:e0325682, Jun 2025. URL: https://doi.org/10.1371/journal.pone.0325682, doi:10.1371/journal.pone.0325682. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rolsma2024thetardigradederivedmitochondrial pages 7-10): Jordan L. Rolsma, William Darch, Nicholas C. Higgins, and Joshua T. Morgan. The tardigrade-derived mitochondrial abundant heat soluble protein improves adipose-derived stem cell survival against representative stressors. Scientific Reports, May 2024. URL: https://doi.org/10.1038/s41598-024-62693-w, doi:10.1038/s41598-024-62693-w. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rolsma2024thetardigradederivedmitochondrial pages 2-3): Jordan L. Rolsma, William Darch, Nicholas C. Higgins, and Joshua T. Morgan. The tardigrade-derived mitochondrial abundant heat soluble protein improves adipose-derived stem cell survival against representative stressors. Scientific Reports, May 2024. URL: https://doi.org/10.1038/s41598-024-62693-w, doi:10.1038/s41598-024-62693-w. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rolsma2024thetardigradederivedmitochondrial pages 10-12): Jordan L. Rolsma, William Darch, Nicholas C. Higgins, and Joshua T. Morgan. The tardigrade-derived mitochondrial abundant heat soluble protein improves adipose-derived stem cell survival against representative stressors. Scientific Reports, May 2024. URL: https://doi.org/10.1038/s41598-024-62693-w, doi:10.1038/s41598-024-62693-w. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(galas2024acomparativeultrastructure pages 2-4): Simon Galas, Emilie Le Goff, Chantal Cazevieille, Akihiro Tanaka, Pierre Cuq, Stephen Baghdiguian, Takekazu Kunieda, Nelly Godefroy, and Myriam Richaud. A comparative ultrastructure study of the tardigrade ramazzottius varieornatus in the hydrated state, after desiccation and during the process of rehydration. PLOS ONE, 19:e0302552, Jun 2024. URL: https://doi.org/10.1371/journal.pone.0302552, doi:10.1371/journal.pone.0302552. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(galas2024acomparativeultrastructure pages 1-2): Simon Galas, Emilie Le Goff, Chantal Cazevieille, Akihiro Tanaka, Pierre Cuq, Stephen Baghdiguian, Takekazu Kunieda, Nelly Godefroy, and Myriam Richaud. A comparative ultrastructure study of the tardigrade ramazzottius varieornatus in the hydrated state, after desiccation and during the process of rehydration. PLOS ONE, 19:e0302552, Jun 2024. URL: https://doi.org/10.1371/journal.pone.0302552, doi:10.1371/journal.pone.0302552. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sadowskabartosz2024antioxidantdefensein pages 9-10): Izabela Sadowska-Bartosz and Grzegorz Bartosz. Antioxidant defense in the toughest animals on the earth: its contribution to the extreme resistance of tardigrades. International Journal of Molecular Sciences, 25:8393, Aug 2024. URL: https://doi.org/10.3390/ijms25158393, doi:10.3390/ijms25158393. This article has 13 citations.</p>
+</li>
+<li>
+<p>(fleming2024theevolutionof pages 11-13): James F Fleming, Davide Pisani, and Kazuharu Arakawa. The evolution of temperature and desiccation-related protein families in tardigrada reveals a complex acquisition of extremotolerance. Genome Biology and Evolution, Nov 2024. URL: https://doi.org/10.1093/gbe/evad217, doi:10.1093/gbe/evad217. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sadowskabartosz2024antioxidantdefensein pages 7-9): Izabela Sadowska-Bartosz and Grzegorz Bartosz. Antioxidant defense in the toughest animals on the earth: its contribution to the extreme resistance of tardigrades. International Journal of Molecular Sciences, 25:8393, Aug 2024. URL: https://doi.org/10.3390/ijms25158393, doi:10.3390/ijms25158393. This article has 13 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>tanaka2015novelmitochondriatargetedheatsoluble pages 1-2</li>
+<li>hesgrove2020thebiologyof pages 1-2</li>
+<li>hesgrove2020thebiologyof pages 2-3</li>
+<li>yoshida2017comparativegenomicsof pages 13-14</li>
+<li>fleming2024theevolutionof pages 6-7</li>
+<li>hesgrove2020thebiologyof pages 3-7</li>
+<li>tanaka2023invivoexpression pages 1-2</li>
+<li>arakawa2023nondomainbiopolymersflexible pages 6-8</li>
+<li>rolsma2024thetardigradederivedmitochondrial pages 1-2</li>
+<li>rolsma2024thetardigradederivedmitochondrial pages 12-13</li>
+<li>lopez2025expressingintrinsicallydisorderedtardigrade pages 5-8</li>
+<li>sadowskabartosz2024antioxidantdefensein pages 9-10</li>
+<li>tanaka2015novelmitochondriatargetedheatsoluble pages 10-11</li>
+<li>tanaka2015novelmitochondriatargetedheatsoluble pages 2-4</li>
+<li>fleming2024theevolutionof pages 7-9</li>
+<li>rolsma2024thetardigradederivedmitochondrial pages 5-7</li>
+<li>rolsma2024thetardigradederivedmitochondrial pages 7-10</li>
+<li>rolsma2024thetardigradederivedmitochondrial pages 2-3</li>
+<li>rolsma2024thetardigradederivedmitochondrial pages 10-12</li>
+<li>galas2024acomparativeultrastructure pages 2-4</li>
+<li>galas2024acomparativeultrastructure pages 1-2</li>
+<li>fleming2024theevolutionof pages 11-13</li>
+<li>sadowskabartosz2024antioxidantdefensein pages 7-9</li>
+<li>https://doi.org/10.1371/journal.pone.0118272</li>
+<li>https://doi.org/10.1371/journal.pbio.2002266</li>
+<li>https://doi.org/10.1186/s12964-020-00670-2</li>
+<li>https://doi.org/10.1016/j.cbpa.2022.111169</li>
+<li>https://doi.org/10.1038/s41598-024-62693-w</li>
+<li>https://doi.org/10.1371/journal.pone.0302552</li>
+<li>https://doi.org/10.3390/ijms25158393</li>
+<li>https://doi.org/10.1093/gbe/evad217</li>
+<li>https://doi.org/10.1371/journal.pone.0325682</li>
+<li>https://doi.org/10.1371/journal.pone.0118272,</li>
+<li>https://doi.org/10.1186/s12964-020-00670-2,</li>
+<li>https://doi.org/10.1371/journal.pbio.2002266,</li>
+<li>https://doi.org/10.1093/gbe/evad217,</li>
+<li>https://doi.org/10.1038/s41598-024-62693-w,</li>
+<li>https://doi.org/10.1073/pnas.2216739120,</li>
+<li>https://doi.org/10.1111/gtc.13050,</li>
+<li>https://doi.org/10.1371/journal.pone.0325682,</li>
+<li>https://doi.org/10.1371/journal.pone.0302552,</li>
+<li>https://doi.org/10.3390/ijms25158393,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A1D1V3Z0
+gene_symbol: MAHS
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:947166
+  label: Ramazzottius varieornatus
+description: &gt;-
+  Mitochondrial-abundant heat-soluble (MAHS) protein is a tardigrade-unique heat-soluble
+  protein that localizes to mitochondria and acts as a molecular shield under water-deficient
+  conditions. MAHS contains a predicted mitochondrial transit peptide (residues 1-73) and a
+  conserved MAHS motif (residues 126-143) that forms a predicted amphipathic helix. The protein
+  is highly hydrophilic and retains solubility after heat treatment. When expressed in human
+  cells, MAHS-GFP localizes to mitochondria and improves hyperosmotic tolerance, consistent
+  with a protective role analogous to LEA proteins but without sequence similarity to any known
+  protein family. MAHS is part of a tardigrade-specific repertoire of heat-soluble proteins
+  (alongside CAHS and SAHS) that together cover most cellular compartments, suggesting a
+  coordinated strategy for desiccation tolerance (anhydrobiosis) in tardigrades.
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      The IEA annotation of MAHS to mitochondrion (GO:0005739) is based on UniProtKB subcellular
+      location mapping (GO_REF:0000044). This is strongly supported by experimental evidence from
+      Tanaka et al. 2015 (PMID:25675104), who demonstrated mitochondrial localization of
+      MAHS-GFP fusion protein in human HEp-2 cells. The protein also has a predicted N-terminal
+      mitochondrial transit peptide (residues 1-73). Although the IEA evidence code is weaker
+      than the available experimental evidence, the annotation itself is correct and well-supported.
+    action: ACCEPT
+    reason: &gt;-
+      Mitochondrial localization is experimentally demonstrated. The protein has a predicted
+      73-residue mitochondrial transit peptide. Three independent prediction programs (TargetP,
+      WoLF PSORT, MitoProt2) predict mitochondrial localization. UniProt records experimental
+      subcellular location as &#34;Mitochondrion&#34; with ECO:0000269|PubMed:25675104. The protein is
+      highly hydrophilic (GRAVY score -0.77), suggesting matrix localization rather than membrane
+      integration.
+    supported_by:
+      - reference_id: PMID:25675104
+        supporting_text: &gt;-
+          Two of them, MAHS and ATPM1, showed mitochondrial localization (Fig. 4a, S3 Fig.).
+      - reference_id: PMID:25675104
+        supporting_text: &gt;-
+          The MAHS protein contained a predicted long mitochondrial targeting peptide at the
+          N-terminus and the resultant putative mature form was highly hydrophilic (GRAVY score
+          of-0.77) like RvLEAM protein (Fig. 4c).
+      - reference_id: PMID:25675104
+        supporting_text: &gt;-
+          MAHS-green fluorescent protein fusion protein localized in human mitochondria and was
+          heat-soluble in vitro, though no sequence similarity with other known proteins was
+          found, and one region was conserved among tardigrades.
+- term:
+    id: GO:0009269
+    label: response to desiccation
+  evidence_type: IDA
+  original_reference_id: PMID:25675104
+  review:
+    summary: &gt;-
+      MAHS is a heat-soluble protein identified from the anhydrobiotic tardigrade R. varieornatus,
+      an organism that tolerates almost complete dehydration. The protein is proposed to act as a
+      molecular shield in water-deficient conditions (UniProt function annotation). The conserved
+      MAHS motif forms a predicted amphipathic helix, similar to LEA proteins involved in
+      desiccation tolerance. While MAHS improves hyperosmotic tolerance when expressed in human
+      cells (PMID:25675104), the direct evidence for its role in desiccation response in the
+      native tardigrade organism is primarily contextual (abundant expression in an anhydrobiotic
+      species, mitochondrial protective role inferred from structural similarity to LEA proteins
+      and osmotic tolerance assays).
+    action: NEW
+    reason: &gt;-
+      This annotation is not currently in the GOA set but is strongly supported by the biological
+      context. MAHS is identified as a protective protein in an anhydrobiotic organism, its
+      amphipathic helix structure parallels that of LEA proteins known to function in desiccation
+      tolerance, and it improves cellular tolerance to water stress. The term GO:0009269 (response
+      to desiccation) is appropriate as the broader biological process. Evidence type would be
+      IMP based on the osmotic tolerance assays as a proxy for water stress.
+    supported_by:
+      - reference_id: PMID:25675104
+        supporting_text: &gt;-
+          The identified repertoire of tardigrade-unique heat-soluble proteins will provide
+          important clues to the desiccation tolerant mechanism in tardigrades.
+      - reference_id: PMID:25675104
+        supporting_text: &gt;-
+          tardigrade mitochondria contain at least two types of heat-soluble proteins that might
+          have protective roles in water-deficient environments.
+- term:
+    id: GO:0006970
+    label: response to osmotic stress
+  evidence_type: IDA
+  original_reference_id: PMID:25675104
+  review:
+    summary: &gt;-
+      Tanaka et al. 2015 (PMID:25675104) demonstrated that expression of MAHS in human HEp-2
+      cells significantly improved hyperosmotic tolerance. Cells expressing MAHS showed increased
+      metabolic activity at 150 mM and 200 mM supplemental sucrose compared to untransfected
+      controls, with the best improvement (~20%) at 200 mM sucrose. This provides direct
+      experimental evidence for involvement in response to osmotic stress.
+    action: NEW
+    reason: &gt;-
+      This annotation is not in the GOA set but is directly supported by experimental evidence.
+      The osmotic tolerance assay in PMID:25675104 provides functional evidence that MAHS
+      participates in the response to osmotic stress. Evidence type would be IDA based on the
+      gain-of-function assay in human cells.
+    supported_by:
+      - reference_id: PMID:25675104
+        supporting_text: &gt;-
+          cells expressing MAHS also had significantly increased metabolic activities at 150 mM
+          and 200 mM sucrose. The best improvement by MAHS (~20%) was observed at 200 mM
+          sucrose, which is close to the EC50 value (179 mM) of untransfected cells (Fig. 5).
+      - reference_id: PMID:25675104
+        supporting_text: &gt;-
+          The results suggested that mitochondrial heat-soluble proteins of tardigrades, even
+          non-LEA protein like MAHS, improve the tolerability of human cells to hyperosmotic
+          stress.
+- term:
+    id: GO:0050821
+    label: protein stabilization
+  evidence_type: IDA
+  original_reference_id: PMID:25675104
+  review:
+    summary: &gt;-
+      MAHS is proposed to function as a molecular shield, preventing undesirable aggregation of
+      proteins under water-deficient conditions, analogous to LEA proteins. The conserved MAHS
+      motif forms a predicted amphipathic helix consistent with molecular shielding activity.
+      However, direct protein stabilization activity has not been demonstrated experimentally
+      for MAHS itself -- the molecular shield function is inferred from structural analogy with
+      LEA proteins and the osmotic tolerance phenotype.
+    action: NEW
+    reason: &gt;-
+      This is a reasonable inference from the structural similarity to LEA proteins and the
+      molecular shield hypothesis described in UniProt and PMID:25675104. The amphipathic helix
+      in the MAHS motif is consistent with the mechanism described for LEA proteins. However,
+      direct biochemical evidence of protein stabilization by MAHS is lacking. This annotation
+      would be appropriate with ISS or IKR evidence based on analogy to LEA proteins, but should
+      be considered cautiously as the molecular shield mechanism is still hypothetical for MAHS.
+    supported_by:
+      - reference_id: PMID:25675104
+        supporting_text: &gt;-
+          In LEA proteins, the amphipathic helix is suggested to be important for loose
+          interactions with other macromolecules to prevent undesirable aggregation or
+          conformational changes of proteins and liposomes, so-called &#39;molecular shielding&#39;
+          [38,39].
+      - reference_id: PMID:25675104
+        supporting_text: &gt;-
+          Sequence comparison among putative tardigrade MAHS proteins revealed a conserved region
+          in the middle of the protein (S4 Fig.), and this region was partially predicted to form
+          an alpha-helix by PORTER predication software (Fig. 4c-d), potentially with an
+          amphipathic property (Fig. 4e), implying that MAHS proteins have a role similar to
+          that of LEA proteins in anhydrobiosis.
+core_functions:
+  - description: &gt;-
+      MAHS is a tardigrade-unique mitochondrial heat-soluble protein that acts as a molecular
+      shield to protect mitochondrial macromolecules during water-deficient conditions
+      (anhydrobiosis). It contains a conserved amphipathic helix motif and improves osmotic
+      tolerance when expressed in human cells. MAHS works alongside RvLEAM (a mitochondrial
+      LEA protein) to protect mitochondrial integrity during desiccation.
+    directly_involved_in:
+      - id: GO:0009269
+        label: response to desiccation
+      - id: GO:0006970
+        label: response to osmotic stress
+    locations:
+      - id: GO:0005739
+        label: mitochondrion
+    supported_by:
+      - reference_id: PMID:25675104
+        supporting_text: &gt;-
+          cells expressing MAHS also had significantly increased metabolic activities at 150 mM
+          and 200 mM sucrose. The best improvement by MAHS (~20%) was observed at 200 mM
+          sucrose, which is close to the EC50 value (179 mM) of untransfected cells (Fig. 5).
+      - reference_id: PMID:25675104
+        supporting_text: &gt;-
+          MAHS-green fluorescent protein fusion protein localized in human mitochondria and was
+          heat-soluble in vitro, though no sequence similarity with other known proteins was
+          found, and one region was conserved among tardigrades.
+references:
+- id: PMID:25675104
+  title: Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic
+    Tardigrade improve osmotic tolerance of human cells
+  findings:
+    - statement: MAHS-GFP fusion protein localizes to mitochondria in human cells
+      supporting_text: &gt;-
+        Two of them, MAHS and ATPM1, showed mitochondrial localization (Fig. 4a, S3 Fig.).
+    - statement: MAHS protein is heat-soluble in vitro
+      supporting_text: &gt;-
+        Although purified MAHS protein was recovered in the soluble fraction after heat
+        treatment, the heat-treated MAHS protein showed relatively slower migration in sodium
+        dodecyl sulphate-polyacrylamide gel electrophoresis (Fig. 4b), indicating a possible
+        conformational change induced by heat treatment.
+    - statement: MAHS expression improves hyperosmotic tolerance of human HEp-2 cells
+      supporting_text: &gt;-
+        cells expressing MAHS also had significantly increased metabolic activities at 150 mM
+        and 200 mM sucrose. The best improvement by MAHS (~20%) was observed at 200 mM
+        sucrose, which is close to the EC50 value (179 mM) of untransfected cells (Fig. 5).
+    - statement: MAHS motif (conserved in tardigrades) forms a predicted amphipathic helix
+      supporting_text: &gt;-
+        Sequence comparison among putative tardigrade MAHS proteins revealed a conserved region
+        in the middle of the protein (S4 Fig.), and this region was partially predicted to form
+        an alpha-helix by PORTER predication software (Fig. 4c-d), potentially with an
+        amphipathic property (Fig. 4e), implying that MAHS proteins have a role similar to
+        that of LEA proteins in anhydrobiosis.
+    - statement: MAHS has no sequence similarity to known protein families including LEA proteins
+      supporting_text: &gt;-
+        A BLASTP search in non-redundant (nr) database retrieved no sequences, and TBLASTN
+        searches in EST/TSA databases retrieved only two sequences of other tardigrades
+        (e-value &lt; 1); one from the EST database of Hypsibius dujardini and the other from
+        the TSA database of Milnesium tardigradum. No LEA proteins were retrieved in the
+        search and also no LEA-like motif was found by either a InterProScan search or manual
+        inspection.
+    - statement: MAHS is part of a tardigrade-unique heat-soluble protein repertoire
+      supporting_text: &gt;-
+        To date, three tardigrade-unique heat-soluble protein families have been identified,
+        MAHS, CAHS, and SAHS. Their subcellular localizations are mutually exclusive and
+        together they cover most cellular components: MAHS in the mitochondria, CAHS in the
+        cytoplasm and nucleus, and SAHS in the extracellular space and secretory organelles.
+- id: PMID:27649274
+  title: Extremotolerant tardigrade genome and improved radiotolerance of human cultured
+    cells by tardigrade-unique protein
+  findings:
+    - statement: Provides the genome sequence for R. varieornatus (YOKOZUNA-1 strain)
+      supporting_text: &gt;-
+        Extremotolerant tardigrade genome and improved radiotolerance of human cultured cells
+        by tardigrade-unique protein.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+proposed_new_terms: []
+suggested_questions:
+  - question: &gt;-
+      Does MAHS directly interact with mitochondrial proteins or lipids to exert its
+      protective effect, or does it act through a more general biophysical mechanism?
+  - question: &gt;-
+      Is MAHS expression specifically induced by desiccation stress in R. varieornatus,
+      or is it constitutively expressed?
+  - question: &gt;-
+      Does MAHS function synergistically with RvLEAM in mitochondrial protection during
+      anhydrobiosis?
+  - question: &gt;-
+      Would a GO term for molecular shield activity or intrinsically disordered protein
+      chaperone activity be appropriate for proteins like MAHS and LEA proteins?
+suggested_experiments:
+  - description: &gt;-
+      In vitro protein aggregation protection assays to test whether MAHS directly prevents
+      protein aggregation under desiccation or osmotic stress conditions.
+    hypothesis: &gt;-
+      MAHS functions as a molecular shield that prevents protein aggregation under
+      water-deficient conditions, similar to LEA proteins.
+  - description: &gt;-
+      Liposome protection assays to determine whether MAHS protects mitochondrial membranes
+      from desiccation-induced damage.
+    hypothesis: &gt;-
+      MAHS may protect mitochondrial membrane integrity during desiccation, complementing
+      the protein-protective role of RvLEAM.
+  - description: &gt;-
+      RNAi or CRISPR knockdown of MAHS in R. varieornatus to test effects on anhydrobiotic
+      survival.
+    hypothesis: &gt;-
+      Loss of MAHS reduces desiccation tolerance in tardigrades, particularly affecting
+      mitochondrial integrity during anhydrobiosis.
+  - description: &gt;-
+      Co-immunoprecipitation or crosslinking mass spectrometry to identify MAHS interaction
+      partners in mitochondria.
+    hypothesis: &gt;-
+      MAHS interacts with specific mitochondrial proteins or membrane components to exert
+      its protective function.
+  - description: &gt;-
+      Structural characterization (NMR or CD spectroscopy) of MAHS under different hydration
+      states to confirm amphipathic helix formation in the MAHS motif.
+    hypothesis: &gt;-
+      The MAHS motif undergoes a conformational transition to amphipathic helix under
+      water-deficient conditions, enabling molecular shield activity.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
