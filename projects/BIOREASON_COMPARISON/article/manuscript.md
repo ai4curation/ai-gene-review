@@ -184,11 +184,63 @@ BioReason-Pro adds genuinely new biology in a minority of cases, specifically wh
 
 This novel-vs-restatement axis is **precisely the information a database deployment decision needs** and is **precisely what aggregate GOA-agreement scores cannot see**. A method that restates InterPro2GO with 3.7/5 correctness provides no net annotation value on top of the existing production pipeline, even though its headline score appears competitive.
 
-### 4.5 SFT vs RL cross-check
+### 4.5 SFT GO term predictions: what the model actually predicts vs. what GOA already knows
 
-On the public HuggingFace `protein_catalogue` dataset [4] (SFT outputs only), we scored 45 additional proteins across 15 clades for an independent cross-check. SFT scored lower than RL on both axes (correctness 2.9/5 vs 3.7/5; completeness 2.7/5 vs 2.9/5), consistent with the BioReason-Pro paper's own finding that SFT has "more hallucinations" and RL is "more accurate, less mechanistically deep" [§3.4 of 4]. The SFT-specific failure mode most concerning for annotation databases is the fabrication of fake "UniProt Summary" blocks for uncharacterised proteins: 7/45 SFT outputs (16%) contained invented UniProt prose. The RL model never fabricated InterPro entries in our corpus (consistent with the paper's claim), but the RL equivalent to fabricated UniProt summaries was not systematically catalogued; we flag it as an open risk.
+The analyses in §4.1–4.4 evaluated BioReason-Pro's *narrative* output (the reasoning trace and functional summary). A separate question is whether the model's *GO term predictions* — the structured terms emitted by the SFT model alongside its narrative — add value over what GOA already contains.
 
-Importantly, on the proteins where BioReason-Pro could add the most value — uncharacterised proteins with 0–3 GOA annotations — it consistently scored lowest (0–1/5). The proteins where it scores 4–5/5 are already well-annotated, so the narrative is redundant. This is an "inverse quality vs characterisation" pattern that, again, is invisible to $F_{\max}$ but decisive for deployment.
+The HuggingFace `wanglab/protein_catalogue` [4] provides the SFT model's full generation output, including a structured GO section at the end of each entry. We extracted SFT-emitted GO term predictions for 138 of our evaluation genes (93 from the 139-gene RL corpus plus all 45 SFT-specific evaluation genes; 29 genes from the RL corpus are absent from the catalogue, and 17 had truncated outputs that did not reach the GO section). Across the 138 genes, the SFT model emitted 1,233 GO term predictions (mean 8.9 per gene; MF: 308, BP: 614, CC: 311).
+
+Of these 1,233 predictions, 809 (66%) match a term already in GOA for that gene. The remaining 417 (34%) are not in GOA and represent potentially novel calls. This 66/34 split is itself informative: two-thirds of the model's output recapitulates existing annotations, consistent with the "narrative restatement" pattern observed for the reasoning traces.
+
+**SFT narrative quality: lower than RL.** On the 45 proteins evaluated for narrative quality, the SFT model scored lower than RL on both axes (correctness 2.9/5 vs 3.7/5; completeness 2.7/5 vs 2.9/5), consistent with the BioReason-Pro paper's own finding that RL has fewer hallucinations. The SFT-specific failure mode most concerning for annotation databases is the fabrication of fake "UniProt Summary" blocks for uncharacterised proteins: 7/45 SFT outputs (16%) contained invented UniProt prose. On the proteins where BioReason-Pro could add the most value — uncharacterised proteins with 0–3 GOA annotations — it consistently scored lowest (0–1/5 on both axes), while proteins scoring 4–5/5 already have extensive annotations that make the narrative redundant. This inverse-quality-vs-characterisation pattern is invisible to $F_{\max}$ but decisive for deployment.
+
+**Case study: RAS2 (*S. cerevisiae*) — where the GO predictions outperform the narrative.** The RL narrative evaluation of RAS2 scored 2/5 for correctness and 1/5 for completeness. The model described RAS2 as a "regulator of intracellular vesicle traffic converging on the vacuole" — a fundamental mischaracterisation. RAS2 is the primary activator of the cAMP/PKA signaling pathway in yeast; the vesicle-trafficking narrative was apparently seeded by the misleading UniProt summary line "Potential regulator of intracellular vesicle traffic" and then elaborated with HOPS/CORVET/Vam3 biology that belongs to Rab GTPases, not Ras.
+
+The SFT GO term predictions for the same protein tell a different story. Of 15 predicted terms, we manually reviewed each against the curated AIGR review (**Table 5**). Twelve match GOA (CNN). One — **GO:0007190, activation of adenylate cyclase activity** — is a genuinely novel and correct prediction (COR) that captures the single most important function of RAS2: direct activation of adenylate cyclase CYR1 to produce cAMP and trigger the PKA cascade. This term is not in GOA. One prediction (GO:0045992, carbon catabolite activation of transcription) is uncertain. And two predictions (GO:0016236 macroautophagy, GO:0032258 Cvt pathway) reproduce GOA annotations that the curated review flagged as directionally wrong — RAS2/PKA *inhibits* both autophagy and the Cvt pathway, so the correct terms would be negative regulation of each.
+
+**Table 5.** Manual review of RAS2 SFT GO predictions against AIGR curated review.
+
+| Predicted term | Aspect | Assessment | Notes |
+|---|---|---|---|
+| GO:0003924 GTPase activity | MF | CNN | Core function, in GOA (IBA/IDA) |
+| GO:0005525 GTP binding | MF | CNN | Core biochemistry, in GOA |
+| GO:0005515 protein binding | MF | CNN | In GOA but removed in curated review (non-informative) |
+| GO:2000222 pos. reg. pseudohyphal growth | BP | CNN | Correct, in GOA |
+| GO:0032880 reg. protein localization | BP | CNN | Correct (Lte1 targeting), in GOA |
+| GO:0010603 reg. P body assembly | BP | CNN | Correct, in GOA |
+| GO:0030437 ascospore formation | BP | CNN | In GOA, non-core |
+| GO:0016236 macroautophagy | BP | CNN | **Directional error**: in GOA, but should be *negative* regulation |
+| GO:0032258 Cvt pathway | BP | CNN | **Directional error**: in GOA, but should be *negative* regulation |
+| **GO:0007190 activation of adenylate cyclase** | **BP** | **COR** | **Novel correct prediction — the core cAMP/PKA function, not in GOA** |
+| GO:0045992 carbon catabolite activation | BP | UNC | Plausible, no direct evidence |
+| GO:0005886 plasma membrane | CC | CNN | Primary localization, in GOA |
+| GO:0005789 ER membrane | CC | CNN | In GOA (lipid modification/trafficking) |
+| GO:0005634 nucleus | CC | CNN | In GOA (RAS2-GTP nuclear pool) |
+| GO:0005739 mitochondrion | CC | CNN | In GOA, non-core |
+
+**Five additional manually reviewed genes.** To test whether the RAS2 pattern generalises, we reviewed SFT predictions for five further genes chosen to span the failure modes identified in the narrative evaluation: Epe1 (pseudoenzyme), daf-16 (organism-specific biology), TOR1 (RL success case), sigF (paralog indistinguishability), and CpxP (localisation defaults). Results are in **Table 6**.
+
+**Table 6.** Consolidated SFT prediction assessment across 6 manually reviewed genes (90 predictions total).
+
+| Gene | Organism | RL score | Preds | CNN | COR | LSP | UNC | NPI | REP |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|
+| RAS2 | yeast | 2/5 | 15 | 12 | **1** | 0 | 1 | 0 | 0 |
+| Epe1 | *S. pombe* | 2/5 | 7 | 3 | 0 | 0 | 0 | **3** | 0 |
+| daf-16 | *C. elegans* | 3.5/5 | 38 | 33 | 0 | 3 | 2 | 0 | 0 |
+| TOR1 | yeast | 5/5 | 18 | 15 | 0 | 1 | 2 | 0 | 0 |
+| sigF | *B. subtilis* | 3/5 | 7 | 2 | 0 | 1 | 1 | **2** | **1** |
+| CpxP | *E. coli* | 3/5 | 5 | 2 | 0 | 0 | 0 | **3** | 0 |
+| **Total** | | | **90** | **67 (74%)** | **1 (1%)** | **5 (6%)** | **6 (7%)** | **8 (9%)** | **1 (1%)** |
+
+Four observations emerge from this sample.
+
+*The dominant mode is CNN.* 74% of SFT predictions reproduce terms already in GOA. Only one prediction across 90 was genuinely novel and correct — the RAS2 adenylate cyclase activation call. The SFT model, like the narrative it accompanies, overwhelmingly restates existing knowledge.
+
+*NPI errors at the GO-term level recapitulate the narrative failure modes.* Epe1's three NPI predictions (2-oxoglutarate-dependent oxidoreductase activity, iron ion binding, 2-oxoglutarate binding) assign active catalytic machinery to a pseudoenzyme with degenerate catalytic residues — the same error the RL narrative makes, now confirmed in structured-term form. CpxP's three NPI predictions all overcall chaperone function for a protein whose primary role is CpxA sensor-kinase inhibition and DegP adaptor activity. sigF's two NPI predictions (plasma membrane, spore wall) confuse the sigma factor with its membrane-associated regulators and target gene products. Each of these parallels a narrative failure mode from §4.3.
+
+*The GO prediction arm and the narrative arm fail independently.* For RAS2, the GO predictions captured the core cAMP/PKA biology (COR for GO:0007190) while the narrative confabulated a vesicle-trafficking story. For CpxP, the GO predictions correctly assign the protein to the periplasm (GO:0030288, CNN) while the narrative called it cytoplasmic. These dissociations arise because the SFT model's GO term section and its reasoning trace are generated semi-independently — the model can emit a correct term while narrating the wrong mechanism, and vice versa. For a database considering deployment, this means **neither the narrative nor the term list can be trusted in isolation**; both must be evaluated.
+
+*Directional errors are invisible to GOA-agreement metrics.* RAS2's autophagy and Cvt pathway predictions match GOA terms that the curated review flags for modification — the protein *inhibits* both processes, so the correct terms would be negative-regulation variants. A CAFA-style $F_{\max}$ evaluation would score these as correct. Similarly, daf-16's 38 predictions include no IIS/longevity/dauer-specific terms that go beyond what GOA already contains — the organism-specific biology that defines daf-16 is absent, but the aggregate score looks fine because every prediction matches a GOA entry.
 
 ### 4.6 Blind replication of the de Crécy-Lagard *E. coli* taxonomy
 
@@ -289,7 +341,7 @@ References are drafted in a mixed short format; a cleaned bibliography will acco
 
 *Further references (Ryngajłło *et al.* on IBA propagation limits; the BioReason-Pro HuggingFace model cards; the ESM2/ProtT5 originals as dependencies of GO-GPT) to be added for final submission.*
 
----
+## Data and code availability
 
 *Repository:* `github.com/ai4curation/ai-gene-review` — 139-gene BioReason-Pro review set, 7-gene *E. coli* cross-validation, AIGR pipeline, LinkML schema, and validator.
 *Browsable reviews:* `https://ai4curation.io/ai-gene-review/`
