@@ -1,0 +1,2840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nip7 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nip7</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/B0G104" target="_blank" class="term-link">
+                        B0G104
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Dictyostelium discoideum</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nip7";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="B0G104" data-a="DESCRIPTION: nip7 encodes the D. discoideum homolog of the cons..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>nip7 encodes the D. discoideum homolog of the conserved 60S ribosome subunit biogenesis protein NIP7. The 179-amino-acid protein contains an N-terminal pre-PUA domain for protein-protein interactions and a C-terminal PUA domain that binds pre-rRNA with polyuridine preference. Based on extensive studies of yeast and human orthologs, nip7 is predicted to function as a nucleolar trans-acting factor required for 27S pre-rRNA processing and 60S ribosomal subunit assembly. The protein associates transiently with pre-60S particles and interacts with other biogenesis factors and exosome components.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B0G104" data-a="GO:0005730" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference (IBA) that nip7 localizes to the nucleolus is well-supported. In yeast, Nip7p-GFP localizes to the nucleolus, and in human cells NIP7 is restricted to the nuclear compartment and colocalizes with nucleolar markers. The nucleolus is the site of pre-rRNA processing and early ribosome assembly where NIP7 orthologs function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleolar localization is a core conserved feature of NIP7 family proteins across eukaryotes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DICDI/nip7/nip7-deep-research-bioreason-sft.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">A nucleolar assembly factor that promotes maturation of the large ribosomal subunit</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9271378" target="_blank" class="term-link">
+                                        PMID:9271378
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">in vivo localization of a Nip7p-green fluorescent protein fusion protein revealed that a significant amount of Nip7p is present inside the nucleus, most probably in the nucleolus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22195017" target="_blank" class="term-link">
+                                        PMID:22195017
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Both exogenous proteins colocalized to the nucleolus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042273" target="_blank" class="term-link">
+                                    GO:0042273
+                                </a>
+                            </span>
+                            <span class="term-label">ribosomal large subunit biogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B0G104" data-a="GO:0042273" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference that nip7 is involved in ribosomal large subunit biogenesis is strongly supported. Yeast Nip7p depletion causes accumulation of 27S pre-rRNA and deficit of 60S subunits. The protein cosediments with free 60S subunits, confirming direct involvement in large subunit maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core biological process for NIP7 family proteins, extensively documented in yeast.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9271378" target="_blank" class="term-link">
+                                        PMID:9271378
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Delayed processing of 27S pre-rRNA appeared to be the cause of reduced synthesis of 25S rRNA relative to 18S rRNA, which may be responsible for the deficit of 60S subunits in these cells</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9891085" target="_blank" class="term-link">
+                                        PMID:9891085
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Rrp43p and a second essential protein, Nop8p, were identified in a two-hybrid screen as Nip7p-interacting proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030687" target="_blank" class="term-link">
+                                    GO:0030687
+                                </a>
+                            </span>
+                            <span class="term-label">preribosome, large subunit precursor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B0G104" data-a="GO:0030687" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference that nip7 is part of the preribosome, large subunit precursor is well-supported. Yeast Nip7p cosediments with free 60S subunits and interacts with other pre-60S assembly factors (Nop8p, Rrp43p). NIP7 family proteins are trans-acting factors that associate transiently with pre-60S particles during maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nip7p association with pre-60S particles is demonstrated by cosedimentation and protein interaction data.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9271378" target="_blank" class="term-link">
+                                        PMID:9271378
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A fraction of Nip7p cosedimented through sucrose gradients with free 60S ribosomal subunits but not with 80S monosomes or polysomal ribosomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9891085" target="_blank" class="term-link">
+                                        PMID:9891085
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Biochemical evidence for an interaction was provided by the copurification on immunoglobulin G-Sepharose of Nip7p with protein A-tagged Rrp43p and Nop8p</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B0G104" data-a="GO:0003723" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO annotation of RNA binding based on the PUA domain (IPR002478, IPR036974). The PUA domain is a well-characterized RNA-binding module. Structural and biochemical studies of archaeal and yeast Nip7 proteins confirm that the PUA domain binds RNA, with specificity for polyuridine sequences. This annotation is correct but could be more specific as rRNA binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RNA binding via the PUA domain is experimentally verified for Nip7 orthologs. While rRNA binding (GO:0019843) would be more specific, RNA binding is not incorrect and the IEA evidence appropriately reflects the domain-level annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18001138" target="_blank" class="term-link">
+                                        PMID:18001138
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the PUA domain mediates Nip7 interaction with RNA and reveals that the preference for interaction with polyuridine sequences is conserved in Archaea and eukaryotic Nip7 proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="B0G104" data-a="GO:0005634" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO annotation of nuclear localization based on the NIP7 family signature (IPR016686). Yeast and human NIP7 proteins localize to the nucleus/nucleolus. The nucleolus annotation (GO:0005730) is more specific and also present, making this a redundant but not incorrect parent term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but less specific than the nucleolus annotation. The nucleolus is within the nucleus, so this is technically true but the more informative annotation is GO:0005730 nucleolus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9271378" target="_blank" class="term-link">
+                                        PMID:9271378
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">in vivo localization of a Nip7p-green fluorescent protein fusion protein revealed that a significant amount of Nip7p is present inside the nucleus, most probably in the nucleolus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B0G104" data-a="GO:0005730" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular location mapping to nucleolus (IEA). This is the same term as the IBA annotation above, providing independent computational support. The nucleolus annotation is well-supported by experimental data from yeast and human orthologs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA annotation but provides independent computational evidence stream.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20798176" target="_blank" class="term-link">
+                                        PMID:20798176
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The NIP7 protein is restricted to the nuclear compartment and co-sediments with complexes with molecular masses in the range of 40S-80S</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042255" target="_blank" class="term-link">
+                                    GO:0042255
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="B0G104" data-a="GO:0042255" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO annotation of ribosome assembly based on IPR016686 (NIP7 family). This is a parent term of the more specific ribosomal large subunit biogenesis (GO:0042273), which is already annotated. Ribosome assembly is correct but less informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct parent term but less specific than GO:0042273 (ribosomal large subunit biogenesis) which is already present with IBA and ISS evidence. The InterPro2GO mapping appropriately captures the family-level biology.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9271378" target="_blank" class="term-link">
+                                        PMID:9271378
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Nip7-1p-depleted cells showed defective pre-rRNA processing, including accumulation of the 35S rRNA precursor, presence of a 23S aberrant precursor, decreased 20S pre-rRNA levels, and accumulation of 27S pre-rRNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042273" target="_blank" class="term-link">
+                                    GO:0042273
+                                </a>
+                            </span>
+                            <span class="term-label">ribosomal large subunit biogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B0G104" data-a="GO:0042273" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Manual ISS annotation by dictyBase based on sequence similarity to yeast Nip7p (Q08962). This is the most informative annotation for the core biological process. The yeast ortholog has extensive experimental evidence for 60S subunit biogenesis, including 27S pre-rRNA processing defects and 60S subunit deficit upon depletion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported ISS annotation based on clear orthology to yeast NIP7, which has direct experimental evidence (IDA/IMP) for this process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9271378" target="_blank" class="term-link">
+                                        PMID:9271378
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Delayed processing of 27S pre-rRNA appeared to be the cause of reduced synthesis of 25S rRNA relative to 18S rRNA, which may be responsible for the deficit of 60S subunits in these cells</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9891085" target="_blank" class="term-link">
+                                        PMID:9891085
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Rrp43p and a second essential protein, Nop8p, were identified in a two-hybrid screen as Nip7p-interacting proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019843" target="_blank" class="term-link">
+                                    GO:0019843
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18001138" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18001138
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural insights into the interaction of the Nip7 PUA dom...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="B0G104" data-a="GO:0019843" data-r="PMID:18001138" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The PUA domain of Nip7 binds RNA with polyuridine preference, and this activity is conserved from archaea to eukaryotes. Given that Nip7 functions in pre-rRNA processing within pre-60S particles, the relevant RNA substrate is pre-rRNA. rRNA binding (GO:0019843) is more specific than the existing RNA binding (GO:0003723) annotation and better reflects the biological context.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Structural and biochemical studies demonstrate that the PUA domain of Nip7 binds RNA, and the biological context (pre-60S particle association, 27S pre-rRNA processing) establishes pre-rRNA as the relevant substrate. This is a more specific annotation than the existing GO:0003723 RNA binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18001138" target="_blank" class="term-link">
+                                        PMID:18001138
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Both proteins can bind specifically to polyuridine, and RNA interaction requires specific residues of the PUA domain</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9271378" target="_blank" class="term-link">
+                                        PMID:9271378
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A fraction of Nip7p cosedimented through sucrose gradients with free 60S ribosomal subunits but not with 80S monosomes or polysomal ribosomes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>nip7 functions as a nucleolar trans-acting factor in 60S ribosomal subunit biogenesis. Its PUA domain binds pre-rRNA (with polyuridine preference) while the N-terminal pre-PUA domain mediates interactions with other assembly factors. The protein associates transiently with pre-60S ribosomal particles during 27S pre-rRNA processing and dissociates as the subunit matures.</h3>
+                <span class="vote-buttons" data-g="B0G104" data-a="FUNCTION: nip7 functions as a nucleolar trans-acting factor ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019843" target="_blank" class="term-link">
+                            rRNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042273" target="_blank" class="term-link">
+                                ribosomal large subunit biogenesis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                nucleolus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030687" target="_blank" class="term-link">
+                            preribosome, large subunit precursor
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18001138" target="_blank" class="term-link">
+                                PMID:18001138
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the PUA domain mediates Nip7 interaction with RNA and reveals that the preference for interaction with polyuridine sequences is conserved in Archaea and eukaryotic Nip7 proteins</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9271378" target="_blank" class="term-link">
+                                PMID:9271378
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">A fraction of Nip7p cosedimented through sucrose gradients with free 60S ribosomal subunits but not with 80S monosomes or polysomal ribosomes</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9891085" target="_blank" class="term-link">
+                                PMID:9891085
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Rrp43p and a second essential protein, Nop8p, were identified in a two-hybrid screen as Nip7p-interacting proteins</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9271378" target="_blank" class="term-link">
+                            PMID:9271378
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Saccharomyces cerevisiae Nip7p is required for efficient 60S ribosome subunit biogenesis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIP7 is essential for growth and required for 60S ribosomal subunit biogenesis in yeast.</div>
+                        
+                        <div class="finding-text">"Nip7-1p-depleted cells showed defective pre-rRNA processing, including accumulation of the 35S rRNA precursor, presence of a 23S aberrant precursor, decreased 20S pre-rRNA levels, and accumulation of 27S pre-rRNA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nip7p cosediments with free 60S subunits and localizes to the nucleolus.</div>
+                        
+                        <div class="finding-text">"A fraction of Nip7p cosedimented through sucrose gradients with free 60S ribosomal subunits but not with 80S monosomes or polysomal ribosomes, indicating that it is not a ribosomal protein"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nip7p is a nucleolar protein.</div>
+                        
+                        <div class="finding-text">"in vivo localization of a Nip7p-green fluorescent protein fusion protein revealed that a significant amount of Nip7p is present inside the nucleus, most probably in the nucleolus"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9891085" target="_blank" class="term-link">
+                            PMID:9891085
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Nip7p interacts with Nop8p, an essential nucleolar protein required for 60S ribosome biogenesis, and the exosome subunit Rrp43p</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nip7p interacts with nucleolar protein Nop8p and exosome subunit Rrp43p.</div>
+                        
+                        <div class="finding-text">"Rrp43p and a second essential protein, Nop8p, were identified in a two-hybrid screen as Nip7p-interacting proteins"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The three proteins form a dynamic complex in 60S biogenesis.</div>
+                        
+                        <div class="finding-text">"Biochemical evidence for an interaction was provided by the copurification on immunoglobulin G-Sepharose of Nip7p with protein A-tagged Rrp43p and Nop8p"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18001138" target="_blank" class="term-link">
+                            PMID:18001138
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural insights into the interaction of the Nip7 PUA domain with polyuridine RNA</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The PUA domain mediates Nip7 interaction with RNA, with conserved polyuridine preference.</div>
+                        
+                        <div class="finding-text">"Both proteins can bind specifically to polyuridine, and RNA interaction requires specific residues of the PUA domain"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Polyuridine binding is conserved from archaea to eukaryotes.</div>
+                        
+                        <div class="finding-text">"the PUA domain mediates Nip7 interaction with RNA and reveals that the preference for interaction with polyuridine sequences is conserved in Archaea and eukaryotic Nip7 proteins"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20798176" target="_blank" class="term-link">
+                            PMID:20798176
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The NIP7 protein is required for accurate pre-rRNA processing in human cells</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Human NIP7 is required for pre-rRNA processing and ribosome subunit biogenesis.</div>
+                        
+                        <div class="finding-text">"downregulation of NIP7 affects pre-rRNA processing, causing an imbalance of the 40S/60S subunit ratio"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIP7 localizes to the nuclear compartment and associates with pre-ribosomal particles.</div>
+                        
+                        <div class="finding-text">"The NIP7 protein is restricted to the nuclear compartment and co-sediments with complexes with molecular masses in the range of 40S-80S"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22195017" target="_blank" class="term-link">
+                            PMID:22195017
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The human nucleolar protein FTSJ3 associates with NIP7 and functions in pre-rRNA processing</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIP7 and FTSJ3 interact and colocalize in the nucleolus.</div>
+                        
+                        <div class="finding-text">"Both exogenous proteins colocalized to the nucleolus"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12097910" target="_blank" class="term-link">
+                            PMID:12097910
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Sequence and analysis of chromosome 2 of Dictyostelium discoideum</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genomic sequence of D. discoideum chromosome 2 where nip7 resides.</div>
+                        
+                        <div class="finding-text">"the chromosome codes for 2,799 predicted protein coding genes and 73 transfer RNA genes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15875012" target="_blank" class="term-link">
+                            PMID:15875012
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The genome of the social amoeba Dictyostelium discoideum</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Complete genome of D. discoideum encoding approximately 12,500 predicted proteins.</div>
+                        
+                        <div class="finding-text">"chromosomes of this organism encode approximately 12,500 predicted proteins"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DICDI/nip7/nip7-deep-research-bioreason-sft.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BioReason-Pro SFT prediction for nip7 (D. discoideum)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BioReason SFT trace identifies nip7 as a nucleolar assembly factor for 60S ribosomal subunit maturation with bipartite pre-PUA and PUA domain architecture.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is nip7 essential for growth in D. discoideum, as it is in yeast? A knockout or knockdown experiment would clarify whether the functional requirement is conserved.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="B0G104" data-a="Q: Is nip7 essential for growth in D. discoideum, as ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does D. discoideum nip7 function primarily in 60S subunit biogenesis (as in yeast) or does it also affect 40S biogenesis (as observed for human NIP7)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="B0G104" data-a="Q: Does D. discoideum nip7 function primarily in 60S ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate a nip7 knockout or conditional knockdown in D. discoideum (e.g., using blasticidin cassette insertion or doxycycline-inducible RNAi). Assess growth, ribosomal subunit profiles by sucrose gradient sedimentation, and pre-rRNA processing by northern blot to determine whether 27S pre-rRNA accumulates as in yeast.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: nip7 is essential for growth and required for 60S ribosomal subunit biogenesis in D. discoideum.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: gene knockout / conditional knockdown</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="B0G104" data-a="EXPERIMENT: Generate a nip7 knockout or conditional knockdown ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine the subcellular localization of nip7 in D. discoideum by expressing a GFP-nip7 fusion. Verify nucleolar localization by co-staining with nucleolar markers such as fibrillarin.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: nip7 localizes to the nucleolus in D. discoideum.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: fluorescence microscopy</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="B0G104" data-a="EXPERIMENT: Determine the subcellular localization of nip7 in ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason Sft</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nip7-deep-research-bioreason-sft.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="B0G104" data-a="DOC: Deep Research Bioreason Sft" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="nt">---</span>
+<span class="nt">provider</span><span class="o">:</span><span class="w"> </span><span class="nt">bioreason-pro</span>
+<span class="nt">model</span><span class="o">:</span><span class="w"> </span><span class="nt">SFT</span>
+<span class="nt">source</span><span class="o">:</span><span class="w"> </span><span class="nt">huggingface</span><span class="p">.</span><span class="nc">co</span><span class="o">/</span><span class="nt">datasets</span><span class="o">/</span><span class="nt">wanglab</span><span class="o">/</span><span class="nt">protein_catalogue</span>
+<span class="nt">date</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;2026-04-04&#39;</span>
+<span class="nt">uniprot_id</span><span class="o">:</span><span class="w"> </span><span class="nt">B0G104</span>
+<span class="nt">gene</span><span class="o">:</span><span class="w"> </span><span class="nt">nip7</span>
+<span class="nt">organism</span><span class="o">:</span><span class="w"> </span><span class="nt">Dictyostelium</span><span class="w"> </span><span class="nt">discoideum</span><span class="w"> </span><span class="o">(</span><span class="nt">Social</span><span class="w"> </span><span class="nt">amoeba</span><span class="o">)</span>
+<span class="nt">---</span>
+
+<span class="err">##</span><span class="w"> </span><span class="nt">Thinking</span><span class="w"> </span><span class="nt">Trace</span>
+
+<span class="nt">I</span><span class="w"> </span><span class="nt">begin</span><span class="w"> </span><span class="nt">with</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">InterPro</span><span class="w"> </span><span class="nt">architecture</span><span class="o">.</span><span class="w"> </span><span class="nt">The</span><span class="w"> </span><span class="nt">entire</span><span class="w"> </span><span class="nt">polypeptide</span><span class="w"> </span><span class="o">(</span><span class="nt">residues</span><span class="w"> </span><span class="nt">1</span><span class="err">–</span><span class="nt">177</span><span class="o">)</span><span class="w"> </span><span class="nt">is</span><span class="w"> </span><span class="nt">classified</span><span class="w"> </span><span class="nt">as</span><span class="w"> </span><span class="nt">IPR016686</span><span class="w"> </span><span class="o">(</span><span class="nt">Ribosome</span><span class="w"> </span><span class="nt">biogenesis</span><span class="w"> </span><span class="nt">factor</span><span class="o">,</span><span class="w"> </span><span class="nt">NIP7</span><span class="w"> </span><span class="nt">family</span><span class="o">),</span><span class="w"> </span><span class="nt">establishing</span><span class="w"> </span><span class="nt">a</span><span class="w"> </span><span class="nt">dedicated</span><span class="w"> </span><span class="nt">role</span><span class="w"> </span><span class="nt">in</span><span class="w"> </span><span class="nt">large</span><span class="w"> </span><span class="nt">subunit</span><span class="w"> </span><span class="nt">assembly</span><span class="o">.</span><span class="w"> </span><span class="nt">The</span><span class="w"> </span><span class="nt">N-terminus</span><span class="w"> </span><span class="nt">carries</span><span class="w"> </span><span class="nt">IPR040598</span><span class="w"> </span><span class="o">(</span><span class="nt">60S</span><span class="w"> </span><span class="nt">ribosome</span><span class="w"> </span><span class="nt">subunit</span><span class="w"> </span><span class="nt">biogenesis</span><span class="w"> </span><span class="nt">protein</span><span class="w"> </span><span class="nt">NIP7</span><span class="o">,</span><span class="w"> </span><span class="nt">pre-PUA</span><span class="w"> </span><span class="nt">domain</span><span class="o">,</span><span class="w"> </span><span class="nt">residues</span><span class="w"> </span><span class="nt">1</span><span class="err">–</span><span class="nt">83</span><span class="o">)</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">its</span><span class="w"> </span><span class="nt">eukaryote-specific</span><span class="w"> </span><span class="nt">refinement</span><span class="w"> </span><span class="nt">IPR055359</span><span class="w"> </span><span class="o">(</span><span class="nt">pre-PUA</span><span class="w"> </span><span class="nt">domain</span><span class="o">,</span><span class="w"> </span><span class="nt">eukaryotes</span><span class="o">,</span><span class="w"> </span><span class="nt">residues</span><span class="w"> </span><span class="nt">2</span><span class="err">–</span><span class="nt">88</span><span class="o">).</span><span class="w"> </span><span class="nt">This</span><span class="w"> </span><span class="nt">pre-PUA</span><span class="w"> </span><span class="nt">segment</span><span class="w"> </span><span class="nt">typically</span><span class="w"> </span><span class="nt">forms</span><span class="w"> </span><span class="nt">an</span><span class="w"> </span><span class="nt">extended</span><span class="o">,</span><span class="w"> </span><span class="nt">basic</span><span class="o">,</span><span class="w"> </span><span class="nt">protein-interaction</span><span class="w"> </span><span class="nt">arm</span><span class="w"> </span><span class="nt">that</span><span class="w"> </span><span class="nt">positions</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">core</span><span class="w"> </span><span class="nt">RNA-binding</span><span class="w"> </span><span class="nt">module</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">mediates</span><span class="w"> </span><span class="nt">contacts</span><span class="w"> </span><span class="nt">with</span><span class="w"> </span><span class="nt">assembly</span><span class="w"> </span><span class="nt">factors</span><span class="o">.</span><span class="w"> </span><span class="nt">The</span><span class="w"> </span><span class="nt">C-terminal</span><span class="w"> </span><span class="nt">half</span><span class="w"> </span><span class="nt">is</span><span class="w"> </span><span class="nt">dominated</span><span class="w"> </span><span class="nt">by</span><span class="w"> </span><span class="nt">a</span><span class="w"> </span><span class="nt">PUA</span><span class="w"> </span><span class="nt">fold</span><span class="o">:</span><span class="w"> </span><span class="nt">IPR002478</span><span class="w"> </span><span class="o">(</span><span class="nt">PUA</span><span class="w"> </span><span class="nt">domain</span><span class="o">,</span><span class="w"> </span><span class="nt">residues</span><span class="w"> </span><span class="nt">95</span><span class="err">–</span><span class="nt">171</span><span class="o">)</span><span class="w"> </span><span class="nt">is</span><span class="w"> </span><span class="nt">corroborated</span><span class="w"> </span><span class="nt">by</span><span class="w"> </span><span class="nt">IPR005155</span><span class="w"> </span><span class="o">(</span><span class="nt">UPF0113</span><span class="o">,</span><span class="w"> </span><span class="nt">PUA</span><span class="w"> </span><span class="nt">domain</span><span class="o">,</span><span class="w"> </span><span class="nt">residues</span><span class="w"> </span><span class="nt">95</span><span class="err">–</span><span class="nt">172</span><span class="o">)</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">encompassed</span><span class="w"> </span><span class="nt">by</span><span class="w"> </span><span class="nt">PUA-related</span><span class="w"> </span><span class="nt">superfamily</span><span class="w"> </span><span class="nt">signatures</span><span class="w"> </span><span class="nt">IPR036974</span><span class="w"> </span><span class="o">(</span><span class="nt">PUA</span><span class="w"> </span><span class="nt">domain</span><span class="w"> </span><span class="nt">superfamily</span><span class="o">,</span><span class="w"> </span><span class="nt">residues</span><span class="w"> </span><span class="nt">94</span><span class="err">–</span><span class="nt">179</span><span class="o">)</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">IPR015947</span><span class="w"> </span><span class="o">(</span><span class="nt">PUA-like</span><span class="w"> </span><span class="nt">superfamily</span><span class="o">,</span><span class="w"> </span><span class="nt">residues</span><span class="w"> </span><span class="nt">95</span><span class="err">–</span><span class="nt">170</span><span class="o">).</span><span class="w"> </span><span class="nt">PUA</span><span class="w"> </span><span class="nt">domains</span><span class="w"> </span><span class="nt">are</span><span class="w"> </span><span class="nt">specialized</span><span class="w"> </span><span class="nt">RNA-recognition</span><span class="w"> </span><span class="nt">modules</span><span class="w"> </span><span class="nt">that</span><span class="w"> </span><span class="nt">bind</span><span class="w"> </span><span class="nt">structured</span><span class="w"> </span><span class="nt">RNAs</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">tRNA-like</span><span class="w"> </span><span class="nt">elements</span><span class="o">;</span><span class="w"> </span><span class="nt">in</span><span class="w"> </span><span class="nt">nucleolar</span><span class="w"> </span><span class="nt">biogenesis</span><span class="w"> </span><span class="nt">factors</span><span class="o">,</span><span class="w"> </span><span class="nt">this</span><span class="w"> </span><span class="nt">fold</span><span class="w"> </span><span class="nt">anchors</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">protein</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">pre-rRNA</span><span class="w"> </span><span class="nt">segments</span><span class="w"> </span><span class="nt">within</span><span class="w"> </span><span class="nt">pre-60S</span><span class="w"> </span><span class="nt">particles</span><span class="o">.</span><span class="w"> </span><span class="nt">The</span><span class="w"> </span><span class="nt">ordered</span><span class="w"> </span><span class="nt">layout</span><span class="err">—</span><span class="nt">pre-PUA</span><span class="w"> </span><span class="nt">for</span><span class="w"> </span><span class="nt">factor</span><span class="w"> </span><span class="nt">docking</span><span class="w"> </span><span class="nt">followed</span><span class="w"> </span><span class="nt">by</span><span class="w"> </span><span class="nt">a</span><span class="w"> </span><span class="nt">PUA</span><span class="w"> </span><span class="nt">core</span><span class="w"> </span><span class="nt">for</span><span class="w"> </span><span class="nt">RNA</span><span class="w"> </span><span class="nt">engagement</span><span class="err">—</span><span class="nt">creates</span><span class="w"> </span><span class="nt">a</span><span class="w"> </span><span class="nt">bipartite</span><span class="w"> </span><span class="nt">clamp</span><span class="w"> </span><span class="nt">that</span><span class="w"> </span><span class="nt">couples</span><span class="w"> </span><span class="nt">protein</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">RNA</span><span class="w"> </span><span class="nt">binding</span><span class="w"> </span><span class="nt">during</span><span class="w"> </span><span class="nt">60S</span><span class="w"> </span><span class="nt">maturation</span><span class="o">.</span>
+</code></pre></div>
+
+<p>This architecture causes two primary molecular activities. First, the pre-PUA and surrounding family-specific surfaces provide multivalent protein interfaces, supporting GO:0005515 protein binding. Second, the PUA fold confers high-affinity binding to structured RNA, most plausibly pre-rRNA or tRNA-like moieties present in pre-60S particles; thus RNA binding (GO:0003723) is expected. Together, these activities enable the factor to stabilize specific rRNA helices, recruit partner assembly factors, and choreograph remodeling steps on nascent 60S subunits.</p>
+<p>From these molecular functions, the biological process follows. By binding pre-rRNA and engaging assembly proteins, the factor drives maturation of the large ribosomal subunit, a core component of ribosome biogenesis (GO:0042254) and specifically ribosomal large subunit biogenesis (GO:0042273). Ribosome production is tightly integrated with cellular stress programs. Perturbations such as UV exposure or DNA damage rapidly reprogram nucleolar activity; a nucleolar assembly factor that senses or enforces pre-rRNA checkpoints can modulate growth and ribosome output during stress. This provides a mechanistic route to participation in cellular response to DNA damage stimulus (GO:0006974) and response to UV (GO:0009411): modulation of pre-60S assembly couples ribosome biogenesis capacity to genome integrity signals, throttling output and facilitating recovery.</p>
+<p>The cellular component is dictated by the substrate and partners. Pre-rRNA transcription and early 60S assembly occur in the nucleolus, aligning with GO:0005730 nucleolus. The absence of transmembrane features and the presence of nucleolar specialization further support a soluble nucleolar residency.</p>
+<p>This mechanistic model predicts specific interaction partners. The pre-PUA arm can dock assembly factors such as BRX1 and WDR12 (components of the PeBoW complex), NSA2, RPF2, and RLP24, while the PUA domain anchors to pre-rRNA near sites where MRT4 (a pre-60S P-stalk placeholder) is handled during maturation. Additional contacts with an RRM domain-containing protein and coiled-coil scaffolds would stabilize transient pre-60S intermediates. In sum, the protein likely bridges pre-rRNA elements to a cohort of 60S biogenesis factors, enforcing quality control and coordinating progression through nucleolar assembly checkpoints, with stress-responsive modulation during UV or DNA-damage conditions.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="n">Functional</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">nucleolar</span><span class="w"> </span><span class="n">assembly</span><span class="w"> </span><span class="n">factor</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">promotes</span><span class="w"> </span><span class="n">maturation</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">large</span><span class="w"> </span><span class="n">ribosomal</span><span class="w"> </span><span class="n">subunit</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">combining</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">docking</span><span class="w"> </span><span class="k">module</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">RNA</span><span class="o">-</span><span class="n">recognition</span><span class="w"> </span><span class="n">fold</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">bind</span><span class="w"> </span><span class="n">pre</span><span class="o">-</span><span class="n">rRNA</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">recruit</span><span class="w"> </span><span class="n">biogenesis</span><span class="w"> </span><span class="n">factors</span><span class="p">.</span><span class="w"> </span><span class="n">Through</span><span class="w"> </span><span class="n">these</span><span class="w"> </span><span class="n">multivalent</span><span class="w"> </span><span class="n">contacts</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">stabilizes</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">remodels</span><span class="w"> </span><span class="n">pre</span><span class="o">-</span><span class="mi">60</span><span class="n">S</span><span class="w"> </span><span class="n">particles</span><span class="p">,</span><span class="w"> </span><span class="n">coordinating</span><span class="w"> </span><span class="n">their</span><span class="w"> </span><span class="n">progression</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">enforcing</span><span class="w"> </span><span class="n">quality</span><span class="w"> </span><span class="n">control</span><span class="p">.</span><span class="w"> </span><span class="n">Its</span><span class="w"> </span><span class="n">activity</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">expected</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">tuned</span><span class="w"> </span><span class="n">during</span><span class="w"> </span><span class="n">UV</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">DNA</span><span class="o">-</span><span class="n">damage</span><span class="w"> </span><span class="n">responses</span><span class="p">,</span><span class="w"> </span><span class="n">coupling</span><span class="w"> </span><span class="n">ribosome</span><span class="w"> </span><span class="k">output</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">stress</span><span class="w"> </span><span class="n">conditions</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">maintain</span><span class="w"> </span><span class="n">cellular</span><span class="w"> </span><span class="n">homeostasis</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">UniProt</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">Involved</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">biogenesis</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="mi">60</span><span class="n">S</span><span class="w"> </span><span class="n">ribosomal</span><span class="w"> </span><span class="n">subunit</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nl">IPR016686</span><span class="p">:</span><span class="w"> </span><span class="n">Ribosome</span><span class="w"> </span><span class="n">biogenesis</span><span class="w"> </span><span class="n">factor</span><span class="p">,</span><span class="w"> </span><span class="n">NIP7</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">1-177</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR040598</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="n">S</span><span class="w"> </span><span class="n">ribosome</span><span class="w"> </span><span class="n">subunit</span><span class="w"> </span><span class="n">biogenesis</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">NIP7</span><span class="p">,</span><span class="w"> </span><span class="n">pre</span><span class="o">-</span><span class="n">PUA</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">1-83</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR055359</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="n">S</span><span class="w"> </span><span class="n">ribosome</span><span class="w"> </span><span class="n">subunit</span><span class="w"> </span><span class="n">biogenesis</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">Nip7</span><span class="p">,</span><span class="w"> </span><span class="n">pre</span><span class="o">-</span><span class="n">PUA</span><span class="w"> </span><span class="k">domain</span><span class="p">,</span><span class="w"> </span><span class="n">eukaryotes</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">2-88</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR036974</span><span class="p">:</span><span class="w"> </span><span class="n">PUA</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">94-179</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR002478</span><span class="p">:</span><span class="w"> </span><span class="n">PUA</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">95-171</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR005155</span><span class="p">:</span><span class="w"> </span><span class="n">UPF0113</span><span class="p">,</span><span class="w"> </span><span class="n">PUA</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">95-172</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR015947</span><span class="p">:</span><span class="w"> </span><span class="n">PUA</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">95-170</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR005155</span><span class="p">:</span><span class="w"> </span><span class="n">UPF0113</span><span class="p">,</span><span class="w"> </span><span class="n">PUA</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">96-175</span><span class="o">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="k">GO</span><span class="w"> </span><span class="n">Term</span><span class="w"> </span><span class="n">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="n">Molecular</span><span class="w"> </span><span class="k">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Biological</span><span class="w"> </span><span class="n">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Cellular</span><span class="w"> </span><span class="n">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nip7-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="B0G104" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nip7-dictyostelium-discoideum-research-notes">nip7 (Dictyostelium discoideum) - Research Notes</h1>
+<p>UniProt: B0G104 | Gene: DDB_G0295477 | 179 aa, 20.7 kDa</p>
+<h2 id="gene-overview">Gene Overview</h2>
+<p>nip7 encodes the Dictyostelium discoideum homolog of the conserved 60S ribosome subunit biogenesis protein NIP7. The protein contains two domains: an N-terminal pre-PUA domain (IPR040598, residues 1-83) and a C-terminal PUA domain (IPR002478, residues 95-171). The full-length protein is classified under IPR016686 (Ribosome biogenesis factor, NIP7 family). No direct experimental studies exist for the D. discoideum protein; all functional inferences are based on orthology to yeast and human NIP7.</p>
+<h2 id="literature-summary">Literature Summary</h2>
+<h3 id="yeast-nip7p-s-cerevisiae-foundational-studies">Yeast Nip7p (S. cerevisiae) -- foundational studies</h3>
+<p>The yeast NIP7 gene was first characterized by Zanchin et al. (1997). NIP7 is essential for growth, and the protein cosediments with free 60S subunits but not 80S monosomes or polysomes, confirming it is a trans-acting assembly factor rather than a ribosomal protein [PMID:9271378, "A fraction of Nip7p cosedimented through sucrose gradients with free 60S ribosomal subunits but not with 80S monosomes or polysomal ribosomes, indicating that it is not a ribosomal protein"]. Nip7p localizes primarily to the nucleolus [PMID:9271378, "in vivo localization of a Nip7p-green fluorescent protein fusion protein revealed that a significant amount of Nip7p is present inside the nucleus, most probably in the nucleolus"]. Depletion of Nip7p causes severe pre-rRNA processing defects: accumulation of 35S and 27S precursors, appearance of 23S aberrant precursor, decreased 20S pre-rRNA, and reduced 25S rRNA relative to 18S rRNA, resulting in a deficit of 60S subunits [PMID:9271378, "Nip7-1p-depleted cells showed defective pre-rRNA processing, including accumulation of the 35S rRNA precursor, presence of a 23S aberrant precursor, decreased 20S pre-rRNA levels, and accumulation of 27S pre-rRNA"].</p>
+<h3 id="nip7p-protein-interactions">Nip7p protein interactions</h3>
+<p>Zanchin and Goldfarb (1999) identified two Nip7p-interacting proteins by yeast two-hybrid: Rrp43p (an exosome subunit) and Nop8p (a nucleolar protein also required for 60S biogenesis) [PMID:9891085, "Rrp43p and a second essential protein, Nop8p, were identified in a two-hybrid screen as Nip7p-interacting proteins"]. Physical interaction was confirmed by copurification [PMID:9891085, "Nip7p was present in IgG-Sepharose column eluates from whole-cell extracts containing either PrtA-Rrp43p or PrtA-Nop8p but not from control extract"]. The authors concluded that these proteins form a dynamic complex essential for 60S biogenesis [PMID:9891085, "Nip7p, Rrp43p, and Nop8p are subunits of a dynamic complex with essential roles in 60S subunit biogenesis"].</p>
+<h3 id="pua-domain-structure-and-rna-binding">PUA domain structure and RNA binding</h3>
+<p>Coltri et al. (2007) solved the crystal structure of archaeal Nip7 (P. abyssi) and showed the PUA domain mediates RNA interaction with preference for polyuridine sequences, conserved across archaea and eukaryotes [PMID:18001138, "Both proteins can bind specifically to polyuridine, and RNA interaction requires specific residues of the PUA domain"]. The PUA domain (named after Pseudo-Uridine synthases and Archaeosine-specific transglycosylases) is the conserved RNA-recognition module [PMID:18001138, "the PUA domain mediates Nip7 interaction with RNA and reveals that the preference for interaction with polyuridine sequences is conserved in Archaea and eukaryotic Nip7 proteins"].</p>
+<h3 id="human-nip7">Human NIP7</h3>
+<p>Morello et al. (2011) showed that human NIP7 depletion affects pre-rRNA processing and causes a 40S/60S subunit imbalance [PMID:20798176, "downregulation of NIP7 affects pre-rRNA processing, causing an imbalance of the 40S/60S subunit ratio"]. Notably, in human cells NIP7 appears more involved in 40S subunit biogenesis (18S rRNA maturation) [PMID:20798176, "NIP7 is required for maturation of the 18S rRNA"], which is a functional divergence from the yeast protein's role primarily in 60S biogenesis. NIP7 localizes to the nuclear compartment and co-sediments with 40S-80S complexes [PMID:20798176, "The NIP7 protein is restricted to the nuclear compartment and co-sediments with complexes with molecular masses in the range of 40S-80S"].</p>
+<h3 id="nip7-ftsj3-interaction-in-humans">NIP7-FTSJ3 interaction in humans</h3>
+<p>Morello et al. (2011) identified FTSJ3 (ortholog of yeast Spb1p) as a human NIP7-interacting protein [PMID:22195017, "FTSJ3, a putative ortholog of yeast Spb1p, as a human NIP7-interacting protein"]. Their interaction is RNA-mediated rather than direct protein-protein contact [PMID:22195017, "Incubation of the extracts with RNase abolishes the coimmunoprecipitation of NIP7 with FLAG-FTSJ3"]. Both colocalize to the nucleolus [PMID:22195017, "Both exogenous proteins colocalized to the nucleolus"].</p>
+<h3 id="genomic-context-in-d-discoideum">Genomic context in D. discoideum</h3>
+<p>The nip7 gene resides on chromosome 2 of D. discoideum, which was sequenced by Gloeckner et al. (2002) <a href="https://pubmed.ncbi.nlm.nih.gov/12097910">PMID:12097910</a> and subsequently the full genome was reported by Eichinger et al. (2005) <a href="https://pubmed.ncbi.nlm.nih.gov/15875012">PMID:15875012</a>.</p>
+<h2 id="functional-inference-for-d-discoideum-nip7">Functional Inference for D. discoideum nip7</h2>
+<p>Given the high conservation of NIP7 across eukaryotes and archaea, D. discoideum nip7 is expected to function as a nucleolar assembly factor for the 60S ribosomal subunit. Its PUA domain should bind pre-rRNA (with polyuridine preference), and its pre-PUA domain should mediate protein-protein interactions with other pre-60S assembly factors. Based on the yeast ortholog, the primary role is in 27S pre-rRNA processing and 60S subunit assembly, operating within pre-60S ribosomal particles in the nucleolus. The ISS annotation (GO_REF:0000024) based on similarity to yeast Q08962 (Nip7p) is well-supported by the extensive yeast literature.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nip7-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="B0G104" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-nip7-dicdi">BioReason-Pro SFT Review: nip7 (DICDI)</h1>
+<p>Source: nip7-deep-research-bioreason-sft.md</p>
+<ul>
+<li><strong>Correctness</strong>: 3/5</li>
+<li><strong>Completeness</strong>: 3/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason functional summary states:</p>
+<blockquote>
+<p>A nucleolar assembly factor that promotes maturation of the large ribosomal subunit by combining an N-terminal docking module with a C-terminal RNA-recognition fold to bind pre-rRNA and recruit biogenesis factors. Through these multivalent contacts it stabilizes and remodels pre-60S particles, coordinating their progression and enforcing quality control. Its activity is expected to be tuned during UV and DNA-damage responses, coupling ribosome output to stress conditions to maintain cellular homeostasis.</p>
+</blockquote>
+<p>The first two sentences are accurate and well-supported. NIP7 is indeed a nucleolar assembly factor with a bipartite architecture: an N-terminal pre-PUA domain for protein interactions and a C-terminal PUA domain for RNA binding. Its role in 60S ribosomal subunit maturation is the core conserved function, supported by extensive experimental data from yeast showing that Nip7p depletion causes 27S pre-rRNA accumulation and 60S subunit deficit (PMID:9271378). The description of binding pre-rRNA and recruiting biogenesis factors aligns with the known interactions with Nop8p and Rrp43p (PMID:9891085).</p>
+<p>However, the claim that NIP7 activity "is expected to be tuned during UV and DNA-damage responses, coupling ribosome output to stress conditions" is speculative and not supported by any published evidence for NIP7 specifically. The thinking trace reveals that BioReason inferred this from a generic reasoning chain: nucleolar factors can sense stress, therefore NIP7 participates in DNA damage response (GO:0006974) and UV response (GO:0009411). This is a category error -- while ribosome biogenesis is generally affected by cellular stress, there is no evidence that NIP7 specifically plays a regulatory role in stress responses. The curated annotations contain no stress-related terms, and none of the primary NIP7 literature (Zanchin et al. 1997, 1999; Coltri et al. 2007; Morello et al. 2011) mentions DNA damage or UV response functions.</p>
+<p>The summary also omits some relevant biology. It does not mention that the PUA domain binds polyuridine RNA specifically (PMID:18001138), nor does it note the interaction with the exosome subunit Rrp43p (PMID:9891085), which connects NIP7 to the RNA degradation machinery involved in pre-rRNA quality control. It also does not mention the functional divergence between yeast NIP7 (primarily 60S) and human NIP7 (also affecting 40S/18S rRNA maturation; PMID:20798176), which would be relevant for understanding the range of NIP7 biology.</p>
+<p>Comparison with interpro2go:</p>
+<p>The InterPro2GO annotations (GO_REF:0000002) for this protein are:<br />
+- GO:0003723 RNA binding (from IPR002478/IPR036974, PUA domain)<br />
+- GO:0005634 nucleus (from IPR016686, NIP7 family)<br />
+- GO:0042255 ribosome assembly (from IPR016686, NIP7 family)</p>
+<p>BioReason's functional summary covers the same core biology as interpro2go: RNA binding via the PUA domain, nuclear/nucleolar localization, and ribosome assembly. However, BioReason adds specificity beyond interpro2go by correctly identifying the large subunit (60S) as the specific target and describing the bipartite domain architecture. The interpro2go annotations are appropriately conservative (ribosome assembly rather than specifically large subunit biogenesis), while BioReason correctly narrows to 60S biogenesis.</p>
+<p>Where BioReason diverges negatively from interpro2go is the fabricated stress-response claims. InterPro2GO makes no such claims because the domain signatures do not predict stress responsiveness. BioReason appears to have over-interpreted the nucleolar localization to generate these additional biological process predictions, which is a hallmark reasoning error where plausible-sounding inferences are made without supporting evidence.</p>
+<p>In summary, BioReason recapitulates the core interpro2go biology with improved specificity (60S rather than generic ribosome assembly), adds reasonable structural interpretation of the domain architecture, but then extends into unsupported stress-response territory.</p>
+<h2 id="notes-on-thinking-trace">Notes on thinking trace</h2>
+<p>The thinking trace demonstrates reasonable domain-level interpretation. The analysis of the pre-PUA and PUA domain architecture is sound: identifying the pre-PUA as a "protein-interaction arm" and the PUA as an "RNA-recognition module" that together create "a bipartite clamp that couples protein and RNA binding during 60S maturation." This is consistent with the structural data (PMID:18001138).</p>
+<p>The trace goes off track when it predicts "participation in cellular response to DNA damage stimulus (GO:0006974) and response to UV (GO:0009411)" through a chain of reasoning that nucleolar factors "can modulate growth and ribosome output during stress." This is generic nucleolar biology reasoning applied without specific evidence for NIP7. The trace also predicts specific interaction partners (BRX1, WDR12/PeBoW complex, NSA2, RPF2, RLP24, MRT4) that are not documented for NIP7 -- these are known pre-60S factors but their specific interaction with NIP7 is speculative.</p>
+<p>The protein binding prediction (GO:0005515) in the trace is also noted. Per curation guidelines, protein binding is uninformative and should be avoided in favor of more specific molecular function terms.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: B0G104
+gene_symbol: nip7
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:44689
+  label: Dictyostelium discoideum
+description: nip7 encodes the D. discoideum homolog of the conserved 60S 
+  ribosome subunit biogenesis protein NIP7. The 179-amino-acid protein contains 
+  an N-terminal pre-PUA domain for protein-protein interactions and a C-terminal
+  PUA domain that binds pre-rRNA with polyuridine preference. Based on extensive
+  studies of yeast and human orthologs, nip7 is predicted to function as a 
+  nucleolar trans-acting factor required for 27S pre-rRNA processing and 60S 
+  ribosomal subunit assembly. The protein associates transiently with pre-60S 
+  particles and interacts with other biogenesis factors and exosome components.
+references:
+- id: PMID:9271378
+  title: Saccharomyces cerevisiae Nip7p is required for efficient 60S ribosome 
+    subunit biogenesis
+  findings:
+  - statement: NIP7 is essential for growth and required for 60S ribosomal 
+      subunit biogenesis in yeast.
+    supporting_text: Nip7-1p-depleted cells showed defective pre-rRNA 
+      processing, including accumulation of the 35S rRNA precursor, presence of 
+      a 23S aberrant precursor, decreased 20S pre-rRNA levels, and accumulation 
+      of 27S pre-rRNA
+  - statement: Nip7p cosediments with free 60S subunits and localizes to the 
+      nucleolus.
+    supporting_text: A fraction of Nip7p cosedimented through sucrose gradients 
+      with free 60S ribosomal subunits but not with 80S monosomes or polysomal 
+      ribosomes, indicating that it is not a ribosomal protein
+  - statement: Nip7p is a nucleolar protein.
+    supporting_text: in vivo localization of a Nip7p-green fluorescent protein 
+      fusion protein revealed that a significant amount of Nip7p is present 
+      inside the nucleus, most probably in the nucleolus
+- id: PMID:9891085
+  title: Nip7p interacts with Nop8p, an essential nucleolar protein required for
+    60S ribosome biogenesis, and the exosome subunit Rrp43p
+  findings:
+  - statement: Nip7p interacts with nucleolar protein Nop8p and exosome subunit 
+      Rrp43p.
+    supporting_text: Rrp43p and a second essential protein, Nop8p, were 
+      identified in a two-hybrid screen as Nip7p-interacting proteins
+  - statement: The three proteins form a dynamic complex in 60S biogenesis.
+    supporting_text: Biochemical evidence for an interaction was provided by the
+      copurification on immunoglobulin G-Sepharose of Nip7p with protein 
+      A-tagged Rrp43p and Nop8p
+- id: PMID:18001138
+  title: Structural insights into the interaction of the Nip7 PUA domain with 
+    polyuridine RNA
+  findings:
+  - statement: The PUA domain mediates Nip7 interaction with RNA, with conserved
+      polyuridine preference.
+    supporting_text: Both proteins can bind specifically to polyuridine, and RNA
+      interaction requires specific residues of the PUA domain
+  - statement: Polyuridine binding is conserved from archaea to eukaryotes.
+    supporting_text: the PUA domain mediates Nip7 interaction with RNA and 
+      reveals that the preference for interaction with polyuridine sequences is 
+      conserved in Archaea and eukaryotic Nip7 proteins
+- id: PMID:20798176
+  title: The NIP7 protein is required for accurate pre-rRNA processing in human 
+    cells
+  findings:
+  - statement: Human NIP7 is required for pre-rRNA processing and ribosome 
+      subunit biogenesis.
+    supporting_text: downregulation of NIP7 affects pre-rRNA processing, causing
+      an imbalance of the 40S/60S subunit ratio
+  - statement: NIP7 localizes to the nuclear compartment and associates with 
+      pre-ribosomal particles.
+    supporting_text: The NIP7 protein is restricted to the nuclear compartment 
+      and co-sediments with complexes with molecular masses in the range of 
+      40S-80S
+- id: PMID:22195017
+  title: The human nucleolar protein FTSJ3 associates with NIP7 and functions in
+    pre-rRNA processing
+  findings:
+  - statement: NIP7 and FTSJ3 interact and colocalize in the nucleolus.
+    supporting_text: Both exogenous proteins colocalized to the nucleolus
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with 
+    GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to
+    orthologs by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular 
+    Location vocabulary mapping, accompanied by conservative changes to GO terms
+    applied by UniProt
+  findings: []
+- id: PMID:12097910
+  title: Sequence and analysis of chromosome 2 of Dictyostelium discoideum
+  findings:
+  - statement: Genomic sequence of D. discoideum chromosome 2 where nip7 
+      resides.
+    supporting_text: the chromosome codes for 2,799 predicted protein coding 
+      genes and 73 transfer RNA genes
+- id: PMID:15875012
+  title: The genome of the social amoeba Dictyostelium discoideum
+  findings:
+  - statement: Complete genome of D. discoideum encoding approximately 12,500 
+      predicted proteins.
+    supporting_text: chromosomes of this organism encode approximately 12,500 
+      predicted proteins
+- id: file:DICDI/nip7/nip7-deep-research-bioreason-sft.md
+  title: BioReason-Pro SFT prediction for nip7 (D. discoideum)
+  findings:
+  - statement: BioReason SFT trace identifies nip7 as a nucleolar assembly 
+      factor for 60S ribosomal subunit maturation with bipartite pre-PUA and PUA
+      domain architecture.
+existing_annotations:
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Phylogenetic inference (IBA) that nip7 localizes to the nucleolus 
+      is well-supported. In yeast, Nip7p-GFP localizes to the nucleolus, and in 
+      human cells NIP7 is restricted to the nuclear compartment and colocalizes 
+      with nucleolar markers. The nucleolus is the site of pre-rRNA processing 
+      and early ribosome assembly where NIP7 orthologs function.
+    action: ACCEPT
+    reason: Nucleolar localization is a core conserved feature of NIP7 family 
+      proteins across eukaryotes.
+    supported_by:
+    - reference_id: file:DICDI/nip7/nip7-deep-research-bioreason-sft.md
+      supporting_text: A nucleolar assembly factor that promotes maturation of 
+        the large ribosomal subunit
+    - reference_id: PMID:9271378
+      supporting_text: in vivo localization of a Nip7p-green fluorescent protein
+        fusion protein revealed that a significant amount of Nip7p is present 
+        inside the nucleus, most probably in the nucleolus
+    - reference_id: PMID:22195017
+      supporting_text: Both exogenous proteins colocalized to the nucleolus
+- term:
+    id: GO:0042273
+    label: ribosomal large subunit biogenesis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Phylogenetic inference that nip7 is involved in ribosomal large 
+      subunit biogenesis is strongly supported. Yeast Nip7p depletion causes 
+      accumulation of 27S pre-rRNA and deficit of 60S subunits. The protein 
+      cosediments with free 60S subunits, confirming direct involvement in large
+      subunit maturation.
+    action: ACCEPT
+    reason: This is the core biological process for NIP7 family proteins, 
+      extensively documented in yeast.
+    supported_by:
+    - reference_id: PMID:9271378
+      supporting_text: Delayed processing of 27S pre-rRNA appeared to be the 
+        cause of reduced synthesis of 25S rRNA relative to 18S rRNA, which may 
+        be responsible for the deficit of 60S subunits in these cells
+    - reference_id: PMID:9891085
+      supporting_text: Rrp43p and a second essential protein, Nop8p, were 
+        identified in a two-hybrid screen as Nip7p-interacting proteins
+- term:
+    id: GO:0030687
+    label: preribosome, large subunit precursor
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Phylogenetic inference that nip7 is part of the preribosome, large 
+      subunit precursor is well-supported. Yeast Nip7p cosediments with free 60S
+      subunits and interacts with other pre-60S assembly factors (Nop8p, 
+      Rrp43p). NIP7 family proteins are trans-acting factors that associate 
+      transiently with pre-60S particles during maturation.
+    action: ACCEPT
+    reason: Nip7p association with pre-60S particles is demonstrated by 
+      cosedimentation and protein interaction data.
+    supported_by:
+    - reference_id: PMID:9271378
+      supporting_text: A fraction of Nip7p cosedimented through sucrose 
+        gradients with free 60S ribosomal subunits but not with 80S monosomes or
+        polysomal ribosomes
+    - reference_id: PMID:9891085
+      supporting_text: Biochemical evidence for an interaction was provided by 
+        the copurification on immunoglobulin G-Sepharose of Nip7p with protein 
+        A-tagged Rrp43p and Nop8p
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: InterPro2GO annotation of RNA binding based on the PUA domain 
+      (IPR002478, IPR036974). The PUA domain is a well-characterized RNA-binding
+      module. Structural and biochemical studies of archaeal and yeast Nip7 
+      proteins confirm that the PUA domain binds RNA, with specificity for 
+      polyuridine sequences. This annotation is correct but could be more 
+      specific as rRNA binding.
+    action: ACCEPT
+    reason: RNA binding via the PUA domain is experimentally verified for Nip7 
+      orthologs. While rRNA binding (GO:0019843) would be more specific, RNA 
+      binding is not incorrect and the IEA evidence appropriately reflects the 
+      domain-level annotation.
+    supported_by:
+    - reference_id: PMID:18001138
+      supporting_text: the PUA domain mediates Nip7 interaction with RNA and 
+        reveals that the preference for interaction with polyuridine sequences 
+        is conserved in Archaea and eukaryotic Nip7 proteins
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: InterPro2GO annotation of nuclear localization based on the NIP7 
+      family signature (IPR016686). Yeast and human NIP7 proteins localize to 
+      the nucleus/nucleolus. The nucleolus annotation (GO:0005730) is more 
+      specific and also present, making this a redundant but not incorrect 
+      parent term.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but less specific than the nucleolus annotation. The 
+      nucleolus is within the nucleus, so this is technically true but the more 
+      informative annotation is GO:0005730 nucleolus.
+    supported_by:
+    - reference_id: PMID:9271378
+      supporting_text: in vivo localization of a Nip7p-green fluorescent protein
+        fusion protein revealed that a significant amount of Nip7p is present 
+        inside the nucleus, most probably in the nucleolus
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: UniProt subcellular location mapping to nucleolus (IEA). This is 
+      the same term as the IBA annotation above, providing independent 
+      computational support. The nucleolus annotation is well-supported by 
+      experimental data from yeast and human orthologs.
+    action: ACCEPT
+    reason: Redundant with the IBA annotation but provides independent 
+      computational evidence stream.
+    supported_by:
+    - reference_id: PMID:20798176
+      supporting_text: The NIP7 protein is restricted to the nuclear compartment
+        and co-sediments with complexes with molecular masses in the range of 
+        40S-80S
+- term:
+    id: GO:0042255
+    label: ribosome assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: InterPro2GO annotation of ribosome assembly based on IPR016686 
+      (NIP7 family). This is a parent term of the more specific ribosomal large 
+      subunit biogenesis (GO:0042273), which is already annotated. Ribosome 
+      assembly is correct but less informative.
+    action: KEEP_AS_NON_CORE
+    reason: Correct parent term but less specific than GO:0042273 (ribosomal 
+      large subunit biogenesis) which is already present with IBA and ISS 
+      evidence. The InterPro2GO mapping appropriately captures the family-level 
+      biology.
+    supported_by:
+    - reference_id: PMID:9271378
+      supporting_text: Nip7-1p-depleted cells showed defective pre-rRNA 
+        processing, including accumulation of the 35S rRNA precursor, presence 
+        of a 23S aberrant precursor, decreased 20S pre-rRNA levels, and 
+        accumulation of 27S pre-rRNA
+- term:
+    id: GO:0042273
+    label: ribosomal large subunit biogenesis
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Manual ISS annotation by dictyBase based on sequence similarity to 
+      yeast Nip7p (Q08962). This is the most informative annotation for the core
+      biological process. The yeast ortholog has extensive experimental evidence
+      for 60S subunit biogenesis, including 27S pre-rRNA processing defects and 
+      60S subunit deficit upon depletion.
+    action: ACCEPT
+    reason: Well-supported ISS annotation based on clear orthology to yeast 
+      NIP7, which has direct experimental evidence (IDA/IMP) for this process.
+    supported_by:
+    - reference_id: PMID:9271378
+      supporting_text: Delayed processing of 27S pre-rRNA appeared to be the 
+        cause of reduced synthesis of 25S rRNA relative to 18S rRNA, which may 
+        be responsible for the deficit of 60S subunits in these cells
+    - reference_id: PMID:9891085
+      supporting_text: Rrp43p and a second essential protein, Nop8p, were 
+        identified in a two-hybrid screen as Nip7p-interacting proteins
+# ================== rRNA BINDING (NEW) ==================
+- term:
+    id: GO:0019843
+    label: rRNA binding
+  evidence_type: ISS
+  original_reference_id: PMID:18001138
+  review:
+    summary: &gt;-
+      The PUA domain of Nip7 binds RNA with polyuridine preference, and this activity
+      is conserved from archaea to eukaryotes. Given that Nip7 functions in pre-rRNA
+      processing within pre-60S particles, the relevant RNA substrate is pre-rRNA.
+      rRNA
+      binding (GO:0019843) is more specific than the existing RNA binding (GO:0003723)
+      annotation and better reflects the biological context.
+    action: NEW
+    reason: &gt;-
+      Structural and biochemical studies demonstrate that the PUA domain of Nip7 binds
+      RNA, and the biological context (pre-60S particle association, 27S pre-rRNA
+      processing)
+      establishes pre-rRNA as the relevant substrate. This is a more specific annotation
+      than the existing GO:0003723 RNA binding.
+    supported_by:
+    - reference_id: PMID:18001138
+      supporting_text: Both proteins can bind specifically to polyuridine, and 
+        RNA interaction requires specific residues of the PUA domain
+    - reference_id: PMID:9271378
+      supporting_text: A fraction of Nip7p cosedimented through sucrose 
+        gradients with free 60S ribosomal subunits but not with 80S monosomes or
+        polysomal ribosomes
+core_functions:
+- description: nip7 functions as a nucleolar trans-acting factor in 60S 
+    ribosomal subunit biogenesis. Its PUA domain binds pre-rRNA (with 
+    polyuridine preference) while the N-terminal pre-PUA domain mediates 
+    interactions with other assembly factors. The protein associates transiently
+    with pre-60S ribosomal particles during 27S pre-rRNA processing and 
+    dissociates as the subunit matures.
+  molecular_function:
+    id: GO:0019843
+    label: rRNA binding
+  directly_involved_in:
+  - id: GO:0042273
+    label: ribosomal large subunit biogenesis
+  locations:
+  - id: GO:0005730
+    label: nucleolus
+  supported_by:
+  - reference_id: PMID:18001138
+    supporting_text: the PUA domain mediates Nip7 interaction with RNA and 
+      reveals that the preference for interaction with polyuridine sequences is 
+      conserved in Archaea and eukaryotic Nip7 proteins
+  - reference_id: PMID:9271378
+    supporting_text: A fraction of Nip7p cosedimented through sucrose gradients 
+      with free 60S ribosomal subunits but not with 80S monosomes or polysomal 
+      ribosomes
+  - reference_id: PMID:9891085
+    supporting_text: Rrp43p and a second essential protein, Nop8p, were 
+      identified in a two-hybrid screen as Nip7p-interacting proteins
+  in_complex:
+    id: GO:0030687
+    label: preribosome, large subunit precursor
+suggested_questions:
+- question: Is nip7 essential for growth in D. discoideum, as it is in yeast? A 
+    knockout or knockdown experiment would clarify whether the functional 
+    requirement is conserved.
+- question: Does D. discoideum nip7 function primarily in 60S subunit biogenesis
+    (as in yeast) or does it also affect 40S biogenesis (as observed for human 
+    NIP7)?
+suggested_experiments:
+- description: Generate a nip7 knockout or conditional knockdown in D. 
+    discoideum (e.g., using blasticidin cassette insertion or 
+    doxycycline-inducible RNAi). Assess growth, ribosomal subunit profiles by 
+    sucrose gradient sedimentation, and pre-rRNA processing by northern blot to 
+    determine whether 27S pre-rRNA accumulates as in yeast.
+  hypothesis: nip7 is essential for growth and required for 60S ribosomal 
+    subunit biogenesis in D. discoideum.
+  experiment_type: gene knockout / conditional knockdown
+- description: Determine the subcellular localization of nip7 in D. discoideum 
+    by expressing a GFP-nip7 fusion. Verify nucleolar localization by 
+    co-staining with nucleolar markers such as fibrillarin.
+  hypothesis: nip7 localizes to the nucleolus in D. discoideum.
+  experiment_type: fluorescence microscopy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

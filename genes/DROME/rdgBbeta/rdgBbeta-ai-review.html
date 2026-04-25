@@ -1,0 +1,2922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rdgBbeta - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rdgBbeta</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9U9P7" target="_blank" class="term-link">
+                        Q9U9P7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rdgBbeta";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9U9P7" data-a="DESCRIPTION: rdgBbeta encodes a soluble, cytoplasmic phosphatid..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>rdgBbeta encodes a soluble, cytoplasmic phosphatidylinositol transfer protein (PITP) of the Class IIB subfamily. Unlike Class I PITPs (vibrator, giotto) which bind both PI and PC, the human ortholog PITPNC1 binds and transfers phosphatidylinositol (PI) and phosphatidic acid (PA) but does not significantly bind phosphatidylcholine. The protein consists of a PITP/START-like lipid-binding domain and a short disordered C-terminal tail, lacking the transmembrane and additional domains found in other rdgB family members. rdgBbeta is broadly expressed and has been detected in adult head tissue by mass spectrometry. Genetic evidence in Drosophila links rdgBbeta to phosphoinositide metabolism in the context of neurodegeneration, as rdgBbeta alleles modify the Vap33-P58S ALS8 model phenotype.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9U9P7" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation from phylogenetic inference. Cytoplasmic localization is well-supported across the PITP family. The human ortholog PITPNC1 was shown to be cytoplasmic by immunofluorescence (PMID:10531358), and rdgBbeta lacks transmembrane domains or secretion signals. This is consistent with a soluble lipid transfer protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is supported by the domain architecture (no transmembrane segments), the experimental localization of the human ortholog PITPNC1 (PMID:10531358), and mass spectrometry detection in Drosophila adult head (FlyBase).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10531358" target="_blank" class="term-link">
+                                        PMID:10531358
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunofluorescence analysis of ectopic MrdgBbeta showed cytoplasmic staining</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008526" target="_blank" class="term-link">
+                                    GO:0008526
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylinositol transfer activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9U9P7" data-a="GO:0008526" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation from phylogenetic inference. PI transfer activity is the defining molecular function of the PITP family. The human ortholog PITPNC1 has been shown to transfer PI in vitro (PMID:10531358, PMID:22822086).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function. The human ortholog was demonstrated to transfer PI in vitro with activity comparable to other PITP-like domains (PMID:10531358). The conserved PITP domain architecture (IPR001666) and START-like fold support this function. The BioReason deep research correctly identifies PI transfer as a core function (rdgBbeta-deep-research-bioreason-sft.md).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10531358" target="_blank" class="term-link">
+                                        PMID:10531358
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the ability of recombinant MrdgBbeta to transfer phosphatidylinositol in vitro was similar to other PITP-like domains</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22822086" target="_blank" class="term-link">
+                                        PMID:22822086
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">besides PI, RdgBβ binds and transfers phosphatidic acid (PA) but hardly binds phosphatidylcholine</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DROME/rdgBbeta/rdgBbeta-deep-research-bioreason-sft.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[BioReason correctly identifies] GO:0008526 phosphatidylinositol transfer activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035091" target="_blank" class="term-link">
+                                    GO:0035091
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylinositol binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9U9P7" data-a="GO:0035091" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation from phylogenetic inference. PI binding is intrinsic to PI transfer activity and well-established for PITPNC1/rdgBbeta orthologs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PI binding is a prerequisite for PI transfer activity and is directly demonstrated for the human ortholog (PMID:22822086). The PITP domain creates a hydrophobic cavity that accommodates PI monomers.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22822086" target="_blank" class="term-link">
+                                        PMID:22822086
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PA and PI were now incorporated into RdgBβ</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005543" target="_blank" class="term-link">
+                                    GO:0005543
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9U9P7" data-a="GO:0005543" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from ARBA machine learning. This is a correct but very general annotation. The protein binds specific phospholipids (PI and PA), so more specific terms are more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Phospholipid binding is accurate but overly broad. The protein specifically binds PI and PA (PMID:22822086). The more specific annotations for PI binding (GO:0035091) and PI transfer activity (GO:0008526) better capture the core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22822086" target="_blank" class="term-link">
+                                        PMID:22822086
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">besides PI, RdgBβ binds and transfers phosphatidic acid (PA) but hardly binds phosphatidylcholine</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9U9P7" data-a="GO:0005634" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from ARBA machine learning. There is no experimental evidence supporting nuclear localization of rdgBbeta or its orthologs. The protein is cytoplasmic.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No published evidence supports nuclear localization for rdgBbeta or PITPNC1. The human ortholog was localized to the cytoplasm by immunofluorescence (PMID:10531358). The protein lacks nuclear localization signals. This ARBA prediction appears to be erroneous.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10531358" target="_blank" class="term-link">
+                                        PMID:10531358
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunofluorescence analysis of ectopic MrdgBbeta showed cytoplasmic staining</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9U9P7" data-a="GO:0005737" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from ARBA machine learning for cytoplasmic localization. Redundant with the IBA annotation for the same term but independently correct.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation consistent with experimental evidence from the human ortholog and absence of membrane-targeting signals. Redundant with the IBA annotation above.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10531358" target="_blank" class="term-link">
+                                        PMID:10531358
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunofluorescence analysis of ectopic MrdgBbeta showed cytoplasmic staining</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015914" target="_blank" class="term-link">
+                                    GO:0015914
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9U9P7" data-a="GO:0015914" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro domain mapping (IPR001666 PITP family). Phospholipid transport is the core biological process for this protein family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Phospholipid transport is the direct biological process consequence of PI transfer activity. The PITP domain mediates monomeric lipid transfer between membranes. This is well-supported by the domain architecture and ortholog biochemistry.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22822086" target="_blank" class="term-link">
+                                        PMID:22822086
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RdgBβ, when containing PA, regulates an effector protein or can facilitate lipid transfer between membrane compartments</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9U9P7" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation by manual curator judgment based on sequence similarity to human PITPNC1 (Q9UKF7). Cytoplasmic localization is correct and well-supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Based on sequence similarity to human PITPNC1, which was experimentally shown to localize to the cytoplasm (PMID:10531358). This is the strongest non-experimental annotation for localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10531358" target="_blank" class="term-link">
+                                        PMID:10531358
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunofluorescence analysis of ectopic MrdgBbeta showed cytoplasmic staining</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9U9P7" data-a="GO:0007165" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation based on sequence similarity to human PITPNC1 (Q9UKF7). Signal transduction is a plausible but very broad annotation. PITPs can influence signaling by supplying PI for phosphoinositide synthesis, and the human ortholog interacts with signaling components (ATRAP, 14-3-3).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Signal transduction is plausible but overly broad. PITPNC1 participates in phospholipase D signaling by binding PA (PMID:22822086) and interacts with ATRAP in the angiotensin signaling pathway (PMID:21728994). However, the specific signaling pathways for Drosophila rdgBbeta are unknown. The annotation is not wrong but is too general to be informative about core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22822086" target="_blank" class="term-link">
+                                        PMID:22822086
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RdgBβ, when containing PA, regulates an effector protein or can facilitate lipid transfer between membrane compartments</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21728994" target="_blank" class="term-link">
+                                        PMID:21728994
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the PITP domain of RdgBβ interacts with the integral membrane protein ATRAP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008526" target="_blank" class="term-link">
+                                    GO:0008526
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylinositol transfer activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9U9P7" data-a="GO:0008526" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation based on sequence similarity to human PITPNC1 (Q9UKF7). PI transfer activity is the core molecular function, well-established for the ortholog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA annotation for the same term. PI transfer activity is the defining function of this protein family and is directly demonstrated for the human ortholog (PMID:10531358, PMID:22822086).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10531358" target="_blank" class="term-link">
+                                        PMID:10531358
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the ability of recombinant MrdgBbeta to transfer phosphatidylinositol in vitro was similar to other PITP-like domains</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>rdgBbeta is a soluble cytoplasmic lipid transfer protein that shuttles phosphatidylinositol and phosphatidic acid between membranes. It uses its PITP/START-like hydrophobic cavity to extract lipid monomers from donor membranes and deliver them to acceptor membranes. Unlike Class I PITPs, it does not significantly bind phosphatidylcholine. Through PI and PA transfer, it likely contributes to phosphoinositide homeostasis and lipid signaling.</h3>
+                <span class="vote-buttons" data-g="Q9U9P7" data-a="FUNCTION: rdgBbeta is a soluble cytoplasmic lipid transfer p..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008526" target="_blank" class="term-link">
+                            phosphatidylinositol transfer activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015914" target="_blank" class="term-link">
+                                phospholipid transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PITP family domain (IPR001666) associated with phospholipid transport</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Annotations transferred from human PITPNC1 (Q9UKF7)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic inference of PITP family conserved functions</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Machine learning predictions for phospholipid binding, cytoplasm, and nucleus localization</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10531358" target="_blank" class="term-link">
+                            PMID:10531358
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cloning and characterization of a novel human phosphatidylinositol transfer protein, rdgBbeta.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Human rdgBbeta (PITPNC1) cloned and characterized as a novel PITP lacking transmembrane domains</div>
+                        
+                        <div class="finding-text">"In contrast to other rdgB-like proteins, MrdgBbeta contains no transmembrane motifs or the conserved carboxyl-terminal domain"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytoplasmic localization demonstrated by immunofluorescence</div>
+                        
+                        <div class="finding-text">"Immunofluorescence analysis of ectopic MrdgBbeta showed cytoplasmic staining"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PI transfer activity demonstrated in vitro</div>
+                        
+                        <div class="finding-text">"the ability of recombinant MrdgBbeta to transfer phosphatidylinositol in vitro was similar to other PITP-like domains"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ubiquitous expression with highest levels in heart, muscle, kidney, liver, and leukocytes</div>
+                        
+                        <div class="finding-text">"MrdgBbeta mRNA is ubiquitously expressed"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22822086" target="_blank" class="term-link">
+                            PMID:22822086
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Phosphatidylinositol transfer protein, cytoplasmic 1 (PITPNC1) binds and transfers phosphatidic acid.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PITPNC1/RdgBbeta binds and transfers both PI and phosphatidic acid (PA)</div>
+                        
+                        <div class="finding-text">"besides PI, RdgBβ binds and transfers phosphatidic acid (PA) but hardly binds phosphatidylcholine"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Does not significantly bind phosphatidylcholine, unlike Class I PITPs</div>
+                        
+                        <div class="finding-text">"the lipid binding properties of this protein are distinct to Class I PITPs because, besides PI, RdgBβ binds and transfers phosphatidic acid (PA) but hardly binds phosphatidylcholine"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified RdgBbeta preloaded with PA and phosphatidylglycerol from E. coli</div>
+                        
+                        <div class="finding-text">"RdgBβ when purified from Escherichia coli is preloaded with PA and phosphatidylglycerol"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PA binding increases at the expense of PI binding when phospholipase D is activated</div>
+                        
+                        <div class="finding-text">"After an increase in PA levels following activation of endogenous phospholipase D...binding of PA to RdgBβ was greater at the expense of PI binding"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21728994" target="_blank" class="term-link">
+                            PMID:21728994
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The phosphatidylinositol transfer protein RdgBβ binds 14-3-3 via its unstructured C-terminus, whereas its lipid-binding domain interacts with the integral membrane protein ATRAP (angiotensin II type I receptor-associated protein).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RdgBbeta C-terminus binds 14-3-3 at two phosphorylated sites</div>
+                        
+                        <div class="finding-text">"the C-terminus contains two tandem phosphorylated binding sites (Ser(274) and Ser(299)) for 14-3-3"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">14-3-3 binding shields PEST sequences and stabilizes the protein</div>
+                        
+                        <div class="finding-text">"The C-terminus also contains PEST sequences which are shielded by 14-3-3 binding"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PITP domain interacts with ATRAP to recruit RdgBbeta to membranes</div>
+                        
+                        <div class="finding-text">"the PITP domain of RdgBβ interacts with the integral membrane protein ATRAP"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RdgBbeta is degraded by proteasome with half-life of 4h; faster without 14-3-3 binding</div>
+                        
+                        <div class="finding-text">"RdgBβ is degraded with a half-life of 4 h following ubiquitination via the proteasome"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26977884" target="_blank" class="term-link">
+                            PMID:26977884
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PITPNC1 Recruits RAB1B to the Golgi Network to Drive Malignant Secretion.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PITPNC1 amplified in breast cancer and overexpressed in metastatic cancers</div>
+                        
+                        <div class="finding-text">"PITPNC1 as a gene amplified in a large fraction of human breast cancer and overexpressed in metastatic breast, melanoma, and colon cancers"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PITPNC1 binds Golgi-resident PI4P and recruits RAB1B to the Golgi</div>
+                        
+                        <div class="finding-text">"PITPNC1 promotes malignant secretion by binding Golgi-resident PI4P and localizing RAB1B to the Golgi"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Drives secretion of pro-invasive and pro-angiogenic factors</div>
+                        
+                        <div class="finding-text">"PITPNC1-mediated vesicular release drives metastasis by increasing the secretion of pro-invasive and pro-angiogenic mediators HTRA1, MMP1, FAM3C, PDGFA, and ADAM10"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DROME/rdgBbeta/rdgBbeta-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Research notes on rdgBbeta gene review</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">rdgBbeta alleles (EP2360, G8057) ameliorate ALS-like phenotype in Vap33-P58S model</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BioReason prediction incorrectly attributes Class I PITP functions (cytokinesis, PC binding) to this Class IIB PITP</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the in vivo function of rdgBbeta in Drosophila? No mutant phenotype has been characterized beyond genetic interaction with Vap33-P58S. Does rdgBbeta loss-of-function produce any developmental or physiological phenotypes?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9U9P7" data-a="Q: What is the in vivo function of rdgBbeta in Drosop..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Drosophila rdgBbeta also bind and transfer phosphatidic acid, as demonstrated for the human ortholog PITPNC1? What are the specific lipid species it handles in vivo?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9U9P7" data-a="Q: Does Drosophila rdgBbeta also bind and transfer ph..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does rdgBbeta modify the Vap33-P58S ALS phenotype? Does it act by modulating phosphoinositide levels, or through an independent mechanism?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9U9P7" data-a="Q: How does rdgBbeta modify the Vap33-P58S ALS phenot..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate rdgBbeta null mutants using CRISPR and characterize phenotypes in development, neuronal function, and lipid metabolism. Assess phosphoinositide and PA levels in mutant tissue.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: rdgBbeta loss-of-function may cause subtle defects in lipid homeostasis that become apparent under stress conditions or in sensitized genetic backgrounds.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9U9P7" data-a="EXPERIMENT: Generate rdgBbeta null mutants using CRISPR and ch..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform in vitro lipid binding and transfer assays with purified Drosophila rdgBbeta to determine whether it shares the PI/PA dual specificity of human PITPNC1.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Drosophila rdgBbeta will show PI and PA binding/transfer activity comparable to human PITPNC1, but minimal PC binding, consistent with Class IIB PITP specificity.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9U9P7" data-a="EXPERIMENT: Perform in vitro lipid binding and transfer assays..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Characterize the genetic interaction between rdgBbeta and Vap33-P58S in detail, measuring phosphoinositide levels and neurodegeneration markers.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: rdgBbeta alleles rescue Vap33-P58S by reducing phosphoinositide delivery to membranes, partially compensating for the loss of Sac1-mediated PI dephosphorylation.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9U9P7" data-a="EXPERIMENT: Characterize the genetic interaction between rdgBb..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason Sft</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rdgBbeta-deep-research-bioreason-sft.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9U9P7" data-a="DOC: Deep Research Bioreason Sft" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code>---
+provider: bioreason-pro
+model: SFT
+source: huggingface.co/datasets/wanglab/protein_catalogue
+date: &#39;2026-04-04&#39;
+uniprot_id: Q9U9P7
+gene: rdgBbeta
+organism: Drosophila melanogaster (Fruit fly)
+---
+
+<span class="gu">##</span> Thinking Trace
+
+The architecture begins with IPR023393 (START-like domain superfamily, residues 2–263), a fold that creates a deep hydrophobic cavity for lipid sequestration and exchange. Nested within this scaffold is IPR055261 (Phosphatidylinositol transfer protein, N-terminal domain, residues 2–244), which defines the specific PITP topology that opens and closes a lipid-binding pocket. Multiple family-level signatures of the phosphatidylinositol transfer protein lineage are embedded across the sequence—IPR001666 (PITP family) at residues 3–254, 17–36, 84–104, 110–125, 193–208, and 213–232—marking conserved motifs that line the cavity and the gating elements that control lipid capture and release. The ordered nesting of a PITP-specific N-terminal domain inside a START-like superfamily fold causes high-affinity, monomeric lipid transfer between membranes without vesicle budding or fusion.
+</code></pre></div>
+
+<p>This PITP fold enforces a molecular function centered on selective lipid exchange. The conserved cavity and gating residues accommodate phosphatidylinositol and phosphatidylcholine, enabling GO:0008526 phosphatidylinositol transfer activity and GO:0008525 phosphatidylcholine transporter activity. Because the cavity is optimized for neutral and anionic glycerophospholipids, the mechanism is a cycle of membrane docking, lipid extraction into the hydrophobic pocket, transit through the cytosol, and deposition at a target membrane.</p>
+<p>Lipid transfer of PI and PC has direct consequences for membrane composition and signaling during cell division. By delivering PI to specific membrane subdomains, the protein sustains phosphoinositide synthesis and curvature-sensitive recruitment of cytokinetic machinery; by shuttling PC, it maintains bilayer integrity and supports membrane expansion at the ingressing furrow. These activities drive the processes formalized as GO:0007110 meiosis I cytokinesis and GO:0007111 meiosis II cytokinesis, and extend to GO:0007112 male meiosis cytokinesis and GO:0048137 spermatocyte division, where precise membrane remodeling is essential. The same lipid supply and signaling flux coordinate with the actomyosin apparatus, promoting GO:0000916 actomyosin contractile ring contraction and GO:0036090 cleavage furrow ingression by ensuring a competent, lipid-rich cortex that can withstand contractile forces and by positioning PI pools that recruit small GTPases and effectors. Proper PI availability also influences microtubule–cortex communication and membrane–microtubule interfaces, contributing to GO:0000212 meiotic spindle organization.</p>
+<p>The domain architecture lacks transmembrane segments and secretion signals, indicating a soluble protein that cycles on and off membranes. Its action requires proximity to sites of intense membrane turnover and signaling. Thus, it operates in the cytoplasm and transiently associates with the GO:0005794 Golgi apparatus to acquire and dispatch lipids, with the GO:0032154 cleavage furrow where cytokinesis occurs, and with the GO:0031965 nuclear membrane during meiotic stages when nuclear envelope dynamics and membrane continuity are critical. This distribution is consistent with a soluble lipid-transfer factor that concentrates at division sites and organelles engaged in lipid trafficking.</p>
+<p>Mechanistically, the protein likely docks to donor membranes via basic surface patches and amphipathic elements, captures PI or PC into its START-like cavity, and releases the lipid at target membranes to sustain phosphoinositide synthesis and bilayer homeostasis. At the cleavage furrow and nuclear envelope, it plausibly collaborates with small GTPases (e.g., ARF and RAB family members) and phosphoinositide kinases to position PI pools that recruit actomyosin regulators and membrane-sculpting factors. It may also engage cytokinetic scaffolds at the furrow to synchronize lipid supply with contractile ring constriction and with spindle–cortex communication during meiosis.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">## Functional Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">soluble</span><span class="w"> </span><span class="n">lipid</span><span class="o">-</span><span class="n">transfer</span><span class="w"> </span><span class="n">factor</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">fruit</span><span class="w"> </span><span class="n">fly</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">uses</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">deep</span><span class="w"> </span><span class="n">hydrophobic</span><span class="w"> </span><span class="n">cavity</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">extract</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">shuttle</span><span class="w"> </span><span class="n">phosphatidylinositol</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">phosphatidylcholine</span><span class="w"> </span><span class="n">between</span><span class="w"> </span><span class="n">membranes</span><span class="o">.</span><span class="w"> </span><span class="n">By</span><span class="w"> </span><span class="n">supplying</span><span class="w"> </span><span class="n">these</span><span class="w"> </span><span class="n">lipids</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">division</span><span class="w"> </span><span class="n">sites</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">organelles</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">sustains</span><span class="w"> </span><span class="n">phosphoinositide</span><span class="w"> </span><span class="n">signaling</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">bilayer</span><span class="w"> </span><span class="n">integrity</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">spindle</span><span class="w"> </span><span class="n">organization</span><span class="p">,</span><span class="w"> </span><span class="n">contractile</span><span class="w"> </span><span class="n">ring</span><span class="w"> </span><span class="n">function</span><span class="p">,</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">membrane</span><span class="w"> </span><span class="n">expansion</span><span class="w"> </span><span class="n">during</span><span class="w"> </span><span class="n">meiotic</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">spermatocyte</span><span class="w"> </span><span class="n">cytokinesis</span><span class="o">.</span><span class="w"> </span><span class="n">It</span><span class="w"> </span><span class="n">operates</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">cytoplasm</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">transiently</span><span class="w"> </span><span class="n">associates</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">Golgi</span><span class="p">,</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">cleavage</span><span class="w"> </span><span class="n">furrow</span><span class="p">,</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">nuclear</span><span class="w"> </span><span class="n">envelope</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">coordinate</span><span class="w"> </span><span class="n">lipid</span><span class="w"> </span><span class="n">flux</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="n">division</span><span class="w"> </span><span class="n">mechanics</span><span class="o">.</span>
+
+<span class="c1">## UniProt Summary</span>
+
+<span class="n">Catalyzes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">phosphatidylinositol</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">phosphatidylcholine</span><span class="w"> </span><span class="n">between</span><span class="w"> </span><span class="n">membranes</span><span class="o">.</span>
+
+<span class="c1">## InterPro Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="n">IPR023393</span><span class="p">:</span><span class="w"> </span><span class="n">START</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="o">-</span><span class="mi">263</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR055261</span><span class="p">:</span><span class="w"> </span><span class="n">Phosphatidylinositol</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="n">protein</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="p">(</span><span class="n">domain</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="o">-</span><span class="mi">244</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR001666</span><span class="p">:</span><span class="w"> </span><span class="n">Phosphatidylinositol</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="o">-</span><span class="mi">254</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR001666</span><span class="p">:</span><span class="w"> </span><span class="n">Phosphatidylinositol</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">17</span><span class="o">-</span><span class="mi">36</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR001666</span><span class="p">:</span><span class="w"> </span><span class="n">Phosphatidylinositol</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">84</span><span class="o">-</span><span class="mi">104</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR001666</span><span class="p">:</span><span class="w"> </span><span class="n">Phosphatidylinositol</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">110</span><span class="o">-</span><span class="mi">125</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR001666</span><span class="p">:</span><span class="w"> </span><span class="n">Phosphatidylinositol</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">193</span><span class="o">-</span><span class="mi">208</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR001666</span><span class="p">:</span><span class="w"> </span><span class="n">Phosphatidylinositol</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">213</span><span class="o">-</span><span class="mi">232</span><span class="p">]</span>
+
+<span class="c1">## GO Term Predictions</span>
+
+<span class="c1">### Molecular Function</span>
+
+
+<span class="c1">### Biological Process</span>
+
+
+<span class="c1">### Cellular Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rdgBbeta-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9U9P7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rdgbbeta-drosophila-melanogaster-research-notes">rdgBbeta (Drosophila melanogaster) - Research Notes</h1>
+<h2 id="gene-identity">Gene Identity</h2>
+<ul>
+<li><strong>Gene symbol</strong>: rdgBbeta (retinal degeneration B homolog beta)</li>
+<li><strong>UniProt</strong>: Q9U9P7 (PITC1_DROME)</li>
+<li><strong>FlyBase</strong>: FBgn0027872</li>
+<li><strong>CG number</strong>: CG17818</li>
+<li><strong>Human ortholog</strong>: PITPNC1 (Q9UKF7) -- cytoplasmic phosphatidylinositol transfer protein 1</li>
+<li><strong>273 amino acids</strong>, 31.7 kDa, soluble cytoplasmic protein</li>
+</ul>
+<h2 id="protein-family-and-domain-architecture">Protein Family and Domain Architecture</h2>
+<p>rdgBbeta belongs to the PtdIns transfer protein family, PI transfer class IIB subfamily.<br />
+It contains:<br />
+- IPR023393: START-like domain superfamily (residues 2-263)<br />
+- IPR055261: Phosphatidylinositol transfer protein, N-terminal domain (residues 2-244)<br />
+- IPR001666: Phosphatidylinositol transfer protein (family) (residues 3-254 and multiple sub-regions)</p>
+<p>Key structural feature: rdgBbeta contains ONLY the PITP domain plus a short disordered C-terminal tail.<br />
+It lacks transmembrane domains and the conserved C-terminal domain found in other rdgB-family proteins<br />
+(rdgB/RdgBalpha, Nir2, Nir3). This makes it a soluble, cytoplasmic lipid transfer protein.</p>
+<h2 id="lipid-binding-specificity-key-distinction-from-class-i-pitps">Lipid Binding Specificity -- Key Distinction from Class I PITPs</h2>
+<p>The human ortholog PITPNC1 has been characterized biochemically <a href="https://pubmed.ncbi.nlm.nih.gov/22822086">PMID:22822086</a>. Critical finding:<br />
+- PITPNC1/rdgBbeta binds and transfers <strong>phosphatidylinositol (PI)</strong> and <strong>phosphatidic acid (PA)</strong><br />
+- It does <strong>NOT</strong> significantly bind phosphatidylcholine (PC)<br />
+- This distinguishes it from Class I PITPs (PITPalpha, PITPbeta/vibrator/giotto) which bind both PI and PC</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/22822086" title="the lipid binding properties of this protein are distinct to Class I PITPs because, besides phosphatidylinositol (PI), RdgBbeta binds and transfers phosphatidic acid (PA) but hardly binds phosphatidylcholine">PMID:22822086</a></p>
+<p>PITPNC1/RdgBbeta is the first lipid-binding protein identified that can bind and transfer PA.<br />
+When purified from E. coli, it was preloaded with PA and phosphatidylglycerol.</p>
+<h2 id="protein-interactions-human-ortholog">Protein Interactions (human ortholog)</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/21728994">PMID:21728994</a> The C-terminus of RdgBbeta binds 14-3-3 proteins via two tandem phosphorylated sites<br />
+(Ser274 and Ser299 in human). The PITP domain interacts with ATRAP (angiotensin II type I <br />
+receptor-associated protein), an integral membrane protein that recruits RdgBbeta to membranes.<br />
+14-3-3 shields PEST sequences; loss of 14-3-3 binding accelerates proteasomal degradation.</p>
+<h2 id="original-cloning-human-ortholog">Original Cloning (human ortholog)</h2>
+<p>[PMID:10531358 Fullwood et al. 1999] Cloned human rdgBbeta by EST database searching for rdgB homologs.<br />
+Key findings:<br />
+- 333 amino acids (human), N-terminal PITP-like domain + short C-terminal domain<br />
+- No transmembrane domains (unlike other rdgB family members)<br />
+- Cytoplasmic localization by immunofluorescence<br />
+- Ubiquitous expression (highest in heart, muscle, kidney, liver, leukocytes)<br />
+- In vitro PI transfer activity comparable to other PITP-like domains</p>
+<h2 id="drosophila-specific-data">Drosophila-specific Data</h2>
+<h3 id="expression">Expression</h3>
+<ul>
+<li>Mass spectrometry detected rdgBbeta protein in adult head tissue, associated with membranes (FlyBase)</li>
+<li>Bgee: expressed in adult middle midgut class I enteroendocrine cell and 98 other cell types/tissues</li>
+<li>Weak testis specificity index (-0.19), indicating modest UNDER-representation in testis</li>
+</ul>
+<h3 id="mutant-phenotypes">Mutant Phenotypes</h3>
+<ul>
+<li>Two alleles (rdgBbeta^EP2360 and rdgBbeta^G8057) ameliorate ALS-like phenotype<br />
+  when modeled with Vap33^P58S mutations (FlyBase allele reports)</li>
+<li>This connects rdgBbeta to phosphoinositide metabolism in neurodegeneration</li>
+</ul>
+<h3 id="connection-to-alsneurodegeneration">Connection to ALS/neurodegeneration</h3>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/23492670">PMID:23492670</a> Drosophila ALS8 model: Vap33-P58S expression causes neurodegeneration through<br />
+increased phosphoinositide levels. Sac1 phosphatase is sequestered into aggregates.<br />
+While this paper does not mention rdgBbeta directly, the FlyBase genetic interaction data <br />
+suggests rdgBbeta alleles modify this phenotype, consistent with its role in PI metabolism.</p>
+<h2 id="relationship-to-other-drosophila-pitps">Relationship to Other Drosophila PITPs</h2>
+<p>Important: rdgBbeta should NOT be confused with:<br />
+- <strong>rdgB/RdgBalpha</strong> (FBgn0003218): membrane-associated PITP with additional domains (FFAT, DDHD),<br />
+  essential for photoreceptor maintenance, required for phototransduction<br />
+- <strong>vibrator</strong> (vib): Class I PITP, required for cytokinesis (cleavage furrow ingression) <a href="https://pubmed.ncbi.nlm.nih.gov/16684816">PMID:16684816</a><br />
+- <strong>giotto</strong> (gio): Class I PITP, required for both mitotic and meiotic cytokinesis <a href="https://pubmed.ncbi.nlm.nih.gov/16431372">PMID:16431372</a></p>
+<p>The cytokinesis, meiosis, and spermatocyte division phenotypes in Drosophila are associated with<br />
+vibrator and giotto mutants, NOT rdgBbeta.</p>
+<h2 id="cancer-biology-human-pitpnc1">Cancer Biology (human PITPNC1)</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/26977884">PMID:26977884</a> PITPNC1 is amplified in breast cancer and overexpressed in metastatic breast,<br />
+melanoma, and colon cancers. It promotes malignant secretion by binding Golgi-resident PI4P and<br />
+localizing RAB1B to the Golgi, driving secretion of pro-invasive and pro-angiogenic factors <br />
+(HTRA1, MMP1, FAM3C, PDGFA, ADAM10).</p>
+<h2 id="bioreason-prediction-assessment">BioReason Prediction Assessment</h2>
+<p>The BioReason deep-research file makes several claims that need verification:</p>
+<ol>
+<li>
+<p><strong>GO:0008525 phosphatidylcholine transporter activity</strong> -- INCORRECT. Literature shows rdgBbeta/PITPNC1<br />
+   "hardly binds phosphatidylcholine" <a href="https://pubmed.ncbi.nlm.nih.gov/22822086">PMID:22822086</a>. This is a Class I PITP property, not Class IIB.</p>
+</li>
+<li>
+<p><strong>Cytokinesis functions (GO:0007110, GO:0007111, GO:0007112, GO:0000916, GO:0036090, GO:0048137)</strong> -- <br />
+   NOT SUPPORTED for rdgBbeta. These functions are associated with vibrator and giotto (Class I PITPs),<br />
+   not rdgBbeta. No published evidence connects rdgBbeta to cytokinesis or meiotic division.</p>
+</li>
+<li>
+<p><strong>GO:0000212 meiotic spindle organization</strong> -- NOT SUPPORTED. No evidence for rdgBbeta.</p>
+</li>
+<li>
+<p><strong>GO:0005794 Golgi apparatus</strong> -- Partially supported for human PITPNC1 in cancer context <a href="https://pubmed.ncbi.nlm.nih.gov/26977884">PMID:26977884</a>,<br />
+   but not demonstrated for Drosophila rdgBbeta.</p>
+</li>
+<li>
+<p><strong>GO:0032154 cleavage furrow</strong> -- NOT SUPPORTED. Cleavage furrow association is for vibrator, not rdgBbeta.</p>
+</li>
+<li>
+<p><strong>GO:0031965 nuclear membrane</strong> -- NOT SUPPORTED. No evidence for rdgBbeta.</p>
+</li>
+<li>
+<p><strong>PI transfer activity (GO:0008526)</strong> -- CORRECT. Well-supported by ortholog data.</p>
+</li>
+<li>
+<p><strong>Cytoplasmic localization (GO:0005737)</strong> -- CORRECT. Supported by multiple lines of evidence.</p>
+</li>
+</ol>
+<p>The BioReason model appears to have conflated the functions of different PITP family members,<br />
+attributing Class I PITP functions (cytokinesis, PC binding) to this Class IIB PITP.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rdgBbeta-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9U9P7" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-rdgbbeta-drosophila-melanogaster">BioReason-Pro SFT Review: rdgBbeta (Drosophila melanogaster)</h1>
+<p>Source: rdgBbeta-deep-research-bioreason-sft.md</p>
+<ul>
+<li><strong>Correctness</strong>: 2/5</li>
+<li><strong>Completeness</strong>: 2/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason functional summary describes rdgBbeta as:</p>
+<blockquote>
+<p>A soluble lipid-transfer factor in fruit fly that uses a deep hydrophobic cavity to extract and shuttle phosphatidylinositol and phosphatidylcholine between membranes. By supplying these lipids to division sites and organelles, it sustains phosphoinositide signaling and bilayer integrity required for spindle organization, contractile ring function, and membrane expansion during meiotic and spermatocyte cytokinesis. It operates in the cytoplasm and transiently associates with the Golgi, the cleavage furrow, and the nuclear envelope to coordinate lipid flux with cell division mechanics.</p>
+</blockquote>
+<p>This summary contains multiple factual errors that arise from conflating rdgBbeta (a Class IIB PITP) with Class I PITPs (vibrator/giotto) and from fabricating biological processes unsupported by any evidence.</p>
+<p><strong>Correctness issues:</strong></p>
+<ol>
+<li>
+<p><strong>Phosphatidylcholine binding is incorrect.</strong> The summary states rdgBbeta shuttles "phosphatidylinositol and phosphatidylcholine." Experimental evidence for the human ortholog PITPNC1 (PMID:22822086) demonstrates that RdgBbeta "hardly binds phosphatidylcholine," which is what distinguishes Class IIB PITPs from Class I PITPs. Instead, rdgBbeta binds and transfers phosphatidic acid (PA) alongside PI. This is a fundamental biochemical error.</p>
+</li>
+<li>
+<p><strong>Cytokinesis functions are entirely fabricated.</strong> The BioReason prediction attributes meiosis I cytokinesis (GO:0007110), meiosis II cytokinesis (GO:0007111), male meiosis cytokinesis (GO:0007112), actomyosin contractile ring contraction (GO:0000916), cleavage furrow ingression (GO:0036090), spermatocyte division (GO:0048137), and meiotic spindle organization (GO:0000212) to rdgBbeta. There is NO published evidence connecting rdgBbeta to any of these processes. These are known phenotypes of the Drosophila Class I PITPs vibrator (PMID:16684816) and giotto (PMID:16431372), which are completely different genes. The BioReason model appears to have conflated different PITP family members.</p>
+</li>
+<li>
+<p><strong>Subcellular localizations are fabricated.</strong> The claims of association with the Golgi apparatus (GO:0005794), cleavage furrow (GO:0032154), and nuclear membrane (GO:0031965) have no experimental support for Drosophila rdgBbeta. Cleavage furrow association is documented for vibrator, not rdgBbeta. The Golgi connection comes from human PITPNC1 cancer biology (PMID:26977884) but has not been shown for the Drosophila protein.</p>
+</li>
+<li>
+<p><strong>GO:0008525 phosphatidylcholine transporter activity is incorrect.</strong> The thinking trace explicitly predicts this term, which directly contradicts the biochemical evidence showing rdgBbeta does not bind PC (PMID:22822086).</p>
+</li>
+</ol>
+<p><strong>What BioReason got right:</strong></p>
+<ol>
+<li><strong>Soluble cytoplasmic protein</strong> -- correct. The protein lacks transmembrane domains and signal peptides.</li>
+<li><strong>PI transfer activity (GO:0008526)</strong> -- correct. This is the core molecular function.</li>
+<li><strong>Deep hydrophobic cavity for lipid sequestration</strong> -- correct description of the START-like/PITP domain mechanism.</li>
+<li><strong>Domain architecture analysis</strong> -- the dissection of IPR023393, IPR055261, and IPR001666 domain nesting is accurate.</li>
+</ol>
+<p><strong>Completeness issues:</strong></p>
+<ol>
+<li>
+<p><strong>No mention of phosphatidic acid binding and transfer.</strong> This is the most distinctive biochemical feature of PITPNC1/rdgBbeta (PMID:22822086), making it unique among lipid transfer proteins. The BioReason model completely missed this.</p>
+</li>
+<li>
+<p><strong>No mention of 14-3-3 binding and ATRAP interaction.</strong> The C-terminal regulatory mechanism involving 14-3-3 proteins and ATRAP-mediated membrane recruitment (PMID:21728994) is absent.</p>
+</li>
+<li>
+<p><strong>No mention of the ALS/neurodegeneration connection.</strong> The most interesting Drosophila-specific finding is that rdgBbeta alleles modify the Vap33-P58S ALS8 model phenotype (FlyBase genetic interaction data), connecting it to phosphoinositide homeostasis in neurodegeneration.</p>
+</li>
+<li>
+<p><strong>No mention of the cancer biology of PITPNC1.</strong> Human PITPNC1 is amplified in breast cancer and drives metastatic secretion via RAB1B/Golgi network (PMID:26977884). While this is human-specific, it provides functional insight into PITP-Golgi interactions.</p>
+</li>
+<li>
+<p><strong>No mention of proteasomal regulation.</strong> RdgBbeta is degraded by the proteasome with a 4-hour half-life, regulated by 14-3-3 shielding of PEST sequences (PMID:21728994).</p>
+</li>
+</ol>
+<h2 id="comparison-with-interpro2go">Comparison with InterPro2GO</h2>
+<p>The InterPro2GO annotation is:<br />
+- GO:0015914 phospholipid transport (from IPR001666)</p>
+<p>This single annotation is accurate and conservative. The BioReason narrative adds some valid mechanistic context (PITP domain architecture, lipid cavity) but introduces far more errors (PC binding, cytokinesis, fabricated localizations) than it adds value. The InterPro2GO annotation is more reliable than the BioReason prediction for this gene.</p>
+<h2 id="notes-on-thinking-trace">Notes on Thinking Trace</h2>
+<p>The thinking trace reveals systematic problems in the BioReason reasoning:</p>
+<ol>
+<li>
+<p><strong>Family-level conflation.</strong> The trace correctly identifies the PITP domain architecture but then attributes functions of other PITP family members (vibrator, giotto) to rdgBbeta. This is analogous to attributing hemoglobin functions to myoglobin because they share the globin fold.</p>
+</li>
+<li>
+<p><strong>Hallucinated biological processes.</strong> The cytokinesis, meiosis, spermatocyte division, and spindle organization functions are not from any annotation database or publication for rdgBbeta. They appear to be fabricated from the general PITP literature, where these functions belong to different genes.</p>
+</li>
+<li>
+<p><strong>PC binding error contradicts available biochemistry.</strong> The thinking trace states the cavity "accommodates phosphatidylinositol and phosphatidylcholine," which is precisely wrong for this Class IIB PITP. The key biochemical finding (PMID:22822086) is that Class IIB PITPs bind PA instead of PC. This suggests the model lacks access to or failed to incorporate the PITPNC1-specific biochemistry literature.</p>
+</li>
+<li>
+<p><strong>Overconfident localization claims.</strong> The trace confidently assigns Golgi, cleavage furrow, and nuclear membrane localizations based purely on functional reasoning ("it must go where lipids are needed"), without any experimental evidence. This is speculative reasoning presented as factual.</p>
+</li>
+<li>
+<p><strong>Expression data contradicts claims.</strong> FlyBase shows rdgBbeta has a weak <em>negative</em> testis specificity index (-0.19), meaning it is actually underrepresented in testis. This directly contradicts the model's emphasis on spermatocyte and meiotic functions.</p>
+</li>
+</ol>
+<p>The BioReason prediction for rdgBbeta demonstrates the failure mode of domain-architecture-only reasoning when a protein's specific biology diverges from the general family narrative. Class IIB PITPs have distinct lipid specificity and biological roles compared to Class I PITPs, and these distinctions cannot be captured by domain-level analysis alone.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9U9P7
+gene_symbol: rdgBbeta
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: &gt;-
+  rdgBbeta encodes a soluble, cytoplasmic phosphatidylinositol transfer protein (PITP) of the
+  Class IIB subfamily. Unlike Class I PITPs (vibrator, giotto) which bind both PI and PC, the
+  human ortholog PITPNC1 binds and transfers phosphatidylinositol (PI) and phosphatidic acid (PA)
+  but does not significantly bind phosphatidylcholine. The protein consists of a PITP/START-like
+  lipid-binding domain and a short disordered C-terminal tail, lacking the transmembrane and
+  additional domains found in other rdgB family members. rdgBbeta is broadly expressed and has
+  been detected in adult head tissue by mass spectrometry. Genetic evidence in Drosophila links
+  rdgBbeta to phosphoinositide metabolism in the context of neurodegeneration, as rdgBbeta alleles
+  modify the Vap33-P58S ALS8 model phenotype.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation from phylogenetic inference. Cytoplasmic localization is well-supported
+      across the PITP family. The human ortholog PITPNC1 was shown to be cytoplasmic by
+      immunofluorescence (PMID:10531358), and rdgBbeta lacks transmembrane domains or
+      secretion signals. This is consistent with a soluble lipid transfer protein.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is supported by the domain architecture (no transmembrane
+      segments), the experimental localization of the human ortholog PITPNC1 (PMID:10531358),
+      and mass spectrometry detection in Drosophila adult head (FlyBase).
+    supported_by:
+      - reference_id: PMID:10531358
+        supporting_text: &#34;Immunofluorescence analysis of ectopic MrdgBbeta showed cytoplasmic staining&#34;
+- term:
+    id: GO:0008526
+    label: phosphatidylinositol transfer activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation from phylogenetic inference. PI transfer activity is the defining
+      molecular function of the PITP family. The human ortholog PITPNC1 has been shown
+      to transfer PI in vitro (PMID:10531358, PMID:22822086).
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular function. The human ortholog was demonstrated to transfer
+      PI in vitro with activity comparable to other PITP-like domains (PMID:10531358). The
+      conserved PITP domain architecture (IPR001666) and START-like fold support this function.
+      The BioReason deep research correctly identifies PI transfer as a core function
+      (rdgBbeta-deep-research-bioreason-sft.md).
+    supported_by:
+      - reference_id: PMID:10531358
+        supporting_text: &#34;the ability of recombinant MrdgBbeta to transfer phosphatidylinositol in vitro was similar to other PITP-like domains&#34;
+      - reference_id: PMID:22822086
+        supporting_text: &#34;besides PI, RdgBβ binds and transfers phosphatidic acid (PA) but hardly binds phosphatidylcholine&#34;
+      - reference_id: file:DROME/rdgBbeta/rdgBbeta-deep-research-bioreason-sft.md
+        supporting_text: &#34;[BioReason correctly identifies] GO:0008526 phosphatidylinositol transfer activity&#34;
+- term:
+    id: GO:0035091
+    label: phosphatidylinositol binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation from phylogenetic inference. PI binding is intrinsic to PI transfer
+      activity and well-established for PITPNC1/rdgBbeta orthologs.
+    action: ACCEPT
+    reason: &gt;-
+      PI binding is a prerequisite for PI transfer activity and is directly demonstrated
+      for the human ortholog (PMID:22822086). The PITP domain creates a hydrophobic
+      cavity that accommodates PI monomers.
+    supported_by:
+      - reference_id: PMID:22822086
+        supporting_text: &#34;PA and PI were now incorporated into RdgBβ&#34;
+- term:
+    id: GO:0005543
+    label: phospholipid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation from ARBA machine learning. This is a correct but very general annotation.
+      The protein binds specific phospholipids (PI and PA), so more specific terms are more
+      informative.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Phospholipid binding is accurate but overly broad. The protein specifically binds PI
+      and PA (PMID:22822086). The more specific annotations for PI binding (GO:0035091) and
+      PI transfer activity (GO:0008526) better capture the core function.
+    supported_by:
+      - reference_id: PMID:22822086
+        supporting_text: &#34;besides PI, RdgBβ binds and transfers phosphatidic acid (PA) but hardly binds phosphatidylcholine&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation from ARBA machine learning. There is no experimental evidence
+      supporting nuclear localization of rdgBbeta or its orthologs. The protein is
+      cytoplasmic.
+    action: REMOVE
+    reason: &gt;-
+      No published evidence supports nuclear localization for rdgBbeta or PITPNC1. The
+      human ortholog was localized to the cytoplasm by immunofluorescence (PMID:10531358).
+      The protein lacks nuclear localization signals. This ARBA prediction appears to be
+      erroneous.
+    supported_by:
+      - reference_id: PMID:10531358
+        supporting_text: &#34;Immunofluorescence analysis of ectopic MrdgBbeta showed cytoplasmic staining&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation from ARBA machine learning for cytoplasmic localization. Redundant
+      with the IBA annotation for the same term but independently correct.
+    action: ACCEPT
+    reason: &gt;-
+      Correct annotation consistent with experimental evidence from the human ortholog
+      and absence of membrane-targeting signals. Redundant with the IBA annotation above.
+    supported_by:
+      - reference_id: PMID:10531358
+        supporting_text: &#34;Immunofluorescence analysis of ectopic MrdgBbeta showed cytoplasmic staining&#34;
+- term:
+    id: GO:0015914
+    label: phospholipid transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation from InterPro domain mapping (IPR001666 PITP family). Phospholipid
+      transport is the core biological process for this protein family.
+    action: ACCEPT
+    reason: &gt;-
+      Phospholipid transport is the direct biological process consequence of PI transfer
+      activity. The PITP domain mediates monomeric lipid transfer between membranes.
+      This is well-supported by the domain architecture and ortholog biochemistry.
+    supported_by:
+      - reference_id: PMID:22822086
+        supporting_text: &#34;RdgBβ, when containing PA, regulates an effector protein or can facilitate lipid transfer between membrane compartments&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation by manual curator judgment based on sequence similarity to human
+      PITPNC1 (Q9UKF7). Cytoplasmic localization is correct and well-supported.
+    action: ACCEPT
+    reason: &gt;-
+      Based on sequence similarity to human PITPNC1, which was experimentally shown to
+      localize to the cytoplasm (PMID:10531358). This is the strongest non-experimental
+      annotation for localization.
+    supported_by:
+      - reference_id: PMID:10531358
+        supporting_text: &#34;Immunofluorescence analysis of ectopic MrdgBbeta showed cytoplasmic staining&#34;
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation based on sequence similarity to human PITPNC1 (Q9UKF7). Signal
+      transduction is a plausible but very broad annotation. PITPs can influence
+      signaling by supplying PI for phosphoinositide synthesis, and the human ortholog
+      interacts with signaling components (ATRAP, 14-3-3).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Signal transduction is plausible but overly broad. PITPNC1 participates in
+      phospholipase D signaling by binding PA (PMID:22822086) and interacts with ATRAP
+      in the angiotensin signaling pathway (PMID:21728994). However, the specific
+      signaling pathways for Drosophila rdgBbeta are unknown. The annotation is not
+      wrong but is too general to be informative about core function.
+    supported_by:
+      - reference_id: PMID:22822086
+        supporting_text: &#34;RdgBβ, when containing PA, regulates an effector protein or can facilitate lipid transfer between membrane compartments&#34;
+      - reference_id: PMID:21728994
+        supporting_text: &#34;the PITP domain of RdgBβ interacts with the integral membrane protein ATRAP&#34;
+- term:
+    id: GO:0008526
+    label: phosphatidylinositol transfer activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation based on sequence similarity to human PITPNC1 (Q9UKF7). PI transfer
+      activity is the core molecular function, well-established for the ortholog.
+    action: ACCEPT
+    reason: &gt;-
+      Redundant with the IBA annotation for the same term. PI transfer activity is the
+      defining function of this protein family and is directly demonstrated for the human
+      ortholog (PMID:10531358, PMID:22822086).
+    supported_by:
+      - reference_id: PMID:10531358
+        supporting_text: &#34;the ability of recombinant MrdgBbeta to transfer phosphatidylinositol in vitro was similar to other PITP-like domains&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: PITP family domain (IPR001666) associated with phospholipid transport
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity
+  findings:
+    - statement: Annotations transferred from human PITPNC1 (Q9UKF7)
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: Phylogenetic inference of PITP family conserved functions
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+    - statement: Machine learning predictions for phospholipid binding, cytoplasm, and nucleus localization
+- id: PMID:10531358
+  title: &#34;Cloning and characterization of a novel human phosphatidylinositol transfer protein, rdgBbeta.&#34;
+  findings:
+    - statement: Human rdgBbeta (PITPNC1) cloned and characterized as a novel PITP lacking transmembrane domains
+      supporting_text: &#34;In contrast to other rdgB-like proteins, MrdgBbeta contains no transmembrane motifs or the conserved carboxyl-terminal domain&#34;
+    - statement: Cytoplasmic localization demonstrated by immunofluorescence
+      supporting_text: &#34;Immunofluorescence analysis of ectopic MrdgBbeta showed cytoplasmic staining&#34;
+    - statement: PI transfer activity demonstrated in vitro
+      supporting_text: &#34;the ability of recombinant MrdgBbeta to transfer phosphatidylinositol in vitro was similar to other PITP-like domains&#34;
+    - statement: Ubiquitous expression with highest levels in heart, muscle, kidney, liver, and leukocytes
+      supporting_text: &#34;MrdgBbeta mRNA is ubiquitously expressed&#34;
+- id: PMID:22822086
+  title: &#34;Phosphatidylinositol transfer protein, cytoplasmic 1 (PITPNC1) binds and transfers phosphatidic acid.&#34;
+  findings:
+    - statement: PITPNC1/RdgBbeta binds and transfers both PI and phosphatidic acid (PA)
+      supporting_text: &#34;besides PI, RdgBβ binds and transfers phosphatidic acid (PA) but hardly binds phosphatidylcholine&#34;
+    - statement: Does not significantly bind phosphatidylcholine, unlike Class I PITPs
+      supporting_text: &#34;the lipid binding properties of this protein are distinct to Class I PITPs because, besides PI, RdgBβ binds and transfers phosphatidic acid (PA) but hardly binds phosphatidylcholine&#34;
+    - statement: Purified RdgBbeta preloaded with PA and phosphatidylglycerol from E. coli
+      supporting_text: &#34;RdgBβ when purified from Escherichia coli is preloaded with PA and phosphatidylglycerol&#34;
+    - statement: PA binding increases at the expense of PI binding when phospholipase D is activated
+      supporting_text: &#34;After an increase in PA levels following activation of endogenous phospholipase D...binding of PA to RdgBβ was greater at the expense of PI binding&#34;
+- id: PMID:21728994
+  title: &#34;The phosphatidylinositol transfer protein RdgBβ binds 14-3-3 via its unstructured C-terminus, whereas its lipid-binding domain interacts with the integral membrane protein ATRAP (angiotensin II type I receptor-associated protein).&#34;
+  findings:
+    - statement: RdgBbeta C-terminus binds 14-3-3 at two phosphorylated sites
+      supporting_text: &#34;the C-terminus contains two tandem phosphorylated binding sites (Ser(274) and Ser(299)) for 14-3-3&#34;
+    - statement: 14-3-3 binding shields PEST sequences and stabilizes the protein
+      supporting_text: &#34;The C-terminus also contains PEST sequences which are shielded by 14-3-3 binding&#34;
+    - statement: PITP domain interacts with ATRAP to recruit RdgBbeta to membranes
+      supporting_text: &#34;the PITP domain of RdgBβ interacts with the integral membrane protein ATRAP&#34;
+    - statement: RdgBbeta is degraded by proteasome with half-life of 4h; faster without 14-3-3 binding
+      supporting_text: &#34;RdgBβ is degraded with a half-life of 4 h following ubiquitination via the proteasome&#34;
+- id: PMID:26977884
+  title: &#34;PITPNC1 Recruits RAB1B to the Golgi Network to Drive Malignant Secretion.&#34;
+  findings:
+    - statement: PITPNC1 amplified in breast cancer and overexpressed in metastatic cancers
+      supporting_text: &#34;PITPNC1 as a gene amplified in a large fraction of human breast cancer and overexpressed in metastatic breast, melanoma, and colon cancers&#34;
+    - statement: PITPNC1 binds Golgi-resident PI4P and recruits RAB1B to the Golgi
+      supporting_text: &#34;PITPNC1 promotes malignant secretion by binding Golgi-resident PI4P and localizing RAB1B to the Golgi&#34;
+    - statement: Drives secretion of pro-invasive and pro-angiogenic factors
+      supporting_text: &#34;PITPNC1-mediated vesicular release drives metastasis by increasing the secretion of pro-invasive and pro-angiogenic mediators HTRA1, MMP1, FAM3C, PDGFA, and ADAM10&#34;
+- id: file:DROME/rdgBbeta/rdgBbeta-notes.md
+  title: Research notes on rdgBbeta gene review
+  findings:
+    - statement: rdgBbeta alleles (EP2360, G8057) ameliorate ALS-like phenotype in Vap33-P58S model
+    - statement: BioReason prediction incorrectly attributes Class I PITP functions (cytokinesis, PC binding) to this Class IIB PITP
+
+core_functions:
+  - description: &gt;-
+      rdgBbeta is a soluble cytoplasmic lipid transfer protein that shuttles phosphatidylinositol
+      and phosphatidic acid between membranes. It uses its PITP/START-like hydrophobic cavity to
+      extract lipid monomers from donor membranes and deliver them to acceptor membranes. Unlike
+      Class I PITPs, it does not significantly bind phosphatidylcholine. Through PI and PA transfer,
+      it likely contributes to phosphoinositide homeostasis and lipid signaling.
+    molecular_function:
+      id: GO:0008526
+      label: phosphatidylinositol transfer activity
+    directly_involved_in:
+      - id: GO:0015914
+        label: phospholipid transport
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+
+proposed_new_terms: []
+
+suggested_questions:
+  - question: &gt;-
+      What is the in vivo function of rdgBbeta in Drosophila? No mutant phenotype has been
+      characterized beyond genetic interaction with Vap33-P58S. Does rdgBbeta loss-of-function
+      produce any developmental or physiological phenotypes?
+  - question: &gt;-
+      Does Drosophila rdgBbeta also bind and transfer phosphatidic acid, as demonstrated for
+      the human ortholog PITPNC1? What are the specific lipid species it handles in vivo?
+  - question: &gt;-
+      How does rdgBbeta modify the Vap33-P58S ALS phenotype? Does it act by modulating
+      phosphoinositide levels, or through an independent mechanism?
+
+suggested_experiments:
+  - description: &gt;-
+      Generate rdgBbeta null mutants using CRISPR and characterize phenotypes in development,
+      neuronal function, and lipid metabolism. Assess phosphoinositide and PA levels in mutant tissue.
+    hypothesis: &gt;-
+      rdgBbeta loss-of-function may cause subtle defects in lipid homeostasis that become
+      apparent under stress conditions or in sensitized genetic backgrounds.
+  - description: &gt;-
+      Perform in vitro lipid binding and transfer assays with purified Drosophila rdgBbeta
+      to determine whether it shares the PI/PA dual specificity of human PITPNC1.
+    hypothesis: &gt;-
+      Drosophila rdgBbeta will show PI and PA binding/transfer activity comparable to
+      human PITPNC1, but minimal PC binding, consistent with Class IIB PITP specificity.
+  - description: &gt;-
+      Characterize the genetic interaction between rdgBbeta and Vap33-P58S in detail,
+      measuring phosphoinositide levels and neurodegeneration markers.
+    hypothesis: &gt;-
+      rdgBbeta alleles rescue Vap33-P58S by reducing phosphoinositide delivery to
+      membranes, partially compensating for the loss of Sac1-mediated PI dephosphorylation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

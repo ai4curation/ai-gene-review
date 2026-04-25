@@ -1,0 +1,3161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aldo-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>aldo-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P54216" target="_blank" class="term-link">
+                        P54216
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "aldo-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P54216" data-a="DESCRIPTION: aldo-1 encodes fructose-bisphosphate aldolase 1 (C..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>aldo-1 encodes fructose-bisphosphate aldolase 1 (CE-1), one of two class I aldolase isozymes in C. elegans (the other being aldo-2/CE-2). The enzyme catalyzes the reversible cleavage of fructose-1,6-bisphosphate into glyceraldehyde-3-phosphate and dihydroxyacetone phosphate, a central step in glycolysis and gluconeogenesis. CE-1 has unique kinetic properties with a broad substrate specificity compared to CE-2. The protein is ubiquitously expressed and in body wall muscle localizes to dense bodies, thick filaments/M-lines, and ER/sarcoplasmic reticulum, consistent with a role in providing ATP near contractile structures.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004332" target="_blank" class="term-link">
+                                    GO:0004332
+                                </a>
+                            </span>
+                            <span class="term-label">fructose-bisphosphate aldolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9056253" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9056253
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caenorhabditis elegans has two isozymic forms, CE-1 and CE-2...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0004332" data-r="PMID:9056253" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence. Inoue et al. purified recombinant CE-1 and demonstrated FBP aldolase activity with KM of 16.7 uM for FBP. This is the core molecular function of aldo-1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct enzyme assay on purified recombinant protein with kinetic characterization
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9056253" target="_blank" class="term-link">
+                                        PMID:9056253
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Two distinct types of cDNAs for fructose-1,6-bisphosphate (FBP) aldolase, Ce-1 and Ce-2, have been isolated from nematode Caenorhabditis elegans, and the respective recombinant aldolase isozymes, CE-1 and CE-2, have been purified and characterized</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/aldo-1/aldo-1-deep-research-bioreason-sft.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[BioReason confirms] GO:0004332 fructose-bisphosphate aldolase activity... the catalytic center is pinpointed by IPR029768...marking the lysine-dependent iminium chemistry that drives carbon-carbon bond cleavage/formation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004332" target="_blank" class="term-link">
+                                    GO:0004332
+                                </a>
+                            </span>
+                            <span class="term-label">fructose-bisphosphate aldolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0004332" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference consistent with and redundant to the IDA annotation from PMID:9056253. Correct but redundant.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Phylogenetic annotation is consistent with direct experimental evidence
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004332" target="_blank" class="term-link">
+                                    GO:0004332
+                                </a>
+                            </span>
+                            <span class="term-label">fructose-bisphosphate aldolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0004332" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated annotation from InterPro domain and Rhea reaction mapping. Correct and consistent with IDA evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Automated annotation correctly infers function from domain architecture
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9056253" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9056253
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caenorhabditis elegans has two isozymic forms, CE-1 and CE-2...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0006096" data-r="PMID:9056253" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement. The Inoue et al. paper characterizes aldo-1 as an FBP aldolase, and FBP aldolase is a glycolytic enzyme by definition. The glycolytic role is well supported by the enzyme activity data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FBP aldolase activity directly places the enzyme in the glycolytic pathway
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9056253" target="_blank" class="term-link">
+                                        PMID:9056253
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CE-1 evolved to act as an intrinsic enzyme that exhibits a much broader substrate specificity than dose CE-2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0006096" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of glycolytic process involvement. Consistent with the NAS annotation and enzyme function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Phylogenetic annotation consistent with biochemical evidence
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0006096" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated annotation from InterPro and UniPathway mapping. Correct and consistent with other evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Automated annotation correctly infers pathway membership
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030388" target="_blank" class="term-link">
+                                    GO:0030388
+                                </a>
+                            </span>
+                            <span class="term-label">fructose 1,6-bisphosphate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0030388" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference. FBP is the direct substrate of aldo-1, so involvement in its metabolism is inherent to the enzyme&#39;s catalytic activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Follows directly from the enzyme&#39;s catalytic function on FBP
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14704431" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14704431
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A map of the interactome network of the metazoan C. elegans.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0042802" data-r="PMID:14704431" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Detected via high-throughput Y2H in the C. elegans interactome mapping project. Class I aldolases are known homotetramers, so self-interaction is expected. However, Y2H self-interactions can be artifacts, though this is biologically plausible. The annotation is kept as non-core since identical protein binding is a generic term that does not inform about specific function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Self-interaction is biologically plausible for a homotetrameric enzyme but identical protein binding is uninformative as a standalone annotation
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14704431" target="_blank" class="term-link">
+                                        PMID:14704431
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">more than 4000 interactions were identified from high-throughput, yeast two-hybrid (HT=Y2H) screens</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19123269" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19123269
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Empirically controlled mapping of the Caenorhabditis elegans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0042802" data-r="PMID:19123269" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Replicated self-interaction in the expanded WI-2007/WI8 interactome. Confirmation of the PMID:14704431 finding, but still a generic annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Replication adds confidence but identical protein binding remains uninformative
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19123269" target="_blank" class="term-link">
+                                        PMID:19123269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the resulting dataset (Worm Interactome 2007 or WI-2007) is similar in quality to low-throughput data curated from the literature</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of cytosolic localization. Class I aldolases are soluble cytosolic enzymes, so this is well supported. Consistent with the cytoplasm ISS annotation but more specific.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Soluble glycolytic enzyme expected in cytosol based on conserved properties
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transferred from ortholog (P05065, rabbit ALDOC). Cytoplasmic localization is expected for a soluble glycolytic enzyme. Consistent with cytosol IBA annotation but less specific.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is well established for class I aldolases
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000792" target="_blank" class="term-link">
+                                    GO:0000792
+                                </a>
+                            </span>
+                            <span class="term-label">heterochromatin</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0000792" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transferred from rabbit aldolase C ortholog (P05065). Aldolase has been reported to associate with heterochromatin in some vertebrate studies as a moonlighting function. However, this is a non-canonical localization for a glycolytic enzyme and direct evidence in C. elegans is lacking. The ISS transfer is questionable for this non-canonical function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Heterochromatin association is a reported moonlighting function in vertebrates but lacks direct evidence in C. elegans; ISS transfer of non-canonical localization is weak
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21611156" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21611156
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Determining the sub-cellular localization of proteins within...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0005783" data-r="PMID:21611156" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput GFP localization in body wall muscle. T05D4.1 was classified in Category 6 (Dense bodies, Thick filaments and/or M-lines, ER/SR). The ER/SR component of the localization pattern was observed. Validated with both Gateway and genomic clones.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct GFP localization data from high-throughput study, validated by two independent cloning approaches
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21611156" target="_blank" class="term-link">
+                                        PMID:21611156
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The sub-cellular localization for the T05D4.1::GFP (A, B)...proteins expressed from gateway clones using a muscle-specific promoter (A, B and C) or from genomic clones using endogenous promoters (B, D and F)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030017" target="_blank" class="term-link">
+                                    GO:0030017
+                                </a>
+                            </span>
+                            <span class="term-label">sarcomere</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21611156" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21611156
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Determining the sub-cellular localization of proteins within...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0030017" data-r="PMID:21611156" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput GFP localization in body wall muscle. Category 6 includes dense bodies, thick filaments, and M-lines, all of which are sarcomeric structures. Consistent with the known association of glycolytic enzymes with sarcomeric structures in muscle.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct GFP localization data showing sarcomeric localization pattern in body wall muscle
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21611156" target="_blank" class="term-link">
+                                        PMID:21611156
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we verified the localization of several Gateway constructs by cloning and tagging the corresponding gene via conventional methods using genomic DNA instead of cDNA, and using endogenous promoters instead of our muscle specific promoter. We were able to confirm the same sub-cellular localization using both methods</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055120" target="_blank" class="term-link">
+                                    GO:0055120
+                                </a>
+                            </span>
+                            <span class="term-label">striated muscle dense body</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21611156" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21611156
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Determining the sub-cellular localization of proteins within...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54216" data-a="GO:0055120" data-r="PMID:21611156" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput GFP localization in body wall muscle. Dense bodies are the C. elegans equivalent of vertebrate Z-discs, where they anchor actin filaments to the cell membrane. Category 6 explicitly includes dense body localization. T05D4.1 was one of the proteins used to validate the approach (Figure 3).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct GFP localization data with validation by both Gateway and genomic clone approaches; dense body localization is part of Category 6
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21611156" target="_blank" class="term-link">
+                                        PMID:21611156
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The sub-cellular localization for the T05D4.1::GFP (A, B)...proteins expressed from gateway clones using a muscle-specific promoter (A, B and C) or from genomic clones using endogenous promoters (B, D and F)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the reversible cleavage of fructose-1,6-bisphosphate into glyceraldehyde-3-phosphate and dihydroxyacetone phosphate as part of glycolysis in the cytosol, with additional localization to sarcomeric structures and ER in body wall muscle.</h3>
+                <span class="vote-buttons" data-g="P54216" data-a="FUNCTION: Catalyzes the reversible cleavage of fructose-1,6-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004332" target="_blank" class="term-link">
+                            fructose-bisphosphate aldolase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                glycolytic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030388" target="_blank" class="term-link">
+                                fructose 1,6-bisphosphate metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055120" target="_blank" class="term-link">
+                                striated muscle dense body
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030017" target="_blank" class="term-link">
+                                sarcomere
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9056253" target="_blank" class="term-link">
+                                PMID:9056253
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Two distinct types of cDNAs for fructose-1,6-bisphosphate (FBP) aldolase, Ce-1 and Ce-2, have been isolated from nematode Caenorhabditis elegans, and the respective recombinant aldolase isozymes, CE-1 and CE-2, have been purified and characterized</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21611156" target="_blank" class="term-link">
+                                PMID:21611156
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The sub-cellular localization for the T05D4.1::GFP (A, B)...proteins expressed from gateway clones using a muscle-specific promoter</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9056253" target="_blank" class="term-link">
+                            PMID:9056253
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Caenorhabditis elegans has two isozymic forms, CE-1 and CE-2, of fructose-1,6-bisphosphate aldolase which are encoded by different genes.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CE-1 (aldo-1) is a class I FBP aldolase with unique kinetic properties and broad substrate specificity</div>
+                        
+                        <div class="finding-text">"CE-1 evolved to act as an intrinsic enzyme that exhibits a much broader substrate specificity than dose CE-2"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CE-1 and CE-2 are encoded by different genes, confirmed by Southern blot</div>
+                        
+                        <div class="finding-text">"Southern blot analysis suggests that CE-1 and CE-2 are encoded by different genes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CE-1 has KM of 16.7 uM for FBP and 0.56 mM for fructose-1-phosphate</div>
+                        
+                        <div class="finding-text">"Two distinct types of cDNAs for fructose-1,6-bisphosphate (FBP) aldolase, Ce-1 and Ce-2, have been isolated from nematode Caenorhabditis elegans, and the respective recombinant aldolase isozymes, CE-1 and CE-2, have been purified and characterized"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14704431" target="_blank" class="term-link">
+                            PMID:14704431
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A map of the interactome network of the metazoan C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput Y2H identified aldo-1 self-interaction</div>
+                        
+                        <div class="finding-text">"more than 4000 interactions were identified from high-throughput, yeast two-hybrid (HT=Y2H) screens"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19123269" target="_blank" class="term-link">
+                            PMID:19123269
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Empirically controlled mapping of the Caenorhabditis elegans protein-protein interactome network.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">aldo-1 self-interaction confirmed in expanded quality-controlled interactome</div>
+                        
+                        <div class="finding-text">"the resulting dataset (Worm Interactome 2007 or WI-2007) is similar in quality to low-throughput data curated from the literature"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21611156" target="_blank" class="term-link">
+                            PMID:21611156
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Determining the sub-cellular localization of proteins within Caenorhabditis elegans body wall muscle.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">T05D4.1 (aldo-1) GFP-tagged protein localizes to dense bodies, thick filaments/M-lines, and ER/SR in body wall muscle (Category 6)</div>
+                        
+                        <div class="finding-text">"The sub-cellular localization for the T05D4.1::GFP (A, B)...proteins expressed from gateway clones using a muscle-specific promoter (A, B and C) or from genomic clones using endogenous promoters (B, D and F)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Localization confirmed with both Gateway and genomic clone approaches</div>
+                        
+                        <div class="finding-text">"we verified the localization of several Gateway constructs by cloning and tagging the corresponding gene via conventional methods using genomic DNA instead of cDNA, and using endogenous promoters instead of our muscle specific promoter. We were able to confirm the same sub-cellular localization using both methods"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:worm/aldo-1/aldo-1-deep-research-bioreason-sft.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BioReason deep research for aldo-1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BioReason confirms aldo-1 as a class I FBP aldolase with TIM barrel architecture and Schiff-base catalytic mechanism</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does aldo-1 form a glycolytic metabolon with other glycolytic enzymes at sarcomeric structures in C. elegans body wall muscle, analogous to what has been proposed in vertebrate striated muscle?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Moerman DG</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P54216" data-a="Q: Does aldo-1 form a glycolytic metabolon with other..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the distinct physiological roles of aldo-1 (CE-1) versus aldo-2 (CE-2) in C. elegans, given their different kinetic properties and substrate specificities?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Hori K</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P54216" data-a="Q: What are the distinct physiological roles of aldo-..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the heterochromatin association observed for vertebrate aldolase orthologs conserved in C. elegans aldo-1, and does it have functional significance?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P54216" data-a="Q: Is the heterochromatin association observed for ve..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation or proximity ligation assay of aldo-1 with other glycolytic enzymes (e.g., phosphofructokinase, GAPDH, triosephosphate isomerase) in C. elegans body wall muscle lysates, combined with co-localization imaging at sarcomeric structures.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: aldo-1 forms a sarcomeric glycolytic metabolon in C. elegans body wall muscle</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: co-immunoprecipitation and imaging</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P54216" data-a="EXPERIMENT: Co-immunoprecipitation or proximity ligation assay..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate aldo-1 single mutants and aldo-1; aldo-2 double mutants to compare phenotypes. Measure glycolytic flux, energy metabolism, lifespan, and glucose sensitivity in each genotype. Given that aldo-2 RNAi causes embryonic lethality, test whether aldo-1 loss is similarly lethal or shows distinct phenotypes.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: aldo-1 and aldo-2 have non-redundant roles in C. elegans metabolism</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic analysis and metabolomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P54216" data-a="EXPERIMENT: Generate aldo-1 single mutants and aldo-1; aldo-2 ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason Sft</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aldo-1-deep-research-bioreason-sft.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P54216" data-a="DOC: Deep Research Bioreason Sft" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="o">---</span>
+<span class="nx">provider</span><span class="p">:</span><span class="w"> </span><span class="nx">bioreason</span><span class="o">-</span><span class="nx">pro</span>
+<span class="nx">model</span><span class="p">:</span><span class="w"> </span><span class="nx">SFT</span>
+<span class="nx">source</span><span class="p">:</span><span class="w"> </span><span class="nx">huggingface</span><span class="p">.</span><span class="nx">co</span><span class="o">/</span><span class="nx">datasets</span><span class="o">/</span><span class="nx">wanglab</span><span class="o">/</span><span class="nx">protein_catalogue</span>
+<span class="nx">date</span><span class="p">:</span><span class="w"> </span><span class="err">&#39;</span><span class="mi">2026</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">04</span><span class="err">&#39;</span>
+<span class="nx">uniprot_id</span><span class="p">:</span><span class="w"> </span><span class="nx">P54216</span>
+<span class="nx">gene</span><span class="p">:</span><span class="w"> </span><span class="nx">aldo</span><span class="o">-</span><span class="mi">1</span>
+<span class="nx">organism</span><span class="p">:</span><span class="w"> </span><span class="nx">Caenorhabditis</span><span class="w"> </span><span class="nx">elegans</span>
+<span class="o">---</span>
+
+<span class="err">##</span><span class="w"> </span><span class="nx">Thinking</span><span class="w"> </span><span class="nx">Trace</span>
+
+<span class="nx">The</span><span class="w"> </span><span class="nx">architecture</span><span class="w"> </span><span class="nx">begins</span><span class="w"> </span><span class="nx">with</span><span class="w"> </span><span class="nx">IPR013785</span><span class="w"> </span><span class="p">(</span><span class="nx">Aldolase</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">TIM</span><span class="w"> </span><span class="nx">barrel</span><span class="p">,</span><span class="w"> </span><span class="nx">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="nx">spanning</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">1</span><span class="err">–</span><span class="mi">366</span><span class="p">,</span><span class="w"> </span><span class="nx">establishing</span><span class="w"> </span><span class="nx">an</span><span class="w"> </span><span class="p">(</span><span class="nx">α</span><span class="o">/</span><span class="nx">β</span><span class="p">)</span><span class="mi">8</span><span class="w"> </span><span class="nx">barrel</span><span class="w"> </span><span class="nx">scaffold</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">positions</span><span class="w"> </span><span class="nx">catalytic</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="nx">at</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">C</span><span class="o">-</span><span class="nx">terminal</span><span class="w"> </span><span class="nx">ends</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">β</span><span class="o">-</span><span class="nx">strands</span><span class="p">.</span><span class="w"> </span><span class="nx">Nested</span><span class="w"> </span><span class="nx">within</span><span class="w"> </span><span class="nx">this</span><span class="w"> </span><span class="nx">fold</span><span class="w"> </span><span class="nx">are</span><span class="w"> </span><span class="nx">two</span><span class="w"> </span><span class="nx">overlapping</span><span class="w"> </span><span class="nx">family</span><span class="w"> </span><span class="nx">signatures</span><span class="p">,</span><span class="w"> </span><span class="nx">IPR000741</span><span class="w"> </span><span class="p">(</span><span class="nx">Fructose</span><span class="o">-</span><span class="nx">bisphosphate</span><span class="w"> </span><span class="nx">aldolase</span><span class="p">,</span><span class="w"> </span><span class="kd">class</span><span class="o">-</span><span class="nx">I</span><span class="p">)</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">13</span><span class="err">–</span><span class="mi">366</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">IPR000741</span><span class="w"> </span><span class="p">(</span><span class="nx">Fructose</span><span class="o">-</span><span class="nx">bisphosphate</span><span class="w"> </span><span class="nx">aldolase</span><span class="p">,</span><span class="w"> </span><span class="kd">class</span><span class="o">-</span><span class="nx">I</span><span class="p">)</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">15</span><span class="err">–</span><span class="mi">366</span><span class="p">,</span><span class="w"> </span><span class="nx">which</span><span class="w"> </span><span class="nx">specify</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">I</span><span class="w"> </span><span class="nx">aldolase</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">uses</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">catalytic</span><span class="w"> </span><span class="nx">lysine</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">form</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">Schiff</span><span class="w"> </span><span class="kd">base</span><span class="w"> </span><span class="nx">with</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">carbonyl</span><span class="w"> </span><span class="nx">substrate</span><span class="p">.</span><span class="w"> </span><span class="nx">The</span><span class="w"> </span><span class="nx">catalytic</span><span class="w"> </span><span class="nx">center</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="nx">pinpointed</span><span class="w"> </span><span class="nx">by</span><span class="w"> </span><span class="nx">IPR029768</span><span class="w"> </span><span class="p">(</span><span class="nx">Fructose</span><span class="o">-</span><span class="nx">bisphosphate</span><span class="w"> </span><span class="nx">aldolase</span><span class="w"> </span><span class="kd">class</span><span class="o">-</span><span class="nx">I</span><span class="w"> </span><span class="nx">active</span><span class="w"> </span><span class="nx">site</span><span class="p">,</span><span class="w"> </span><span class="nx">conserved_site</span><span class="p">)</span><span class="w"> </span><span class="nx">at</span><span class="w"> </span><span class="nx">residues</span><span class="w"> </span><span class="mi">223</span><span class="err">–</span><span class="mi">233</span><span class="p">,</span><span class="w"> </span><span class="nx">marking</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">lysine</span><span class="o">-</span><span class="nx">dependent</span><span class="w"> </span><span class="nx">iminium</span><span class="w"> </span><span class="nx">chemistry</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">drives</span><span class="w"> </span><span class="nx">carbon</span><span class="err">–</span><span class="nx">carbon</span><span class="w"> </span><span class="nx">bond</span><span class="w"> </span><span class="nx">cleavage</span><span class="o">/</span><span class="nx">formation</span><span class="p">.</span><span class="w"> </span><span class="nx">This</span><span class="w"> </span><span class="nx">ordered</span><span class="w"> </span><span class="nx">layout</span><span class="err">—</span><span class="nx">TIM</span><span class="w"> </span><span class="nx">barrel</span><span class="w"> </span><span class="nx">scaffold</span><span class="p">,</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">I</span><span class="w"> </span><span class="nx">family</span><span class="w"> </span><span class="nx">determinants</span><span class="p">,</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">conserved</span><span class="w"> </span><span class="nx">active</span><span class="o">-</span><span class="nx">site</span><span class="w"> </span><span class="nx">lysine</span><span class="err">—</span><span class="nx">causes</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">reversible</span><span class="w"> </span><span class="nx">aldol</span><span class="w"> </span><span class="nx">cleavage</span><span class="o">/</span><span class="nx">condensation</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">fructose</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="o">-</span><span class="nx">bisphosphate</span><span class="w"> </span><span class="nx">into</span><span class="w"> </span><span class="nx">dihydroxyacetone</span><span class="w"> </span><span class="nx">phosphate</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">glyceraldehyde</span><span class="w"> </span><span class="mi">3</span><span class="o">-</span><span class="nx">phosphate</span><span class="p">,</span><span class="w"> </span><span class="nx">which</span><span class="w"> </span><span class="nx">defines</span><span class="w"> </span><span class="nx">GO</span><span class="p">:</span><span class="mi">0004332</span><span class="w"> </span><span class="nx">fructose</span><span class="o">-</span><span class="nx">bisphosphate</span><span class="w"> </span><span class="nx">aldolase</span><span class="w"> </span><span class="nx">activity</span><span class="p">.</span><span class="w"> </span><span class="nx">Class</span><span class="w"> </span><span class="nx">I</span><span class="w"> </span><span class="nx">aldolases</span><span class="w"> </span><span class="nx">typically</span><span class="w"> </span><span class="nx">assemble</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nx">homotetramers</span><span class="p">;</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">quaternary</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="nx">arises</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">complementary</span><span class="w"> </span><span class="nx">TIM</span><span class="o">-</span><span class="nx">barrel</span><span class="w"> </span><span class="nx">surfaces</span><span class="p">,</span><span class="w"> </span><span class="nx">which</span><span class="w"> </span><span class="nx">necessitates</span><span class="w"> </span><span class="nx">GO</span><span class="p">:</span><span class="mi">0042802</span><span class="w"> </span><span class="nx">identical</span><span class="w"> </span><span class="nx">protein</span><span class="w"> </span><span class="nx">binding</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">form</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">active</span><span class="w"> </span><span class="nx">oligomer</span><span class="p">.</span>
+</code></pre></div>
+
+<p>Catalysis at this step channels carbon flux through glycolysis and supports gluconeogenesis. In the glycolytic direction, the Schiff-base mechanism cleaves fructose 1,6-bisphosphate to DHAP and G3P, embedding the enzyme in GO:0006096 glycolytic process. Because glycolytic throughput directly sets blood glucose levels in metazoans, the same reaction underpins systemic sugar balance, aligning with GO:0042593 glucose homeostasis. The reversibility of the reaction also supports gluconeogenic assembly of fructose 1,6-bisphosphate from triose phosphates, ensuring metabolic flexibility.</p>
+<p>Cellular placement follows from both function and muscle-specific architecture. The TIM-barrel enzyme is soluble and lacks transmembrane features, favoring a cytosolic environment. In striated muscle, glycolytic enzymes are known to dock onto cytoskeletal and adhesion-associated structures to create metabolons that buffer ATP supply during contraction. This explains localization to GO:0030017 sarcomere and GO:0055120 striated muscle dense body, where anchoring near actin-attachment sites positions the enzyme to feed ATP-consuming myofibrillar processes. Association with GO:0005783 endoplasmic reticulum is consistent with peripheral binding to ER membranes or ER–myofibril junctions, enabling local exchange of metabolites and potentially coupling to calcium signaling that modulates glycolytic flux.</p>
+<p>Mechanistically, the enzyme likely operates within a sarcomeric glycolytic metabolon. Upstream, ATP-dependent 6-phosphofructokinase 1 and 2 generate fructose 1,6-bisphosphate, which this enzyme cleaves; downstream, triosephosphate isomerase equilibrates DHAP and G3P, and glyceraldehyde-3-phosphate dehydrogenases 1–4 draw flux forward, while an FBPase domain-containing protein can reverse the direction during gluconeogenesis. Glucose-6-phosphate isomerase supplies the hexose substrate pool, and a transket_pyr domain-containing protein may provide auxiliary carbon-shuffling or regulatory interactions. The homomeric assembly (identical protein binding) stabilizes the active site geometry and supports high local catalytic throughput at dense bodies and sarcomeres, with transient ER contacts positioning the metabolon near excitation–contraction machinery. This arrangement ensures rapid, spatially focused energy production to sustain muscle contraction while maintaining whole-organism glucose balance.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="nx">Functional</span><span class="w"> </span><span class="nx">Summary</span>
+
+<span class="nx">A</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">I</span><span class="w"> </span><span class="nx">aldolase</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">Caenorhabditis</span><span class="w"> </span><span class="nx">elegans</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">assembles</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">homomeric</span><span class="w"> </span><span class="nx">TIM</span><span class="o">-</span><span class="nx">barrel</span><span class="w"> </span><span class="nx">enzyme</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">catalyze</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">reversible</span><span class="w"> </span><span class="nx">cleavage</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">fructose</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="o">-</span><span class="nx">bisphosphate</span><span class="w"> </span><span class="nx">into</span><span class="w"> </span><span class="nx">triose</span><span class="w"> </span><span class="nx">phosphates</span><span class="w"> </span><span class="nx">during</span><span class="w"> </span><span class="nx">glycolysis</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">corresponding</span><span class="w"> </span><span class="nx">condensation</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">gluconeogenesis</span><span class="p">.</span><span class="w"> </span><span class="nx">By</span><span class="w"> </span><span class="nx">anchoring</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">sarcomeric</span><span class="w"> </span><span class="nx">structures</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">dense</span><span class="w"> </span><span class="nx">bodies</span><span class="p">,</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">by</span><span class="w"> </span><span class="nx">transiently</span><span class="w"> </span><span class="nx">associating</span><span class="w"> </span><span class="nx">with</span><span class="w"> </span><span class="nx">endoplasmic</span><span class="w"> </span><span class="nx">reticulum</span><span class="w"> </span><span class="nx">interfaces</span><span class="p">,</span><span class="w"> </span><span class="nx">it</span><span class="w"> </span><span class="nx">forms</span><span class="w"> </span><span class="nx">part</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">muscle</span><span class="w"> </span><span class="nx">glycolytic</span><span class="w"> </span><span class="nx">metabolon</span><span class="w"> </span><span class="nx">that</span><span class="w"> </span><span class="nx">channels</span><span class="w"> </span><span class="nx">substrates</span><span class="w"> </span><span class="nx">efficiently</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">ATP</span><span class="o">-</span><span class="nx">producing</span><span class="w"> </span><span class="nx">steps</span><span class="p">,</span><span class="w"> </span><span class="nx">thereby</span><span class="w"> </span><span class="nx">supporting</span><span class="w"> </span><span class="nx">contraction</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">contributing</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">organismal</span><span class="w"> </span><span class="nx">glucose</span><span class="w"> </span><span class="nx">balance</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="nx">UniProt</span><span class="w"> </span><span class="nx">Summary</span>
+
+<span class="nx">Plays</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="nx">role</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="nx">glycolysis</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">gluconeogenesis</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="nx">InterPro</span><span class="w"> </span><span class="nx">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nx">IPR013785</span><span class="p">:</span><span class="w"> </span><span class="nx">Aldolase</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">TIM</span><span class="w"> </span><span class="nx">barrel</span><span class="w"> </span><span class="p">(</span><span class="nx">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="o">-</span><span class="mi">366</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nx">IPR000741</span><span class="p">:</span><span class="w"> </span><span class="nx">Fructose</span><span class="o">-</span><span class="nx">bisphosphate</span><span class="w"> </span><span class="nx">aldolase</span><span class="p">,</span><span class="w"> </span><span class="kd">class</span><span class="o">-</span><span class="nx">I</span><span class="w"> </span><span class="p">(</span><span class="nx">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">13</span><span class="o">-</span><span class="mi">366</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nx">IPR000741</span><span class="p">:</span><span class="w"> </span><span class="nx">Fructose</span><span class="o">-</span><span class="nx">bisphosphate</span><span class="w"> </span><span class="nx">aldolase</span><span class="p">,</span><span class="w"> </span><span class="kd">class</span><span class="o">-</span><span class="nx">I</span><span class="w"> </span><span class="p">(</span><span class="nx">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">15</span><span class="o">-</span><span class="mi">366</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nx">IPR029768</span><span class="p">:</span><span class="w"> </span><span class="nx">Fructose</span><span class="o">-</span><span class="nx">bisphosphate</span><span class="w"> </span><span class="nx">aldolase</span><span class="w"> </span><span class="kd">class</span><span class="o">-</span><span class="nx">I</span><span class="w"> </span><span class="nx">active</span><span class="w"> </span><span class="nx">site</span><span class="w"> </span><span class="p">(</span><span class="nx">conserved_site</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">223</span><span class="o">-</span><span class="mi">233</span><span class="p">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="nx">GO</span><span class="w"> </span><span class="nx">Term</span><span class="w"> </span><span class="nx">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="nx">Molecular</span><span class="w"> </span><span class="nx">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="nx">Biological</span><span class="w"> </span><span class="nx">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="nx">Cellular</span><span class="w"> </span><span class="nx">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aldo-1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P54216" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="aldo-1-c-elegans-research-notes">aldo-1 (C. elegans) Research Notes</h1>
+<p>Gene: aldo-1 (T05D4.1, WBGene00011474)<br />
+UniProt: P54216<br />
+Protein: Fructose-bisphosphate aldolase 1, also known as Aldolase CE-1</p>
+<h2 id="summary-of-gene-biology">Summary of Gene Biology</h2>
+<p>aldo-1 encodes one of two fructose-1,6-bisphosphate aldolase isozymes in C. elegans (the other being aldo-2/CE-2). It is a class I aldolase that catalyzes the reversible cleavage of fructose-1,6-bisphosphate (FBP) into glyceraldehyde-3-phosphate (G3P) and dihydroxyacetone phosphate (DHAP), a key step in glycolysis (step 4/4 in the conversion of glucose to triose phosphates) and gluconeogenesis.</p>
+<h2 id="key-literature-findings">Key Literature Findings</h2>
+<h3 id="pmid9056253-inoue-et-al-1997-arch-biochem-biophys">PMID:9056253 - Inoue et al. 1997 (Arch Biochem Biophys)</h3>
+<p>Title: "Caenorhabditis elegans has two isozymic forms, CE-1 and CE-2, of fructose-1,6-bisphosphate aldolase which are encoded by different genes."</p>
+<ul>
+<li>Two distinct cDNAs (Ce-1 and Ce-2) isolated; both encode 366 amino acid proteins</li>
+<li>CE-1 (aldo-1) and CE-2 (aldo-2) are encoded by different genes (Southern blot confirmed)</li>
+<li>CE-1 has unique kinetic properties: KM = 16.7 uM for FBP, KM = 0.56 mM for fructose-1-phosphate</li>
+<li>CE-1 exhibits broader substrate specificity than CE-2</li>
+<li>CE-2 is more similar to vertebrate aldolase C, while CE-1 has unique characteristics</li>
+<li>Highest sequence diversity between CE-1 and CE-2 is in the C-terminal region (isozyme-specific)</li>
+<li>EC assigned: 4.1.2.13 (IDA evidence)<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9056253" title="CE-1 evolved to act as an intrinsic enzyme that exhibits a much broader substrate specificity than does CE-2">PMID:9056253</a></li>
+</ul>
+<h3 id="pmid21611156-meissner-et-al-2011-plos-one">PMID:21611156 - Meissner et al. 2011 (PLoS One)</h3>
+<p>Title: "Determining the sub-cellular localization of proteins within Caenorhabditis elegans body wall muscle."</p>
+<ul>
+<li>T05D4.1 (aldo-1) was GFP-tagged and localized in body wall muscle cells</li>
+<li>Classified in Category 6: "Dense bodies, Thick filaments and/or M-lines, ER/SR"</li>
+<li>T05D4.1::GFP was one of 3 proteins used to validate the Gateway approach vs. genomic clones (Figure 3A,B) -- localization was confirmed with both methods</li>
+<li>The study identified 227 GFP-tagged proteins with localized expression in body wall muscle</li>
+<li>This is high-quality HDA evidence for sarcomere, dense body, and ER localization<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21611156" title="The sub-cellular localization for the T05D4.1::GFP (A, B)... proteins expressed from gateway clones using a muscle-specific promoter (A, B and C) or from genomic clones using endogenous promoters (B, D and F)">PMID:21611156</a></li>
+</ul>
+<h3 id="pmid14704431-li-et-al-2004-science">PMID:14704431 - Li et al. 2004 (Science)</h3>
+<p>Title: "A map of the interactome network of the metazoan C. elegans."</p>
+<ul>
+<li>High-throughput Y2H screen identified &gt;4000 interactions in C. elegans</li>
+<li>aldo-1 (P54216) self-interaction detected (identical protein binding)</li>
+<li>Part of the Worm Interactome WI5 map<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/14704431" title="more than 4000 interactions were identified from high-throughput, yeast two-hybrid (HT=Y2H) screens">PMID:14704431</a></li>
+</ul>
+<h3 id="pmid19123269-simonis-et-al-2009-nat-methods">PMID:19123269 - Simonis et al. 2009 (Nat Methods)</h3>
+<p>Title: "Empirically controlled mapping of the Caenorhabditis elegans protein-protein interactome network."</p>
+<ul>
+<li>Expanded C. elegans interactome (WI-2007/WI8)</li>
+<li>aldo-1 self-interaction replicated/confirmed</li>
+<li>Quality-controlled dataset comparable to low-throughput literature data<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19123269" title="the resulting dataset (Worm Interactome 2007 or WI-2007) is similar in quality to low-throughput data curated from the literature">PMID:19123269</a></li>
+</ul>
+<h2 id="expression-and-tissue-distribution">Expression and Tissue Distribution</h2>
+<ul>
+<li>UniProt states: ubiquitous expression, all developmental stages</li>
+<li>Bgee: expressed in larva and 3 other cell types/tissues</li>
+<li>The Meissner et al. study used a muscle-specific promoter for GFP localization, so the muscle localization findings are for ectopically driven expression, but were confirmed with endogenous promoter constructs</li>
+</ul>
+<h2 id="quaternary-structure">Quaternary Structure</h2>
+<ul>
+<li>Class I aldolases are typically homotetrameric</li>
+<li>IntAct records 3 experiments showing aldo-1 self-interaction (P54216-P54216)</li>
+<li>The homotetrameric quaternary structure is important for enzyme stability but not strictly required for catalysis (monomers retain ~72% activity in other aldolases)</li>
+<li>The "identical protein binding" GO annotation reflects the self-interaction seen in Y2H</li>
+</ul>
+<h2 id="relationship-to-aldo-2-ce-2">Relationship to aldo-2 (CE-2)</h2>
+<ul>
+<li>aldo-2 (P46563, F01F1.12) is the other C. elegans FBP aldolase</li>
+<li>aldo-2 is more similar to vertebrate aldolase C</li>
+<li>aldo-2 RNAi causes embryonic lethality (~75% of embryos die) <a href="https://pubmed.ncbi.nlm.nih.gov/38947245">PMID:38947245</a></li>
+<li>aldo-2 has been implicated as a potential epigenetic regulator during embryogenesis via histone lactylation</li>
+</ul>
+<h2 id="c-elegans-metabolic-context">C. elegans Metabolic Context</h2>
+<ul>
+<li>C. elegans has functional glycolysis and gluconeogenesis pathways</li>
+<li>The daf-2/insulin signaling pathway regulates metabolic flux; daf-2 mutants show upregulated glycolytic enzymes</li>
+<li>Glucose toxicity in C. elegans is mediated partly through glycolytic intermediates including DHAP</li>
+<li>Genetic inhibition of aldolase (aldo-1/aldo-2) suppresses glucose toxicity and restores lifespan on high-glucose diets, suggesting DHAP accumulation from aldolase activity mediates glucose-induced aging</li>
+</ul>
+<h2 id="bioreason-claims-assessment">BioReason Claims Assessment</h2>
+<p>The BioReason deep-research file claims:<br />
+1. GO:0042593 (glucose homeostasis) - NOT in existing GOA annotations. While aldo-1 participates in glycolysis which affects glucose levels, C. elegans lacks a blood glucose system. This term is more appropriate for vertebrates. The claim of "systemic sugar balance" is an overreach for a nematode.<br />
+2. Dense body/sarcomere/ER localization - CORRECT, supported by PMID:21611156<br />
+3. "Glycolytic metabolon" at sarcomeres - Plausible but speculative for C. elegans specifically. There is evidence from vertebrate muscle that glycolytic enzymes form metabolons at sarcomeres, and the dense body/ER localization of aldo-1 is consistent with this, but no direct evidence of a metabolon exists in C. elegans.<br />
+4. Homotetrameric assembly - CORRECT for class I aldolases generally</p>
+<h2 id="reference-verification">Reference Verification</h2>
+<p>All PMIDs cited in the GOA annotations are REAL and verified:<br />
+- PMID:9056253 - Verified (Inoue et al. 1997, Arch Biochem Biophys)<br />
+- PMID:14704431 - Verified (Li et al. 2004, Science) <br />
+- PMID:19123269 - Verified (Simonis et al. 2009, Nat Methods)<br />
+- PMID:21611156 - Verified (Meissner et al. 2011, PLoS One)<br />
+- GO_REF:0000033 - Standard phylogenetic annotation reference<br />
+- GO_REF:0000024 - Standard manual ISS transfer reference<br />
+- GO_REF:0000120 - Standard combined IEA method reference</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aldo-1-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P54216" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-aldo-1-caenorhabditis-elegans">BioReason-Pro SFT Review: aldo-1 (Caenorhabditis elegans)</h1>
+<p>Source: aldo-1-deep-research-bioreason-sft.md</p>
+<ul>
+<li><strong>Correctness</strong>: 3/5</li>
+<li><strong>Completeness</strong>: 3/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason functional summary describes aldo-1 as:</p>
+<blockquote>
+<p>A class I aldolase in Caenorhabditis elegans that assembles as a homomeric TIM-barrel enzyme to catalyze the reversible cleavage of fructose 1,6-bisphosphate into triose phosphates during glycolysis and the corresponding condensation in gluconeogenesis. By anchoring to sarcomeric structures and dense bodies, and by transiently associating with endoplasmic reticulum interfaces, it forms part of a muscle glycolytic metabolon that channels substrates efficiently to ATP-producing steps, thereby supporting contraction and contributing to organismal glucose balance.</p>
+</blockquote>
+<p>This summary is largely correct in its core biochemistry but makes several unsupported claims about metabolon formation and glucose homeostasis.</p>
+<p><strong>Correctness issues:</strong></p>
+<ol>
+<li>
+<p><strong>"Glycolytic metabolon" is speculative for C. elegans.</strong> While vertebrate muscle studies suggest glycolytic enzymes may form sarcomeric metabolons (PMID:25247275), no direct evidence demonstrates a glycolytic metabolon in C. elegans body wall muscle. The BioReason model extrapolates from vertebrate muscle biology without distinguishing organism-specific evidence. The localization of aldo-1 to dense bodies and ER/SR (PMID:21611156) is consistent with a metabolon hypothesis but does not demonstrate one.</p>
+</li>
+<li>
+<p><strong>"Contributing to organismal glucose balance" is an overreach.</strong> The thinking trace predicts GO:0042593 (glucose homeostasis), but this term is not in the existing GOA annotations and is inappropriate for C. elegans, which lacks a blood glucose regulatory system analogous to vertebrates. C. elegans does have insulin/IGF-1 signaling (daf-2 pathway) that affects glucose metabolism, and aldolase RNAi can suppress glucose toxicity on high-glucose diets, but this does not constitute "glucose homeostasis" in the GO sense of the term.</p>
+</li>
+<li>
+<p><strong>"Homomeric TIM-barrel enzyme" is slightly misleading.</strong> While each subunit has a TIM barrel fold, class I aldolases function as homotetramers. The summary does not clearly state the tetrameric quaternary structure, instead vaguely referring to "homomeric assembly."</p>
+</li>
+<li>
+<p><strong>"Transient ER contacts positioning the metabolon near excitation-contraction machinery" is fabricated.</strong> No evidence supports transient ER contacts having a role in positioning a glycolytic metabolon near excitation-contraction coupling in C. elegans. The ER/SR localization from Meissner et al. 2011 is a static observation from GFP imaging, not evidence of dynamic transient contacts.</p>
+</li>
+</ol>
+<p><strong>What was correct:</strong></p>
+<ol>
+<li>The core biochemistry is accurate: class I aldolase, TIM barrel fold, Schiff-base mechanism with catalytic lysine, reversible cleavage of FBP into DHAP and G3P.</li>
+<li>The domain architecture analysis from InterPro entries is sound: IPR013785 (TIM barrel), IPR000741 (class I FBP aldolase), IPR029768 (active site).</li>
+<li>The localization to sarcomere, dense bodies, and ER is correct, supported by PMID:21611156. T05D4.1 was classified in Category 6 of the Meissner et al. study and was one of three proteins specifically used to validate their approach (Figure 3).</li>
+<li>The identical protein binding (self-interaction) is correctly noted, supported by Y2H data from two independent interactome studies (PMID:14704431, PMID:19123269).</li>
+<li>Involvement in glycolysis and gluconeogenesis is well supported.</li>
+</ol>
+<h2 id="comparison-with-goa-annotations">Comparison with GOA Annotations</h2>
+<p>The existing GOA annotations include:<br />
+- GO:0004332 fructose-bisphosphate aldolase activity (IDA, IBA, IEA) -- core function, directly demonstrated<br />
+- GO:0006096 glycolytic process (NAS, IBA, IEA) -- core function<br />
+- GO:0030388 fructose 1,6-bisphosphate metabolic process (IBA) -- core function<br />
+- GO:0042802 identical protein binding (IPI) -- non-core, from interactome screens<br />
+- GO:0005829 cytosol (IBA) -- expected for soluble enzyme<br />
+- GO:0005737 cytoplasm (ISS) -- expected, less specific than cytosol<br />
+- GO:0000792 heterochromatin (ISS) -- questionable, transferred from rabbit ortholog<br />
+- GO:0005783 endoplasmic reticulum (HDA) -- supported by Meissner et al.<br />
+- GO:0030017 sarcomere (HDA) -- supported by Meissner et al.<br />
+- GO:0055120 striated muscle dense body (HDA) -- supported by Meissner et al.</p>
+<p>BioReason correctly captures the MF and BP annotations but does not add novel GO term predictions in its structured output (the GO Term Predictions sections are empty). The narrative mentions GO:0042593 (glucose homeostasis) which is not in GOA and would be inappropriate for C. elegans.</p>
+<h2 id="notes-on-thinking-trace">Notes on Thinking Trace</h2>
+<p>The thinking trace reveals several characteristic patterns:</p>
+<ol>
+<li>
+<p><strong>Mechanistic over-elaboration.</strong> The trace constructs an elaborate narrative about a sarcomeric glycolytic metabolon with upstream PFK, downstream TPI and GAPDH, FBPase for gluconeogenesis, and transket_pyr for "auxiliary carbon-shuffling." While each individual enzyme exists in C. elegans, the assembled narrative of a coordinated metabolon is speculative fiction presented as established biology.</p>
+</li>
+<li>
+<p><strong>Appropriate use of domain analysis.</strong> The trace correctly reasons from the TIM barrel scaffold through the class I family signatures to the active-site lysine. This structural reasoning is sound and well-grounded in the InterPro domain annotations.</p>
+</li>
+<li>
+<p><strong>Vertebrate biology leakage.</strong> Claims about "blood glucose levels in metazoans" and "systemic sugar balance" reveal that the model is applying vertebrate physiology to a nematode. C. elegans has trehalose rather than glucose as its primary circulating sugar, and lacks the endocrine pancreas-based glucose homeostatic system of vertebrates.</p>
+</li>
+<li>
+<p><strong>Correct handling of localization evidence.</strong> The trace correctly explains why a cytosolic enzyme might associate with sarcomeric structures and ER, drawing on the concept of enzyme-cytoskeleton interactions in muscle. The reasoning is plausible even though the specific metabolon claim is unproven.</p>
+</li>
+<li>
+<p><strong>Empty structured predictions.</strong> The GO Term Predictions sections (Molecular Function, Biological Process, Cellular Component) are all empty, meaning the model generated no novel structured predictions despite the extensive narrative. This disconnect between narrative and output is a weakness.</p>
+</li>
+</ol>
+<h2 id="reference-verification">Reference Verification</h2>
+<p>All references cited in the existing GOA annotations are verified as real publications:<br />
+- PMID:9056253 (Inoue et al. 1997) -- real, describes CE-1/CE-2 characterization<br />
+- PMID:14704431 (Li et al. 2004) -- real, C. elegans interactome mapping<br />
+- PMID:19123269 (Simonis et al. 2009) -- real, expanded interactome<br />
+- PMID:21611156 (Meissner et al. 2011) -- real, muscle protein localization study</p>
+<p>The BioReason narrative does not cite specific papers but the claims it makes are broadly consistent with the literature, except for the glucose homeostasis claim.</p>
+<h2 id="summary">Summary</h2>
+<p>The BioReason prediction is competent at the level of core biochemistry and domain architecture analysis. It correctly identifies aldo-1 as a class I FBP aldolase involved in glycolysis, and appropriately notes the muscle-specific localizations. However, it over-interprets the localization data into a speculative glycolytic metabolon narrative, inappropriately applies vertebrate glucose homeostasis concepts to C. elegans, and generates no structured GO term predictions despite extensive narrative reasoning. For a well-characterized gene like aldo-1, the BioReason output adds little beyond what is already captured in the existing GOA annotations, and the speculative additions (metabolon, glucose homeostasis) reduce rather than increase the reliability of the output.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P54216
+gene_symbol: aldo-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  aldo-1 encodes fructose-bisphosphate aldolase 1 (CE-1), one of two class I aldolase
+  isozymes in C. elegans (the other being aldo-2/CE-2). The enzyme catalyzes the
+  reversible cleavage of fructose-1,6-bisphosphate into glyceraldehyde-3-phosphate and
+  dihydroxyacetone phosphate, a central step in glycolysis and gluconeogenesis. CE-1
+  has unique kinetic properties with a broad substrate specificity compared to CE-2.
+  The protein is ubiquitously expressed and in body wall muscle localizes to dense
+  bodies, thick filaments/M-lines, and ER/sarcoplasmic reticulum, consistent with a
+  role in providing ATP near contractile structures.
+references:
+  - id: PMID:9056253
+    title: Caenorhabditis elegans has two isozymic forms, CE-1 and CE-2, of fructose-1,6-bisphosphate
+      aldolase which are encoded by different genes.
+    findings:
+      - statement: CE-1 (aldo-1) is a class I FBP aldolase with unique kinetic properties
+          and broad substrate specificity
+        supporting_text: &gt;-
+          CE-1 evolved to act as an intrinsic enzyme that exhibits a much broader
+          substrate specificity than dose CE-2
+        reference_section_type: ABSTRACT
+      - statement: CE-1 and CE-2 are encoded by different genes, confirmed by Southern blot
+        supporting_text: &gt;-
+          Southern blot analysis suggests that CE-1 and CE-2 are encoded by different genes
+        reference_section_type: ABSTRACT
+      - statement: CE-1 has KM of 16.7 uM for FBP and 0.56 mM for fructose-1-phosphate
+        supporting_text: &gt;-
+          Two distinct types of cDNAs for fructose-1,6-bisphosphate (FBP) aldolase,
+          Ce-1 and Ce-2, have been isolated from nematode Caenorhabditis elegans, and
+          the respective recombinant aldolase isozymes, CE-1 and CE-2, have been purified
+          and characterized
+        reference_section_type: ABSTRACT
+  - id: PMID:14704431
+    title: A map of the interactome network of the metazoan C. elegans.
+    findings:
+      - statement: High-throughput Y2H identified aldo-1 self-interaction
+        supporting_text: &gt;-
+          more than 4000 interactions were identified from high-throughput,
+          yeast two-hybrid (HT=Y2H) screens
+        reference_section_type: ABSTRACT
+  - id: PMID:19123269
+    title: Empirically controlled mapping of the Caenorhabditis elegans protein-protein
+      interactome network.
+    findings:
+      - statement: aldo-1 self-interaction confirmed in expanded quality-controlled interactome
+        supporting_text: &gt;-
+          the resulting dataset (Worm Interactome 2007 or WI-2007) is similar in
+          quality to low-throughput data curated from the literature
+        reference_section_type: ABSTRACT
+  - id: PMID:21611156
+    title: Determining the sub-cellular localization of proteins within Caenorhabditis
+      elegans body wall muscle.
+    findings:
+      - statement: T05D4.1 (aldo-1) GFP-tagged protein localizes to dense bodies, thick
+          filaments/M-lines, and ER/SR in body wall muscle (Category 6)
+        supporting_text: &gt;-
+          The sub-cellular localization for the T05D4.1::GFP (A, B)...proteins
+          expressed from gateway clones using a muscle-specific promoter (A, B and C)
+          or from genomic clones using endogenous promoters (B, D and F)
+        reference_section_type: RESULTS
+      - statement: Localization confirmed with both Gateway and genomic clone approaches
+        supporting_text: &gt;-
+          we verified the localization of several Gateway constructs by cloning and
+          tagging the corresponding gene via conventional methods using genomic DNA
+          instead of cDNA, and using endogenous promoters instead of our muscle
+          specific promoter. We were able to confirm the same sub-cellular
+          localization using both methods
+        reference_section_type: RESULTS
+  - id: file:worm/aldo-1/aldo-1-deep-research-bioreason-sft.md
+    title: BioReason deep research for aldo-1
+    findings:
+      - statement: BioReason confirms aldo-1 as a class I FBP aldolase with TIM barrel
+          architecture and Schiff-base catalytic mechanism
+  - id: GO_REF:0000024
+    title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+      by curator judgment of sequence similarity
+    findings: []
+  - id: GO_REF:0000033
+    title: Annotation inferences using phylogenetic trees
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+existing_annotations:
+  - term:
+      id: GO:0004332
+      label: fructose-bisphosphate aldolase activity
+    evidence_type: IDA
+    original_reference_id: PMID:9056253
+    review:
+      summary: &gt;-
+        Direct experimental evidence. Inoue et al. purified recombinant CE-1 and
+        demonstrated FBP aldolase activity with KM of 16.7 uM for FBP. This is the
+        core molecular function of aldo-1.
+      action: ACCEPT
+      reason: Direct enzyme assay on purified recombinant protein with kinetic characterization
+      supported_by:
+        - reference_id: PMID:9056253
+          supporting_text: &gt;-
+            Two distinct types of cDNAs for fructose-1,6-bisphosphate (FBP) aldolase,
+            Ce-1 and Ce-2, have been isolated from nematode Caenorhabditis elegans, and
+            the respective recombinant aldolase isozymes, CE-1 and CE-2, have been purified
+            and characterized
+        - reference_id: file:worm/aldo-1/aldo-1-deep-research-bioreason-sft.md
+          supporting_text: &gt;-
+            [BioReason confirms] GO:0004332 fructose-bisphosphate aldolase activity...
+            the catalytic center is pinpointed by IPR029768...marking the
+            lysine-dependent iminium chemistry that drives carbon-carbon bond
+            cleavage/formation
+  - term:
+      id: GO:0004332
+      label: fructose-bisphosphate aldolase activity
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    review:
+      summary: &gt;-
+        Phylogenetic inference consistent with and redundant to the IDA annotation from
+        PMID:9056253. Correct but redundant.
+      action: ACCEPT
+      reason: Phylogenetic annotation is consistent with direct experimental evidence
+  - term:
+      id: GO:0004332
+      label: fructose-bisphosphate aldolase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: &gt;-
+        Automated annotation from InterPro domain and Rhea reaction mapping. Correct
+        and consistent with IDA evidence.
+      action: ACCEPT
+      reason: Automated annotation correctly infers function from domain architecture
+  - term:
+      id: GO:0006096
+      label: glycolytic process
+    evidence_type: NAS
+    original_reference_id: PMID:9056253
+    review:
+      summary: &gt;-
+        Non-traceable author statement. The Inoue et al. paper characterizes aldo-1 as
+        an FBP aldolase, and FBP aldolase is a glycolytic enzyme by definition. The
+        glycolytic role is well supported by the enzyme activity data.
+      action: ACCEPT
+      reason: FBP aldolase activity directly places the enzyme in the glycolytic pathway
+      supported_by:
+        - reference_id: PMID:9056253
+          supporting_text: &gt;-
+            CE-1 evolved to act as an intrinsic enzyme that exhibits a much broader
+            substrate specificity than dose CE-2
+  - term:
+      id: GO:0006096
+      label: glycolytic process
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    review:
+      summary: &gt;-
+        Phylogenetic inference of glycolytic process involvement. Consistent with
+        the NAS annotation and enzyme function.
+      action: ACCEPT
+      reason: Phylogenetic annotation consistent with biochemical evidence
+  - term:
+      id: GO:0006096
+      label: glycolytic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: &gt;-
+        Automated annotation from InterPro and UniPathway mapping. Correct and
+        consistent with other evidence.
+      action: ACCEPT
+      reason: Automated annotation correctly infers pathway membership
+  - term:
+      id: GO:0030388
+      label: fructose 1,6-bisphosphate metabolic process
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    review:
+      summary: &gt;-
+        Phylogenetic inference. FBP is the direct substrate of aldo-1, so involvement
+        in its metabolism is inherent to the enzyme&#39;s catalytic activity.
+      action: ACCEPT
+      reason: Follows directly from the enzyme&#39;s catalytic function on FBP
+  - term:
+      id: GO:0042802
+      label: identical protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:14704431
+    review:
+      summary: &gt;-
+        Detected via high-throughput Y2H in the C. elegans interactome mapping project.
+        Class I aldolases are known homotetramers, so self-interaction is expected.
+        However, Y2H self-interactions can be artifacts, though this is biologically
+        plausible. The annotation is kept as non-core since identical protein binding
+        is a generic term that does not inform about specific function.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Self-interaction is biologically plausible for a homotetrameric enzyme but
+        identical protein binding is uninformative as a standalone annotation
+      supported_by:
+        - reference_id: PMID:14704431
+          supporting_text: &gt;-
+            more than 4000 interactions were identified from high-throughput,
+            yeast two-hybrid (HT=Y2H) screens
+  - term:
+      id: GO:0042802
+      label: identical protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:19123269
+    review:
+      summary: &gt;-
+        Replicated self-interaction in the expanded WI-2007/WI8 interactome.
+        Confirmation of the PMID:14704431 finding, but still a generic annotation.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Replication adds confidence but identical protein binding remains uninformative
+      supported_by:
+        - reference_id: PMID:19123269
+          supporting_text: &gt;-
+            the resulting dataset (Worm Interactome 2007 or WI-2007) is similar in
+            quality to low-throughput data curated from the literature
+  - term:
+      id: GO:0005829
+      label: cytosol
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    review:
+      summary: &gt;-
+        Phylogenetic inference of cytosolic localization. Class I aldolases are soluble
+        cytosolic enzymes, so this is well supported. Consistent with the cytoplasm ISS
+        annotation but more specific.
+      action: ACCEPT
+      reason: Soluble glycolytic enzyme expected in cytosol based on conserved properties
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: ISS
+    original_reference_id: GO_REF:0000024
+    review:
+      summary: &gt;-
+        Transferred from ortholog (P05065, rabbit ALDOC). Cytoplasmic localization is
+        expected for a soluble glycolytic enzyme. Consistent with cytosol IBA annotation
+        but less specific.
+      action: ACCEPT
+      reason: Cytoplasmic localization is well established for class I aldolases
+  - term:
+      id: GO:0000792
+      label: heterochromatin
+    evidence_type: ISS
+    original_reference_id: GO_REF:0000024
+    review:
+      summary: &gt;-
+        Transferred from rabbit aldolase C ortholog (P05065). Aldolase has been reported
+        to associate with heterochromatin in some vertebrate studies as a moonlighting
+        function. However, this is a non-canonical localization for a glycolytic enzyme
+        and direct evidence in C. elegans is lacking. The ISS transfer is questionable
+        for this non-canonical function.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Heterochromatin association is a reported moonlighting function in vertebrates
+        but lacks direct evidence in C. elegans; ISS transfer of non-canonical
+        localization is weak
+  - term:
+      id: GO:0005783
+      label: endoplasmic reticulum
+    evidence_type: HDA
+    original_reference_id: PMID:21611156
+    review:
+      summary: &gt;-
+        High-throughput GFP localization in body wall muscle. T05D4.1 was classified
+        in Category 6 (Dense bodies, Thick filaments and/or M-lines, ER/SR). The ER/SR
+        component of the localization pattern was observed. Validated with both Gateway
+        and genomic clones.
+      action: ACCEPT
+      reason: &gt;-
+        Direct GFP localization data from high-throughput study, validated by two
+        independent cloning approaches
+      supported_by:
+        - reference_id: PMID:21611156
+          supporting_text: &gt;-
+            The sub-cellular localization for the T05D4.1::GFP (A, B)...proteins
+            expressed from gateway clones using a muscle-specific promoter (A, B and C)
+            or from genomic clones using endogenous promoters (B, D and F)
+      additional_reference_ids:
+        - PMID:21611156
+  - term:
+      id: GO:0030017
+      label: sarcomere
+    evidence_type: HDA
+    original_reference_id: PMID:21611156
+    review:
+      summary: &gt;-
+        High-throughput GFP localization in body wall muscle. Category 6 includes
+        dense bodies, thick filaments, and M-lines, all of which are sarcomeric
+        structures. Consistent with the known association of glycolytic enzymes with
+        sarcomeric structures in muscle.
+      action: ACCEPT
+      reason: &gt;-
+        Direct GFP localization data showing sarcomeric localization pattern in
+        body wall muscle
+      supported_by:
+        - reference_id: PMID:21611156
+          supporting_text: &gt;-
+            we verified the localization of several Gateway constructs by cloning and
+            tagging the corresponding gene via conventional methods using genomic DNA
+            instead of cDNA, and using endogenous promoters instead of our muscle
+            specific promoter. We were able to confirm the same sub-cellular
+            localization using both methods
+      additional_reference_ids:
+        - PMID:21611156
+  - term:
+      id: GO:0055120
+      label: striated muscle dense body
+    evidence_type: HDA
+    original_reference_id: PMID:21611156
+    review:
+      summary: &gt;-
+        High-throughput GFP localization in body wall muscle. Dense bodies are the
+        C. elegans equivalent of vertebrate Z-discs, where they anchor actin filaments
+        to the cell membrane. Category 6 explicitly includes dense body localization.
+        T05D4.1 was one of the proteins used to validate the approach (Figure 3).
+      action: ACCEPT
+      reason: &gt;-
+        Direct GFP localization data with validation by both Gateway and genomic
+        clone approaches; dense body localization is part of Category 6
+      supported_by:
+        - reference_id: PMID:21611156
+          supporting_text: &gt;-
+            The sub-cellular localization for the T05D4.1::GFP (A, B)...proteins
+            expressed from gateway clones using a muscle-specific promoter (A, B and C)
+            or from genomic clones using endogenous promoters (B, D and F)
+      additional_reference_ids:
+        - PMID:21611156
+core_functions:
+  - description: &gt;-
+      Catalyzes the reversible cleavage of fructose-1,6-bisphosphate into
+      glyceraldehyde-3-phosphate and dihydroxyacetone phosphate as part of
+      glycolysis in the cytosol, with additional localization to sarcomeric
+      structures and ER in body wall muscle.
+    molecular_function:
+      id: GO:0004332
+      label: fructose-bisphosphate aldolase activity
+    directly_involved_in:
+      - id: GO:0006096
+        label: glycolytic process
+      - id: GO:0030388
+        label: fructose 1,6-bisphosphate metabolic process
+    locations:
+      - id: GO:0005829
+        label: cytosol
+      - id: GO:0055120
+        label: striated muscle dense body
+      - id: GO:0030017
+        label: sarcomere
+    supported_by:
+      - reference_id: PMID:9056253
+        supporting_text: &gt;-
+          Two distinct types of cDNAs for fructose-1,6-bisphosphate (FBP)
+          aldolase, Ce-1 and Ce-2, have been isolated from nematode
+          Caenorhabditis elegans, and the respective recombinant aldolase
+          isozymes, CE-1 and CE-2, have been purified and characterized
+      - reference_id: PMID:21611156
+        supporting_text: &gt;-
+          The sub-cellular localization for the T05D4.1::GFP (A, B)...proteins
+          expressed from gateway clones using a muscle-specific promoter
+suggested_questions:
+  - question: &gt;-
+      Does aldo-1 form a glycolytic metabolon with other glycolytic enzymes at
+      sarcomeric structures in C. elegans body wall muscle, analogous to what has
+      been proposed in vertebrate striated muscle?
+    experts:
+      - Moerman DG
+  - question: &gt;-
+      What are the distinct physiological roles of aldo-1 (CE-1) versus aldo-2
+      (CE-2) in C. elegans, given their different kinetic properties and substrate
+      specificities?
+    experts:
+      - Hori K
+  - question: &gt;-
+      Is the heterochromatin association observed for vertebrate aldolase orthologs
+      conserved in C. elegans aldo-1, and does it have functional significance?
+suggested_experiments:
+  - hypothesis: &gt;-
+      aldo-1 forms a sarcomeric glycolytic metabolon in C. elegans body wall muscle
+    description: &gt;-
+      Co-immunoprecipitation or proximity ligation assay of aldo-1 with other
+      glycolytic enzymes (e.g., phosphofructokinase, GAPDH, triosephosphate
+      isomerase) in C. elegans body wall muscle lysates, combined with
+      co-localization imaging at sarcomeric structures.
+    experiment_type: co-immunoprecipitation and imaging
+  - hypothesis: &gt;-
+      aldo-1 and aldo-2 have non-redundant roles in C. elegans metabolism
+    description: &gt;-
+      Generate aldo-1 single mutants and aldo-1; aldo-2 double mutants to
+      compare phenotypes. Measure glycolytic flux, energy metabolism, lifespan,
+      and glucose sensitivity in each genotype. Given that aldo-2 RNAi causes
+      embryonic lethality, test whether aldo-1 loss is similarly lethal or shows
+      distinct phenotypes.
+    experiment_type: genetic analysis and metabolomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
