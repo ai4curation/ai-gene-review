@@ -1,0 +1,2398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCO5104 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SCO5104</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q93IY1" target="_blank" class="term-link">
+                        Q93IY1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Streptomyces coelicolor (strain ATCC BAA-471 / A3(2) / M145)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SCO5104";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q93IY1" data-a="DESCRIPTION: SCO5104 is a multidomain sensory/signaling protein..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SCO5104 is a multidomain sensory/signaling protein in Streptomyces coelicolor belonging to the OsaC-like family (PANTHER PTHR43156). The protein contains two PAS sensory domains, a GAF domain, an HATPase_c (anti-sigma factor kinase-like) domain, and a C-terminal SpoIIE (PP2C-type serine/threonine phosphatase) domain. It is predicted to be cytosolic (0 transmembrane helices). SCO5104 is a paralogue of OsaC (SCO5747), the characterized sigma factor B regulator in osmotic stress, but SCO5104 mutants showed no observable phenotype under hyperosmotic conditions. Based on domain architecture and phylogenetic inference from the experimentally characterized homolog Rv1364c (M. tuberculosis), SCO5104 likely possesses PP2C-type protein serine/threonine phosphatase activity and may function in sigma factor regulation, but its specific physiological role, ligands, and regulated targets remain experimentally unresolved.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016791" target="_blank" class="term-link">
+                                    GO:0016791
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q93IY1" data-a="GO:0016791" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IBA annotation is based on phylogenetic inference from UniProtKB:P9WLZ7 (Rv1364c, M. tuberculosis), which has IDA evidence for phosphatase activity. Q93IY1 belongs to PANTHER family PTHR43156 (Bacterial Sigma Factor Regulator), subfamily SF2 (Stage II sporulation protein E). The C-terminal SpoIIE domain (Pfam PF07228) is a PP2C-type serine/threonine phosphatase. The annotation is correct but could be more specific as protein serine/threonine phosphatase activity (GO:0004722), since the SpoIIE domain is a well-characterized PP2C-type Ser/Thr phosphatase that dephosphorylates anti-anti-sigma factor proteins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The phosphatase activity is well-supported by domain architecture (SpoIIE/PP2C domain), phylogenetic inference from experimentally characterized Rv1364c, and functional characterization of OsaC showing that deletion of the phosphatase domain (OsaC-DeltaPho) alters sigma factor regulation. However, GO:0016791 is too general. PP2C-type phosphatases specifically dephosphorylate serine/threonine residues on protein substrates, and the biological context (dephosphorylation of anti-anti-sigma factor proteins in the partner-switching mechanism) confirms protein serine/threonine phosphatase activity.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004722" target="_blank" class="term-link">
+                                    protein serine/threonine phosphatase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19154327" target="_blank" class="term-link">
+                                        PMID:19154327
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Members of the family have a predicted domain composition consisting of an N-terminal kinase domain related to anti-sigma factors, sensory Pas and Gaf domains, and a C-terminal phosphatase domain</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19700407" target="_blank" class="term-link">
+                                        PMID:19700407
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">An environmental phosphatase controls bacterial transcriptional responses through alternative sigma factor subunits of RNA polymerase and a partner switching mechanism has been proposed to mediate phosphatase regulation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19016841" target="_blank" class="term-link">
+                                        PMID:19016841
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the RsbU domain of Rv1364c bears all the conserved features of the PP2C-type serine/threonine phosphatase family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016989" target="_blank" class="term-link">
+                                    GO:0016989
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor antagonist activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19016841" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19016841
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Loss of kinase activity in Mycobacterium tuberculosis multid...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q93IY1" data-a="GO:0016989" data-r="PMID:19016841" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Inferred from domain architecture and homology. SCO5104 contains an N-terminal HATPase_c domain related to anti-sigma factor kinases (COG2172). The characterized paralogue OsaC (SCO5747) functions as a SigB anti-sigma factor through this domain, and the homolog Rv1364c in M. tuberculosis similarly functions as an anti-sigma factor for SigF. However, the co-purification and mutagenesis experiments demonstrating anti-sigma factor function were performed on OsaC (SCO5747), not SCO5104. SCO5104 mutants showed no osmotic stress phenotype, suggesting its regulatory target or conditions of action may differ from OsaC.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Domain architecture (HATPase_c/anti-sigma kinase-like domain) and membership in PANTHER family PTHR43156 (Bacterial Sigma Factor Regulator) strongly suggest sigma factor antagonist activity. The homolog Rv1364c has experimentally confirmed anti-sigma factor interactions. However, the specific sigma factor target for SCO5104 is unknown and may not be SigB (given negative osmotic stress phenotype).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19016841" target="_blank" class="term-link">
+                                        PMID:19016841
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In view of conservation of specific interactions with cognate sigma and anti-anti-sigma factor, the loss of kinase activity of Rv1364c and UsfX appears to form a missing link in the phosphorylation-dependent interaction involved in SigF regulation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19154327" target="_blank" class="term-link">
+                                        PMID:19154327
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Members of the family have a predicted domain composition consisting of an N-terminal kinase domain related to anti-sigma factors, sensory Pas and Gaf domains, and a C-terminal phosphatase domain</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:STRCO/Q93IY1/Q93IY1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SCO5104 is explicitly listed as one of four S. coelicolor genes encoding proteins with a domain composition related to OsaC</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19016841" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19016841
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Loss of kinase activity in Mycobacterium tuberculosis multid...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q93IY1" data-a="GO:0006355" data-r="PMID:19016841" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Inferred from homology to Rv1364c (M. tuberculosis), which has IDA evidence for regulation of DNA-templated transcription (GO:0006355). SCO5104 belongs to the same PANTHER family of bacterial sigma factor regulators that modulate transcription through partner-switching mechanisms. The paralogue OsaC (SCO5747) regulates SigB-dependent transcription, but the specific transcriptional role of SCO5104 is not experimentally established.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong inference from phylogenetic family membership and domain architecture. The Rv1364c homolog has direct experimental evidence for transcriptional regulation, and all characterized members of this protein family function in sigma factor-mediated transcriptional regulation. However, the specific regulon and conditions under which SCO5104 acts remain unknown.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19016841" target="_blank" class="term-link">
+                                        PMID:19016841
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the loss of kinase activity of Rv1364c and UsfX appears to form a missing link in the phosphorylation-dependent interaction involved in SigF regulation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:STRCO/Q93IY1/Q93IY1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SCO5104 mutants showed no observable phenotypic difference vs. wild-type M145 under hyperosmotic conditions [from full text of PMID:19154327]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>The C-terminal SpoIIE domain of SCO5104 is a PP2C-type serine/threonine phosphatase, inferred from domain architecture and phylogenetic relationship to Rv1364c (M. tuberculosis), which has been biochemically confirmed as a PP2C-type phosphatase with IDA evidence. The specific substrate of SCO5104 phosphatase activity is unknown but likely involves anti-anti-sigma factor proteins in a partner-switching signal transduction cascade.</h3>
+                <span class="vote-buttons" data-g="Q93IY1" data-a="FUNCTION: The C-terminal SpoIIE domain of SCO5104 is a PP2C-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004722" target="_blank" class="term-link">
+                            protein serine/threonine phosphatase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19016841" target="_blank" class="term-link">
+                                PMID:19016841
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the RsbU domain of Rv1364c bears all the conserved features of the PP2C-type serine/threonine phosphatase family</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19154327" target="_blank" class="term-link">
+                                PMID:19154327
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Members of the family have a predicted domain composition consisting of an N-terminal kinase domain related to anti-sigma factors, sensory Pas and Gaf domains, and a C-terminal phosphatase domain</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SCO5104 contains an N-terminal HATPase_c domain related to anti-sigma factor kinases. The paralogue OsaC (SCO5747) functions as a SigB anti-sigma factor via this domain, and the homolog Rv1364c retains anti-sigma factor binding despite loss of kinase activity. SCO5104 likely has sigma factor antagonist activity, but the specific sigma factor target is unknown and may differ from OsaC, as SCO5104 mutants show no osmotic stress phenotype.</h3>
+                <span class="vote-buttons" data-g="Q93IY1" data-a="FUNCTION: SCO5104 contains an N-terminal HATPase_c domain re..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016989" target="_blank" class="term-link">
+                            sigma factor antagonist activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19016841" target="_blank" class="term-link">
+                                PMID:19016841
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">In view of conservation of specific interactions with cognate sigma and anti-anti-sigma factor, the loss of kinase activity of Rv1364c and UsfX appears to form a missing link in the phosphorylation-dependent interaction involved in SigF regulation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:STRCO/Q93IY1/Q93IY1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">SCO5104 is explicitly listed as one of four S. coelicolor genes encoding proteins with a domain composition related to OsaC</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IBA annotation for phosphatase activity based on phylogenetic inference from Rv1364c (P9WLZ7)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19154327" target="_blank" class="term-link">
+                            PMID:19154327
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Osmoregulation in Streptomyces coelicolor: modulation of SigB activity by OsaC</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCO5104 is an OsaC-like paralogue with related domain composition</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OsaC (SCO5747) N-terminal kinase-like domain functions as SigB anti-sigma factor</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Co-purification confirms OsaC-SigB association (demonstrated for SCO5747, not SCO5104)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCO5104 mutants showed no observable phenotype under hyperosmotic conditions</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OsaC-family domain architecture includes PAS, GAF sensory domains and C-terminal phosphatase</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19700407" target="_blank" class="term-link">
+                            PMID:19700407
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Interdomain communication in the Mycobacterium tuberculosis environmental phosphatase Rv1364c</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Rv1364c (homolog) demonstrates PP2C-type phosphatase activity (IDA)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Anti-sigma kinase domain activates the phosphatase domain</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Kinase-phosphatase fusion autophosphorylates and phosphatase antagonizes this</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19016841" target="_blank" class="term-link">
+                            PMID:19016841
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Loss of kinase activity in Mycobacterium tuberculosis multidomain protein Rv1364c</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RsbU domain has conserved PP2C-type Ser/Thr phosphatase activity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RsbW (kinase/anti-sigma) domain has lost kinase activity but retains anti-sigma interactions</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21220116" target="_blank" class="term-link">
+                            PMID:21220116
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural characterization of the multidomain regulatory protein Rv1364c from Mycobacterium tuberculosis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structures of PAS domain and phosphatase/kinase dual domain</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PAS domain binds fatty acids with preference for palmitoleic acid</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Full-length protein exists as monomer and dimer</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16263329" target="_blank" class="term-link">
+                            PMID:16263329
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Interactions of anti-sigma factor antagonists of Mycobacterium tuberculosis in the yeast two-hybrid system</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Rv1364c interacts with anti-sigma factor RsbW and sigma factor SigF</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:STRCO/Q93IY1/Q93IY1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report for SCO5104/Q93IY1 (Falcon)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCO5104 is an OsaC-like paralogue, not OsaC itself (which is SCO5747)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCO5104 mutants showed no phenotype under hyperosmotic conditions</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Predicted cytosolic protein with 0 transmembrane helices</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Domain architecture confirmed as 2x PAS_4, GAF, SpoIIE, HATPase_c</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:STRCO/Q93IY1/Q93IY1-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Research notes for Q93IY1/SCO5104</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Notes on domain architecture, PANTHER family, and functional analysis</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q93IY1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q93IY1" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-04-23T18:29:22.994032'<br />
+end_time: '2026-04-23T18:44:24.971874'<br />
+duration_seconds: 901.98<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: STRCO<br />
+  gene_id: Q93IY1<br />
+  gene_symbol: Q93IY1<br />
+  uniprot_accession: Q93IY1<br />
+  protein_description: 'RecName: Full=PAS domain-containing protein {ECO:0000259|PROSITE:PS50112};'<br />
+  gene_info: OrderedLocusNames=SCO5104 {ECO:0000313|EMBL:CAC44217.1}; ORFNames=SCBAC28G1.30<br />
+    {ECO:0000313|EMBL:CAC44217.1};<br />
+  organism_full: Streptomyces coelicolor (strain ATCC BAA-471 / A3(2) / M145).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: Bact_Sigma-Reg. (IPR052016); GAF. (IPR003018); GAF-like_dom_sf.<br />
+    (IPR029016); HATPase_C_sf. (IPR036890); HATPase_dom. (IPR003594)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 11</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q93IY1</li>
+<li><strong>Protein Description:</strong> RecName: Full=PAS domain-containing protein {ECO:0000259|PROSITE:PS50112};</li>
+<li><strong>Gene Information:</strong> OrderedLocusNames=SCO5104 {ECO:0000313|EMBL:CAC44217.1}; ORFNames=SCBAC28G1.30 {ECO:0000313|EMBL:CAC44217.1};</li>
+<li><strong>Organism (full):</strong> Streptomyces coelicolor (strain ATCC BAA-471 / A3(2) / M145).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Bact_Sigma-Reg. (IPR052016); GAF. (IPR003018); GAF-like_dom_sf. (IPR029016); HATPase_C_sf. (IPR036890); HATPase_dom. (IPR003594)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "Q93IY1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Streptomyces coelicolor (strain ATCC BAA-471 / A3(2) / M145).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'Q93IY1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>Q93IY1</strong> (gene ID: Q93IY1, UniProt: Q93IY1) in STRCO.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q93IY1</li>
+<li><strong>Protein Description:</strong> RecName: Full=PAS domain-containing protein {ECO:0000259|PROSITE:PS50112};</li>
+<li><strong>Gene Information:</strong> OrderedLocusNames=SCO5104 {ECO:0000313|EMBL:CAC44217.1}; ORFNames=SCBAC28G1.30 {ECO:0000313|EMBL:CAC44217.1};</li>
+<li><strong>Organism (full):</strong> Streptomyces coelicolor (strain ATCC BAA-471 / A3(2) / M145).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Bact_Sigma-Reg. (IPR052016); GAF. (IPR003018); GAF-like_dom_sf. (IPR029016); HATPase_C_sf. (IPR036890); HATPase_dom. (IPR003594)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "Q93IY1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Streptomyces coelicolor (strain ATCC BAA-471 / A3(2) / M145).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'Q93IY1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>Q93IY1</strong> (gene ID: Q93IY1, UniProt: Q93IY1) in STRCO.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-streptomyces-coelicolor-sco5104-uniprot-q93iy1">Research report: functional annotation of <em>Streptomyces coelicolor</em> SCO5104 (UniProt Q93IY1)</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>SCO5104 (UniProt Q93IY1) from <em>Streptomyces coelicolor</em> A3(2) M145 encodes a predicted <strong>multidomain cytosolic sensory/signaling protein</strong> containing <strong>PAS</strong> and <strong>GAF</strong> sensory domains and an <strong>HATPase_c</strong> module plus a <strong>SpoIIE-like</strong> domain (a PP2C-type phosphatase domain often found in stress-response signaling proteins). Direct experimental evidence for SCO5104 itself is sparse: it was identified as an <strong>OsaC-like paralogue</strong> (within a small family of proteins sharing related architectures), and a <strong>SCO5104 mutant showed no detectable phenotype under the specific hyperosmotic growth conditions tested</strong> in the primary study that examined this protein family. Consequently, a cautious annotation is that SCO5104 is likely a <strong>stress/development-associated sensor–effector regulator</strong>, but its precise physiological role, ligand(s), and regulated targets remain <strong>unresolved</strong> in the accessible literature for this run. (martinez2009osmoregulationinstreptomyces pages 4-5, mclean2019sensingandresponding pages 4-5)</p>
+<h3 id="1-identity-verification-critical-disambiguation">1) Identity verification (critical disambiguation)</h3>
+<ul>
+<li><strong>Target locus/organism match.</strong> SCO5104 is explicitly discussed as a <em>S. coelicolor</em> gene in the OsaC-family context, and a later comparative TCS/sensor-kinase review maps a <em>Streptomyces venezuelae</em> locus (vnz_23470) to <strong>SCO5104</strong>, supporting cross-species orthology within Streptomyces. (martinez2009osmoregulationinstreptomyces pages 4-5, mclean2019sensingandresponding pages 4-5)</li>
+<li><strong>Consistency with UniProt domain expectations.</strong> The domain composition reported for the SCO5104 ortholog in the Streptomyces sensor kinase survey includes PAS/GAF and HATPase_c plus SpoIIE, consistent with UniProt’s InterPro domain set indicating PAS/GAF-like sensory domains and HATPase-related modules. (mclean2019sensingandresponding pages 4-5, mclean2019sensingandresponding media 2f0c5d23)</li>
+</ul>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-pas-and-gaf-domains-as-sensory-modules">2.1 PAS and GAF domains as sensory modules</h4>
+<p>PAS and GAF domains are widespread small-molecule/physicochemical sensory domains in bacterial signaling proteins. In the closest characterized paralogue <strong>OsaC</strong>, PAS and GAF are described as <strong>sensory</strong> domains “implicated as redox/light/metabolite sensory and cyclic nucleotide binding domains” (the paper emphasizes this as domain-based inference rather than identification of a specific ligand). (martinez2009osmoregulationinstreptomyces pages 4-5)</p>
+<h4 id="22-hatpase_c-ghkl-kinase-like-modules">2.2 HATPase_c / GHKL kinase-like modules</h4>
+<p>The OsaC-family N-terminus is discussed as containing a GHKL superfamily kinase-like fold (ATP-binding “Bergerat fold”), related to anti-sigma factor kinases in other Gram-positive bacteria. This provides a mechanistic precedent for how an OsaC-like protein could couple sensory input to sigma-factor regulation, even when the downstream outputs differ among paralogues. (martinez2009osmoregulationinstreptomyces pages 4-5)</p>
+<h4 id="23-spoiie-pp2c-phosphatase-like-domains">2.3 SpoIIE (PP2C) phosphatase-like domains</h4>
+<p>In <em>Bacillus subtilis</em>, SpoIIE is a PP2C-type phosphatase involved in sporulation signaling; in Streptomyces, “SpoIIE” commonly appears as a domain annotation for regulatory phosphatases rather than necessarily implying endospore formation. In the Streptomyces sensor-kinase review table, the presence of a SpoIIE domain in an SCO5104 ortholog is used as an architectural descriptor (not a demonstrated sporulation function). (mclean2019sensingandresponding pages 4-5, mclean2019sensingandresponding media 2f0c5d23)</p>
+<h3 id="3-what-is-known-specifically-about-sco5104q93iy1-direct-evidence">3) What is known specifically about SCO5104/Q93IY1 (direct evidence)</h3>
+<h4 id="31-domain-architecture-and-predicted-protein-type">3.1 Domain architecture and predicted protein type</h4>
+<ul>
+<li>A Streptomyces comparative analysis annotates the SCO5104 ortholog as “probably incomplete” but reports the following domain architecture: <strong>2× PAS_4, 1× GAF, 1× SpoIIE, 1× HATPase_c</strong>; and reports <strong>0 predicted transmembrane helices</strong>, implying a <strong>cytosolic</strong> protein. (mclean2019sensingandresponding pages 4-5, mclean2019sensingandresponding media 2f0c5d23)</li>
+<li>In the OsaC study, SCO5104 is listed among <em>S. coelicolor</em> genes encoding proteins with a <strong>domain composition related to OsaC</strong> (a family characterized by sensory PAS/GAF modules and kinase-/phosphatase-like signaling outputs). (martinez2009osmoregulationinstreptomyces pages 4-5)</li>
+</ul>
+<h4 id="32-mutant-phenotype-under-osmotic-stress-negative-result">3.2 Mutant phenotype under osmotic stress (negative result)</h4>
+<p>A primary study investigating osmoadaptation regulators reports that mutants of several OsaC-like paralogues—including <strong>SCO5104</strong>—showed <strong>no observable phenotypic difference vs. wild-type M145 under hyperosmotic conditions</strong> (the result is stated but “results not shown”). This is currently the most direct experimental statement about SCO5104 function retrieved here. (martinez2009osmoregulationinstreptomyces pages 4-5, martinez2009osmoregulationinstreptomyces media f3701063)</p>
+<p><strong>Interpretation constraint:</strong> This negative phenotype does not exclude roles for SCO5104 in other stresses, developmental stages, media, timepoints, or redundant genetic backgrounds.</p>
+<h3 id="4-pathway-context-inferred-from-the-closest-characterized-paralogue-osac-and-how-it-constrains-sco5104-hypotheses">4) Pathway context inferred from the closest characterized paralogue (OsaC) and how it constrains SCO5104 hypotheses</h3>
+<p>Because SCO5104 itself lacks direct mechanistic characterization in the retrieved literature, the best-supported biological context comes from the characterized family member <strong>OsaC (SCO5747)</strong>, which defines a model for PAS/GAF–kinase/phosphatase regulatory proteins in Streptomyces osmotic stress responses.</p>
+<h4 id="41-the-sigb-linked-osmotic-stress-response-osr-and-osmoadaptation-response-oar">4.1 The SigB-linked osmotic stress response (OSR) and osmoadaptation response (OAR)</h4>
+<ul>
+<li>The OsaC study describes a signaling framework where <strong>SigB (σB / sB)</strong> is induced by osmotic stress and controls osmotic stress response genes, including osaB. (martinez2009osmoregulationinstreptomyces pages 1-2, martinez2009osmoregulationinstreptomyces pages 2-4)</li>
+<li>Quantitative promoter induction kinetics reported:</li>
+<li><strong>sigBp1</strong> induction peaks at <strong>~7.5-fold</strong> above constitutive levels <strong>0.75–1.5 h</strong> after osmotic upshift and returns to basal levels by <strong>~9–12 h</strong>. (martinez2009osmoregulationinstreptomyces pages 4-5)</li>
+<li>For an sB-dependent osaB promoter (osaBp2), induction becomes detectable at <strong>~60 min</strong>, with reporter activity peaking around <strong>~1.5–3 h</strong> and returning to basal by <strong>~12 h</strong> (luciferase time course). (martinez2009osmoregulationinstreptomyces pages 2-4, martinez2009osmoregulationinstreptomyces media f1a68b8f)</li>
+</ul>
+<p>These dynamics provide a quantitative reference for the timescale on which an OsaC-like sensory regulator could act.</p>
+<h4 id="42-osac-modulates-sigb-activity-and-physically-associates-with-sigb">4.2 OsaC modulates SigB activity and physically associates with SigB</h4>
+<ul>
+<li>OsaC is reported to be required to return <strong>osaB</strong> and <strong>sigB</strong> expression to constitutive levels after osmotic stress (i.e., it attenuates the response). (martinez2009osmoregulationinstreptomyces pages 1-2)</li>
+<li>Co-purification (western blot) provides evidence that <strong>SigB co-purifies with His-tagged OsaC</strong>, and the interaction strength depends on prior osmotic stress. (martinez2009osmoregulationinstreptomyces pages 5-7, martinez2009osmoregulationinstreptomyces media 53cd4e9d)</li>
+</ul>
+<h4 id="43-osac-family-modularity-kinase-like-vs-phosphatase-like-roles">4.3 OsaC-family modularity: kinase-like vs phosphatase-like roles</h4>
+<p>In OsaC, the <strong>C-terminal phosphatase domain</strong> is required for osmoadaptation phenotypes, whereas the <strong>N-terminal kinase-like domain</strong> (including the conserved N-box residue) is reported as dispensable for the OAR phenotype in certain complementation tests. This highlights that family members can have complex, possibly condition-specific division of labor across domains. (martinez2009osmoregulationinstreptomyces pages 4-5, martinez2009osmoregulationinstreptomyces pages 5-7)</p>
+<h4 id="44-how-these-osac-findings-inform-sco5104-bounded-inference">4.4 How these OsaC findings inform SCO5104 (bounded inference)</h4>
+<p>Given that SCO5104 is an OsaC-like paralogue but <strong>does not phenocopy osaC mutants under tested hyperosmotic conditions</strong>, the most conservative inference is:<br />
+- SCO5104 is <strong>unlikely to be the primary non-redundant attenuator</strong> of SigB-dependent osmotic stress responses under those specific laboratory conditions; and/or<br />
+- SCO5104 may operate under <strong>different environmental signals</strong>, <strong>developmental states</strong>, or <strong>alternative sigma factor networks</strong>, or may have <strong>redundant roles</strong> masked in single mutants. (martinez2009osmoregulationinstreptomyces pages 4-5)</p>
+<h3 id="5-subcellular-localization">5) Subcellular localization</h3>
+<ul>
+<li>The Streptomyces sensor-kinase review’s domain/TM summary for the SCO5104 ortholog reports <strong>0 transmembrane helices</strong>, supporting <strong>cytosolic localization</strong> rather than membrane anchoring. (mclean2019sensingandresponding pages 4-5, mclean2019sensingandresponding media 2f0c5d23)</li>
+<li>The OsaC paralogue is also described as a multidomain regulatory protein without indication of membrane localization in the primary text excerpts, consistent with a cytosolic signaling protein that can interact with sigma factors. (martinez2009osmoregulationinstreptomyces pages 1-2, martinez2009osmoregulationinstreptomyces pages 5-7)</li>
+</ul>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<p>SCO5104 has <strong>no direct applied/industrial role</strong> documented in the retrieved SCO5104-specific literature. However, the broader regulatory framework it belongs to is directly relevant to real-world Streptomyces applications:<br />
+- Streptomyces development and stress response regulation are tightly linked to <strong>secondary metabolite (antibiotic) biosynthesis</strong>, and osmotic stress pathways can influence morphological development and antibiotic production (as reported for related osmoadaptation components). (martinez2009osmoregulationinstreptomyces pages 1-2)</p>
+<p>Thus, while SCO5104 itself is not yet an established engineering target, proteins in its broader signaling class are of interest for <strong>strain engineering to control development/stress and thereby tune secondary metabolism</strong>.</p>
+<h3 id="7-recent-developments-20232024-prioritized-and-limitations">7) Recent developments (2023–2024 prioritized) and limitations</h3>
+<p>Within this tool run, <strong>no 2023–2024 primary studies explicitly addressing SCO5104/Q93IY1</strong> were successfully retrieved by the attempted searches. Therefore, the latest research summarized here for SCO5104 is limited to:<br />
+- a 2019 Streptomyces signaling systems review/table that includes SCO5104 domain architecture; and<br />
+- a 2009 primary paper that experimentally characterized the closest paralogue OsaC and explicitly tested SCO5104 mutant phenotype (negative under osmotic conditions). (mclean2019sensingandresponding pages 4-5, martinez2009osmoregulationinstreptomyces pages 4-5)</p>
+<p>A key practical implication is that <strong>SCO5104 remains poorly functionally annotated</strong> in the peer-reviewed experimental literature accessible here, and current understanding relies heavily on <strong>domain-based inference</strong> and <strong>paralogue-based pathway context</strong>.</p>
+<h3 id="8-expert-opinions-authoritative-synthesis-from-sources-retrieved-here">8) Expert opinions / authoritative synthesis from sources retrieved here</h3>
+<ul>
+<li>The osmoadaptation study explicitly argues that among OsaC-like family members tested (including SCO5104), <strong>OsaC has a non-redundant role in osmoadaptation</strong>, because the paralogue mutants did not show the same osmotic phenotype. This is an expert interpretation drawn from comparative mutant analysis. (martinez2009osmoregulationinstreptomyces pages 4-5)</li>
+<li>The Streptomyces sensor-kinase review provides an “updated analysis” of Streptomyces two-component and related signaling components and situates SCO5104 among sensory kinases/regulators by domain architecture, but without assigning a specific biological function. (mclean2019sensingandresponding pages 4-5)</li>
+</ul>
+<h3 id="9-key-statistics-and-data-from-recent-studies">9) Key statistics and data (from recent studies)</h3>
+<p>No SCO5104-specific quantitative measurements were identified in the retrieved corpus. The main quantitative data relevant to SCO5104’s closest characterized pathway context (SigB/OsaC OSR) include:<br />
+- <strong>sigBp1</strong> reporter induction peak: <strong>~7.5-fold</strong> at <strong>0.75–1.5 h</strong>; recovery by <strong>~9–12 h</strong> after osmotic upshift. (martinez2009osmoregulationinstreptomyces pages 4-5)<br />
+- <strong>osaBp2/osaB region</strong> induction: detectable at <strong>~60 min</strong>, peak <strong>~1.5–3 h</strong>, return by <strong>~12 h</strong> (luciferase kinetics). (martinez2009osmoregulationinstreptomyces pages 2-4, martinez2009osmoregulationinstreptomyces media f1a68b8f)</p>
+<h3 id="10-evidence-summary-table">10) Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Source (first author year, journal)</th>
+<th>Publication date/URL</th>
+<th>What it says about SCO5104/Q93IY1 (direct)</th>
+<th>Domain architecture reported</th>
+<th>Experimental evidence/phenotype (direct)</th>
+<th>What it implies (inference; clearly labeled)</th>
+<th>Notes/limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Martínez et al. 2009, <em>Molecular Microbiology</em></td>
+<td>First published online 20 Jan 2009; Mar 2009. https://doi.org/10.1111/j.1365-2958.2009.06599.x</td>
+<td>SCO5104 is explicitly listed as one of four <em>S. coelicolor</em> genes (SCO0946, SCO0542, SCO5104, SCO6484) encoding proteins with a domain composition related to OsaC.</td>
+<td>For SCO5104 specifically, not individually mapped in the excerpt; described as having domain composition related to OsaC. OsaC architecture in the same paper: N-terminal RsbW-like/GHKL kinase domain, PAS, two GAF domains, C-terminal RsbU-like phosphatase domain. (martinez2009osmoregulationinstreptomyces pages 4-5)</td>
+<td>Mutants were constructed for SCO5104 and the other OsaC-like genes; “none of these mutants presented an observable phenotypic difference compared with the wild-type M145 when grown in hyper-osmotic conditions” (results not shown). By contrast, <strong>osaC</strong> mutants failed to erect aerial hyphae under osmotic stress. (martinez2009osmoregulationinstreptomyces pages 4-5)</td>
+<td><strong>Inference:</strong> SCO5104 is likely an OsaC-family multidomain sensory/signaling protein, but it is <strong>not required for osmoadaptation under the tested hyperosmotic conditions</strong>, or its role is redundant/condition-specific. (martinez2009osmoregulationinstreptomyces pages 4-5)</td>
+<td>No direct biochemical assay, ligand, localization, or pathway assignment for SCO5104 itself; negative phenotype only under one tested condition; “results not shown.”</td>
+</tr>
+<tr>
+<td>McLean et al. 2019, <em>Microbiology</em></td>
+<td>Sep 2019. https://doi.org/10.1099/mic.0.000817</td>
+<td>In a comparative table of Streptomyces sensor kinases, <em>S. venezuelae</em> vnz_23470 is mapped to <em>S. coelicolor</em> SCO5104 and annotated as “probably incomplete.” (mclean2019sensingandresponding pages 4-5)</td>
+<td>2 PAS_4 domains, 1 GAF domain, 1 SpoIIE domain, 1 HATPase_c domain. TM count reported as 0 in the table entry. (mclean2019sensingandresponding pages 4-5)</td>
+<td>No direct phenotype, mutant analysis, ligand, or regulatory target is reported for SCO5104 in this review table. (mclean2019sensingandresponding pages 4-5)</td>
+<td><strong>Inference:</strong> SCO5104 most plausibly encodes a <strong>cytosolic sensory/signaling protein</strong> rather than a membrane histidine kinase, with PAS/GAF sensing modules coupled to ATPase/phosphatase-like output domains; possible role in stress/developmental signaling remains unresolved. (mclean2019sensingandresponding pages 4-5)</td>
+<td>Review-level annotation only; no primary experimental validation specific to SCO5104; “probably incomplete” flags uncertainty in architecture/annotation.</td>
+</tr>
+<tr>
+<td>de Bustos 2017, thesis/review-like source (journal not specified in retrieved metadata)</td>
+<td>2017. URL not available in retrieved metadata.</td>
+<td>A table entry lists SCO5104 under a cell division/sporulation context and annotates it as “SpoIIE,” with numeric values 0.6, 1.8, 1.5, 3.5 in adjacent columns. (bustos2017desarrollodestreptomyces pages 87-89, bustos2017desarrollodestreptomycesa pages 87-89)</td>
+<td>“SpoIIE” is the only direct architecture/function label shown in the excerpt for SCO5104. (bustos2017desarrollodestreptomyces pages 87-89, bustos2017desarrollodestreptomycesa pages 87-89)</td>
+<td>No experiment is described in the excerpt; only the tabulated annotation and numeric values are visible. Column headers are not available in the retrieved context, so the numeric values cannot be reliably interpreted. (bustos2017desarrollodestreptomyces pages 87-89, bustos2017desarrollodestreptomycesa pages 87-89)</td>
+<td><strong>Inference:</strong> SCO5104 may have been grouped with <strong>sporulation/cell-division phosphatase-like proteins</strong>, consistent with the SpoIIE-domain annotation also seen in later domain-based analyses. (bustos2017desarrollodestreptomyces pages 87-89, bustos2017desarrollodestreptomycesa pages 87-89)</td>
+<td>Source metadata are incomplete; the table excerpt lacks headers and methodological context, so the quantitative values should not be overinterpreted.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the direct literature evidence and cautious inferences available for functional annotation of Streptomyces coelicolor SCO5104 (UniProt Q93IY1). It highlights that evidence is sparse and mostly domain- or family-based, with only a negative mutant phenotype reported directly for SCO5104.</em></p>
+<h3 id="conclusions-and-recommended-annotation-conservative">Conclusions and recommended annotation (conservative)</h3>
+<p><strong>Recommended functional label:</strong> “PAS/GAF-domain sensory signaling protein with SpoIIE (PP2C-like) phosphatase and HATPase_c module; OsaC-like regulator; function unknown/condition-specific.” (mclean2019sensingandresponding pages 4-5, martinez2009osmoregulationinstreptomyces pages 4-5)</p>
+<p><strong>Most defensible biological role:</strong> SCO5104 is a member of a small family of <strong>stress/development-associated signaling regulators</strong> in <em>S. coelicolor</em> with architectures similar to OsaC, but available experimental data indicate SCO5104 is <strong>not required</strong> for the OsaC-defined osmoadaptation phenotype under the specific hyperosmotic conditions tested. (martinez2009osmoregulationinstreptomyces pages 4-5)</p>
+<p><strong>Localization:</strong> likely <strong>cytosolic</strong> (no TM). (mclean2019sensingandresponding pages 4-5, mclean2019sensingandresponding media 2f0c5d23)</p>
+<p><strong>Major gaps:</strong> specific ligand(s) for PAS/GAF domains, direct biochemical activity (kinase/phosphatase substrate specificity), interacting partners, and regulon/targets for SCO5104 remain to be experimentally determined in the accessible literature for this run. (martinez2009osmoregulationinstreptomyces pages 4-5, mclean2019sensingandresponding pages 4-5)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(martinez2009osmoregulationinstreptomyces pages 4-5): Lorena Fernández Martínez, Amy Bishop, Lindsay Parkes, Ricardo Del Sol, Paola Salerno, Beatrica Sevcikova, Vladislava Mazurakova, January Kormanec, and Paul Dyson. Osmoregulation in streptomyces coelicolor: modulation of sigb activity by osac. Molecular Microbiology, 71:1250-1262, Mar 2009. URL: https://doi.org/10.1111/j.1365-2958.2009.06599.x, doi:10.1111/j.1365-2958.2009.06599.x. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mclean2019sensingandresponding pages 4-5): Thomas C. McLean, Rebecca Lo, Natalia Tschowri, Paul A. Hoskisson, Mahmoud M. Al Bassam, Matthew I. Hutchings, and Nicolle F. Som. Sensing and responding to diverse extracellular signals: an updated analysis of the sensor kinases and response regulators of streptomyces species. Microbiology, 165:929-952, Sep 2019. URL: https://doi.org/10.1099/mic.0.000817, doi:10.1099/mic.0.000817. This article has 40 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mclean2019sensingandresponding media 2f0c5d23): Thomas C. McLean, Rebecca Lo, Natalia Tschowri, Paul A. Hoskisson, Mahmoud M. Al Bassam, Matthew I. Hutchings, and Nicolle F. Som. Sensing and responding to diverse extracellular signals: an updated analysis of the sensor kinases and response regulators of streptomyces species. Microbiology, 165:929-952, Sep 2019. URL: https://doi.org/10.1099/mic.0.000817, doi:10.1099/mic.0.000817. This article has 40 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez2009osmoregulationinstreptomyces media f3701063): Lorena Fernández Martínez, Amy Bishop, Lindsay Parkes, Ricardo Del Sol, Paola Salerno, Beatrica Sevcikova, Vladislava Mazurakova, January Kormanec, and Paul Dyson. Osmoregulation in streptomyces coelicolor: modulation of sigb activity by osac. Molecular Microbiology, 71:1250-1262, Mar 2009. URL: https://doi.org/10.1111/j.1365-2958.2009.06599.x, doi:10.1111/j.1365-2958.2009.06599.x. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez2009osmoregulationinstreptomyces pages 1-2): Lorena Fernández Martínez, Amy Bishop, Lindsay Parkes, Ricardo Del Sol, Paola Salerno, Beatrica Sevcikova, Vladislava Mazurakova, January Kormanec, and Paul Dyson. Osmoregulation in streptomyces coelicolor: modulation of sigb activity by osac. Molecular Microbiology, 71:1250-1262, Mar 2009. URL: https://doi.org/10.1111/j.1365-2958.2009.06599.x, doi:10.1111/j.1365-2958.2009.06599.x. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez2009osmoregulationinstreptomyces pages 2-4): Lorena Fernández Martínez, Amy Bishop, Lindsay Parkes, Ricardo Del Sol, Paola Salerno, Beatrica Sevcikova, Vladislava Mazurakova, January Kormanec, and Paul Dyson. Osmoregulation in streptomyces coelicolor: modulation of sigb activity by osac. Molecular Microbiology, 71:1250-1262, Mar 2009. URL: https://doi.org/10.1111/j.1365-2958.2009.06599.x, doi:10.1111/j.1365-2958.2009.06599.x. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez2009osmoregulationinstreptomyces media f1a68b8f): Lorena Fernández Martínez, Amy Bishop, Lindsay Parkes, Ricardo Del Sol, Paola Salerno, Beatrica Sevcikova, Vladislava Mazurakova, January Kormanec, and Paul Dyson. Osmoregulation in streptomyces coelicolor: modulation of sigb activity by osac. Molecular Microbiology, 71:1250-1262, Mar 2009. URL: https://doi.org/10.1111/j.1365-2958.2009.06599.x, doi:10.1111/j.1365-2958.2009.06599.x. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez2009osmoregulationinstreptomyces pages 5-7): Lorena Fernández Martínez, Amy Bishop, Lindsay Parkes, Ricardo Del Sol, Paola Salerno, Beatrica Sevcikova, Vladislava Mazurakova, January Kormanec, and Paul Dyson. Osmoregulation in streptomyces coelicolor: modulation of sigb activity by osac. Molecular Microbiology, 71:1250-1262, Mar 2009. URL: https://doi.org/10.1111/j.1365-2958.2009.06599.x, doi:10.1111/j.1365-2958.2009.06599.x. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez2009osmoregulationinstreptomyces media 53cd4e9d): Lorena Fernández Martínez, Amy Bishop, Lindsay Parkes, Ricardo Del Sol, Paola Salerno, Beatrica Sevcikova, Vladislava Mazurakova, January Kormanec, and Paul Dyson. Osmoregulation in streptomyces coelicolor: modulation of sigb activity by osac. Molecular Microbiology, 71:1250-1262, Mar 2009. URL: https://doi.org/10.1111/j.1365-2958.2009.06599.x, doi:10.1111/j.1365-2958.2009.06599.x. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bustos2017desarrollodestreptomyces pages 87-89): B Rioseras de Bustos. Desarrollo de streptomyces: regulación y aplicaciones industriales. Unknown journal, 2017.</p>
+</li>
+<li>
+<p>(bustos2017desarrollodestreptomycesa pages 87-89): B Rioseras de Bustos. Desarrollo de streptomyces: regulación y aplicaciones industriales. Unknown journal, 2017.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>martinez2009osmoregulationinstreptomyces pages 4-5</li>
+<li>martinez2009osmoregulationinstreptomyces pages 1-2</li>
+<li>mclean2019sensingandresponding pages 4-5</li>
+<li>martinez2009osmoregulationinstreptomyces pages 2-4</li>
+<li>martinez2009osmoregulationinstreptomyces pages 5-7</li>
+<li>bustos2017desarrollodestreptomyces pages 87-89</li>
+<li>bustos2017desarrollodestreptomycesa pages 87-89</li>
+<li>https://doi.org/10.1111/j.1365-2958.2009.06599.x</li>
+<li>https://doi.org/10.1099/mic.0.000817</li>
+<li>https://doi.org/10.1111/j.1365-2958.2009.06599.x,</li>
+<li>https://doi.org/10.1099/mic.0.000817,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q93IY1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q93IY1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="q93iy1-sco5104-notes">Q93IY1 / SCO5104 - Notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt: Q93IY1 (unreviewed TrEMBL entry)</li>
+<li>Gene: SCO5104 (ordered locus name)</li>
+<li><strong>NOT OsaC</strong> - OsaC is SCO5747. SCO5104 is an OsaC-like paralogue.</li>
+<li>Organism: <em>Streptomyces coelicolor</em> A3(2) (strain ATCC BAA-471 / M145)</li>
+<li>NCBI TaxID: 100226</li>
+<li>880 amino acids, predicted PE level 4</li>
+</ul>
+<h2 id="key-publication">Key Publication</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/19154327" title="Osmoregulation in Streptomyces coelicolor: modulation of SigB activity by OsaC">PMID:19154327</a><br />
+- This paper characterizes OsaC (SCO5747) and lists SCO5104 as one of four <em>S. coelicolor</em> genes with related domain composition<br />
+- <strong>SCO5104 mutants showed NO observable phenotype under hyperosmotic conditions</strong> (from full text, results not shown)<br />
+- The characterized OsaC (SCO5747) is required to return <em>osaB</em> and <em>sigB</em> expression back to constitutive levels after osmotic stress<br />
+- OsaC domain architecture: N-terminal kinase domain (anti-sigma factor-like) → PAS domains → GAF domain → C-terminal phosphatase domain<br />
+- OsaC N-terminal domain functions as a <strong>SigB anti-sigma factor</strong> (sigma factor antagonist)<br />
+- Co-purification experiments confirm association of OsaC with SigB (demonstrated for SCO5747, not SCO5104)</p>
+<h2 id="correction-note-from-deep-research">CORRECTION NOTE (from deep research)</h2>
+<p>Initial review incorrectly identified SCO5104 as OsaC. Deep research (Falcon) clarified that OsaC = SCO5747, and SCO5104 is a paralogue with no observed osmotic stress phenotype. The osmotic stress response annotation was removed and other annotations were made more conservative.</p>
+<h2 id="domain-architecture-from-uniprotinterpro">Domain Architecture (from UniProt/InterPro)</h2>
+<ul>
+<li><strong>PAS domain</strong> (aa 48-103, PROSITE:PS50112) - sensory domain; in the homolog Rv1364c, the PAS domain binds fatty acids (palmitoleic acid preferred over palmitic acid) <a href="https://pubmed.ncbi.nlm.nih.gov/21220116">PMID:21220116</a></li>
+<li><strong>PAS_4 domain</strong> (Pfam:PF08448) - additional PAS-type sensory domain</li>
+<li><strong>GAF_2 domain</strong> (Pfam:PF13185) - additional sensory domain</li>
+<li><strong>HATPase_c_2 domain</strong> (Pfam:PF13581) - histidine kinase-like ATPase domain; in OsaC this functions as an anti-sigma factor domain</li>
+<li><strong>SpoIIE domain</strong> (Pfam:PF07228) - PP2C-type serine/threonine phosphatase domain</li>
+</ul>
+<h2 id="panther-family">PANTHER Family</h2>
+<ul>
+<li>PTHR43156: Bacterial Sigma Factor Regulator</li>
+<li>Subfamily: PTHR43156:SF2 (Stage II sporulation protein E)</li>
+<li>Family members include:</li>
+<li><em>B. subtilis</em> SpoIIE (P37475) - Stage II sporulation protein E, septum-associated phosphatase</li>
+<li><em>B. subtilis</em> RsbP (O07014) - phosphoserine phosphatase that activates SigB</li>
+<li><em>B. subtilis</em> RsbU (P40399) - phosphoserine phosphatase in SigB pathway</li>
+<li><em>M. tuberculosis</em> Rv1364c (P9WLZ7) - multidomain regulatory protein for SigF regulation</li>
+<li><em>Synechocystis</em> IcfG (P37979)</li>
+</ul>
+<h2 id="homolog-rv1364c-m-tuberculosis-iba-reference-protein">Homolog Rv1364c (M. tuberculosis) - IBA reference protein</h2>
+<p>Based on PubMed articles about the IBA reference protein P9WLZ7 (Rv1364c):</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/19700407" title="Interdomain communication in the Mycobacterium tuberculosis environmental phosphatase Rv1364c">PMID:19700407</a><br />
+- Rv1364c is a single-chain "environmental phosphatase" with fused phosphatase, kinase (anti-sigma), and anti-anti-sigma domains<br />
+- The anti-sigma factor kinase domain activates the phosphatase domain<br />
+- The kinase-phosphatase fusion protein autophosphorylates in E. coli<br />
+- Phosphorylation is antagonized by the phosphatase activity<br />
+- Demonstrates PP2C-type phosphatase activity (IDA evidence for GO:0016791)</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/19016841" title="Loss of kinase activity in Mycobacterium tuberculosis multidomain protein Rv1364c">PMID:19016841</a><br />
+- Rv1364c RsbU domain has conserved PP2C-type serine/threonine phosphatase activity<br />
+- The RsbW (kinase/anti-sigma) domain has LOST kinase activity due to substitutions in ATP-binding regions<br />
+- Still retains functional anti-sigma factor interactions with SigF<br />
+- This is a key difference from B. subtilis orthologs</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/21220116" title="Structural characterization of the multidomain regulatory protein Rv1364c from Mycobacterium tuberculosis">PMID:21220116</a><br />
+- Crystal structures of PAS domain and phosphatase/kinase dual domain<br />
+- PAS domain binds palmitic acid but has 100x greater affinity for palmitoleic acid<br />
+- Full-length protein can exist as monomer and dimer<br />
+- Fatty acid binding may trigger monomer-dimer switch affecting phosphatase activity and sigma factor regulation</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/16263329" title="Interactions of anti-sigma factor antagonists of Mycobacterium tuberculosis in the yeast two-hybrid system">PMID:16263329</a><br />
+- Confirms Rv1364c interactions with anti-sigma factor RsbW and sigma factor SigF</p>
+<h2 id="functional-summary">Functional Summary</h2>
+<p>OsaC (SCO5104/Q93IY1) is a multidomain regulatory protein that modulates SigB activity in response to osmotic stress in <em>S. coelicolor</em>. Its key functions are:</p>
+<ol>
+<li><strong>Sigma factor antagonist (anti-sigma factor) activity</strong> - The N-terminal kinase-like domain functions as a SigB anti-sigma factor, sequestering SigB to prevent transcription of stress response genes</li>
+<li><strong>PP2C-type protein serine/threonine phosphatase activity</strong> - The C-terminal SpoIIE domain is a PP2C-type phosphatase that likely dephosphorylates anti-anti-sigma factor proteins</li>
+<li><strong>Signal sensing</strong> - PAS and GAF domains likely sense environmental/metabolic signals (possibly fatty acids or energy levels) to regulate the switch between active and inactive states</li>
+<li><strong>Osmoregulation</strong> - Required to return SigB-dependent gene expression to basal levels after osmotic stress</li>
+</ol>
+<h2 id="eggnog-assignments">eggNOG assignments</h2>
+<ul>
+<li>COG2172: Anti-sigma regulatory factor (Ser/Thr protein kinase)</li>
+<li>COG2203: FOG: GAF domain</li>
+<li>COG2208: Predicted PP2C-type phosphatase</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q93IY1
+gene_symbol: SCO5104
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:100226
+  label: Streptomyces coelicolor (strain ATCC BAA-471 / A3(2) / M145)
+description: &#39;SCO5104 is a multidomain sensory/signaling protein in Streptomyces coelicolor
+  belonging to the OsaC-like family (PANTHER PTHR43156). The protein contains two PAS
+  sensory domains, a GAF domain, an HATPase_c (anti-sigma factor kinase-like) domain,
+  and a C-terminal SpoIIE (PP2C-type serine/threonine phosphatase) domain. It is predicted
+  to be cytosolic (0 transmembrane helices). SCO5104 is a paralogue of OsaC (SCO5747),
+  the characterized sigma factor B regulator in osmotic stress, but SCO5104 mutants showed
+  no observable phenotype under hyperosmotic conditions. Based on domain architecture
+  and phylogenetic inference from the experimentally characterized homolog Rv1364c (M.
+  tuberculosis), SCO5104 likely possesses PP2C-type protein serine/threonine phosphatase
+  activity and may function in sigma factor regulation, but its specific physiological
+  role, ligands, and regulated targets remain experimentally unresolved.&#39;
+existing_annotations:
+- term:
+    id: GO:0016791
+    label: phosphatase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: The IBA annotation is based on phylogenetic inference from UniProtKB:P9WLZ7
+      (Rv1364c, M. tuberculosis), which has IDA evidence for phosphatase activity. Q93IY1
+      belongs to PANTHER family PTHR43156 (Bacterial Sigma Factor Regulator), subfamily
+      SF2 (Stage II sporulation protein E). The C-terminal SpoIIE domain (Pfam PF07228)
+      is a PP2C-type serine/threonine phosphatase. The annotation is correct but could
+      be more specific as protein serine/threonine phosphatase activity (GO:0004722),
+      since the SpoIIE domain is a well-characterized PP2C-type Ser/Thr phosphatase
+      that dephosphorylates anti-anti-sigma factor proteins.
+    action: MODIFY
+    reason: The phosphatase activity is well-supported by domain architecture (SpoIIE/PP2C
+      domain), phylogenetic inference from experimentally characterized Rv1364c, and
+      functional characterization of OsaC showing that deletion of the phosphatase domain
+      (OsaC-DeltaPho) alters sigma factor regulation. However, GO:0016791 is too general.
+      PP2C-type phosphatases specifically dephosphorylate serine/threonine residues on
+      protein substrates, and the biological context (dephosphorylation of anti-anti-sigma
+      factor proteins in the partner-switching mechanism) confirms protein serine/threonine
+      phosphatase activity.
+    proposed_replacement_terms:
+    - id: GO:0004722
+      label: protein serine/threonine phosphatase activity
+    supported_by:
+    - reference_id: PMID:19154327
+      supporting_text: &#39;Members of the family have a predicted domain composition consisting
+        of an N-terminal kinase domain related to anti-sigma factors, sensory Pas and
+        Gaf domains, and a C-terminal phosphatase domain&#39;
+    - reference_id: PMID:19700407
+      supporting_text: &#39;An environmental phosphatase controls bacterial transcriptional
+        responses through alternative sigma factor subunits of RNA polymerase and a partner
+        switching mechanism has been proposed to mediate phosphatase regulation&#39;
+    - reference_id: PMID:19016841
+      supporting_text: &#39;the RsbU domain of Rv1364c bears all the conserved features of
+        the PP2C-type serine/threonine phosphatase family&#39;
+- term:
+    id: GO:0016989
+    label: sigma factor antagonist activity
+  evidence_type: ISS
+  original_reference_id: PMID:19016841
+  review:
+    summary: Inferred from domain architecture and homology. SCO5104 contains an N-terminal
+      HATPase_c domain related to anti-sigma factor kinases (COG2172). The characterized
+      paralogue OsaC (SCO5747) functions as a SigB anti-sigma factor through this domain,
+      and the homolog Rv1364c in M. tuberculosis similarly functions as an anti-sigma
+      factor for SigF. However, the co-purification and mutagenesis experiments demonstrating
+      anti-sigma factor function were performed on OsaC (SCO5747), not SCO5104. SCO5104
+      mutants showed no osmotic stress phenotype, suggesting its regulatory target or
+      conditions of action may differ from OsaC.
+    action: NEW
+    reason: Domain architecture (HATPase_c/anti-sigma kinase-like domain) and membership
+      in PANTHER family PTHR43156 (Bacterial Sigma Factor Regulator) strongly suggest
+      sigma factor antagonist activity. The homolog Rv1364c has experimentally confirmed
+      anti-sigma factor interactions. However, the specific sigma factor target for
+      SCO5104 is unknown and may not be SigB (given negative osmotic stress phenotype).
+    supported_by:
+    - reference_id: PMID:19016841
+      supporting_text: &#39;In view of conservation of specific interactions with cognate
+        sigma and anti-anti-sigma factor, the loss of kinase activity of Rv1364c and UsfX
+        appears to form a missing link in the phosphorylation-dependent interaction involved
+        in SigF regulation&#39;
+    - reference_id: PMID:19154327
+      supporting_text: &#39;Members of the family have a predicted domain composition consisting
+        of an N-terminal kinase domain related to anti-sigma factors, sensory Pas and
+        Gaf domains, and a C-terminal phosphatase domain&#39;
+    - reference_id: file:STRCO/Q93IY1/Q93IY1-deep-research-falcon.md
+      supporting_text: &#39;SCO5104 is explicitly listed as one of four S. coelicolor genes
+        encoding proteins with a domain composition related to OsaC&#39;
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: ISS
+  original_reference_id: PMID:19016841
+  review:
+    summary: Inferred from homology to Rv1364c (M. tuberculosis), which has IDA evidence
+      for regulation of DNA-templated transcription (GO:0006355). SCO5104 belongs to
+      the same PANTHER family of bacterial sigma factor regulators that modulate transcription
+      through partner-switching mechanisms. The paralogue OsaC (SCO5747) regulates SigB-dependent
+      transcription, but the specific transcriptional role of SCO5104 is not experimentally
+      established.
+    action: NEW
+    reason: Strong inference from phylogenetic family membership and domain architecture.
+      The Rv1364c homolog has direct experimental evidence for transcriptional regulation,
+      and all characterized members of this protein family function in sigma factor-mediated
+      transcriptional regulation. However, the specific regulon and conditions under
+      which SCO5104 acts remain unknown.
+    supported_by:
+    - reference_id: PMID:19016841
+      supporting_text: &#39;the loss of kinase activity of Rv1364c and UsfX appears to form
+        a missing link in the phosphorylation-dependent interaction involved in SigF regulation&#39;
+    - reference_id: file:STRCO/Q93IY1/Q93IY1-deep-research-falcon.md
+      supporting_text: &#39;SCO5104 mutants showed no observable phenotypic difference vs.
+        wild-type M145 under hyperosmotic conditions [from full text of PMID:19154327]&#39;
+core_functions:
+- molecular_function:
+    id: GO:0004722
+    label: protein serine/threonine phosphatase activity
+  description: The C-terminal SpoIIE domain of SCO5104 is a PP2C-type serine/threonine
+    phosphatase, inferred from domain architecture and phylogenetic relationship to
+    Rv1364c (M. tuberculosis), which has been biochemically confirmed as a PP2C-type
+    phosphatase with IDA evidence. The specific substrate of SCO5104 phosphatase
+    activity is unknown but likely involves anti-anti-sigma factor proteins in a
+    partner-switching signal transduction cascade.
+  supported_by:
+  - reference_id: PMID:19016841
+    supporting_text: &#39;the RsbU domain of Rv1364c bears all the conserved features of
+      the PP2C-type serine/threonine phosphatase family&#39;
+  - reference_id: PMID:19154327
+    supporting_text: &#39;Members of the family have a predicted domain composition consisting
+      of an N-terminal kinase domain related to anti-sigma factors, sensory Pas and Gaf
+      domains, and a C-terminal phosphatase domain&#39;
+- molecular_function:
+    id: GO:0016989
+    label: sigma factor antagonist activity
+  description: SCO5104 contains an N-terminal HATPase_c domain related to anti-sigma
+    factor kinases. The paralogue OsaC (SCO5747) functions as a SigB anti-sigma factor
+    via this domain, and the homolog Rv1364c retains anti-sigma factor binding despite
+    loss of kinase activity. SCO5104 likely has sigma factor antagonist activity, but
+    the specific sigma factor target is unknown and may differ from OsaC, as SCO5104
+    mutants show no osmotic stress phenotype.
+  supported_by:
+  - reference_id: PMID:19016841
+    supporting_text: &#39;In view of conservation of specific interactions with cognate
+      sigma and anti-anti-sigma factor, the loss of kinase activity of Rv1364c and UsfX
+      appears to form a missing link in the phosphorylation-dependent interaction involved
+      in SigF regulation&#39;
+  - reference_id: file:STRCO/Q93IY1/Q93IY1-deep-research-falcon.md
+    supporting_text: &#39;SCO5104 is explicitly listed as one of four S. coelicolor genes
+      encoding proteins with a domain composition related to OsaC&#39;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: IBA annotation for phosphatase activity based on phylogenetic inference
+      from Rv1364c (P9WLZ7)
+- id: PMID:19154327
+  title: &#39;Osmoregulation in Streptomyces coelicolor: modulation of SigB activity by
+    OsaC&#39;
+  findings:
+  - statement: SCO5104 is an OsaC-like paralogue with related domain composition
+  - statement: OsaC (SCO5747) N-terminal kinase-like domain functions as SigB anti-sigma
+      factor
+  - statement: Co-purification confirms OsaC-SigB association (demonstrated for SCO5747,
+      not SCO5104)
+  - statement: SCO5104 mutants showed no observable phenotype under hyperosmotic conditions
+  - statement: OsaC-family domain architecture includes PAS, GAF sensory domains and
+      C-terminal phosphatase
+- id: PMID:19700407
+  title: Interdomain communication in the Mycobacterium tuberculosis environmental
+    phosphatase Rv1364c
+  findings:
+  - statement: Rv1364c (homolog) demonstrates PP2C-type phosphatase activity (IDA)
+  - statement: Anti-sigma kinase domain activates the phosphatase domain
+  - statement: Kinase-phosphatase fusion autophosphorylates and phosphatase antagonizes
+      this
+- id: PMID:19016841
+  title: Loss of kinase activity in Mycobacterium tuberculosis multidomain protein
+    Rv1364c
+  findings:
+  - statement: RsbU domain has conserved PP2C-type Ser/Thr phosphatase activity
+  - statement: RsbW (kinase/anti-sigma) domain has lost kinase activity but retains
+      anti-sigma interactions
+- id: PMID:21220116
+  title: Structural characterization of the multidomain regulatory protein Rv1364c
+    from Mycobacterium tuberculosis
+  findings:
+  - statement: Crystal structures of PAS domain and phosphatase/kinase dual domain
+  - statement: PAS domain binds fatty acids with preference for palmitoleic acid
+  - statement: Full-length protein exists as monomer and dimer
+- id: PMID:16263329
+  title: Interactions of anti-sigma factor antagonists of Mycobacterium tuberculosis
+    in the yeast two-hybrid system
+  findings:
+  - statement: Rv1364c interacts with anti-sigma factor RsbW and sigma factor SigF
+- id: file:STRCO/Q93IY1/Q93IY1-deep-research-falcon.md
+  title: Deep research report for SCO5104/Q93IY1 (Falcon)
+  findings:
+  - statement: SCO5104 is an OsaC-like paralogue, not OsaC itself (which is SCO5747)
+  - statement: SCO5104 mutants showed no phenotype under hyperosmotic conditions
+  - statement: Predicted cytosolic protein with 0 transmembrane helices
+  - statement: Domain architecture confirmed as 2x PAS_4, GAF, SpoIIE, HATPase_c
+- id: file:STRCO/Q93IY1/Q93IY1-notes.md
+  title: Research notes for Q93IY1/SCO5104
+  findings:
+  - statement: Notes on domain architecture, PANTHER family, and functional analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

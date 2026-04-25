@@ -1,0 +1,3002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rbcL - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rbcL</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P0C512" target="_blank" class="term-link">
+                        P0C512
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Poales</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rbcL";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P0C512" data-a="DESCRIPTION: rbcL encodes the large subunit of ribulose-1,5-bis..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>rbcL encodes the large subunit of ribulose-1,5-bisphosphate carboxylase/oxygenase (RuBisCO, EC 4.1.1.39), the most abundant protein on Earth and the central enzyme in photosynthetic carbon fixation. RuBisCO catalyzes two competing reactions at the same active site: (1) carboxylation of D-ribulose 1,5-bisphosphate (RuBP) with CO2 to produce two molecules of 3-phosphoglycerate in the Calvin-Benson-Bassham cycle, and (2) oxygenation of RuBP with O2 to produce 2-phosphoglycolate and 3-phosphoglycerate, initiating photorespiration. The enzyme is a form I heterohexadecamer (L8S8) localized in the chloroplast stroma, requiring Mg2+ as a cofactor and activation by Lys-201 carbamylation. This review uses the rice (Oryza sativa subsp. japonica, P0C512) entry as a representative for Poales.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019253" target="_blank" class="term-link">
+                                    GO:0019253
+                                </a>
+                            </span>
+                            <span class="term-label">reductive pentose-phosphate cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0C512" data-a="GO:0019253" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation placing rbcL in the reductive pentose-phosphate cycle (Calvin-Benson-Bassham cycle), transferred via UniRule UR000339182 based on shared sequence features. RuBisCO catalyzes the carbon-fixing step of this cycle: carboxylation of RuBP to yield two molecules of 3-phosphoglycerate. This is the defining reaction of the Calvin cycle and the primary biological role of the large subunit.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The reductive pentose-phosphate cycle is the core biological process context for RuBisCO function. The large subunit catalyzes the rate-limiting carboxylation step of this pathway. UniProt states &#34;RuBisCO catalyzes two reactions: the carboxylation of D-ribulose 1,5-bisphosphate, the primary event in carbon dioxide fixation&#34; (P0C512 FUNCTION). Crystal structure of rice RuBisCO confirms the active site architecture for this reaction (PMID:22609438).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22609438" target="_blank" class="term-link">
+                                        PMID:22609438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/rbcL/rbcL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RuBisCO catalyzes two reactions: the carboxylation of D-ribulose 1,5-bisphosphate, the primary event in carbon dioxide fixation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/rbcL/rbcL-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Rice RbcL is the catalytic large subunit of chloroplast Form I Rubisco, catalyzing RuBP carboxylation (CO2 fixation to produce 3PG) [in the reductive pentose-phosphate cycle]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0C512" data-a="GO:0000287" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for magnesium ion binding, inferred from multiple InterPro signatures (IPR000685, IPR020878, IPR020888, IPR036376) and UniRule UR000339182. Mg2+ is an essential catalytic cofactor for RuBisCO, binding 1 ion per large subunit at the active site via the carbamylated Lys-201 residue. Crystal structure of rice RuBisCO at 1.35 A resolution directly demonstrates Mg2+ coordination (PMID:22609438).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Magnesium ion binding is experimentally validated as essential for RuBisCO catalysis. The 1.35 A crystal structure of rice RuBisCO (PDB: 1WDD) shows Mg2+ coordinated by carbamylated Lys-201, Asp-203, and Glu-204 (PMID:22609438). UniProt confirms &#34;Binds 1 Mg(2+) ion per subunit&#34; with experimental evidence ECO:0000269|PubMed:22609438.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22609438" target="_blank" class="term-link">
+                                        PMID:22609438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/rbcL/rbcL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds 1 Mg(2+) ion per subunit</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009507" target="_blank" class="term-link">
+                                    GO:0009507
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P0C512" data-a="GO:0009507" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for chloroplast localization, inferred from UniProtKB-SubCell SL-0049 and UniRule. RuBisCO is localized in the chloroplast stroma where it catalyzes carbon fixation. The rbcL gene is itself chloroplast-encoded (plastid genome). UniProt states &#34;Subcellular location: Plastid, chloroplast&#34; for this entry. While correct, the more specific term GO:0009570 (chloroplast stroma) would be more informative, as RuBisCO is a soluble stromal enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Chloroplast localization is correct but could be more specific. RuBisCO is a soluble enzyme in the chloroplast stroma, not associated with thylakoid membranes. GO:0009570 (chloroplast stroma) more precisely captures the sub-organellar localization. The crystal structure was obtained from stromal extracts (PMID:22609438), and RuBisCO is a canonical chloroplast stroma marker protein.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009570" target="_blank" class="term-link">
+                                    chloroplast stroma
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/rbcL/rbcL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Plastid, chloroplast</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22609438" target="_blank" class="term-link">
+                                        PMID:22609438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate [enzyme purified from leaf chloroplast stroma]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009536" target="_blank" class="term-link">
+                                    GO:0009536
+                                </a>
+                            </span>
+                            <span class="term-label">plastid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0C512" data-a="GO:0009536" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for plastid localization via ARBA machine learning model ARBA00027316. This is correct but very general - plastid is the parent term of chloroplast. Since the more specific chloroplast annotation (GO:0009507) is already present and we propose further refinement to chloroplast stroma (GO:0009570), this broader plastid annotation is redundant.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plastid localization is technically correct since chloroplasts are plastids, but this annotation is redundant with the more specific chloroplast annotation. It is not incorrect and reflects the ARBA automated inference, but does not add information beyond the chloroplast annotation. Retained as non-core rather than removed since it is not wrong.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/rbcL/rbcL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Plastid, chloroplast</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015977" target="_blank" class="term-link">
+                                    GO:0015977
+                                </a>
+                            </span>
+                            <span class="term-label">carbon fixation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0C512" data-a="GO:0015977" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for carbon fixation, inferred from multiple InterPro signatures (IPR017443, IPR020878, IPR020888, IPR036422) and UniRule. Carbon fixation is the defining biological function of RuBisCO - the enzyme catalyzes the primary reaction by which inorganic CO2 is incorporated into organic carbon (3-phosphoglycerate). This is a broader term than GO:0019253 (reductive pentose-phosphate cycle) but accurately captures the fundamental role of the enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Carbon fixation is the core biological function of RuBisCO and an appropriate annotation at the broader process level. While the more specific reductive pentose-phosphate cycle term (GO:0019253) is also present, carbon fixation as a standalone process annotation is warranted because it directly describes what the enzyme does - incorporating CO2 into organic molecules. UniProt keywords include &#34;Carbon dioxide fixation&#34; and &#34;Calvin cycle&#34; for this entry.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/rbcL/rbcL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RuBisCO catalyzes two reactions: the carboxylation of D-ribulose 1,5-bisphosphate, the primary event in carbon dioxide fixation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016984" target="_blank" class="term-link">
+                                    GO:0016984
+                                </a>
+                            </span>
+                            <span class="term-label">ribulose-bisphosphate carboxylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0C512" data-a="GO:0016984" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for ribulose-bisphosphate carboxylase activity (EC 4.1.1.39), inferred from multiple InterPro signatures, Rhea reaction RHEA:23124, EC number, and UniRule. This is the primary molecular function of the rbcL gene product. The enzyme catalyzes the reaction: D-ribulose 1,5-bisphosphate + CO2 + H2O = 2 (2R)-3-phosphoglycerate + 2 H+. Crystal structure of rice RuBisCO confirms the active site with substrate binding residues and transition state analog 2-CABP bound (PMID:22609438).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the defining molecular function of RuBisCO and the most specific appropriate MF term. The carboxylase activity is directly demonstrated by the 1.35 A crystal structure of rice RuBisCO in complex with transition-state analog 2-CABP (PMID:22609438). UniProt assigns EC 4.1.1.39 and the catalytic activity is described with Rhea cross-reference RHEA:23124. This is the single most important annotation for this gene product.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22609438" target="_blank" class="term-link">
+                                        PMID:22609438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/rbcL/rbcL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=2 (2R)-3-phosphoglycerate + 2 H(+) = D-ribulose 1,5-bisphosphate + CO2 + H2O; EC=4.1.1.39</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009536" target="_blank" class="term-link">
+                                    GO:0009536
+                                </a>
+                            </span>
+                            <span class="term-label">plastid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12520024" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12520024
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The SWISS-PROT protein knowledgebase and its supplement TrEM...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0C512" data-a="GO:0009536" data-r="PMID:12520024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IC (Inferred by Curator) annotation for plastid localization, assigned by Gramene with reference to PMID:12520024 (Swiss-Prot knowledgebase description paper). This is a curator inference based on the UniProt/Swiss-Prot annotation that rbcL is encoded by the plastid genome and localized to the plastid/chloroplast. The reference is a database description paper rather than primary research on rbcL localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IC annotation is correct - rbcL is indeed located in the plastid (specifically chloroplast). However, it is redundant with the IEA chloroplast annotation (GO:0009507) and the other IEA plastid annotation (GO:0009536). The reference PMID:12520024 is a Swiss-Prot database paper, not primary evidence for rbcL localization, though the curator inference itself is sound. Retained as non-core since the IC evidence code adds curatorial validation but the term is less specific than chloroplast.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12520024" target="_blank" class="term-link">
+                                        PMID:12520024
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SWISS-PROT provides annotated entries for all species</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/rbcL/rbcL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Plastid, chloroplast</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009853" target="_blank" class="term-link">
+                                    GO:0009853
+                                </a>
+                            </span>
+                            <span class="term-label">photorespiration</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P0C512" data-a="GO:0009853" data-r="GO_REF:0000120" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> New annotation for photorespiration. RuBisCO catalyzes the oxygenase reaction that initiates the photorespiratory pathway: D-ribulose 1,5-bisphosphate + O2 = 2-phosphoglycolate + 3-phosphoglycerate + 2 H+. This reaction occurs at the same active site as carboxylation, in competition with CO2 fixation. UniProt lists photorespiration as a keyword and cross-references GO:0009853 via UniProtKB-KW. This annotation is present in the UniProt DR lines but was not captured in the GOA download.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Photorespiration is a biologically important process directly initiated by RuBisCO&#39;s oxygenase activity. UniProt explicitly describes this dual function: &#34;the oxidative fragmentation of the pentose substrate in the photorespiration process. Both reactions occur simultaneously and in competition at the same active site.&#34; The oxygenase reaction is catalyzed with Rhea cross-reference RHEA:36631. This annotation should be included as it represents a core function of rbcL that is absent from the current GOA annotation set.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/rbcL/rbcL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">the oxidative fragmentation of the pentose substrate in the photorespiration process. Both reactions occur simultaneously and in competition at the same active site</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/rbcL/rbcL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=D-ribulose 1,5-bisphosphate + O2 = 2-phosphoglycolate + (2R)-3-phosphoglycerate + 2 H(+); Xref=Rhea:RHEA:36631</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009570" target="_blank" class="term-link">
+                                    GO:0009570
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast stroma</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22609438" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22609438
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of rice Rubisco and implications for activ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P0C512" data-a="GO:0009570" data-r="PMID:22609438" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> New annotation for chloroplast stroma localization. RuBisCO is a soluble enzyme in the chloroplast stroma where it performs carbon fixation. The crystal structure was obtained from rice leaf chloroplast stromal extracts (PMID:22609438). This is a more specific localization than the existing chloroplast (GO:0009507) annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RuBisCO is universally recognized as a chloroplast stroma protein. The rice crystal structure (PMID:22609438) was obtained from leaf tissue chloroplast preparations, and the enzyme functions as a soluble stromal protein. GO:0009570 (chloroplast stroma) provides more informative sub-organellar localization than the generic chloroplast term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22609438" target="_blank" class="term-link">
+                                        PMID:22609438
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/rbcL/rbcL-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Plastid, chloroplast</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>rbcL encodes the catalytic large subunit of RuBisCO, which enables ribulose-bisphosphate carboxylase activity (EC 4.1.1.39) to fix atmospheric CO2 onto D-ribulose 1,5-bisphosphate, producing two molecules of 3-phosphoglycerate in the reductive pentose-phosphate cycle (Calvin-Benson-Bassham cycle). This is the primary carbon fixation reaction in photosynthesis. The enzyme requires Mg2+ as an essential cofactor, coordinated at the active site by carbamylated Lys-201, Asp-203, and Glu-204 (PMID:22609438). The L8S8 holoenzyme functions as a soluble complex in the chloroplast stroma.</h3>
+                <span class="vote-buttons" data-g="P0C512" data-a="FUNCTION: rbcL encodes the catalytic large subunit of RuBisC..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016984" target="_blank" class="term-link">
+                            ribulose-bisphosphate carboxylase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015977" target="_blank" class="term-link">
+                                carbon fixation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019253" target="_blank" class="term-link">
+                                reductive pentose-phosphate cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009570" target="_blank" class="term-link">
+                                chloroplast stroma
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22609438" target="_blank" class="term-link">
+                                PMID:22609438
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:9POAL/rbcL/rbcL-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">RuBisCO catalyzes two reactions: the carboxylation of D-ribulose 1,5-bisphosphate, the primary event in carbon dioxide fixation</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>The same active site of RuBisCO also catalyzes the oxygenation of D-ribulose 1,5-bisphosphate with O2 to produce 2-phosphoglycolate and 3-phosphoglycerate, initiating the photorespiratory pathway. This competing reaction is an intrinsic property of the enzyme that cannot be separated from the carboxylase activity. The oxygenase reaction has significant metabolic consequences, reducing photosynthetic efficiency particularly in C3 plants like rice.</h3>
+                <span class="vote-buttons" data-g="P0C512" data-a="FUNCTION: The same active site of RuBisCO also catalyzes the..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016984" target="_blank" class="term-link">
+                            ribulose-bisphosphate carboxylase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009853" target="_blank" class="term-link">
+                                photorespiration
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009570" target="_blank" class="term-link">
+                                chloroplast stroma
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:9POAL/rbcL/rbcL-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">the oxidative fragmentation of the pentose substrate in the photorespiration process. Both reactions occur simultaneously and in competition at the same active site</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12520024" target="_blank" class="term-link">
+                            PMID:12520024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The SWISS-PROT protein knowledgebase and its supplement TrEMBL in 2003.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Database description paper for Swiss-Prot/TrEMBL, not primary research on rbcL. Used as reference for IC annotation of plastid localization by Gramene curators.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22609438" target="_blank" class="term-link">
+                            PMID:22609438
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">1.35 A resolution crystal structure of activated rice RuBisCO holoenzyme (L8S8) reveals Mg2+ coordination at the active site via carbamylated Lys-201, Asp-203, and Glu-204.</div>
+                        
+                        <div class="finding-text">"Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NADPH and 6-phosphogluconate bind as positive effectors promoting enzyme activation. Transition-state analog 2-CABP bound at active site confirms the carboxylase mechanism.</div>
+                        
+                        <div class="finding-text">"Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2770692" target="_blank" class="term-link">
+                            PMID:2770692
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The complete sequence of the rice (Oryza sativa) chloroplast genome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Complete rice chloroplast genome sequence establishing rbcL as chloroplast-encoded.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16758443" target="_blank" class="term-link">
+                            PMID:16758443
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteomic analysis of rice leaf, stem and root tissues during growth course.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mass spectrometry identification of rbcL protein in rice leaf tissue proteomics.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:9POAL/rbcL/rbcL-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on rbcL (RuBisCO large subunit) in Poales</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive literature synthesis confirming rbcL encodes the catalytic large subunit of Form I RuBisCO (L8S8), performing carboxylation and oxygenation of RuBP in the chloroplast stroma. Activation requires carbamylation of Lys-201 and Mg2+ coordination. In rice, the PPR protein RCN22 stabilizes rbcL mRNA via its 5&#39; UTR, linking photosynthetic capacity to tillering via the TB1-RCN22-RbcL module.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rbcL-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P0C512" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-04-22T22:48:06.852724'<br />
+end_time: '2026-04-22T22:58:35.048568'<br />
+duration_seconds: 628.2<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: 9POAL<br />
+  gene_id: rbcL<br />
+  gene_symbol: rbcL<br />
+  uniprot_accession: P0C512<br />
+  protein_description: 'RecName: Full=Ribulose bisphosphate carboxylase large chain;<br />
+    Short=RuBisCO large subunit; EC=4.1.1.39; Flags: Precursor;'<br />
+  gene_info: Name=rbcL; OrderedLocusNames=LOC_Osp1g00420; ORFNames=Nip064;<br />
+  organism_full: Oryza sativa subsp. japonica (Rice).<br />
+  protein_family: Belongs to the RuBisCO large chain family. Type I<br />
+  protein_domains: RuBisCO. (IPR033966); RuBisCo_large_chain_AS. (IPR020878); RuBisCO_lsu_C.<br />
+    (IPR000685); RuBisCO_lsu_C_sf. (IPR036376); RuBisCO_lsu_fd_N. (IPR017443)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 36</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P0C512</li>
+<li><strong>Protein Description:</strong> RecName: Full=Ribulose bisphosphate carboxylase large chain; Short=RuBisCO large subunit; EC=4.1.1.39; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=rbcL; OrderedLocusNames=LOC_Osp1g00420; ORFNames=Nip064;</li>
+<li><strong>Organism (full):</strong> Oryza sativa subsp. japonica (Rice).</li>
+<li><strong>Protein Family:</strong> Belongs to the RuBisCO large chain family. Type I</li>
+<li><strong>Key Domains:</strong> RuBisCO. (IPR033966); RuBisCo_large_chain_AS. (IPR020878); RuBisCO_lsu_C. (IPR000685); RuBisCO_lsu_C_sf. (IPR036376); RuBisCO_lsu_fd_N. (IPR017443)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "rbcL" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Oryza sativa subsp. japonica (Rice).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'rbcL' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>rbcL</strong> (gene ID: rbcL, UniProt: P0C512) in 9POAL.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P0C512</li>
+<li><strong>Protein Description:</strong> RecName: Full=Ribulose bisphosphate carboxylase large chain; Short=RuBisCO large subunit; EC=4.1.1.39; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=rbcL; OrderedLocusNames=LOC_Osp1g00420; ORFNames=Nip064;</li>
+<li><strong>Organism (full):</strong> Oryza sativa subsp. japonica (Rice).</li>
+<li><strong>Protein Family:</strong> Belongs to the RuBisCO large chain family. Type I</li>
+<li><strong>Key Domains:</strong> RuBisCO. (IPR033966); RuBisCo_large_chain_AS. (IPR020878); RuBisCO_lsu_C. (IPR000685); RuBisCO_lsu_C_sf. (IPR036376); RuBisCO_lsu_fd_N. (IPR017443)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "rbcL" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Oryza sativa subsp. japonica (Rice).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'rbcL' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>rbcL</strong> (gene ID: rbcL, UniProt: P0C512) in 9POAL.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-rbcl-uniprot-p0c512-in-oryza-sativa-subsp-japonica-rice">Research report: <strong>rbcL (UniProt P0C512)</strong> in <em>Oryza sativa</em> subsp. <em>japonica</em> (rice)</h1>
+<h2 id="1-target-verification-geneprotein-identity">1. Target verification (gene/protein identity)</h2>
+<p>The rice gene symbol <strong>rbcL</strong> (UniProt <strong>P0C512</strong>) corresponds to the <strong>ribulose-1,5-bisphosphate carboxylase/oxygenase large subunit (RbcL)</strong>, a chloroplast-genome-encoded catalytic subunit of <strong>Form I Rubisco</strong>. Form I Rubisco in plants is the canonical <strong>L8S8</strong> holoenzyme (eight large subunits plus eight small subunits), with the active sites residing on the large subunits. This identity is consistent across authoritative biochemistry reviews and rice-specific regulatory studies that explicitly refer to rice <strong>RbcL</strong> as the chloroplast-encoded Rubisco large subunit. (prywes2023rubiscofunctionevolution pages 3-5, gruber2018rubiscoassemblyin pages 1-2, mo2024thechloroplastpentatricopeptide pages 1-2)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-core-biochemical-function-carboxylaseoxygenase-of-the-calvinbensonbassham-cbb-cycle">2.1. Core biochemical function: carboxylase/oxygenase of the Calvin–Benson–Bassham (CBB) cycle</h3>
+<p>Rubisco is the <strong>carbon-fixing carboxylase</strong> of the CBB cycle: it adds <strong>CO2</strong> to <strong>ribulose-1,5-bisphosphate (RuBP)</strong>, producing <strong>two molecules of 3-phosphoglycerate (3PG/3-PGA)</strong>. Rubisco also catalyzes a competing <strong>oxygenation</strong> reaction in which <strong>O2</strong> is added to RuBP, yielding <strong>one 3PG plus one 2-phosphoglycolate (2PG)</strong>, which must be salvaged by photorespiration. (prywes2023rubiscofunctionevolution pages 3-5, prywes2023rubiscofunctionevolution pages 1-3, mao2023thesmallsubunit pages 1-3, gruber2018rubiscoassemblyin pages 1-2)</p>
+<h3 id="22-substrate-specificity-and-the-central-trade-off">2.2. Substrate specificity and the central trade-off</h3>
+<p>Rubisco’s substrate is <strong>RuBP</strong>, but it has dual gas substrates (<strong>CO2</strong> and <strong>O2</strong>). Modern plant Rubiscos operate in today’s low-CO2/high-O2 atmosphere, and the oxygenation side reaction is a major reason Rubisco is considered inefficient and a frequent target for crop engineering. (gruber2018rubiscoassemblyin pages 1-2, bouvier2024rubiscoisevolving pages 1-2)</p>
+<h3 id="23-structural-definition-of-the-catalytic-unit-and-active-site-location">2.3. Structural definition of the catalytic unit and active site location</h3>
+<p>For plant Form I Rubisco, the <strong>RbcL homodimer (L2)</strong> is the key catalytic unit. The <strong>active sites sit at the interface between two RbcL subunits</strong> (two sites per L2 dimer). The full plant enzyme is an <strong>L8S8</strong> complex (four L2 dimers capped by eight small subunits), and the small subunits (RbcS) influence stability/assembly and can modulate catalysis even though catalysis occurs on RbcL. (prywes2023rubiscofunctionevolution pages 3-5, mao2023thesmallsubunit pages 1-3, gruber2018rubiscoassemblyin pages 1-2)</p>
+<h3 id="24-activation-requirements-carbamylation-and-mg2">2.4. Activation requirements: carbamylation and Mg2+</h3>
+<p>Rubisco requires an activation step: a conserved active-site <strong>lysine is carbamylated by CO2</strong> (distinct from the CO2 substrate), and the resulting carbamate is stabilized by <strong>Mg2+</strong>; the activated site then catalyzes RuBP chemistry. Mechanistically, this means Rubisco’s active site involves (at minimum) <strong>(i) a CO2 used for carbamylation and (ii) a CO2 or O2 used as substrate</strong>. (prywes2023rubiscofunctionevolution pages 3-5, moore2024usingthegreen pages 21-25)</p>
+<p>Inactive states are common: RuBP can bind an uncarbamylated site to form a nonproductive complex, and additional inhibitors (e.g., CA1P, XuBP) can form dead-end complexes that must be cleared to restore activity. (moore2024usingthegreena pages 21-25, moore2024usingthegreen pages 21-25)</p>
+<h3 id="25-mechanistic-steps-high-level">2.5. Mechanistic steps (high-level)</h3>
+<p>An authoritative biochemical synthesis describes Rubisco catalysis as proceeding through: (1) <strong>activation/carbamylation</strong>, (2) <strong>RuBP binding and enediol formation</strong>, (3) <strong>gas addition (CO2 or O2)</strong>, and (4) <strong>cleavage</strong> to produce either <strong>two 3PG (carboxylation)</strong> or <strong>3PG + 2PG (oxygenation)</strong>. A key structural element is <strong>loop 6</strong>, which closes over the active site (≈12 Å movement) to stabilize intermediates during catalysis. (prywes2023rubiscofunctionevolution pages 3-5)</p>
+<h2 id="3-subcellular-localization-and-biogenesis-with-rice-context">3. Subcellular localization and biogenesis (with rice context)</h2>
+<h3 id="31-where-rbcl-functions">3.1. Where RbcL functions</h3>
+<p>In plants, <strong>rbcL is encoded in the chloroplast genome and translated in the chloroplast</strong>, and the assembled Rubisco enzyme functions in the <strong>chloroplast stroma</strong>, where the CBB cycle operates. In contrast, <strong>RbcS is nuclear-encoded and imported into chloroplasts</strong> for holoenzyme assembly. (prywes2023rubiscofunctionevolution pages 3-5, gruber2018rubiscoassemblyin pages 1-2, moore2024usingthegreena pages 25-29)</p>
+<h3 id="32-folding-and-assembly-required-chaperonins-and-auxiliary-factors">3.2. Folding and assembly: required chaperonins and auxiliary factors</h3>
+<p>Plant Rubisco biogenesis is not spontaneous: it depends on the chloroplast chaperonin system <strong>Cpn60/Cpn20</strong> and auxiliary assembly factors including <strong>Raf1, Raf2, Bsd2, and RbcX</strong>. These factors facilitate folding of RbcL and oligomerization/assembly of the L8S8 holoenzyme, and species-specific compatibility of these systems is a recognized bottleneck in Rubisco engineering and cross-species replacement. (gruber2018rubiscoassemblyin pages 1-2, moore2024usingthegreena pages 25-29)</p>
+<h3 id="33-rice-genetic-evidence-linking-chaperonins-to-rbcl-accumulation">3.3. Rice genetic evidence linking chaperonins to RbcL accumulation</h3>
+<p>Rice mutants disrupting plastid chaperonin function demonstrate the dependence of RbcL accumulation on chaperonin-mediated folding/assembly. In rice, knockout of <strong>OsCpn60β1</strong> causes albino, seedling-lethal phenotypes with severely disrupted chloroplast development, and related rice chaperonin mutants have been reported to show severely reduced <strong>rbcL/RbcL protein levels</strong>, consistent with RbcL being a key client of the chaperonin system in vivo. (wu2020oscpn60β1isessential pages 1-3)</p>
+<h2 id="4-rice-specific-regulation-and-pathway-integration-2024-emphasis">4. Rice-specific regulation and pathway integration (2024 emphasis)</h2>
+<h3 id="41-post-transcriptional-regulation-of-rbcl-mrna-stability-by-a-chloroplast-ppr-protein">4.1. Post-transcriptional regulation of <em>rbcL</em> mRNA stability by a chloroplast PPR protein</h3>
+<p>A 2024 rice study identified <strong>RCN22</strong>, a chloroplast-localized P-type pentatricopeptide repeat (PPR) protein, as a <strong>sequence-specific regulator of RbcL mRNA stability</strong>. RCN22 binds the <strong>5′ UTR of RbcL mRNA</strong> and increases its stability; <strong>rcn22</strong> loss-of-function reduces RbcL mRNA abundance (via faster decay), reduces RbcL protein accumulation, and lowers Rubisco activity and photosynthetic rate. (mo2024thechloroplastpentatricopeptide pages 1-2, mo2024thechloroplastpentatricopeptide pages 5-7, mo2024thechloroplastpentatricopeptide pages 3-5)</p>
+<h3 id="42-whole-plant-consequences-linking-chloroplast-carbon-fixation-to-rice-tillering-via-tb1rcn22rbcl">4.2. Whole-plant consequences: linking chloroplast carbon fixation to rice tillering via TB1–RCN22–RbcL</h3>
+<p>The same 2024 work places RbcL within a regulatory module (<strong>TB1–RCN22–RbcL</strong>) that connects chloroplast carbon fixation capacity to sugar status and shoot architecture. In this model, <strong>TB1 represses RCN22</strong>, while RCN22 stabilizes <strong>RbcL mRNA</strong>, and the resulting changes in photosynthetic output/sugar availability influence tiller-bud outgrowth (few-tiller phenotype in rcn22). Exogenous sucrose can rescue the rcn22 tiller-bud growth defect, supporting a carbon/sugar-mediated mechanism downstream of reduced RbcL expression. (mo2024thechloroplastpentatricopeptide pages 1-2, mo2024thechloroplastpentatricopeptide pages 5-7, mo2024thechloroplastpentatricopeptide pages 3-5)</p>
+<h2 id="5-recent-developments-and-latest-research-prioritizing-20232024">5. Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="51-2024-evolutionary-constraints-and-adaptive-trends-of-rbclrbcl">5.1. 2024: evolutionary constraints and adaptive trends of rbcL/RbcL</h3>
+<p>A 2024 phylogenetic analysis (PNAS) emphasizes that <strong>rbcL is among the slowest-evolving genes</strong>: on average <strong>one nucleotide substitution every ~0.9 million years</strong> and <strong>one amino-acid change every ~7.2 million years</strong>, placing it among the slowest-evolving ~1% of genes/proteins. Despite this, the authors argue that Form I Rubisco kinetics have continued to evolve toward improved <strong>CO2/O2 specificity</strong>, <strong>carboxylation turnover</strong>, and <strong>carboxylation efficiency</strong>, and that these evolutionary changes correlate with leaf-level CO2 assimilation. (bouvier2024rubiscoisevolving pages 1-2, bouvier2024rubiscoisevolving pages 2-3)</p>
+<h3 id="52-2023-mechanistic-and-engineering-synthesis-from-authoritative-reviews">5.2. 2023: mechanistic and engineering synthesis from authoritative reviews</h3>
+<p>A 2023 Annual Review synthesizes current mechanistic understanding (active-site architecture, carbamylation/Mg2+ activation, loop 6 dynamics) and highlights persistent engineering constraints including the need for compatible assembly machinery when expressing non-native Rubiscos in chloroplasts. (prywes2023rubiscofunctionevolution pages 3-5)</p>
+<h3 id="53-20232024-expanding-engineering-levers-beyond-rbcl-sequence-alone">5.3. 2023–2024: expanding engineering levers beyond RbcL sequence alone</h3>
+<p>Recent literature emphasizes that Rubisco engineering can act on multiple layers:</p>
+<ul>
+<li><strong>Small-subunit (RbcS) engineering:</strong> Although RbcS is noncatalytic, it can influence holoenzyme abundance and catalytic properties. A 2023 review summarizes engineered/hybrid Rubiscos showing measurable kinetic shifts, including reported <strong>~28% increases in kcatc</strong> in some constructs and a variety of trade-offs in specificity and Michaelis constants across hybrids/mutants. (mao2023thesmallsubunit pages 8-9, mao2023thesmallsubunit pages 1-3)</li>
+<li><strong>Rubisco activase (Rca) optimization for heat tolerance:</strong> A 2024 synthesis notes that Rubisco performance in planta can be limited by Rca thermal stability; in a rice-related example summarized in recent literature, expressing a <strong>thermostable Rca from <em>Oryza australiensis</em></strong> in <em>O. sativa</em> increased seed number by <strong>~150%</strong> and raised reported Rca thermostability from <strong>~36 °C to ~42 °C</strong>. (moore2024usingthegreen pages 25-29, moore2024usingthegreena pages 25-29)</li>
+</ul>
+<h3 id="54-2024-pyrenoid-inspired-carbon-concentrating-mechanisms-ccms-that-interact-with-rbcl">5.4. 2024: pyrenoid-inspired carbon concentrating mechanisms (CCMs) that interact with RbcL</h3>
+<p>A 2024 Nature Plants study reports a <strong>green-algal disordered “linker” protein</strong> (from <em>Chlorella</em>) that binds a <strong>conserved site on RbcL</strong> and can phase-separate Rubisco to form functional pyrenoid-like condensates in <em>Chlamydomonas</em>. Importantly, the linker can also drive condensation of some native plant Rubiscos <strong>in vitro and in planta</strong>, supporting feasibility of pyrenoid-inspired CCM engineering in crops via RbcL-interacting scaffolds. (barrett2024apromiscuousmechanism pages 1-2)</p>
+<h2 id="6-current-applications-and-real-world-implementations">6. Current applications and real-world implementations</h2>
+<h3 id="61-chloroplast-transformation-and-rubisco-gene-replacement-transplastomics">6.1. Chloroplast transformation and Rubisco gene replacement (transplastomics)</h3>
+<p>Direct manipulation of rbcL at the plastid-genome level is a major implementation route. A 2023 transplastomic crop example replaced native Rubisco in potato with <strong>bacterial Form II Rubisco (Rhodospirillum rubrum)</strong>, achieving high enzyme accumulation (<strong>8–10 μmol catalytic sites m−2</strong>) sufficient to support near wild-type productivity under elevated CO2, while highlighting the trade-off of reduced performance at ambient CO2 due to lower CO2 affinity/specificity. This illustrates both feasibility and constraints of “Rubisco swapping” strategies relevant to rbcL-centric engineering. (manning2023bacterialformii pages 1-2)</p>
+<p>A 2024 plant synthetic biology review further contextualizes chloroplast gene replacement efforts, describing prior replacement of tobacco rbcL with cyanobacterial rbcLS and early efforts to combine Rubisco replacement with carboxysome components (often requiring elevated CO2 for growth). (hayakawa2024syntheticbiologyin pages 6-7)</p>
+<h3 id="62-exploiting-rubisco-diversity-red-rubiscos-as-targets">6.2. Exploiting Rubisco diversity: “red” Rubiscos as targets</h3>
+<p>A 2023 Journal of Experimental Botany review highlights that eukaryotic <strong>red-type Rubiscos</strong> (Forms IC/ID) can show higher specificity and catalytic efficiency than the plant “green-type” Rubisco, making them attractive candidates for crop improvement; however, it also emphasizes that <strong>functional expression of a high-performing red-type Rubisco in chloroplasts is not yet achieved</strong>, reflecting ongoing assembly/compatibility barriers. (oh2023redrubiscosand pages 1-2)</p>
+<h3 id="63-using-rbcl-for-phylogenetic-inference">6.3. Using rbcL for phylogenetic inference</h3>
+<p>Because rbcL encodes the large subunit (LSu) and is broadly conserved in plastid genomes, <strong>LSu (rbcL)-based phylogenies</strong> are widely used to separate major Rubisco lineages (red vs green) and support evolutionary analyses relevant to engineering and comparative biology. (oh2023redrubiscosand pages 1-2)</p>
+<h2 id="7-relevant-statistics-and-data-recent-studies">7. Relevant statistics and data (recent studies)</h2>
+<h3 id="71-evolutionary-rate-statistics-2024">7.1. Evolutionary rate statistics (2024)</h3>
+<ul>
+<li>rbcL evolutionary rate estimate: <strong>~1 nucleotide substitution per 0.9 million years</strong> and <strong>~1 amino-acid change per 7.2 million years</strong> (plant Form I dataset and comparative tree-of-life context). (bouvier2024rubiscoisevolving pages 1-2)</li>
+<li>Comparative constraint: RbcL reported to evolve more slowly than <strong>&gt;98%</strong> of other gene/protein sequences across the tree of life, and more slowly than rbcS (nucleotide and protein rates). (bouvier2024rubiscoisevolving pages 2-3)</li>
+</ul>
+<h3 id="72-enzyme-performanceabundance-benchmarks">7.2. Enzyme performance/abundance benchmarks</h3>
+<ul>
+<li>Maximum substrate-saturated turnover reported for Form I Rubisco: <strong>&lt;12 s−1</strong>. (bouvier2024rubiscoisevolving pages 1-2)</li>
+<li>Rubisco abundance in C3 leaves: often <strong>~30–50% (up to ~50%)</strong> of soluble protein, reflecting compensation for slow turnover and oxygenation losses. (gruber2018rubiscoassemblyin pages 1-2, bouvier2024rubiscoisevolving pages 1-2)</li>
+</ul>
+<h3 id="73-engineeringimplementation-quantitative-data">7.3. Engineering/implementation quantitative data</h3>
+<ul>
+<li>Transplastomic Rubisco replacement example (2023, potato): <strong>8–10 μmol catalytic sites m−2</strong> of bacterial Rubisco accumulated in leaves, sufficient for wild-type productivity under elevated CO2. (manning2023bacterialformii pages 1-2)</li>
+<li>Kinetic changes from RbcS-focused engineering (summary in 2023 review): examples include <strong>~28% increases in kcatc</strong> (with accompanying trade-offs in Kc, Ko, and SC/O depending on construct). (mao2023thesmallsubunit pages 8-9)</li>
+<li>Rice-related heat-tolerance and yield outcome summarized in 2024 literature: Rca thermostability <strong>~36 → ~42 °C</strong> and seed number <strong>+150%</strong> when expressing a thermostable Rca from <em>Oryza australiensis</em> in <em>O. sativa</em>. (moore2024usingthegreen pages 25-29, moore2024usingthegreena pages 25-29)</li>
+</ul>
+<h2 id="8-expert-interpretation-and-functional-annotation-summary-for-rice-rbcl-p0c512">8. Expert interpretation and functional annotation summary for rice rbcL (P0C512)</h2>
+<p><strong>Primary molecular function (enzyme):</strong> Rice <strong>RbcL</strong> is the catalytic large subunit of chloroplast <strong>Form I Rubisco</strong>, catalyzing RuBP carboxylation (CO2 fixation to produce 3PG) and the competing oxygenation reaction (producing 2PG, initiating photorespiration). (prywes2023rubiscofunctionevolution pages 3-5, mao2023thesmallsubunit pages 1-3)</p>
+<p><strong>Substrate specificity:</strong> RuBP is the sugar-phosphate substrate; <strong>CO2</strong> is the desired gas substrate and <strong>O2</strong> is the competing substrate, creating a biochemical specificity problem central to photosynthetic efficiency. (gruber2018rubiscoassemblyin pages 1-2, prywes2023rubiscofunctionevolution pages 3-5)</p>
+<p><strong>Cellular localization:</strong> Function in the <strong>chloroplast stroma</strong>; rbcL expression occurs in the chloroplast, while assembly requires coordination with nuclear-encoded RbcS import and chloroplast folding/assembly machinery. (gruber2018rubiscoassemblyin pages 1-2, moore2024usingthegreena pages 25-29)</p>
+<p><strong>Pathway context:</strong> Central enzyme of the <strong>Calvin–Benson–Bassham cycle</strong>; oxygenation products (2PG) are routed to <strong>photorespiration</strong>. In rice, chloroplast gene expression control of rbcL can propagate to whole-plant carbon allocation and architecture (TB1–RCN22–RbcL module). (prywes2023rubiscofunctionevolution pages 1-3, gruber2018rubiscoassemblyin pages 1-2, mo2024thechloroplastpentatricopeptide pages 1-2)</p>
+<p><strong>Regulatory/biogenesis dependencies (strong evidence in plants; emerging rice-specific factors):</strong> RbcL folding and assembly depends on <strong>Cpn60/Cpn20</strong> and auxiliary factors <strong>Raf1/2, Bsd2, RbcX</strong>; rice genetics implicate plastid chaperonins in enabling RbcL accumulation and chloroplast development. Rice also uses a chloroplast PPR protein (<strong>RCN22</strong>) to stabilize RbcL mRNA via the 5′UTR, linking rbcL expression to photosynthesis and sugar-dependent tillering. (gruber2018rubiscoassemblyin pages 1-2, wu2020oscpn60β1isessential pages 1-3, mo2024thechloroplastpentatricopeptide pages 5-7)</p>
+<h2 id="summary-table-of-key-annotation-facts">Summary table of key annotation facts</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key points</th>
+<th>Evidence/citation IDs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/annotation</td>
+<td><strong>rbcL / RbcL</strong> in <em>Oryza sativa</em> is the chloroplast-genome-encoded large subunit of <strong>Form I Rubisco</strong>; the large subunit carries the catalytic machinery of the enzyme complex.</td>
+<td>(prywes2023rubiscofunctionevolution pages 3-5, gruber2018rubiscoassemblyin pages 1-2, mo2024thechloroplastpentatricopeptide pages 1-2)</td>
+</tr>
+<tr>
+<td>Reaction and products</td>
+<td>Rubisco catalyzes <strong>carboxylation</strong> of ribulose-1,5-bisphosphate (RuBP) with <strong>CO2</strong> to produce <strong>2 molecules of 3-phosphoglycerate (3-PGA/3PG)</strong>, and a competing <strong>oxygenation</strong> reaction with <strong>O2</strong> to produce <strong>1 molecule of 3-PGA plus 1 molecule of 2-phosphoglycolate (2-PG/2PG)</strong>, linking RbcL directly to carbon fixation and photorespiration.</td>
+<td>(prywes2023rubiscofunctionevolution pages 3-5, prywes2023rubiscofunctionevolution pages 1-3, mao2023thesmallsubunit pages 1-3, gruber2018rubiscoassemblyin pages 1-2)</td>
+</tr>
+<tr>
+<td>Activation requirements</td>
+<td>Catalysis requires <strong>carbamylation of a conserved active-site lysine</strong> (K201 in plants) and coordination by <strong>Mg2+</strong>; uncarbamylated sites can bind RuBP in inactive complexes, so active-site resetting is required.</td>
+<td>(prywes2023rubiscofunctionevolution pages 3-5, moore2024usingthegreena pages 21-25, moore2024usingthegreen pages 21-25)</td>
+</tr>
+<tr>
+<td>Holoenzyme architecture and active-site location</td>
+<td>Plant Rubisco is an <strong>L8S8</strong> holoenzyme of <strong>8 RbcL + 8 RbcS</strong> subunits; the functional unit is the <strong>RbcL dimer (L2)</strong>, and the <strong>active sites lie at the interface of two RbcL subunits</strong>. RbcL dimers alone are not fully functional in plant Form I Rubisco.</td>
+<td>(prywes2023rubiscofunctionevolution pages 3-5, gruber2018rubiscoassemblyin pages 1-2, mao2023thesmallsubunit pages 1-3)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>In rice and other plants, <strong>rbcL is plastid-encoded</strong> and RbcL functions in the <strong>chloroplast stroma</strong>, where the Calvin–Benson cycle operates; RbcS is nuclear-encoded and imported into chloroplasts for holoenzyme assembly.</td>
+<td>(prywes2023rubiscofunctionevolution pages 3-5, gruber2018rubiscoassemblyin pages 1-2, moore2024usingthegreena pages 25-29, wu2020oscpn60β1isessential pages 1-3)</td>
+</tr>
+<tr>
+<td>Biogenesis and assembly factors</td>
+<td>Chloroplast Rubisco assembly requires <strong>Cpn60/Cpn20 chaperonins</strong> and auxiliary factors including <strong>Raf1, Raf2, Bsd2, and RbcX</strong>. In rice, plastid chaperonins are important for RbcL accumulation/folding; loss of <strong>OsCpn60β1</strong> disrupts chloroplast development, and prior rice <strong>OsCpn60α1</strong> mutants showed severely reduced RbcL protein.</td>
+<td>(gruber2018rubiscoassemblyin pages 1-2, moore2024usingthegreena pages 25-29, wu2020oscpn60β1isessential pages 1-3)</td>
+</tr>
+<tr>
+<td>Rice-specific post-transcriptional regulation</td>
+<td>In rice, the chloroplast PPR protein <strong>RCN22</strong> binds the <strong>5′ UTR of RbcL mRNA</strong> and promotes its stability. <strong>rcn22</strong> mutants show reduced RbcL mRNA stability, reduced RbcL protein, lower Rubisco activity/photosynthetic rate, reduced sugar levels, and fewer tillers.</td>
+<td>(mo2024thechloroplastpentatricopeptide pages 1-2, mo2024thechloroplastpentatricopeptide pages 3-5, mo2024thechloroplastpentatricopeptide pages 5-7, mo2024thechloroplastpentatricopeptide pages 13-14)</td>
+</tr>
+<tr>
+<td>Rice regulatory module</td>
+<td>A <strong>TB1–RCN22–RbcL</strong> module has been described in rice: <strong>TB1</strong> represses <strong>RCN22</strong>, which in turn stabilizes <strong>RbcL mRNA</strong>; this links chloroplast carbon fixation capacity to sugar status and tiller-bud outgrowth.</td>
+<td>(mo2024thechloroplastpentatricopeptide pages 1-2, mo2024thechloroplastpentatricopeptide pages 5-7, mo2024thechloroplastpentatricopeptide pages 13-14)</td>
+</tr>
+<tr>
+<td>Quantitative statistics</td>
+<td>Recent syntheses report that <strong>rbcL/RbcL is among the slowest-evolving ~1% of genes/proteins</strong>, with about <strong>1 nucleotide substitution every 0.9 million years</strong> and <strong>1 amino-acid change every 7.2 million years</strong>; maximum substrate-saturated Form I Rubisco turnover is reported as <strong>&lt;12 s−1</strong>; Rubisco can account for <strong>~30–50% (up to ~50%) of soluble leaf protein</strong> in C3 leaves.</td>
+<td>(bouvier2024rubiscoisevolving pages 1-2, bouvier2024rubiscoisevolving pages 2-3, moore2024usingthegreen pages 32-36, gruber2018rubiscoassemblyin pages 1-2)</td>
+</tr>
+<tr>
+<td>Engineering/implementation statistics</td>
+<td>In a 2023 transplastomic crop example, bacterial Form II Rubisco accumulated to <strong>8–10 μmol catalytic sites m−2</strong> in potato and supported near wild-type productivity under elevated CO2. In a rice-related thermostability example summarized in 2024 literature, expressing a thermostable <strong>Oryza australiensis</strong> Rubisco activase in <strong>O. sativa</strong> increased seed number by <strong>150%</strong> and raised Rca thermostability from <strong>36 °C to ~42 °C</strong>.</td>
+<td>(manning2023bacterialformii pages 1-2, moore2024usingthegreen pages 25-29, moore2024usingthegreena pages 25-29)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the key functional-annotation facts for rice chloroplast rbcL/RbcL, including biochemical function, activation mechanism, localization, assembly, rice-specific regulation, and recent quantitative findings useful for gene-function interpretation.</em></p>
+<h2 id="key-recent-sources-with-dates-and-urls">Key recent sources (with dates and URLs)</h2>
+<ul>
+<li>Prywes et al. <strong>2023-07</strong>. <em>Annual Review of Biochemistry</em>: “Rubisco Function, Evolution, and Engineering.” https://doi.org/10.48550/arxiv.2207.10773 (prywes2023rubiscofunctionevolution pages 3-5)</li>
+<li>Mao et al. <strong>2023-07</strong>. <em>Journal of Experimental Botany</em>: “The small subunit of Rubisco and its potential as an engineering target.” https://doi.org/10.1093/jxb/erac309 (mao2023thesmallsubunit pages 1-3, mao2023thesmallsubunit pages 8-9)</li>
+<li>Bouvier et al. <strong>2024-03</strong>. <em>PNAS</em>: “Rubisco is evolving for improved catalytic efficiency and CO2 assimilation in plants.” https://doi.org/10.1073/pnas.2321050121 (bouvier2024rubiscoisevolving pages 1-2, bouvier2024rubiscoisevolving pages 2-3)</li>
+<li>Barrett et al. <strong>2024-04</strong>. <em>Nature Plants</em>: “A promiscuous mechanism to phase separate eukaryotic carbon fixation in the green lineage.” https://doi.org/10.1038/s41477-024-01812-x (barrett2024apromiscuousmechanism pages 1-2)</li>
+<li>Mo et al. <strong>2024-12</strong>. <em>Plant Communications</em>: “TB1–RCN22–RbcL module” controlling tillering via sugar levels by stabilizing RbcL mRNA. https://doi.org/10.1016/j.xplc.2024.101073 (mo2024thechloroplastpentatricopeptide pages 1-2, mo2024thechloroplastpentatricopeptide pages 5-7)</li>
+<li>Manning et al. <strong>2023-01</strong>. <em>PNAS Nexus</em>: transplastomic replacement with bacterial Form II Rubisco (quantitative catalytic sites). https://doi.org/10.1093/pnasnexus/pgac305 (manning2023bacterialformii pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(prywes2023rubiscofunctionevolution pages 3-5): Noam Prywes, Naiya R Phillips, Owen T Tuck, Luis E Valentin-Alvarado, and David F Savage. Rubisco function, evolution, and engineering. Annual review of biochemistry, Jul 2023. URL: https://doi.org/10.48550/arxiv.2207.10773, doi:10.48550/arxiv.2207.10773. This article has 170 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gruber2018rubiscoassemblyin pages 1-2): Anna Vitlin Gruber and Leila Feiz. Rubisco assembly in the chloroplast. Frontiers in Molecular Biosciences, Mar 2018. URL: https://doi.org/10.3389/fmolb.2018.00024, doi:10.3389/fmolb.2018.00024. This article has 99 citations.</p>
+</li>
+<li>
+<p>(mo2024thechloroplastpentatricopeptide pages 1-2): Tianyu Mo, Tianhao Wang, Yinglu Sun, Ashmit Kumar, Humphrey Mkumbwa, Jingjing Fang, Jinfeng Zhao, Shoujiang Yuan, Zichao Li, and Xueyong Li. The chloroplast pentatricopeptide repeat protein rcn22 regulates tiller number in rice by affecting sugar levels via the tb1–rcn22–rbcl module. Plant Communications, 5:101073, Dec 2024. URL: https://doi.org/10.1016/j.xplc.2024.101073, doi:10.1016/j.xplc.2024.101073. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(prywes2023rubiscofunctionevolution pages 1-3): Noam Prywes, Naiya R Phillips, Owen T Tuck, Luis E Valentin-Alvarado, and David F Savage. Rubisco function, evolution, and engineering. Annual review of biochemistry, Jul 2023. URL: https://doi.org/10.48550/arxiv.2207.10773, doi:10.48550/arxiv.2207.10773. This article has 170 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mao2023thesmallsubunit pages 1-3): Yuwei Mao, Ella Catherall, Aranzazú Díaz-Ramos, George R L Greiff, Stavros Azinas, Laura Gunn, and Alistair J McCormick. The small subunit of rubisco and its potential as an engineering target. Journal of Experimental Botany, 74:543-561, Jul 2023. URL: https://doi.org/10.1093/jxb/erac309, doi:10.1093/jxb/erac309. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bouvier2024rubiscoisevolving pages 1-2): Jacques W. Bouvier, David M. Emms, and Steven Kelly. Rubisco is evolving for improved catalytic efficiency and co <sub>2</sub> assimilation in plants. Proceedings of the National Academy of Sciences, Mar 2024. URL: https://doi.org/10.1073/pnas.2321050121, doi:10.1073/pnas.2321050121. This article has 56 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moore2024usingthegreen pages 21-25): RL Moore. Using the green alga, chlamydomonas reinhardtii, as a chassis to express non-green rubisco variants. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(moore2024usingthegreena pages 21-25): RL Moore. Using the green alga, chlamydomonas reinhardtii, as a chassis to express non-green rubisco variants. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(moore2024usingthegreena pages 25-29): RL Moore. Using the green alga, chlamydomonas reinhardtii, as a chassis to express non-green rubisco variants. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(wu2020oscpn60β1isessential pages 1-3): Qingfei Wu, Cheng Zhang, Yue Chen, Kaiyue Zhou, Yihua Zhan, and Dean Jiang. Oscpn60β1 is essential for chloroplast development in rice (oryza sativa l.). International Journal of Molecular Sciences, 21:4023, Jun 2020. URL: https://doi.org/10.3390/ijms21114023, doi:10.3390/ijms21114023. This article has 13 citations.</p>
+</li>
+<li>
+<p>(mo2024thechloroplastpentatricopeptide pages 5-7): Tianyu Mo, Tianhao Wang, Yinglu Sun, Ashmit Kumar, Humphrey Mkumbwa, Jingjing Fang, Jinfeng Zhao, Shoujiang Yuan, Zichao Li, and Xueyong Li. The chloroplast pentatricopeptide repeat protein rcn22 regulates tiller number in rice by affecting sugar levels via the tb1–rcn22–rbcl module. Plant Communications, 5:101073, Dec 2024. URL: https://doi.org/10.1016/j.xplc.2024.101073, doi:10.1016/j.xplc.2024.101073. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mo2024thechloroplastpentatricopeptide pages 3-5): Tianyu Mo, Tianhao Wang, Yinglu Sun, Ashmit Kumar, Humphrey Mkumbwa, Jingjing Fang, Jinfeng Zhao, Shoujiang Yuan, Zichao Li, and Xueyong Li. The chloroplast pentatricopeptide repeat protein rcn22 regulates tiller number in rice by affecting sugar levels via the tb1–rcn22–rbcl module. Plant Communications, 5:101073, Dec 2024. URL: https://doi.org/10.1016/j.xplc.2024.101073, doi:10.1016/j.xplc.2024.101073. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bouvier2024rubiscoisevolving pages 2-3): Jacques W. Bouvier, David M. Emms, and Steven Kelly. Rubisco is evolving for improved catalytic efficiency and co <sub>2</sub> assimilation in plants. Proceedings of the National Academy of Sciences, Mar 2024. URL: https://doi.org/10.1073/pnas.2321050121, doi:10.1073/pnas.2321050121. This article has 56 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mao2023thesmallsubunit pages 8-9): Yuwei Mao, Ella Catherall, Aranzazú Díaz-Ramos, George R L Greiff, Stavros Azinas, Laura Gunn, and Alistair J McCormick. The small subunit of rubisco and its potential as an engineering target. Journal of Experimental Botany, 74:543-561, Jul 2023. URL: https://doi.org/10.1093/jxb/erac309, doi:10.1093/jxb/erac309. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moore2024usingthegreen pages 25-29): RL Moore. Using the green alga, chlamydomonas reinhardtii, as a chassis to express non-green rubisco variants. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(barrett2024apromiscuousmechanism pages 1-2): James Barrett, Mihris I.S. Naduthodi, Yuwei Mao, Clément Dégut, Sabina Musiał, Aidan Salter, Mark C. Leake, Michael J. Plevin, Alistair J. McCormick, James N. Blaza, and Luke C.M. Mackinder. A promiscuous mechanism to phase separate eukaryotic carbon fixation in the green lineage. Nature Plants, 10:1801-1813, Apr 2024. URL: https://doi.org/10.1038/s41477-024-01812-x, doi:10.1038/s41477-024-01812-x. This article has 26 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manning2023bacterialformii pages 1-2): Tahnee Manning, Rosemary Birch, Trevor Stevenson, Gregory Nugent, and Spencer Whitney. Bacterial form ii rubisco can support wild-type growth and productivity in solanum tuberosum cv. desiree (potato) under elevated co2. PNAS Nexus, Jan 2023. URL: https://doi.org/10.1093/pnasnexus/pgac305, doi:10.1093/pnasnexus/pgac305. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hayakawa2024syntheticbiologyin pages 6-7): Takahiko Hayakawa, Hayato Suzuki, Hiroshi Yamamoto, and Nobutaka Mitsuda. Synthetic biology in plants. Plant Biotechnology, 41:173-193, Sep 2024. URL: https://doi.org/10.5511/plantbiotechnology.24.0630b, doi:10.5511/plantbiotechnology.24.0630b. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(oh2023redrubiscosand pages 1-2): Zhen Guo Oh, Bryce Askey, and Laura H Gunn. Red rubiscos and opportunities for engineering green plants. Journal of Experimental Botany, 74:520-542, Sep 2023. URL: https://doi.org/10.1093/jxb/erac349, doi:10.1093/jxb/erac349. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mo2024thechloroplastpentatricopeptide pages 13-14): Tianyu Mo, Tianhao Wang, Yinglu Sun, Ashmit Kumar, Humphrey Mkumbwa, Jingjing Fang, Jinfeng Zhao, Shoujiang Yuan, Zichao Li, and Xueyong Li. The chloroplast pentatricopeptide repeat protein rcn22 regulates tiller number in rice by affecting sugar levels via the tb1–rcn22–rbcl module. Plant Communications, 5:101073, Dec 2024. URL: https://doi.org/10.1016/j.xplc.2024.101073, doi:10.1016/j.xplc.2024.101073. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moore2024usingthegreen pages 32-36): RL Moore. Using the green alga, chlamydomonas reinhardtii, as a chassis to express non-green rubisco variants. Unknown journal, 2024.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>prywes2023rubiscofunctionevolution pages 3-5</li>
+<li>barrett2024apromiscuousmechanism pages 1-2</li>
+<li>manning2023bacterialformii pages 1-2</li>
+<li>hayakawa2024syntheticbiologyin pages 6-7</li>
+<li>oh2023redrubiscosand pages 1-2</li>
+<li>bouvier2024rubiscoisevolving pages 1-2</li>
+<li>bouvier2024rubiscoisevolving pages 2-3</li>
+<li>mao2023thesmallsubunit pages 8-9</li>
+<li>gruber2018rubiscoassemblyin pages 1-2</li>
+<li>mo2024thechloroplastpentatricopeptide pages 1-2</li>
+<li>prywes2023rubiscofunctionevolution pages 1-3</li>
+<li>mao2023thesmallsubunit pages 1-3</li>
+<li>moore2024usingthegreen pages 21-25</li>
+<li>moore2024usingthegreena pages 21-25</li>
+<li>moore2024usingthegreena pages 25-29</li>
+<li>mo2024thechloroplastpentatricopeptide pages 5-7</li>
+<li>mo2024thechloroplastpentatricopeptide pages 3-5</li>
+<li>moore2024usingthegreen pages 25-29</li>
+<li>mo2024thechloroplastpentatricopeptide pages 13-14</li>
+<li>moore2024usingthegreen pages 32-36</li>
+<li>https://doi.org/10.48550/arxiv.2207.10773</li>
+<li>https://doi.org/10.1093/jxb/erac309</li>
+<li>https://doi.org/10.1073/pnas.2321050121</li>
+<li>https://doi.org/10.1038/s41477-024-01812-x</li>
+<li>https://doi.org/10.1016/j.xplc.2024.101073</li>
+<li>https://doi.org/10.1093/pnasnexus/pgac305</li>
+<li>https://doi.org/10.48550/arxiv.2207.10773,</li>
+<li>https://doi.org/10.3389/fmolb.2018.00024,</li>
+<li>https://doi.org/10.1016/j.xplc.2024.101073,</li>
+<li>https://doi.org/10.1093/jxb/erac309,</li>
+<li>https://doi.org/10.1073/pnas.2321050121,</li>
+<li>https://doi.org/10.3390/ijms21114023,</li>
+<li>https://doi.org/10.1038/s41477-024-01812-x,</li>
+<li>https://doi.org/10.1093/pnasnexus/pgac305,</li>
+<li>https://doi.org/10.5511/plantbiotechnology.24.0630b,</li>
+<li>https://doi.org/10.1093/jxb/erac349,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rbcL-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P0C512" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rbcl-notes-ribulose-bisphosphate-carboxylase-large-chain-rubisco-large-subunit">rbcL Notes - Ribulose bisphosphate carboxylase large chain (RuBisCO large subunit)</h1>
+<h2 id="gene-overview">Gene Overview</h2>
+<p>rbcL encodes the large subunit of ribulose-1,5-bisphosphate carboxylase/oxygenase (RuBisCO, EC 4.1.1.39), <br />
+the most abundant protein on Earth and the key enzyme in photosynthetic carbon fixation. The gene is <br />
+chloroplast-encoded in land plants. This review uses the rice (Oryza sativa subsp. japonica) entry P0C512 <br />
+as a representative for Poales (9POAL).</p>
+<h2 id="key-functions">Key Functions</h2>
+<h3 id="1-carbon-fixation-carboxylase-activity">1. Carbon Fixation (Carboxylase Activity)</h3>
+<p>RuBisCO catalyzes the primary carbon fixation reaction in the Calvin-Benson-Bassham cycle (reductive <br />
+pentose-phosphate cycle): fixation of atmospheric CO2 onto ribulose-1,5-bisphosphate (RuBP) to produce <br />
+two molecules of 3-phosphoglycerate (3-PGA) <a href="https://pubmed.ncbi.nlm.nih.gov/22609438" title="RuBisCO catalyzes two reactions: the  carboxylation of D-ribulose 1,5-bisphosphate, the primary event in carbon dioxide fixation">PMID:22609438</a>.</p>
+<h3 id="2-oxygenase-activity-photorespiration">2. Oxygenase Activity (Photorespiration)</h3>
+<p>RuBisCO also catalyzes an oxygenase reaction where O2 competes with CO2 at the same active site, <br />
+cleaving RuBP into 2-phosphoglycolate and 3-PGA. This initiates the photorespiratory pathway <br />
+[UniProt P0C512: "the oxidative fragmentation of the pentose substrate in the photorespiration process. <br />
+Both reactions occur simultaneously and in competition at the same active site"].</p>
+<h3 id="3-enzyme-structure">3. Enzyme Structure</h3>
+<ul>
+<li>Form I RuBisCO: heterohexadecamer (L8S8) - 8 large subunits (rbcL) and 8 small subunits (rbcS)</li>
+<li>Large subunit homodimer is the basic functional unit arranged head-to-tail</li>
+<li>Four L2 dimers form a barrel-like tetramer, capped by S4 tetramers <a href="https://pubmed.ncbi.nlm.nih.gov/22609438">PMID:22609438</a></li>
+</ul>
+<h3 id="4-cofactor-requirements">4. Cofactor Requirements</h3>
+<ul>
+<li>Requires Mg2+ (1 per subunit) for catalysis <a href="https://pubmed.ncbi.nlm.nih.gov/22609438">PMID:22609438</a></li>
+<li>Activation by carbamylation of Lys-201 (formation of N6-carboxylysine) <a href="https://pubmed.ncbi.nlm.nih.gov/22609438">PMID:22609438</a></li>
+<li>NADPH and 6-phosphogluconate act as positive effectors promoting activation <a href="https://pubmed.ncbi.nlm.nih.gov/22609438">PMID:22609438</a></li>
+</ul>
+<h3 id="5-subcellular-localization">5. Subcellular Localization</h3>
+<ul>
+<li>Chloroplast stroma (soluble enzyme in the chloroplast stroma)</li>
+<li>Gene is chloroplast-encoded (plastid genome)</li>
+</ul>
+<h2 id="key-references">Key References</h2>
+<ul>
+<li>PMID:22609438 - Crystal structure of rice RuBisCO at 1.35 A resolution; activation by NADPH and <br />
+  6-phosphogluconate; Mg2+ binding; subunit structure [Matsumura et al. 2012, J Mol Biol]</li>
+<li>PMID:2770692 - Complete rice chloroplast genome sequence [Hiratsuka et al. 1989]</li>
+<li>PMID:15122023 - Rice chloroplast genome comparison [Tang et al. 2004]</li>
+<li>PMID:16758443 - Proteomic identification of rbcL in rice tissues [Nozu et al. 2006]</li>
+</ul>
+<h2 id="annotation-notes">Annotation Notes</h2>
+<h3 id="monooxygenase-activity-go0004497">Monooxygenase activity (GO:0004497)</h3>
+<p>UniProt annotates rbcL with "monooxygenase activity" (GO:0004497) via the KW "Monooxygenase". However, <br />
+RuBisCO's oxygenase reaction does NOT fit the GO definition of monooxygenase activity ("incorporation of <br />
+one atom of molecular oxygen into the substrate and reduction of the other atom to water"). RuBisCO's <br />
+oxygenase reaction cleaves RuBP using O2, producing 2-phosphoglycolate + 3-PGA + 2H+. This is mechanistically <br />
+distinct from a monooxygenase. The monooxygenase annotation appears questionable/over-annotated.</p>
+<h3 id="nucleotide-binding-go0000166">Nucleotide binding (GO:0000166)</h3>
+<p>UniProt also has "nucleotide binding" from the KW "Nucleotide-binding". This relates to NADP binding <br />
+(positive effector), but nucleotide binding is very generic. A more specific term would be appropriate <br />
+if annotating this function.</p>
+<h3 id="carbon-fixation-vs-reductive-pentose-phosphate-cycle">Carbon fixation vs reductive pentose-phosphate cycle</h3>
+<p>Both GO:0015977 (carbon fixation) and GO:0019253 (reductive pentose-phosphate cycle) are annotated. <br />
+Carbon fixation is a broader parent term. The reductive pentose-phosphate cycle (Calvin cycle) is more <br />
+specific and represents the core pathway. Both are appropriate - carbon fixation as the high-level <br />
+function, and the Calvin cycle as the specific pathway context.</p>
+<h3 id="plastid-vs-chloroplast-redundancy">Plastid vs chloroplast redundancy</h3>
+<p>GO:0009536 (plastid) and GO:0009507 (chloroplast) are both annotated. Chloroplast is a subtype of <br />
+plastid. Having both is somewhat redundant; chloroplast is more specific and informative. The plastid <br />
+annotation could be considered redundant but is not incorrect.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P0C512
+gene_symbol: rbcL
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:4479
+  label: Poales
+description: &gt;-
+  rbcL encodes the large subunit of ribulose-1,5-bisphosphate carboxylase/oxygenase
+  (RuBisCO, EC 4.1.1.39), the most abundant protein on Earth and the central enzyme
+  in photosynthetic carbon fixation. RuBisCO catalyzes two competing reactions at the
+  same active site: (1) carboxylation of D-ribulose 1,5-bisphosphate (RuBP) with CO2
+  to produce two molecules of 3-phosphoglycerate in the Calvin-Benson-Bassham cycle,
+  and (2) oxygenation of RuBP with O2 to produce 2-phosphoglycolate and
+  3-phosphoglycerate, initiating photorespiration. The enzyme is a form I
+  heterohexadecamer (L8S8) localized in the chloroplast stroma, requiring Mg2+ as a
+  cofactor and activation by Lys-201 carbamylation. This review uses the rice
+  (Oryza sativa subsp. japonica, P0C512) entry as a representative for Poales.
+existing_annotations:
+- term:
+    id: GO:0019253
+    label: reductive pentose-phosphate cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      IEA annotation placing rbcL in the reductive pentose-phosphate cycle (Calvin-Benson-Bassham
+      cycle), transferred via UniRule UR000339182 based on shared sequence features. RuBisCO
+      catalyzes the carbon-fixing step of this cycle: carboxylation of RuBP to yield two molecules
+      of 3-phosphoglycerate. This is the defining reaction of the Calvin cycle and the primary
+      biological role of the large subunit.
+    action: ACCEPT
+    reason: &gt;-
+      The reductive pentose-phosphate cycle is the core biological process context for RuBisCO
+      function. The large subunit catalyzes the rate-limiting carboxylation step of this pathway.
+      UniProt states &#34;RuBisCO catalyzes two reactions: the carboxylation of D-ribulose
+      1,5-bisphosphate, the primary event in carbon dioxide fixation&#34; (P0C512 FUNCTION).
+      Crystal structure of rice RuBisCO confirms the active site architecture for this reaction
+      (PMID:22609438).
+    supported_by:
+      - reference_id: PMID:22609438
+        supporting_text: &#34;Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate&#34;
+      - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+        supporting_text: &#34;RuBisCO catalyzes two reactions: the carboxylation of D-ribulose 1,5-bisphosphate, the primary event in carbon dioxide fixation&#34;
+      - reference_id: file:9POAL/rbcL/rbcL-deep-research-falcon.md
+        supporting_text: &#34;Rice RbcL is the catalytic large subunit of chloroplast Form I Rubisco, catalyzing RuBP carboxylation (CO2 fixation to produce 3PG) [in the reductive pentose-phosphate cycle]&#34;
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for magnesium ion binding, inferred from multiple InterPro signatures
+      (IPR000685, IPR020878, IPR020888, IPR036376) and UniRule UR000339182. Mg2+ is an essential
+      catalytic cofactor for RuBisCO, binding 1 ion per large subunit at the active site via
+      the carbamylated Lys-201 residue. Crystal structure of rice RuBisCO at 1.35 A resolution
+      directly demonstrates Mg2+ coordination (PMID:22609438).
+    action: ACCEPT
+    reason: &gt;-
+      Magnesium ion binding is experimentally validated as essential for RuBisCO catalysis.
+      The 1.35 A crystal structure of rice RuBisCO (PDB: 1WDD) shows Mg2+ coordinated by
+      carbamylated Lys-201, Asp-203, and Glu-204 (PMID:22609438). UniProt confirms
+      &#34;Binds 1 Mg(2+) ion per subunit&#34; with experimental evidence ECO:0000269|PubMed:22609438.
+    supported_by:
+      - reference_id: PMID:22609438
+        supporting_text: &#34;Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate&#34;
+      - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+        supporting_text: &#34;Binds 1 Mg(2+) ion per subunit&#34;
+- term:
+    id: GO:0009507
+    label: chloroplast
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for chloroplast localization, inferred from UniProtKB-SubCell SL-0049
+      and UniRule. RuBisCO is localized in the chloroplast stroma where it catalyzes carbon
+      fixation. The rbcL gene is itself chloroplast-encoded (plastid genome). UniProt states
+      &#34;Subcellular location: Plastid, chloroplast&#34; for this entry. While correct, the more
+      specific term GO:0009570 (chloroplast stroma) would be more informative, as RuBisCO is
+      a soluble stromal enzyme.
+    action: MODIFY
+    reason: &gt;-
+      Chloroplast localization is correct but could be more specific. RuBisCO is a soluble
+      enzyme in the chloroplast stroma, not associated with thylakoid membranes. GO:0009570
+      (chloroplast stroma) more precisely captures the sub-organellar localization. The crystal
+      structure was obtained from stromal extracts (PMID:22609438), and RuBisCO is a canonical
+      chloroplast stroma marker protein.
+    proposed_replacement_terms:
+      - id: GO:0009570
+        label: chloroplast stroma
+    supported_by:
+      - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Plastid, chloroplast&#34;
+      - reference_id: PMID:22609438
+        supporting_text: &#34;Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate [enzyme purified from leaf chloroplast stroma]&#34;
+- term:
+    id: GO:0009536
+    label: plastid
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation for plastid localization via ARBA machine learning model ARBA00027316.
+      This is correct but very general - plastid is the parent term of chloroplast. Since the
+      more specific chloroplast annotation (GO:0009507) is already present and we propose
+      further refinement to chloroplast stroma (GO:0009570), this broader plastid annotation
+      is redundant.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Plastid localization is technically correct since chloroplasts are plastids, but this
+      annotation is redundant with the more specific chloroplast annotation. It is not
+      incorrect and reflects the ARBA automated inference, but does not add information
+      beyond the chloroplast annotation. Retained as non-core rather than removed since
+      it is not wrong.
+    supported_by:
+      - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Plastid, chloroplast&#34;
+- term:
+    id: GO:0015977
+    label: carbon fixation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for carbon fixation, inferred from multiple InterPro signatures
+      (IPR017443, IPR020878, IPR020888, IPR036422) and UniRule. Carbon fixation is the
+      defining biological function of RuBisCO - the enzyme catalyzes the primary reaction
+      by which inorganic CO2 is incorporated into organic carbon (3-phosphoglycerate).
+      This is a broader term than GO:0019253 (reductive pentose-phosphate cycle) but
+      accurately captures the fundamental role of the enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Carbon fixation is the core biological function of RuBisCO and an appropriate
+      annotation at the broader process level. While the more specific reductive
+      pentose-phosphate cycle term (GO:0019253) is also present, carbon fixation as a
+      standalone process annotation is warranted because it directly describes what the
+      enzyme does - incorporating CO2 into organic molecules. UniProt keywords include
+      &#34;Carbon dioxide fixation&#34; and &#34;Calvin cycle&#34; for this entry.
+    supported_by:
+      - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+        supporting_text: &#34;RuBisCO catalyzes two reactions: the carboxylation of D-ribulose 1,5-bisphosphate, the primary event in carbon dioxide fixation&#34;
+- term:
+    id: GO:0016984
+    label: ribulose-bisphosphate carboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for ribulose-bisphosphate carboxylase activity (EC 4.1.1.39), inferred
+      from multiple InterPro signatures, Rhea reaction RHEA:23124, EC number, and UniRule.
+      This is the primary molecular function of the rbcL gene product. The enzyme catalyzes
+      the reaction: D-ribulose 1,5-bisphosphate + CO2 + H2O = 2 (2R)-3-phosphoglycerate + 2 H+.
+      Crystal structure of rice RuBisCO confirms the active site with substrate binding residues
+      and transition state analog 2-CABP bound (PMID:22609438).
+    action: ACCEPT
+    reason: &gt;-
+      This is the defining molecular function of RuBisCO and the most specific appropriate
+      MF term. The carboxylase activity is directly demonstrated by the 1.35 A crystal
+      structure of rice RuBisCO in complex with transition-state analog 2-CABP
+      (PMID:22609438). UniProt assigns EC 4.1.1.39 and the catalytic activity is described
+      with Rhea cross-reference RHEA:23124. This is the single most important annotation
+      for this gene product.
+    supported_by:
+      - reference_id: PMID:22609438
+        supporting_text: &#34;Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate&#34;
+      - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+        supporting_text: &#34;Reaction=2 (2R)-3-phosphoglycerate + 2 H(+) = D-ribulose 1,5-bisphosphate + CO2 + H2O; EC=4.1.1.39&#34;
+- term:
+    id: GO:0009536
+    label: plastid
+  evidence_type: IC
+  original_reference_id: PMID:12520024
+  review:
+    summary: &gt;-
+      IC (Inferred by Curator) annotation for plastid localization, assigned by Gramene with
+      reference to PMID:12520024 (Swiss-Prot knowledgebase description paper). This is a
+      curator inference based on the UniProt/Swiss-Prot annotation that rbcL is encoded by
+      the plastid genome and localized to the plastid/chloroplast. The reference is a database
+      description paper rather than primary research on rbcL localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This IC annotation is correct - rbcL is indeed located in the plastid (specifically
+      chloroplast). However, it is redundant with the IEA chloroplast annotation (GO:0009507)
+      and the other IEA plastid annotation (GO:0009536). The reference PMID:12520024 is a
+      Swiss-Prot database paper, not primary evidence for rbcL localization, though the
+      curator inference itself is sound. Retained as non-core since the IC evidence code
+      adds curatorial validation but the term is less specific than chloroplast.
+    supported_by:
+      - reference_id: PMID:12520024
+        supporting_text: &#34;SWISS-PROT provides annotated entries for all species&#34;
+      - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Plastid, chloroplast&#34;
+- term:
+    id: GO:0009853
+    label: photorespiration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      New annotation for photorespiration. RuBisCO catalyzes the oxygenase reaction that
+      initiates the photorespiratory pathway: D-ribulose 1,5-bisphosphate + O2 =
+      2-phosphoglycolate + 3-phosphoglycerate + 2 H+. This reaction occurs at the same
+      active site as carboxylation, in competition with CO2 fixation. UniProt lists
+      photorespiration as a keyword and cross-references GO:0009853 via UniProtKB-KW.
+      This annotation is present in the UniProt DR lines but was not captured in the GOA
+      download.
+    action: NEW
+    reason: &gt;-
+      Photorespiration is a biologically important process directly initiated by RuBisCO&#39;s
+      oxygenase activity. UniProt explicitly describes this dual function: &#34;the oxidative
+      fragmentation of the pentose substrate in the photorespiration process. Both reactions
+      occur simultaneously and in competition at the same active site.&#34; The oxygenase
+      reaction is catalyzed with Rhea cross-reference RHEA:36631. This annotation should
+      be included as it represents a core function of rbcL that is absent from the current
+      GOA annotation set.
+    supported_by:
+      - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+        supporting_text: &#34;the oxidative fragmentation of the pentose substrate in the photorespiration process. Both reactions occur simultaneously and in competition at the same active site&#34;
+      - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+        supporting_text: &#34;Reaction=D-ribulose 1,5-bisphosphate + O2 = 2-phosphoglycolate + (2R)-3-phosphoglycerate + 2 H(+); Xref=Rhea:RHEA:36631&#34;
+- term:
+    id: GO:0009570
+    label: chloroplast stroma
+  evidence_type: IDA
+  original_reference_id: PMID:22609438
+  review:
+    summary: &gt;-
+      New annotation for chloroplast stroma localization. RuBisCO is a soluble enzyme in
+      the chloroplast stroma where it performs carbon fixation. The crystal structure was
+      obtained from rice leaf chloroplast stromal extracts (PMID:22609438). This is a more
+      specific localization than the existing chloroplast (GO:0009507) annotation.
+    action: NEW
+    reason: &gt;-
+      RuBisCO is universally recognized as a chloroplast stroma protein. The rice crystal
+      structure (PMID:22609438) was obtained from leaf tissue chloroplast preparations, and
+      the enzyme functions as a soluble stromal protein. GO:0009570 (chloroplast stroma)
+      provides more informative sub-organellar localization than the generic chloroplast term.
+    supported_by:
+      - reference_id: PMID:22609438
+        supporting_text: &#34;Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate&#34;
+      - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Plastid, chloroplast&#34;
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12520024
+  title: The SWISS-PROT protein knowledgebase and its supplement TrEMBL in 2003.
+  findings:
+    - statement: &gt;-
+        Database description paper for Swiss-Prot/TrEMBL, not primary research on rbcL.
+        Used as reference for IC annotation of plastid localization by Gramene curators.
+- id: PMID:22609438
+  title: Crystal structure of rice Rubisco and implications for activation induced by positive
+    effectors NADPH and 6-phosphogluconate.
+  findings:
+    - statement: &gt;-
+        1.35 A resolution crystal structure of activated rice RuBisCO holoenzyme (L8S8)
+        reveals Mg2+ coordination at the active site via carbamylated Lys-201, Asp-203,
+        and Glu-204.
+      supporting_text: &#34;Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate&#34;
+    - statement: &gt;-
+        NADPH and 6-phosphogluconate bind as positive effectors promoting enzyme activation.
+        Transition-state analog 2-CABP bound at active site confirms the carboxylase mechanism.
+      supporting_text: &#34;Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate&#34;
+- id: PMID:2770692
+  title: The complete sequence of the rice (Oryza sativa) chloroplast genome.
+  findings:
+    - statement: &gt;-
+        Complete rice chloroplast genome sequence establishing rbcL as chloroplast-encoded.
+- id: PMID:16758443
+  title: Proteomic analysis of rice leaf, stem and root tissues during growth course.
+  findings:
+    - statement: &gt;-
+        Mass spectrometry identification of rbcL protein in rice leaf tissue proteomics.
+- id: file:9POAL/rbcL/rbcL-deep-research-falcon.md
+  title: Deep research report on rbcL (RuBisCO large subunit) in Poales
+  findings:
+    - statement: &gt;-
+        Comprehensive literature synthesis confirming rbcL encodes the catalytic large subunit
+        of Form I RuBisCO (L8S8), performing carboxylation and oxygenation of RuBP in the
+        chloroplast stroma. Activation requires carbamylation of Lys-201 and Mg2+ coordination.
+        In rice, the PPR protein RCN22 stabilizes rbcL mRNA via its 5&#39; UTR, linking
+        photosynthetic capacity to tillering via the TB1-RCN22-RbcL module.
+core_functions:
+# Core function 1: RuBisCO carboxylase -- Calvin cycle carbon fixation
+- description: &gt;-
+    rbcL encodes the catalytic large subunit of RuBisCO, which enables
+    ribulose-bisphosphate carboxylase activity (EC 4.1.1.39) to fix atmospheric CO2
+    onto D-ribulose 1,5-bisphosphate, producing two molecules of 3-phosphoglycerate
+    in the reductive pentose-phosphate cycle (Calvin-Benson-Bassham cycle). This is the
+    primary carbon fixation reaction in photosynthesis. The enzyme requires Mg2+ as an
+    essential cofactor, coordinated at the active site by carbamylated Lys-201, Asp-203,
+    and Glu-204 (PMID:22609438). The L8S8 holoenzyme functions as a soluble complex in
+    the chloroplast stroma.
+  molecular_function:
+    id: GO:0016984
+    label: ribulose-bisphosphate carboxylase activity
+  directly_involved_in:
+  - id: GO:0015977
+    label: carbon fixation
+  - id: GO:0019253
+    label: reductive pentose-phosphate cycle
+  locations:
+  - id: GO:0009570
+    label: chloroplast stroma
+  supported_by:
+  - reference_id: PMID:22609438
+    supporting_text: &#34;Crystal structure of rice Rubisco and implications for activation induced by positive effectors NADPH and 6-phosphogluconate&#34;
+  - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+    supporting_text: &#34;RuBisCO catalyzes two reactions: the carboxylation of D-ribulose 1,5-bisphosphate, the primary event in carbon dioxide fixation&#34;
+# Core function 2: RuBisCO oxygenase -- photorespiration
+- description: &gt;-
+    The same active site of RuBisCO also catalyzes the oxygenation of D-ribulose
+    1,5-bisphosphate with O2 to produce 2-phosphoglycolate and 3-phosphoglycerate,
+    initiating the photorespiratory pathway. This competing reaction is an intrinsic
+    property of the enzyme that cannot be separated from the carboxylase activity.
+    The oxygenase reaction has significant metabolic consequences, reducing
+    photosynthetic efficiency particularly in C3 plants like rice.
+  molecular_function:
+    id: GO:0016984
+    label: ribulose-bisphosphate carboxylase activity
+  directly_involved_in:
+  - id: GO:0009853
+    label: photorespiration
+  locations:
+  - id: GO:0009570
+    label: chloroplast stroma
+  supported_by:
+  - reference_id: file:9POAL/rbcL/rbcL-uniprot.txt
+    supporting_text: &#34;the oxidative fragmentation of the pentose substrate in the photorespiration process. Both reactions occur simultaneously and in competition at the same active site&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
