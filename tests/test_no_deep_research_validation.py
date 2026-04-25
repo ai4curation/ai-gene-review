@@ -60,7 +60,7 @@ def test_no_deep_research_warning():
             yaml.dump(yaml_data, f)
 
         # Validate - should get warning about unused research files
-        report = validate_gene_review(yaml_file, check_best_practices=True, best_practices_only=True)
+        report = validate_gene_review(yaml_file, check_best_practices=True)
 
         # Find the specific warning
         warning_found = False
@@ -116,7 +116,7 @@ def test_deep_research_referenced_no_warning():
             yaml.dump(yaml_data, f)
 
         # Validate - should NOT get warning about unused research
-        report = validate_gene_review(yaml_file, check_best_practices=True, best_practices_only=True)
+        report = validate_gene_review(yaml_file, check_best_practices=True)
 
         # Verify no warning about deep research
         warning_found = False
@@ -156,7 +156,7 @@ def test_no_research_files_no_warning():
             yaml.dump(yaml_data, f)
 
         # Validate - should NOT get warning when no research files exist
-        report = validate_gene_review(yaml_file, check_best_practices=True, best_practices_only=True)
+        report = validate_gene_review(yaml_file, check_best_practices=True)
 
         # Verify no warning about deep research
         warning_found = False
@@ -205,7 +205,7 @@ def test_various_research_file_patterns(research_filename):
             yaml.dump(yaml_data, f)
 
         # Validate
-        report = validate_gene_review(yaml_file, check_best_practices=True, best_practices_only=True)
+        report = validate_gene_review(yaml_file, check_best_practices=True)
 
         # Should warn about the unused research file
         warning_found = False

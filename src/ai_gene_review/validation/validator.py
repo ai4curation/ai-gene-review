@@ -1,9 +1,10 @@
-"""Validator for gene review YAML files using LinkML schema.
+"""Custom best-practices validator for gene review YAML files.
 
-Schema, term, and reference validation are delegated to the standard
+Schema, term, and reference validation are handled by the standard
 LinkML CLI tools (``linkml-validate``, ``linkml-term-validator``,
-``linkml-reference-validator``) via wrapper scripts in ``scripts/``.
-Only the custom best-practices checks remain in Python.
+``linkml-reference-validator``) invoked from the justfile.  This
+module contains only the domain-specific best-practices checks that
+have no upstream equivalent.
 
 Example:
     >>> from ai_gene_review.validation import validate_gene_review
@@ -18,7 +19,6 @@ Example:
 
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple, Callable
-import subprocess
 import yaml
 import time
 from contextlib import contextmanager
@@ -82,266 +82,17 @@ def load_schema() -> SchemaView:
 
 
 # ---------------------------------------------------------------------------
-# CLI tool runners
+# GO branch binding validation (cached)
 # ---------------------------------------------------------------------------
 
-def _run_cli_tool(
-    cmd: List[str],
-    report: ValidationReport,
-    category: str,
-    check_type: str,
-    *,
-    progress_callback: Optional[Callable] = None,
-    step_label: str = "",
-) -> bool:
-    """Run a CLI validation tool and parse its output into *report*.
-
-    Only lines containing ``[ERROR]``, ``[WARNING]``, or ``[INFO]``
-    markers are captured as issues.  Informational output (banners,
-    summary counts, cache paths) is ignored.
-
-    Returns True when the tool reported no errors.
-    """
-    if progress_callback and step_label:
-        progress_callback(step_label)
-
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    output = (result.stdout + "\n" + result.stderr).strip()
-
-    if result.returncode == 0:
-        return True
-
-    # Parse output for structured error/warning/info lines only
-    for line in output.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-
-        if "[ERROR]" in line:
-            report.add_issue(
-                ValidationSeverity.ERROR, line, path=None,
-                validation_category=category, check_type=check_type,
-            )
-        elif "[WARNING]" in line or "[WARN]" in line:
-            report.add_issue(
-                ValidationSeverity.WARNING, line, path=None,
-                validation_category=category, check_type=check_type,
-            )
-        elif "[INFO]" in line:
-            report.add_issue(
-                ValidationSeverity.INFO, line, path=None,
-                validation_category=category, check_type=check_type,
-            )
-        # Skip lines without severity markers (banners, summaries, etc.)
-
-    # If non-zero exit but no structured issues found, report a generic error
-    if result.returncode != 0 and not any(
-        issue.validation_category == category for issue in report.issues
-    ):
-        report.add_issue(
-            ValidationSeverity.ERROR,
-            output or f"CLI tool exited with code {result.returncode}",
-            path=None,
-            validation_category=category,
-            check_type=check_type,
-        )
-
-    return result.returncode == 0
-
-
-def run_schema_validation(
-    yaml_file: Path,
-    schema_path: Path,
-    report: ValidationReport,
-    target_class: str = "GeneReview",
-    *,
-    progress_callback: Optional[Callable] = None,
-) -> bool:
-    """Run ``linkml-validate`` for structural schema validation."""
-    cmd = [
-        "uv", "run", "linkml-validate",
-        "--schema", str(schema_path),
-        "--target-class", target_class,
-        str(yaml_file),
-    ]
-    return _run_cli_tool(
-        cmd, report, "SchemaValidator", "schema_validation",
-        progress_callback=progress_callback,
-        step_label="Schema validation",
-    )
-
-
-def run_term_validation(
-    yaml_file: Path,
-    schema_path: Path,
-    report: ValidationReport,
-    target_class: str = "GeneReview",
-    *,
-    progress_callback: Optional[Callable] = None,
-) -> bool:
-    """Run ``linkml-term-validator`` for ontology term validation."""
-    project_root = get_project_root()
-    term_validator = project_root / "scripts" / "run_term_validator.sh"
-    oak_config = project_root / "conf" / "oak_config.yaml"
-
-    cmd = [
-        str(term_validator),
-        "validate-data",
-        str(yaml_file),
-        "-s", str(schema_path),
-        "-t", target_class,
-        "--labels",
-        "-c", str(oak_config),
-    ]
-    return _run_cli_tool(
-        cmd, report, "TermValidator", "term_validation",
-        progress_callback=progress_callback,
-        step_label="Term validation",
-    )
-
-
-def run_reference_validation(
-    yaml_file: Path,
-    schema_path: Path,
-    report: ValidationReport,
-    target_class: str = "GeneReview",
-    *,
-    progress_callback: Optional[Callable] = None,
-) -> bool:
-    """Run ``linkml-reference-validator`` for publication/snippet validation."""
-    project_root = get_project_root()
-    ref_validator = project_root / "scripts" / "run_reference_validator.sh"
-    ref_config = project_root / "conf" / "reference_validator_config.yaml"
-
-    cmd = [
-        str(ref_validator),
-        "validate", "data",
-        str(yaml_file),
-        "--schema", str(schema_path),
-        "--target-class", target_class,
-        "--config", str(ref_config),
-    ]
-    return _run_cli_tool(
-        cmd, report, "ReferenceValidator", "reference_validation",
-        progress_callback=progress_callback,
-        step_label="Reference validation",
-    )
-
-
-# ---------------------------------------------------------------------------
-# Main validation entry points
-# ---------------------------------------------------------------------------
-
-def validate_gene_review(
-    yaml_file: Path | str,
-    schema_path: Optional[Path | str] = None,
-    check_best_practices: bool = True,
-    check_goa: bool = True,
-    check_supporting_text: bool = True,
-    progress_callback: Optional[Callable] = None,
-    best_practices_only: bool = False,
-) -> ValidationReport:
-    """Validate a gene review YAML file against the LinkML schema.
-
-    Orchestrates three CLI tools (schema, term, reference validation)
-    then runs custom best-practices checks in Python.
-
-    Args:
-        yaml_file: Path to the YAML file to validate
-        schema_path: Optional path to schema file (uses default if not provided)
-        check_best_practices: Whether to check for best practices (soft failures)
-        check_goa: Whether to validate against GOA file (enabled by default)
-        check_supporting_text: Whether to validate supporting_text against cached publications
-        progress_callback: Optional callback function to report progress steps
-        best_practices_only: Skip CLI tool validation (schema/term/ref) and only
-            run the Python best-practices checks.  Useful for unit tests that
-            exercise domain rules without subprocess overhead.
-
-    Returns:
-        ValidationReport with detailed validation results
-
-    Example:
-        >>> # Create a test file
-        >>> import tempfile, yaml
-        >>> from pathlib import Path
-        >>> data = {
-        ...     "id": "Q12345",
-        ...     "gene_symbol": "TEST",
-        ...     "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
-        ...     "description": "A test gene for demonstration purposes"
-        ... }
-        >>> with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-        ...     yaml.dump(data, f)
-        ...     test_file = Path(f.name)
-        >>> report = validate_gene_review(test_file)  # doctest: +ELLIPSIS
-        ...
-        >>> print("Valid!" if report.is_valid else f"Errors: {report.error_count}")
-        Valid!
-        >>> test_file.unlink()  # Clean up
-    """
-    yaml_file_path: Path = Path(yaml_file)
-    report = ValidationReport(file_path=yaml_file_path, is_valid=True)
-
-    if progress_callback:
-        progress_callback("Checking file existence")
-
-    if not yaml_file_path.exists():
-        report.add_issue(
-            ValidationSeverity.ERROR, f"File not found: {yaml_file_path}", path=None
-        )
-        return report
-
-    resolved_schema = Path(schema_path) if schema_path else get_schema_path()
-    if not resolved_schema.exists():
-        report.add_issue(
-            ValidationSeverity.ERROR,
-            f"Schema file not found: {resolved_schema}",
-            path=None,
-        )
-        return report
-
-    if not best_practices_only:
-        # 1. Schema validation via linkml-validate CLI
-        run_schema_validation(
-            yaml_file_path, resolved_schema, report,
-            progress_callback=progress_callback,
-        )
-
-        # Stop early on schema errors — term/ref validation won't be meaningful
-        if report.has_errors:
-            return report
-
-        # 2. Term validation via linkml-term-validator CLI
-        run_term_validation(
-            yaml_file_path, resolved_schema, report,
-            progress_callback=progress_callback,
-        )
-
-        # 3. Reference validation via linkml-reference-validator CLI
-        if check_supporting_text:
-            run_reference_validation(
-                yaml_file_path, resolved_schema, report,
-                progress_callback=progress_callback,
-            )
-
-    # 4. Custom best-practices checks (Python)
-    # Run even if term/ref validation reported errors — only skip on schema failures.
-    if check_best_practices and not report.has_errors:
-        if progress_callback:
-            progress_callback("Best practices validation")
-
-        with open(yaml_file_path, "r") as f:
-            data = yaml.safe_load(f)
-
-        check_best_practices_rules(
-            data,
-            report,
-            yaml_file_path if check_goa else None,
-            check_supporting_text,
-            progress_callback,
-        )
-
-    return report
+# Fields in core_functions -> (dynamic enum name, human-readable branch label)
+_BINDING_CHECKS: List[Tuple[str, str, str]] = [
+    ("molecular_function", "GOMolecularActivityEnum", "molecular_function"),
+    ("contributes_to_molecular_function", "GOMolecularActivityEnum", "molecular_function"),
+    ("directly_involved_in", "GOBiologicalProcessEnum", "biological_process"),
+    ("locations", "GOCellularLocationEnum", "cellular_component"),
+    ("in_complex", "GOProteinContainingComplexEnum", "protein-containing complex"),
+]
 
 
 @lru_cache(maxsize=1)
@@ -374,16 +125,6 @@ def _get_expanded_enums() -> Dict[str, set]:
         if enum_def:
             result[enum_name] = plugin.expand_enum(enum_def, sv)
     return result
-
-
-# Fields in core_functions → (dynamic enum name, human-readable branch label)
-_BINDING_CHECKS: List[Tuple[str, str, str]] = [
-    ("molecular_function", "GOMolecularActivityEnum", "molecular_function"),
-    ("contributes_to_molecular_function", "GOMolecularActivityEnum", "molecular_function"),
-    ("directly_involved_in", "GOBiologicalProcessEnum", "biological_process"),
-    ("locations", "GOCellularLocationEnum", "cellular_component"),
-    ("in_complex", "GOProteinContainingComplexEnum", "protein-containing complex"),
-]
 
 
 def _check_go_branch_bindings(data: Dict[str, Any], report: ValidationReport) -> None:
@@ -430,6 +171,83 @@ def _check_go_branch_bindings(data: Dict[str, Any], report: ValidationReport) ->
                         )
 
 
+# ---------------------------------------------------------------------------
+# Main validation entry points
+# ---------------------------------------------------------------------------
+
+def validate_gene_review(
+    yaml_file: Path | str,
+    schema_path: Optional[Path | str] = None,
+    check_best_practices: bool = True,
+    check_goa: bool = True,
+    check_supporting_text: bool = True,
+    progress_callback: Optional[Callable] = None,
+) -> ValidationReport:
+    """Run custom best-practices checks on a gene review YAML file.
+
+    Schema, term, and reference validation are handled by the standard
+    LinkML CLI tools invoked from the justfile.  This function runs only
+    the domain-specific checks that have no upstream equivalent.
+
+    Args:
+        yaml_file: Path to the YAML file to validate
+        schema_path: Unused (kept for backward compatibility)
+        check_best_practices: Whether to check for best practices (soft failures)
+        check_goa: Whether to validate against GOA file (enabled by default)
+        check_supporting_text: Unused (handled by linkml-reference-validator CLI)
+        progress_callback: Optional callback function to report progress steps
+
+    Returns:
+        ValidationReport with detailed validation results
+
+    Example:
+        >>> # Create a test file
+        >>> import tempfile, yaml
+        >>> from pathlib import Path
+        >>> data = {
+        ...     "id": "Q12345",
+        ...     "gene_symbol": "TEST",
+        ...     "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+        ...     "description": "A test gene for demonstration purposes"
+        ... }
+        >>> with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        ...     yaml.dump(data, f)
+        ...     test_file = Path(f.name)
+        >>> report = validate_gene_review(test_file)  # doctest: +ELLIPSIS
+        ...
+        >>> print("Valid!" if report.is_valid else f"Errors: {report.error_count}")
+        Valid!
+        >>> test_file.unlink()  # Clean up
+    """
+    yaml_file_path: Path = Path(yaml_file)
+    report = ValidationReport(file_path=yaml_file_path, is_valid=True)
+
+    if progress_callback:
+        progress_callback("Checking file existence")
+
+    if not yaml_file_path.exists():
+        report.add_issue(
+            ValidationSeverity.ERROR, f"File not found: {yaml_file_path}", path=None
+        )
+        return report
+
+    with open(yaml_file_path, "r") as f:
+        data = yaml.safe_load(f)
+
+    if check_best_practices:
+        if progress_callback:
+            progress_callback("Best practices validation")
+
+        check_best_practices_rules(
+            data,
+            report,
+            yaml_file_path if check_goa else None,
+            progress_callback=progress_callback,
+        )
+
+    return report
+
+
 def check_best_practices_rules(
     data: Dict[str, Any],
     report: ValidationReport,
@@ -441,13 +259,13 @@ def check_best_practices_rules(
 
     This function contains only the custom domain-specific checks.
     Schema, term-label, and reference/snippet validation are handled
-    by the CLI tools invoked from ``validate_gene_review()``.
+    by the CLI tools invoked from the justfile.
 
     Args:
         data: The parsed YAML data
         report: ValidationReport to add warnings to
         yaml_file: Path to YAML file for GOA validation (if enabled)
-        check_supporting_text: Whether to validate supporting_text against publications
+        check_supporting_text: Unused (kept for backward compatibility)
         progress_callback: Optional callback function to report progress steps
     """
     if progress_callback:
@@ -1110,10 +928,10 @@ def validate_multiple_files(
 
     Args:
         yaml_files: List of paths to YAML files
-        schema_path: Optional path to schema file
+        schema_path: Unused (kept for backward compatibility)
         check_best_practices: Whether to check for best practices
         check_goa: Whether to validate against GOA files
-        check_supporting_text: Whether to validate supporting_text against cached publications
+        check_supporting_text: Unused (handled by linkml-reference-validator CLI)
         show_progress: Whether to show a progress bar for multiple files
 
     Returns:
@@ -1225,14 +1043,16 @@ def validate_rule_review(
     check_publications: bool = True,
     progress_callback: Optional[Callable] = None,
 ) -> ValidationReport:
-    """Validate a rule review YAML file against the LinkML schema.
+    """Validate a rule review YAML file.
 
-    Uses CLI tools for schema and reference validation.
+    Schema and reference validation are handled by the CLI tools
+    invoked from the justfile.  This is a minimal stub that checks
+    file existence.
 
     Args:
         yaml_file: Path to the YAML file to validate
-        schema_path: Optional path to schema file (uses default if not provided)
-        check_publications: Whether to validate PMID titles
+        schema_path: Unused (kept for backward compatibility)
+        check_publications: Unused (handled by linkml-reference-validator CLI)
         progress_callback: Optional callback function to report progress steps
 
     Returns:
@@ -1247,31 +1067,6 @@ def validate_rule_review(
     if not yaml_file_path.exists():
         report.add_issue(
             ValidationSeverity.ERROR, f"File not found: {yaml_file_path}", path=None
-        )
-        return report
-
-    resolved_schema = Path(schema_path) if schema_path else get_schema_path()
-    if not resolved_schema.exists():
-        report.add_issue(
-            ValidationSeverity.ERROR,
-            f"Schema file not found: {resolved_schema}",
-            path=None,
-        )
-        return report
-
-    # Schema validation via CLI
-    run_schema_validation(
-        yaml_file_path, resolved_schema, report,
-        target_class="RuleReview",
-        progress_callback=progress_callback,
-    )
-
-    # Reference validation via CLI
-    if check_publications and not report.has_errors:
-        run_reference_validation(
-            yaml_file_path, resolved_schema, report,
-            target_class="RuleReview",
-            progress_callback=progress_callback,
         )
 
     return report

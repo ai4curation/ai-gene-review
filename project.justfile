@@ -329,21 +329,28 @@ validate-files files:
 validate-deep-research:
     uv run python scripts/validate_deep_research.py
 
-# Validate a specific gene's review file AND check PMID references (short alias)
+# Full validation of a single gene file (schema + terms + references + best practices)
+[group('QC')]
 validate organism gene:
-    @echo "Validating {{organism}}/{{gene}} review file..."
-    uv run ai-gene-review validate --verbose genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
-    @echo ""
-    @echo "Checking PMID references in markdown files..."
-    uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/{{organism}}/{{gene}}/
+    #!/usr/bin/env bash
+    set -e
+    file="genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
+    echo "Schema validation..."
+    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$file"
+    echo "Term validation..."
+    {{term_validator}} validate-data "$file" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
+    echo "Reference validation..."
+    {{ref_validator}} validate data "$file" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+    echo "Best practices validation..."
+    uv run ai-gene-review validate --verbose "$file"
+    echo ""
+    echo "Checking PMID references in markdown files..."
+    uv run python src/ai_gene_review/tools/validate_pmid_references.py "genes/{{organism}}/{{gene}}/"
+    echo "✓ All validations passed for {{organism}}/{{gene}}"
 
-# Validate a specific gene's review file AND check PMID references (long name for clarity)
+# Alias for validate
 validate-gene organism gene:
-    @echo "Validating {{organism}}/{{gene}} review file..."
-    uv run ai-gene-review validate genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
-    @echo ""
-    @echo "Checking PMID references in markdown files..."
-    @uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/{{organism}}/{{gene}}/ || (echo "❌ PMID validation failed" && exit 1)
+    just validate {{organism}} {{gene}}
 
 # Validate with verbose output
 validate-gene-verbose organism gene:
@@ -380,14 +387,53 @@ validate-tag tag:
     uv run ai-gene-review validate --verbose --tsv-output "${report_path}" $(cat "${tmp_file}")
     echo "Wrote validation report to ${report_path}"
 
-# Validate all gene review files (shows detailed errors by default)
+# Validate all gene review files (schema + terms + refs + best practices)
+[group('QC')]
 validate-all:
-    @echo "Validating all gene review YAML files..."
-    @mkdir -p reports
+    #!/usr/bin/env bash
+    failed_files=()
+    echo "Validating all gene review files..."
+    for f in genes/*/*/*-ai-review.yaml; do
+        echo "=== $(basename $f) ==="
+        errors=""
+        # Schema validation
+        if ! uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f" 2>&1 | grep -q "No issues found"; then
+            errors+="  [SCHEMA] $(uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f" 2>&1 | grep -v "^$")\n"
+        fi
+        # Term validation
+        term_output=$({{term_validator}} validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)
+        if ! echo "$term_output" | grep -q "Validation passed"; then
+            errors+="  [TERMS] $term_output\n"
+        fi
+        # Reference validation
+        ref_output=$({{ref_validator}} validate data "$f" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}} 2>&1)
+        if echo "$ref_output" | grep -q "\[ERROR\]"; then
+            errors+="  [REFERENCES]\n$(echo "$ref_output" | grep -A2 "\[ERROR\]")\n"
+        fi
+        if [ -n "$errors" ]; then
+            failed_files+=("$f")
+            echo -e "$errors"
+        else
+            echo "  ✓ OK"
+        fi
+    done
+    echo ""
+    echo "Best practices validation..."
+    mkdir -p reports
     uv run ai-gene-review validate --verbose --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml"
-    @echo ""
-    @echo "Checking PMID references in all pathway markdown files..."
-    @uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || (echo "❌ PMID validation failed" && exit 1)
+    echo ""
+    echo "Checking PMID references in all pathway markdown files..."
+    uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || (echo "❌ PMID validation failed" && exit 1)
+    echo ""
+    if [ ${#failed_files[@]} -eq 0 ]; then
+        echo "✓ All files validated successfully!"
+    else
+        echo "✗ ${#failed_files[@]} file(s) with CLI tool errors:"
+        for f in "${failed_files[@]}"; do
+            echo "  - $f"
+        done
+        exit 1
+    fi
 
 # Compliance report for recommended fields (separate from validation-all.tsv)
 compliance-all:

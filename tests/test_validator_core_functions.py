@@ -44,7 +44,7 @@ def test_core_function_without_support_or_accepted_term():
         test_file = Path(f.name)
     
     try:
-        report = validate_gene_review(test_file, check_goa=False, best_practices_only=True)
+        report = validate_gene_review(test_file, check_goa=False)
         
         # Should have an error about the core function
         errors = [issue for issue in report.issues if issue.severity == ValidationSeverity.ERROR]
@@ -91,7 +91,7 @@ def test_core_function_from_accepted_annotation():
         test_file = Path(f.name)
     
     try:
-        report = validate_gene_review(test_file, check_goa=False, best_practices_only=True)
+        report = validate_gene_review(test_file, check_goa=False)
         
         # Should not have errors about this core function
         errors = [issue for issue in report.issues if issue.severity == ValidationSeverity.ERROR]
@@ -137,7 +137,7 @@ def test_core_function_with_supported_by():
         test_file = Path(f.name)
     
     try:
-        report = validate_gene_review(test_file, check_goa=False, check_supporting_text=False, best_practices_only=True)
+        report = validate_gene_review(test_file, check_goa=False, check_supporting_text=False)
         
         # Should not have errors about this core function
         errors = [issue for issue in report.issues if issue.severity == ValidationSeverity.ERROR]
@@ -186,7 +186,7 @@ def test_core_function_from_proposed_replacement():
         test_file = Path(f.name)
     
     try:
-        report = validate_gene_review(test_file, check_goa=False, best_practices_only=True)
+        report = validate_gene_review(test_file, check_goa=False)
         
         # Should not have errors about this core function
         errors = [issue for issue in report.issues if issue.severity == ValidationSeverity.ERROR]
