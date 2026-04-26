@@ -387,36 +387,19 @@ validate-tag tag:
     uv run ai-gene-review validate --verbose --tsv-output "${report_path}" $(cat "${tmp_file}")
     echo "Wrote validation report to ${report_path}"
 
-# Validate all gene review files (schema + terms + refs + best practices)
+# Validate all gene review files (schema + terms + best practices)
+# Uses batch mode for schema and term validation (single process, fast).
+# Reference validation is per-file and slow (~10s each); use
+# validate-references-all or single-file `just validate` for that.
 [group('QC')]
 validate-all:
     #!/usr/bin/env bash
-    failed_files=()
-    echo "Validating all gene review files..."
-    for f in genes/*/*/*-ai-review.yaml; do
-        echo "=== $(basename $f) ==="
-        errors=""
-        # Schema validation
-        if ! uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f" 2>&1 | grep -q "No issues found"; then
-            errors+="  [SCHEMA] $(uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f" 2>&1 | grep -v "^$")\n"
-        fi
-        # Term validation
-        term_output=$({{term_validator}} validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)
-        if ! echo "$term_output" | grep -q "Validation passed"; then
-            errors+="  [TERMS] $term_output\n"
-        fi
-        # Reference validation
-        ref_output=$({{ref_validator}} validate data "$f" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}} 2>&1)
-        if echo "$ref_output" | grep -q "\[ERROR\]"; then
-            errors+="  [REFERENCES]\n$(echo "$ref_output" | grep -A2 "\[ERROR\]")\n"
-        fi
-        if [ -n "$errors" ]; then
-            failed_files+=("$f")
-            echo -e "$errors"
-        else
-            echo "  ✓ OK"
-        fi
-    done
+    set -e
+    echo "Schema validation (batch)..."
+    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml
+    echo ""
+    echo "Term validation (batch)..."
+    uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
     echo ""
     echo "Best practices validation..."
     mkdir -p reports
@@ -424,16 +407,7 @@ validate-all:
     echo ""
     echo "Checking PMID references in all pathway markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || (echo "❌ PMID validation failed" && exit 1)
-    echo ""
-    if [ ${#failed_files[@]} -eq 0 ]; then
-        echo "✓ All files validated successfully!"
-    else
-        echo "✗ ${#failed_files[@]} file(s) with CLI tool errors:"
-        for f in "${failed_files[@]}"; do
-            echo "  - $f"
-        done
-        exit 1
-    fi
+    echo "✓ All validations passed!"
 
 # Compliance report for recommended fields (separate from validation-all.tsv)
 compliance-all:
