@@ -136,10 +136,12 @@ descriptions-status organism *args="":
 
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
+# Supports --fallback PROVIDER [PROVIDER ...] and --timeout SECONDS
 # Examples:
 #   just deep-research-openai human TP53              # gene_symbol=TP53, gene_id=TP53
 #   just deep-research-openai ARATH BRI1              # Looks up gene symbol from UniProt
 #   just deep-research-openai METEA C5B1I4 --alias mllA  # gene_symbol=mllA, gene_id=C5B1I4
+#   just deep-research-openai human TP53 --fallback perplexity-lite  # fallback on failure/timeout
 #   just deep-research-openai human CFAP300 --extra-args --param "model=gpt-4o"
 deep-research-openai organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} openai {{args}}
@@ -1295,6 +1297,94 @@ find-genes-missing-research:
     done
     echo ""
     echo "Summary: $missing_count of $total_count genes lack deep research files"
+
+# Generate per-organism quality dashboard for gene reviews
+# Shows annotation counts, action distribution, coverage gaps
+# Examples:
+#   just quality-report                          # all organisms, terminal output
+#   just quality-report human                    # single organism
+#   just quality-report "" --tsv reports/quality.tsv  # all organisms with TSV output
+quality-report organism="" *args="":
+    #!/usr/bin/env bash
+    cmd="uv run python scripts/quality_report.py {{args}}"
+    if [ -n "{{organism}}" ]; then
+        cmd="$cmd --organism {{organism}}"
+    fi
+    eval "$cmd"
+
+# Show deep research coverage status per organism
+# Displays: total genes, genes with research, missing, and per-provider counts
+# Examples:
+#   just deep-research-status            # all organisms
+#   just deep-research-status human      # single organism
+deep-research-status organism="":
+    #!/usr/bin/env python3
+    import os
+    import sys
+    from collections import defaultdict
+    from pathlib import Path
+    import re
+
+    organism_filter = "{{organism}}"
+    genes_root = Path("genes")
+
+    if organism_filter:
+        org_dirs = [genes_root / organism_filter]
+    else:
+        org_dirs = sorted(p for p in genes_root.iterdir() if p.is_dir())
+
+    grand_total = 0
+    grand_with = 0
+    grand_missing = 0
+    header_printed = False
+    all_missing = []
+
+    for org_dir in org_dirs:
+        if not org_dir.is_dir():
+            continue
+        org = org_dir.name
+        total = 0
+        with_research = 0
+        missing = 0
+        providers = defaultdict(int)
+
+        for gene_dir in sorted(org_dir.iterdir()):
+            if not gene_dir.is_dir():
+                continue
+            total += 1
+            research_files = list(gene_dir.glob("*-deep-research-*.md"))
+            if research_files:
+                with_research += 1
+                for f in research_files:
+                    m = re.search(r'-deep-research-(.+)\.md$', f.name)
+                    if m:
+                        providers[m.group(1)] += 1
+            else:
+                missing += 1
+                all_missing.append(f"{org}/{gene_dir.name}")
+
+        if total == 0:
+            continue
+
+        if not header_printed:
+            print(f"{'ORGANISM':<12s} {'TOTAL':>6s} {'WITH':>6s} {'MISSING':>7s}  PROVIDERS")
+            print(f"{'--------':<12s} {'-----':>6s} {'----':>6s} {'-------':>7s}  ---------")
+            header_printed = True
+
+        prov_str = ", ".join(f"{p}:{providers[p]}" for p in sorted(providers))
+        print(f"{org:<12s} {total:>6d} {with_research:>6d} {missing:>7d}  {prov_str}")
+        grand_total += total
+        grand_with += with_research
+        grand_missing += missing
+
+    if grand_total > 0:
+        print(f"{'--------':<12s} {'-----':>6s} {'----':>6s} {'-------':>7s}")
+        print(f"{'TOTAL':<12s} {grand_total:>6d} {grand_with:>6d} {grand_missing:>7d}")
+
+    if all_missing:
+        print(f"\nGenes missing deep research ({len(all_missing)}):")
+        for g in all_missing:
+            print(f"  {g}")
 
 # ============== Publications Cache Management ==============
 

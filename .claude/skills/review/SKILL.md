@@ -10,10 +10,25 @@ Review the gene specified in $ARGUMENTS.
 
 IMPORTANT: you MUST consult the annotation-reviewer.md subagent for this task.
 
-If the user specifies a deep research provider(s), make sure to perform deep research using at
-least this provider(s), otherwise default to falcon.
+## Step 1: Ensure gene data is fetched
 
-E.g. `just deep-research-falcon ORGANISM GENE_SYMBOL`
+Run `just fetch-gene ORGANISM GENE_SYMBOL` if the gene directory doesn't exist yet.
+
+## Step 2: Run deep research AND publication caching in parallel
+
+Publication caching only needs the GOA file (created by fetch-gene), so it can run
+concurrently with deep research. Launch both at the same time:
+
+- **Deep research**: If the user specifies a deep research provider(s), use that provider(s),
+  otherwise default to falcon. Use `--fallback perplexity-lite` so that if the primary
+  provider times out, it automatically retries with perplexity-lite.
+  E.g. `just deep-research-falcon ORGANISM GENE_SYMBOL --fallback perplexity-lite`
+- **Publication caching**: `just fetch-gene-pmids ORGANISM GENE_SYMBOL`
+
+Run these two steps **in parallel** (e.g. as concurrent background agents or shell jobs).
+Do NOT wait for deep research to finish before starting publication caching.
+
+## Step 3: Fetch additional data (bacterial organisms)
 
 For bacterial organisms (e.g. PSEPK, ECOLI, SALTY, or any prokaryote), after deep research,
 also fetch FEBA/RB-TnSeq fitness data if available:
@@ -24,3 +39,7 @@ just fetch-fitness ORGANISM GENE_SYMBOL
 
 This creates a GENE-fitness.md file with mutant fitness phenotypes and cofitness partners.
 The annotation-reviewer agent will use this data as additional evidence when reviewing annotations.
+
+## Step 4: Run annotation review
+
+Invoke the annotation-reviewer subagent to systematically review all annotations.
