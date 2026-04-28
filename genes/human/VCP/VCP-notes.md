@@ -45,3 +45,36 @@ is a real, correctly-identified primary reference (ref 21 of Olmos 2015) and
 may be useful for future annotations in the chromosome-segregation context,
 and (b) caching reflects evaluation work that future reviewers should not
 have to repeat.
+
+### Experimental systems supporting the IMP evidence code
+
+The IMP evidence code on GO:0007084 annotates *human* VCP (P55072), but the
+two direct-p97 manipulation primary references use heterologous /
+reconstitution systems rather than direct loss-of-function in human cells:
+
+- **PMID:11781570 (Hetzer 2001)** — in vitro NE assembly reconstitution.
+  The abstract describes two discrete p97 functions dissected by direct
+  manipulation of the AAA-ATPase in a reconstituted assembly system, not
+  by p97 depletion in cultured cells.
+- **PMID:18097415 (Ramadan 2007)** — explicitly states "In vitro, nucleus
+  formation requires p97" in the abstract. The Aurora-B chromatin-extraction
+  mechanism is established by direct p97 manipulation in this in vitro
+  nucleus-formation system, with corroborating in-cell data on p97-Aurora-B
+  binding after ubiquitylation.
+- **PMID:26040713 (Olmos 2015)** — the only primary reference in the
+  `supported_by` set with direct loss-of-function data in human cells (HeLa,
+  diploid fibroblasts). Olmos depletes UFD1 (a VCP adaptor), not VCP itself,
+  which is the indirect-evidence concern that motivated the IMP→TAS interim
+  on commit `3d7c271c`.
+
+Annotating human VCP with IMP via direct p97 manipulation in in vitro / in
+egg-extract systems is standard GO practice (cross-species annotation by
+orthology, with the in vitro reconstitution providing the strongest
+mechanistic dissection). This note documents the experimental-system
+limitation transparently so a future curator does not need to re-derive it.
+
+A direct human-cell VCP loss-of-function experiment in an NE-reformation
+assay (e.g., VCP siRNA, NMS-873, or CB-5083 in HeLa/RPE-1 with NE-rim
+imaging) would further strengthen the IMP annotation. This was raised as a
+non-blocking suggestion by claude-review on commit `2407bdcf` and is left as
+a future-pass concern.
