@@ -44,7 +44,7 @@ def test_molecular_function_must_be_mf_branch():
         branch_errors = [
             issue
             for issue in report.issues
-            if issue.severity == ValidationSeverity.ERROR
+            if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING)
             and (
                 "biological_process branch but should be in the molecular_function branch" in issue.message
                 or ("GO:0008150" in issue.message and "GOMolecularActivityEnum" in issue.message)
@@ -93,7 +93,7 @@ def test_directly_involved_in_must_be_bp_branch():
         branch_errors = [
             issue
             for issue in report.issues
-            if issue.severity == ValidationSeverity.ERROR
+            if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING)
             and (
                 "molecular_function branch but should be in the biological_process branch" in issue.message
                 or ("GO:0003674" in issue.message and "directly_involved_in" in issue.message.lower())
@@ -146,7 +146,7 @@ def test_locations_must_be_cc_branch():
         branch_errors = [
             issue
             for issue in report.issues
-            if issue.severity == ValidationSeverity.ERROR
+            if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING)
             and (
                 "biological_process branch but should be in the cellular_component branch" in issue.message
                 or ("GO:0008150" in issue.message and "GOCellularLocationEnum" in issue.message)
@@ -201,7 +201,7 @@ def test_correct_go_branches_pass():
         branch_errors = [
             issue
             for issue in report.issues
-            if issue.severity == ValidationSeverity.ERROR
+            if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING)
             and "branch but should be in" in issue.message
         ]
         assert len(branch_errors) == 0
@@ -211,7 +211,7 @@ def test_correct_go_branches_pass():
         if not report.is_valid:
             # Make sure failures are not branch-related
             for issue in report.issues:
-                if issue.severity == ValidationSeverity.ERROR:
+                if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING):
                     assert "branch but should be in" not in issue.message
     finally:
         temp_path.unlink()
@@ -234,7 +234,7 @@ def test_real_gene_branch_validation():
     branch_errors = [
         issue
         for issue in report.issues
-        if issue.severity == ValidationSeverity.ERROR
+        if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING)
         and "branch but should be in" in issue.message
     ]
 

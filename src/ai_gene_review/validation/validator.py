@@ -162,8 +162,12 @@ def _check_go_branch_bindings(data: Dict[str, Any], report: ValidationReport) ->
                     term_id = val["id"]
                     if term_id not in valid_ids:
                         idx = f"[{j}]" if isinstance(cf.get(field), list) else ""
+                        # WARNING not ERROR: the expanded enum depends on which
+                        # GO release is cached locally; obsolete terms (like
+                        # GO:0005615) will fail here but may be valid in
+                        # the GO version the curation was done against.
                         report.add_issue(
-                            ValidationSeverity.ERROR,
+                            ValidationSeverity.WARNING,
                             f"Term {term_id} ({val.get('label', '?')}) is not in the {branch_label} branch (expected {enum_name})",
                             path=f"core_functions[{i}].{field}{idx}.id",
                             validation_category="LTVValidator",
