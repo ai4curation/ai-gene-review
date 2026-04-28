@@ -22,7 +22,6 @@ from typing import List, Dict, Any, Optional, Tuple, Callable
 import yaml
 import time
 from contextlib import contextmanager
-from functools import lru_cache
 from linkml_runtime.utils.schemaview import SchemaView  # type: ignore[import-untyped]
 
 from ai_gene_review.validation.validation_report import (
@@ -79,100 +78,6 @@ def load_schema() -> SchemaView:
         raise FileNotFoundError(f"Schema file not found: {schema_path}")
 
     return SchemaView(str(schema_path))
-
-
-# ---------------------------------------------------------------------------
-# GO branch binding validation (cached)
-# ---------------------------------------------------------------------------
-
-# Fields in core_functions -> (dynamic enum name, human-readable branch label)
-_BINDING_CHECKS: List[Tuple[str, str, str]] = [
-    ("molecular_function", "GOMolecularActivityEnum", "molecular_function"),
-    ("contributes_to_molecular_function", "GOMolecularActivityEnum", "molecular_function"),
-    ("directly_involved_in", "GOBiologicalProcessEnum", "biological_process"),
-    ("locations", "GOCellularLocationEnum", "cellular_component"),
-    ("in_complex", "GOProteinContainingComplexEnum", "protein-containing complex"),
-]
-
-
-@lru_cache(maxsize=1)
-def _get_expanded_enums() -> Dict[str, set]:
-    """Lazily load and cache the expanded dynamic enum sets.
-
-    Uses DynamicEnumPlugin to resolve reachable_from constraints
-    (e.g. GOMolecularActivityEnum = all descendants of GO:0003674).
-    The result is cached so that batch validation doesn't re-download
-    ontology databases for every file.
-    """
-    from linkml_term_validator.plugins import DynamicEnumPlugin
-
-    schema_path = get_schema_path()
-    project_root = get_project_root()
-    cache_dir = project_root / "cache"
-    oak_config_path = project_root / "conf" / "oak_config.yaml"
-
-    plugin = DynamicEnumPlugin(
-        cache_dir=str(cache_dir),
-        oak_config_path=str(oak_config_path) if oak_config_path.exists() else None,
-    )
-
-    sv = SchemaView(str(schema_path))
-    result: Dict[str, set] = {}
-    for enum_name in [bc[1] for bc in _BINDING_CHECKS]:
-        if enum_name in result:
-            continue
-        enum_def = sv.get_enum(enum_name)
-        if enum_def:
-            result[enum_name] = plugin.expand_enum(enum_def, sv)
-    return result
-
-
-def _check_go_branch_bindings(data: Dict[str, Any], report: ValidationReport) -> None:
-    """Validate GO branch membership for bindings in core_functions.
-
-    The term validator CLI handles direct slot ranges with dynamic enums,
-    but BindingValidationPlugin skips dynamic enums (reachable_from) and
-    DynamicEnumPlugin only checks direct ranges, not bindings. This
-    function fills that gap.
-    """
-    if "core_functions" not in data or not data["core_functions"]:
-        return
-
-    expanded = _get_expanded_enums()
-    if not expanded:
-        return
-
-    for i, cf in enumerate(data["core_functions"]):
-        if not isinstance(cf, dict):
-            continue
-        for field, enum_name, branch_label in _BINDING_CHECKS:
-            values = cf.get(field)
-            if values is None:
-                continue
-            # Normalize to list (in_complex and molecular_function are single-valued)
-            if isinstance(values, dict):
-                values = [values]
-            if not isinstance(values, list):
-                continue
-            if enum_name not in expanded:
-                continue
-            valid_ids = expanded[enum_name]
-            for j, val in enumerate(values):
-                if isinstance(val, dict) and "id" in val:
-                    term_id = val["id"]
-                    if term_id not in valid_ids:
-                        idx = f"[{j}]" if isinstance(cf.get(field), list) else ""
-                        # WARNING not ERROR: the expanded enum depends on which
-                        # GO release is cached locally; obsolete terms (like
-                        # GO:0005615) will fail here but may be valid in
-                        # the GO version the curation was done against.
-                        report.add_issue(
-                            ValidationSeverity.WARNING,
-                            f"Term {term_id} ({val.get('label', '?')}) is not in the {branch_label} branch (expected {enum_name})",
-                            path=f"core_functions[{i}].{field}{idx}.id",
-                            validation_category="LTVValidator",
-                            check_type="go_branch_validation",
-                        )
 
 
 # ---------------------------------------------------------------------------
@@ -275,11 +180,8 @@ def check_best_practices_rules(
     if progress_callback:
         progress_callback("Running best-practices checks")
 
-    # Validate GO branch membership for bindings in core_functions.
-    # The term validator CLI handles direct slot ranges, but not bindings
-    # with dynamic enums (reachable_from). We check bindings here using
-    # a lazily-cached DynamicEnumPlugin instance (shared across files).
-    _check_go_branch_bindings(data, report)
+    # Note: GO branch validation for core_functions is handled by
+    # linkml-term-validator CLI (invoked from justfile), not here.
 
     # Check for TODO in description
     if "description" in data and "TODO" in str(data["description"]):

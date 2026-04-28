@@ -1,17 +1,33 @@
 """Test validation of GO term branch constraints in core_functions.
 
-Note: Since v0.2.0, GO branch validation uses linkml-term-validator's
-DynamicEnumPlugin with dynamic enums defined in the schema. Error messages
-may differ from the old custom TermValidator implementation.
+GO branch validation is handled by linkml-term-validator CLI with
+dynamic enums defined in the schema (e.g., GOMolecularActivityEnum).
+These tests invoke the CLI tool via subprocess.
 """
 
+import subprocess
 import tempfile
 from pathlib import Path
 
 import pytest
 import yaml
 
-from ai_gene_review.validation import validate_gene_review, ValidationSeverity
+from ai_gene_review.validation.validator import get_schema_path
+
+
+def _run_term_validator(yaml_file: Path) -> subprocess.CompletedProcess:
+    """Run linkml-term-validator on a file and return the result."""
+    return subprocess.run(
+        [
+            "uv", "run", "linkml-term-validator", "validate-data",
+            str(yaml_file),
+            "-s", str(get_schema_path()),
+            "-t", "GeneReview",
+            "--labels",
+            "-c", "conf/oak_config.yaml",
+        ],
+        capture_output=True, text=True,
+    )
 
 
 def test_molecular_function_must_be_mf_branch():
@@ -37,22 +53,11 @@ def test_molecular_function_must_be_mf_branch():
         temp_path = Path(f.name)
 
     try:
-        report = validate_gene_review(temp_path)
-
-        # Should have error about wrong branch
-        # The new linkml-term-validator may use different message formats
-        branch_errors = [
-            issue
-            for issue in report.issues
-            if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING)
-            and (
-                "biological_process branch but should be in the molecular_function branch" in issue.message
-                or ("GO:0008150" in issue.message and "GOMolecularActivityEnum" in issue.message)
-                or ("GO:0008150" in issue.message and "not valid" in issue.message.lower())
-            )
-        ]
-        assert len(branch_errors) >= 1, f"Expected branch error for GO:0008150, got: {[i.message for i in report.issues]}"
-        assert not report.is_valid
+        result = _run_term_validator(temp_path)
+        output = result.stdout + result.stderr
+        assert "GO:0008150" in output and "GOMolecularActivityEnum" in output, (
+            f"Expected branch error for GO:0008150 in MF slot, got: {output}"
+        )
     finally:
         temp_path.unlink()
 
@@ -68,7 +73,7 @@ def test_directly_involved_in_must_be_bp_branch():
             {
                 "description": "Test function",
                 "molecular_function": {
-                    "id": "GO:0003674",  # molecular_function root - correct
+                    "id": "GO:0003674",
                     "label": "molecular_function",
                 },
                 "directly_involved_in": [
@@ -86,26 +91,12 @@ def test_directly_involved_in_must_be_bp_branch():
         temp_path = Path(f.name)
 
     try:
-        report = validate_gene_review(temp_path)
-
-        # Should have error about wrong branch for directly_involved_in
-        # The new linkml-term-validator may use different message formats
-        branch_errors = [
-            issue
-            for issue in report.issues
-            if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING)
-            and (
-                "molecular_function branch but should be in the biological_process branch" in issue.message
-                or ("GO:0003674" in issue.message and "directly_involved_in" in issue.message.lower())
-                or ("GO:0003674" in issue.message and "not valid" in issue.message.lower())
-            )
-        ]
-        # Note: directly_involved_in may not have bindings defined in schema yet
-        # so validation may not catch this. Check if the report has any errors.
-        if branch_errors:
-            assert len(branch_errors) >= 1
-        # If no specific branch error, the test may pass if schema doesn't have bindings for this field
-        assert not report.is_valid or len(branch_errors) >= 1 or True  # Allow pass if schema not configured
+        result = _run_term_validator(temp_path)
+        output = result.stdout + result.stderr
+        # GO:0003674 should fail in directly_involved_in (BP slot)
+        assert "GO:0003674" in output and "GOBiologicalProcessEnum" in output, (
+            f"Expected branch error for GO:0003674 in BP slot, got: {output}"
+        )
     finally:
         temp_path.unlink()
 
@@ -121,7 +112,7 @@ def test_locations_must_be_cc_branch():
             {
                 "description": "Test function",
                 "molecular_function": {
-                    "id": "GO:0003674",  # molecular_function root - correct
+                    "id": "GO:0003674",
                     "label": "molecular_function",
                 },
                 "locations": [
@@ -139,23 +130,11 @@ def test_locations_must_be_cc_branch():
         temp_path = Path(f.name)
 
     try:
-        report = validate_gene_review(temp_path)
-
-        # Should have error about wrong branch for locations
-        # The new linkml-term-validator may use different message formats
-        branch_errors = [
-            issue
-            for issue in report.issues
-            if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING)
-            and (
-                "biological_process branch but should be in the cellular_component branch" in issue.message
-                or ("GO:0008150" in issue.message and "GOCellularLocationEnum" in issue.message)
-                or ("GO:0008150" in issue.message and "locations" in issue.message.lower())
-                or ("GO:0008150" in issue.message and "not valid" in issue.message.lower())
-            )
-        ]
-        assert len(branch_errors) >= 1, f"Expected branch error for GO:0008150, got: {[i.message for i in report.issues]}"
-        assert not report.is_valid
+        result = _run_term_validator(temp_path)
+        output = result.stdout + result.stderr
+        assert "GO:0008150" in output and "GOCellularLocationEnum" in output, (
+            f"Expected branch error for GO:0008150 in CC slot, got: {output}"
+        )
     finally:
         temp_path.unlink()
 
@@ -195,24 +174,11 @@ def test_correct_go_branches_pass():
         temp_path = Path(f.name)
 
     try:
-        report = validate_gene_review(temp_path)
-
-        # Should not have any GO branch errors
-        branch_errors = [
-            issue
-            for issue in report.issues
-            if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING)
-            and "branch but should be in" in issue.message
-        ]
-        assert len(branch_errors) == 0
-
-        # May have other validation issues (like term label checks) but no branch issues
-        # Check that if it's invalid, it's not due to branch errors
-        if not report.is_valid:
-            # Make sure failures are not branch-related
-            for issue in report.issues:
-                if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING):
-                    assert "branch but should be in" not in issue.message
+        result = _run_term_validator(temp_path)
+        output = result.stdout + result.stderr
+        assert "Validation passed" in output, (
+            f"Correct branches should pass, got: {output}"
+        )
     finally:
         temp_path.unlink()
 
@@ -224,19 +190,8 @@ def test_real_gene_branch_validation():
     if not cfap300_file.exists():
         pytest.skip("CFAP300 file not found")
 
-    report = validate_gene_review(cfap300_file)
-
-    # CFAP300 should have correct branches now
-    # molecular_function: GO:0030674 (protein-macromolecule adaptor activity) is in MF
-    # directly_involved_in items are in BP
-    # locations items are in CC
-
-    branch_errors = [
-        issue
-        for issue in report.issues
-        if issue.severity in (ValidationSeverity.ERROR, ValidationSeverity.WARNING)
-        and "branch but should be in" in issue.message
-    ]
-
-    # Should not have any branch errors
-    assert len(branch_errors) == 0, f"Unexpected branch errors: {branch_errors}"
+    result = _run_term_validator(cfap300_file)
+    output = result.stdout + result.stderr
+    assert "Validation passed" in output, (
+        f"CFAP300 should pass branch validation, got: {output}"
+    )
