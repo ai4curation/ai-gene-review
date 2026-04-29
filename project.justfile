@@ -1334,6 +1334,26 @@ refresh-publications-force-test count="10":
     @echo "Force refreshing {{count}} publications for testing..."
     uv run ai-gene-review refresh-publications --force-all --count {{count}} --delay 1.0
 
+# Convert DOI-keyed publication files to PMID-keyed format
+convert-doi-publications *args="":
+    @echo "Converting DOI-keyed publication files to PMID format..."
+    uv run ai-gene-review convert-doi-publications {{args}}
+
+# Preview DOI-keyed files that would be converted (dry run)
+convert-doi-publications-preview:
+    @echo "DOI-keyed files that would be converted:"
+    uv run ai-gene-review convert-doi-publications --dry-run
+
+# Refresh publication stubs for genes under active review (IN_PROGRESS or DRAFT)
+refresh-publications-active *args="":
+    @echo "Refreshing publications for active gene reviews..."
+    uv run ai-gene-review refresh-publications-active {{args}}
+
+# Preview what refresh-publications-active would do
+refresh-publications-active-preview:
+    @echo "Active review publications (dry run):"
+    uv run ai-gene-review refresh-publications-active --dry-run
+
 # ============== InterPro Family Data Management ==============
 
 # Fetch PANTHER family metadata via InterPro API and store in interpro/panther/PTHRnnnn/ directory
