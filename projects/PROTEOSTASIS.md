@@ -273,6 +273,72 @@ Each row should be classified into one of four buckets:
 4. `non_GO_metadata`
    Example: family/domain/subtype labels that should stay as supporting metadata.
 
+### 3a. Use the deepest informative path, not the shallow lexical match
+
+Shallow PN labels can look GO-like while still being too broad for the actual
+member assignment.
+
+Concrete example:
+
+- `AATF` is placed in the PN path
+  `Translation -> Cytosolic translation -> Ribosome biogenesis factor -> pre-60S complex -> ANN complex`
+- a naive mapping from the class label `Translation|Cytosolic translation` to
+  `GO:0002181 cytoplasmic translation` would therefore over-annotate `AATF`
+- the deeper PN path shows that the assignment is really through a ribosome-
+  biogenesis context, specifically the pre-`60S` large-subunit maturation
+  machinery, not through a core translating-ribosome role
+
+This is exactly why PN-to-GO mapping cannot be done reliably from branch or
+class labels alone. The full path may:
+
+- narrow the meaning
+- reveal that the row is about assembly or maturation rather than the top-level process
+- or force an override that blocks propagation of a broader GO term
+
+So the operational rule should be:
+
+- treat shallow mappings as provisional
+- check whether deeper `Group/Type/Subtype` nodes refine or contradict the
+  top-level process interpretation
+- allow deeper path nodes to override or suppress broader propagation when they
+  would otherwise cause over-annotation
+
+In the sidecar mapping model, this argues for a weaker qualifier on some broad
+PN mappings rather than forcing every source-to-GO relationship into a
+propagation-ready category.
+
+For example:
+
+- `Translation|Cytosolic translation -> GO:0002181 cytoplasmic translation`
+  is useful as a high-level semantic relationship
+- but for rows like `AATF`, it should be treated as
+  `too_broad_to_propagate` rather than `ok_for_propagation_to_go`
+- the mapping should remain visible in YAML/XLSX as an interpretive aid, while
+  the projection pipeline suppresses it as a candidate GO addition
+
+This is a lighter-weight and more auditable solution than building a complex
+override framework. It is also explicit about operationalization: the mapping
+is retained because the relationship is real, but the pipeline is instructed
+not to propagate it.
+
+The same validation pattern appears elsewhere in the current mapping set:
+
+- `Mitochondrial proteostasis|Chaperone -> GO:0042719 mitochondrial intermembrane space chaperone complex`
+  looked superficially plausible, but projected onto mixed mitochondrial
+  chaperone genes such as `HSPA9`, `HSPD1`, `TRAP1`, `PHB1`, and `PHB2`; that
+  broad class is now treated as explicitly unmapped rather than propagation-safe
+- `Ubiquitin Proteasome System|Ubiquitin and UBL binding|translation -> GO:0006412 translation`
+  projected onto mixed context genes such as `TNRC6C` (repression), `MDN1`
+  (ribosome maturation), and `NACA2` / `NACAD` (nascent-peptide binding); that
+  relationship is now recorded as `too_broad_to_propagate`
+
+This is the core sanity-check loop for the project:
+
+- add a candidate mapping
+- inspect the projected gene set
+- keep deeper positive mappings that behave coherently
+- downgrade or remove mappings that systematically over-annotate mixed-context genes
+
 ### 4. Curate by branch, not all at once
 
 The branches are not equally reusable.

@@ -112,6 +112,13 @@ def test_ext_mapping_sets_use_schema_values() -> None:
     )
     assert importin_alpha_mapping["target_term"]["id"] == "GO:0006913"
     assert importin_alpha_mapping["target_term"]["label"] == "nucleocytoplasmic transport"
+    histone_chaperone_mapping = next(
+        mapping
+        for mapping in mapping_sets["nuclear_proteostasis.yaml"]["mappings"]
+        if mapping["subject_code"] == "Nuclear proteostasis|Chaperone|Histone chaperone"
+    )
+    assert histone_chaperone_mapping["target_term"]["id"] == "GO:0140713"
+    assert histone_chaperone_mapping["target_term"]["label"] == "histone chaperone activity"
     nuclear_receptor_group = next(
         mapping
         for mapping in mapping_sets["nuclear_proteostasis.yaml"]["mappings"]
@@ -142,6 +149,25 @@ def test_ext_mapping_sets_use_schema_values() -> None:
         eif3_mapping["target_term"]["label"]
         == "eukaryotic translation initiation factor 3 complex"
     )
+    translation_branch_mapping = next(
+        mapping
+        for mapping in mapping_sets["translation.yaml"]["mappings"]
+        if mapping["subject_code"] == "Translation"
+    )
+    assert translation_branch_mapping["mapping_scope"] == "too_broad_to_propagate"
+    cytosolic_translation_mapping = next(
+        mapping
+        for mapping in mapping_sets["translation.yaml"]["mappings"]
+        if mapping["subject_code"] == "Translation|Cytosolic translation"
+    )
+    assert cytosolic_translation_mapping["mapping_scope"] == "too_broad_to_propagate"
+    ribosome_biogenesis_mapping = next(
+        mapping
+        for mapping in mapping_sets["translation.yaml"]["mappings"]
+        if mapping["subject_code"] == "Translation|Cytosolic translation|Ribosome biogenesis factor"
+    )
+    assert ribosome_biogenesis_mapping["target_term"]["id"] == "GO:0042254"
+    assert ribosome_biogenesis_mapping["target_term"]["label"] == "ribosome biogenesis"
     explicit_unmapped = mapping_sets["translation.yaml"]["unmapped_subjects"][0]
     assert (
         explicit_unmapped["subject_code"]
@@ -159,10 +185,20 @@ def test_ext_mapping_sets_use_schema_values() -> None:
         mapping
         for mapping in mapping_sets["ubiquitin_proteasome_system.yaml"]["mappings"]
         if mapping["subject_code"]
-        == "Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|Anaphase Promoting Complex"
+        == (
+            "Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|"
+            "idiosyncratic RING complex|Anaphase Promoting Complex"
+        )
     )
     assert ups_mapping["target_term"]["id"] == "GO:0005680"
     assert ups_mapping["target_term"]["label"] == "anaphase-promoting complex"
+    ups_translation_mapping = next(
+        mapping
+        for mapping in mapping_sets["ubiquitin_proteasome_system.yaml"]["mappings"]
+        if mapping["subject_code"]
+        == "Ubiquitin Proteasome System|Ubiquitin and UBL binding|translation"
+    )
+    assert ups_translation_mapping["mapping_scope"] == "too_broad_to_propagate"
     pi3k_group_mapping = next(
         mapping
         for mapping in mapping_sets["autophagy_lysosome_pathway.yaml"]["mappings"]
@@ -191,3 +227,16 @@ def test_ext_mapping_sets_use_schema_values() -> None:
     )
     assert sumo_e2_mapping["target_term"]["id"] == "GO:0019789"
     assert sumo_e2_mapping["target_term"]["label"] == "SUMO transferase activity"
+    jdomain_mapping = next(
+        mapping
+        for mapping in mapping_sets["chaperone_systems.yaml"]["mappings"]
+        if mapping["subject_code"] == "J-domain containing HSP70 cochaperone"
+    )
+    assert jdomain_mapping["target_term"]["id"] == "GO:0030544"
+    assert jdomain_mapping["target_term"]["label"] == "Hsp70 protein binding"
+    mitochondrial_unmapped = next(
+        unmapped
+        for unmapped in mapping_sets["mitochondrial_proteostasis.yaml"]["unmapped_subjects"]
+        if unmapped["subject_code"] == "Mitochondrial proteostasis|Chaperone"
+    )
+    assert mitochondrial_unmapped["subject_level"] == "class"

@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import duckdb
 from openpyxl import Workbook
 import yaml
 
@@ -149,6 +150,46 @@ def _goa_tsv_text(gene_product_id: str, gene_symbol: str, go_id: str, go_label: 
 def _write_minimal_goa(path: Path, gene_symbol: str, go_id: str, go_label: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(_goa_tsv_text("P00001", gene_symbol, go_id, go_label), encoding="utf-8")
+
+
+def _write_minimal_goa_duckdb(
+    path: Path,
+    *,
+    db_object_id: str,
+    gene_symbol: str,
+    go_id: str,
+    go_label: str,
+    is_negation: bool = False,
+) -> None:
+    con = duckdb.connect(str(path))
+    con.execute(
+        """
+        create table gaf_association (
+            db varchar,
+            db_object_id varchar,
+            db_object_symbol varchar,
+            ontology_class_ref varchar,
+            is_negation boolean
+        )
+        """
+    )
+    con.execute(
+        """
+        create table term_label (
+            id varchar,
+            label varchar
+        )
+        """
+    )
+    con.execute(
+        "insert into gaf_association values (?, ?, ?, ?, ?)",
+        ["UniProtKB", db_object_id, gene_symbol, go_id, is_negation],
+    )
+    con.execute(
+        "insert into term_label values (?, ?)",
+        [go_id, go_label],
+    )
+    con.close()
 
 
 def test_pn_projection_reports_existing_new_and_missing_goa(tmp_path: Path) -> None:
@@ -321,3 +362,115 @@ def test_pn_projection_can_fetch_missing_goa_into_project_cache(
     assert summaries[0]["goa_status"] == "already_in_goa_exact"
     assert (cache_dir / "GENE4__P00004-goa.tsv").exists()
     assert not (goa_root / "GENE4" / "GENE4-goa.tsv").exists()
+
+
+def test_pn_projection_can_use_duckdb_goa_source(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "pn.xlsx"
+    _write_projection_workbook(workbook_path)
+
+    mapping_dir = tmp_path / "mappings"
+    mapping_dir.mkdir()
+    mapping_set = {
+        "id": "pn_mapping_set:test",
+        "label": "Test mapping set",
+        "mappings": [
+            {
+                "subject_code": "HSP70",
+                "subject_level": "type",
+                "target_term": {
+                    "id": "GO:0140662",
+                    "label": "ATP-dependent protein folding chaperone",
+                },
+                "mapping_scope": "ok_for_propagation_to_go",
+                "rationale": "Test projection mapping.",
+                "conditions": [
+                    {"condition_level": "class", "condition_code": "Chaperone"},
+                    {"condition_level": "group", "condition_code": "HSP70 system"},
+                ],
+                "references": ["proteostasis-ms1"],
+            }
+        ],
+    }
+    (mapping_dir / "chaperone_systems.yaml").write_text(
+        yaml.safe_dump(mapping_set, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    duckdb_path = tmp_path / "goa_human.ddb"
+    _write_minimal_goa_duckdb(
+        duckdb_path,
+        db_object_id="P00004",
+        gene_symbol="GENE4",
+        go_id="GO:0140662",
+        go_label="ATP-dependent protein folding chaperone",
+    )
+
+    workbook_rows = load_workbook_rows(workbook_path)
+    mapping_specs = load_mapping_specs(mapping_dir)
+    projected_rows = project_annotations(
+        [row for row in workbook_rows if row.gene_symbol in {"GENE4", "GENE5"}],
+        mapping_specs,
+        tmp_path / "genes" / "human",
+        goa_duckdb=duckdb_path,
+    )
+    summaries = summarize_gene_go_projections(projected_rows)
+    status_by_gene_go = {
+        (row["gene_symbol"], row["target_go_id"]): row["goa_status"] for row in summaries
+    }
+
+    assert status_by_gene_go[("GENE4", "GO:0140662")] == "already_in_goa_exact"
+    assert status_by_gene_go[("GENE5", "GO:0140662")] == "no_local_goa"
+
+
+def test_too_broad_mappings_are_not_projected(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "pn.xlsx"
+    _write_projection_workbook(workbook_path)
+
+    mapping_dir = tmp_path / "mappings"
+    mapping_dir.mkdir()
+    mapping_set = {
+        "id": "pn_mapping_set:test",
+        "label": "Test mapping set",
+        "mappings": [
+            {
+                "subject_code": "Cytonuclear proteostasis|Chaperone",
+                "subject_level": "class",
+                "target_term": {
+                    "id": "GO:0044183",
+                    "label": "protein folding chaperone",
+                },
+                "mapping_scope": "too_broad_to_propagate",
+                "rationale": "Recorded but too broad to project.",
+                "references": ["proteostasis-ms1"],
+            },
+            {
+                "subject_code": "HSP70",
+                "subject_level": "type",
+                "target_term": {
+                    "id": "GO:0140662",
+                    "label": "ATP-dependent protein folding chaperone",
+                },
+                "mapping_scope": "ok_for_propagation_to_go",
+                "conditions": [
+                    {"condition_level": "class", "condition_code": "Chaperone"},
+                    {"condition_level": "group", "condition_code": "HSP70 system"},
+                ],
+                "rationale": "Specific propagation-safe mapping.",
+                "references": ["proteostasis-ms1"],
+            },
+        ],
+    }
+    (mapping_dir / "chaperone_systems.yaml").write_text(
+        yaml.safe_dump(mapping_set, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    projected_rows = project_annotations(
+        [row for row in load_workbook_rows(workbook_path) if row.gene_symbol == "GENE4"],
+        load_mapping_specs(mapping_dir),
+        tmp_path / "genes" / "human",
+    )
+
+    assert len(projected_rows) == 1
+    assert projected_rows[0].mapping_scope == "ok_for_propagation_to_go"
+    assert projected_rows[0].target_go_id == "GO:0140662"

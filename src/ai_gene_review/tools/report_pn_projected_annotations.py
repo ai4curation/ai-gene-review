@@ -7,6 +7,7 @@ import csv
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from collections import defaultdict
 
 from openpyxl import load_workbook
 import yaml
@@ -20,9 +21,11 @@ DEFAULT_MAPPING_DIR = Path("projects/PROTEOSTASIS/mappings")
 DEFAULT_GOA_ROOT = Path("genes/human")
 DEFAULT_OUTPUT_DIR = Path("projects/PROTEOSTASIS/reports/pn_projection")
 DEFAULT_GOA_CACHE_DIR = Path("projects/PROTEOSTASIS/cache/goa")
+DEFAULT_GOA_DUCKDB = Path.home() / "repos" / "go-db" / "db" / "goa_human.ddb"
 DEFAULT_REPRESENTATIVE_GENE_LIMIT = 5
 MISSING_MARKERS = {"", "(no Branch)", "(no Class)", "(no Group)", "(no Type)", "(no Subtype)"}
 GO_CLOSURE_PREDICATES = ("rdfs:subClassOf", "BFO:0000050")
+PROPAGATING_MAPPING_SCOPES = {"exact", "ok_for_propagation_to_go"}
 
 
 @dataclass(frozen=True)
@@ -221,25 +224,31 @@ def load_workbook_rows(
     header = next(rows)
     index = {str(name).strip(): i for i, name in enumerate(header)}
 
+    def cell(row: tuple[Any, ...], column: str) -> str:
+        if column not in index:
+            return ""
+        return _clean_value(row[index[column]])
+
     workbook_rows: list[PNWorkbookRow] = []
     for row in rows:
-        gene_symbol = _clean_value(row[index["Gene Symbol"]])
+        gene_symbol = cell(row, "Gene Symbol")
         if not gene_symbol:
             continue
 
         raw_order = row[index["order"]] if "order" in index else None
         order = int(raw_order) if raw_order not in (None, "") else None
+        gene_name = cell(row, "Gene Name") or cell(row, "Protein Name")
         workbook_rows.append(
             PNWorkbookRow(
                 order=order,
                 gene_symbol=gene_symbol,
-                gene_name=_clean_value(row[index["Gene Name"]]),
-                branch=_clean_value(row[index[WORKBOOK_COLUMNS["branch"]]]),
-                class_name=_clean_value(row[index[WORKBOOK_COLUMNS["class"]]]),
-                group=_clean_value(row[index[WORKBOOK_COLUMNS["group"]]]),
-                type_name=_clean_value(row[index[WORKBOOK_COLUMNS["type"]]]),
-                subtype=_clean_value(row[index[WORKBOOK_COLUMNS["subtype"]]]),
-                uniprot_id=_clean_value(row[index["UniProt ID"]]) if "UniProt ID" in index else "",
+                gene_name=gene_name,
+                branch=cell(row, WORKBOOK_COLUMNS["branch"]),
+                class_name=cell(row, WORKBOOK_COLUMNS["class"]),
+                group=cell(row, WORKBOOK_COLUMNS["group"]),
+                type_name=cell(row, WORKBOOK_COLUMNS["type"]),
+                subtype=cell(row, WORKBOOK_COLUMNS["subtype"]),
+                uniprot_id=cell(row, "UniProt ID"),
             )
         )
 
@@ -331,10 +340,93 @@ class GOClosureClassifier:
         return "new_to_goa", ()
 
 
+def load_goa_terms_from_duckdb(
+    workbook_rows: list[PNWorkbookRow],
+    duckdb_path: Path,
+) -> dict[tuple[str, str], dict[str, str]]:
+    """Bulk-load GOA terms for workbook genes from a DuckDB GOA database.
+
+    The lookup prefers exact UniProt accession matches when available, and falls
+    back to symbol matches for rows without a usable accession.
+    """
+    import duckdb
+
+    requested_keys = sorted(
+        {
+            (row.gene_symbol, row.uniprot_id)
+            for row in workbook_rows
+            if row.gene_symbol
+        }
+    )
+    if not requested_keys:
+        return {}
+
+    con = duckdb.connect(str(duckdb_path), read_only=True)
+    con.execute(
+        "create temp table pn_projection_rows(gene_symbol varchar, uniprot_id varchar)"
+    )
+    con.executemany(
+        "insert into pn_projection_rows values (?, ?)",
+        requested_keys,
+    )
+
+    by_uniprot_rows = con.execute(
+        """
+        select
+            p.gene_symbol,
+            p.uniprot_id,
+            ga.ontology_class_ref,
+            coalesce(tl.label, ga.ontology_class_ref) as go_label
+        from pn_projection_rows as p
+        join gaf_association as ga
+          on p.uniprot_id <> ''
+         and ga.db_object_id = p.uniprot_id
+        left join term_label as tl
+          on tl.id = ga.ontology_class_ref
+        where coalesce(ga.is_negation, false) = false
+        """
+    ).fetchall()
+
+    by_symbol_rows = con.execute(
+        """
+        select
+            p.gene_symbol,
+            p.uniprot_id,
+            ga.ontology_class_ref,
+            coalesce(tl.label, ga.ontology_class_ref) as go_label
+        from pn_projection_rows as p
+        join gaf_association as ga
+          on p.gene_symbol <> ''
+         and ga.db_object_symbol = p.gene_symbol
+        left join term_label as tl
+          on tl.id = ga.ontology_class_ref
+        where coalesce(ga.is_negation, false) = false
+        """
+    ).fetchall()
+
+    by_uniprot: dict[tuple[str, str], dict[str, str]] = defaultdict(dict)
+    for gene_symbol, uniprot_id, go_id, go_label in by_uniprot_rows:
+        by_uniprot[(gene_symbol, uniprot_id)][go_id] = go_label
+
+    by_symbol: dict[tuple[str, str], dict[str, str]] = defaultdict(dict)
+    for gene_symbol, uniprot_id, go_id, go_label in by_symbol_rows:
+        by_symbol[(gene_symbol, uniprot_id)][go_id] = go_label
+
+    resolved: dict[tuple[str, str], dict[str, str]] = {}
+    for key in requested_keys:
+        if by_uniprot.get(key):
+            resolved[key] = dict(by_uniprot[key])
+        elif by_symbol.get(key):
+            resolved[key] = dict(by_symbol[key])
+
+    return resolved
+
+
 def project_annotations(
     workbook_rows: list[PNWorkbookRow],
     mapping_specs: list[MappingSpec],
     goa_root: Path,
+    goa_duckdb: Path | None = None,
     fetch_missing_goa: bool = False,
     goa_cache_dir: Path | None = None,
 ) -> list[ProjectedAnnotation]:
@@ -346,6 +438,9 @@ def project_annotations(
     representative_genes_by_spec = derive_representative_genes(workbook_rows, mapping_specs)
     if goa_cache_dir is None:
         goa_cache_dir = DEFAULT_GOA_CACHE_DIR
+    duckdb_goa: dict[tuple[str, str], dict[str, str]] = {}
+    if goa_duckdb is not None:
+        duckdb_goa = load_goa_terms_from_duckdb(workbook_rows, goa_duckdb)
 
     def load_cached_or_remote_goa(row: PNWorkbookRow) -> tuple[bool, dict[str, str]]:
         if not fetch_missing_goa or not row.uniprot_id:
@@ -367,24 +462,31 @@ def project_annotations(
             return False, {}
 
     def load_goa_terms(row: PNWorkbookRow) -> tuple[bool, dict[str, str]]:
-        gene_symbol = row.gene_symbol
-        if gene_symbol not in goa_cache:
+        key = (row.gene_symbol, row.uniprot_id)
+        if key not in goa_cache:
+            if key in duckdb_goa:
+                goa_cache[key] = (True, duckdb_goa[key])
+                return goa_cache[key]
+
+            gene_symbol = row.gene_symbol
             goa_file = goa_root / gene_symbol / f"{gene_symbol}-goa.tsv"
             if goa_file.exists():
                 terms = {
                     annotation.go_id: annotation.go_term
                     for annotation in validator.parse_goa_file(goa_file)
                 }
-                goa_cache[gene_symbol] = (True, terms)
+                goa_cache[key] = (True, terms)
             else:
-                goa_cache[gene_symbol] = load_cached_or_remote_goa(row)
-        return goa_cache[gene_symbol]
+                goa_cache[key] = load_cached_or_remote_goa(row)
+        return goa_cache[key]
 
     for row in workbook_rows:
         has_goa_file, goa_terms = load_goa_terms(row)
         pn_code = _deepest_code(row)
 
         for spec in mapping_specs:
+            if spec.mapping_scope not in PROPAGATING_MAPPING_SCOPES:
+                continue
             if not _matches(row, spec):
                 continue
 
@@ -658,6 +760,15 @@ def build_argument_parser() -> argparse.ArgumentParser:
         help=f"Root directory containing per-gene GOA folders (default: {DEFAULT_GOA_ROOT})",
     )
     parser.add_argument(
+        "--goa-duckdb",
+        type=Path,
+        default=None,
+        help=(
+            "Optional DuckDB GOA database to use as the primary GOA source, "
+            f"for example {DEFAULT_GOA_DUCKDB}"
+        ),
+    )
+    parser.add_argument(
         "--fetch-missing-goa",
         action="store_true",
         help="Fetch missing GOA on the fly into a project-local cache instead of requiring gene folders.",
@@ -687,6 +798,7 @@ def main() -> None:
         workbook_rows,
         mapping_specs,
         args.goa_root,
+        goa_duckdb=args.goa_duckdb,
         fetch_missing_goa=args.fetch_missing_goa,
         goa_cache_dir=args.goa_cache_dir,
     )

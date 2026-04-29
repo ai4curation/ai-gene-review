@@ -16,6 +16,8 @@ import yaml
 from ai_gene_review.tools.report_pn_mapping_coverage import LEVELS
 from ai_gene_review.tools.report_pn_projected_annotations import (
     DEFAULT_GOA_CACHE_DIR,
+    DEFAULT_GOA_DUCKDB,
+    DEFAULT_WORKBOOK_SHEET,
     derive_representative_genes,
     load_mapping_specs as load_projection_mapping_specs,
     load_workbook_rows as load_projection_workbook_rows,
@@ -80,7 +82,9 @@ README_ROWS = [
         "mapping_scope",
         "exact means the PN code and GO term are treated as semantically equivalent. "
         "ok_for_propagation_to_go means the PN code is not identical to the GO term, "
-        "but genes in that PN bucket can reasonably propagate to the GO target.",
+        "but genes in that PN bucket can reasonably propagate to the GO target. "
+        "too_broad_to_propagate means the PN-to-GO relationship is real and worth "
+        "recording, but projecting it onto member genes would over-annotate them.",
     ),
     (
         "target_go_id / target_go_label",
@@ -278,9 +282,10 @@ def _format_condition_tuples(conditions: tuple[tuple[str, str], ...]) -> str:
 def build_mapping_row_representative_lookup(
     mapping_dir: Path,
     workbook_path: Path,
+    sheet_name: str = DEFAULT_WORKBOOK_SHEET,
 ) -> dict[tuple[str, str, str, str, str], str]:
     """Derive example genes for mapping rows from matched workbook members."""
-    workbook_rows = load_projection_workbook_rows(workbook_path)
+    workbook_rows = load_projection_workbook_rows(workbook_path, sheet_name=sheet_name)
     mapping_specs = load_projection_mapping_specs(mapping_dir)
     representative_genes_by_spec = derive_representative_genes(workbook_rows, mapping_specs)
 
@@ -329,16 +334,19 @@ def build_projection_tables(
     mapping_dir: Path,
     workbook_path: Path,
     goa_root: Path,
+    sheet_name: str = DEFAULT_WORKBOOK_SHEET,
+    goa_duckdb: Path | None = None,
     fetch_missing_goa: bool = False,
     goa_cache_dir: Path | None = None,
 ) -> tuple[list[dict[str, str]], list[dict[str, str]], list[list[str]]]:
     """Build projection-derived tables for embedding in the XLSX export."""
-    workbook_rows = load_projection_workbook_rows(workbook_path)
+    workbook_rows = load_projection_workbook_rows(workbook_path, sheet_name=sheet_name)
     mapping_specs = load_projection_mapping_specs(mapping_dir)
     projected_rows = project_annotations(
         workbook_rows,
         mapping_specs,
         goa_root,
+        goa_duckdb=goa_duckdb,
         fetch_missing_goa=fetch_missing_goa,
         goa_cache_dir=goa_cache_dir,
     )
@@ -689,10 +697,24 @@ def build_argument_parser() -> argparse.ArgumentParser:
         help="Optional PN workbook XLSX path. When provided, projection tabs are embedded.",
     )
     parser.add_argument(
+        "--sheet",
+        default=DEFAULT_WORKBOOK_SHEET,
+        help=f"Workbook sheet to read when --workbook is provided (default: {DEFAULT_WORKBOOK_SHEET})",
+    )
+    parser.add_argument(
         "--goa-root",
         type=Path,
         default=DEFAULT_GOA_ROOT,
         help=f"Root directory containing local GOA gene folders (default: {DEFAULT_GOA_ROOT})",
+    )
+    parser.add_argument(
+        "--goa-duckdb",
+        type=Path,
+        default=None,
+        help=(
+            "Optional DuckDB GOA database to use as the primary GOA source, "
+            f"for example {DEFAULT_GOA_DUCKDB}"
+        ),
     )
     parser.add_argument(
         "--fetch-missing-goa",
@@ -720,12 +742,15 @@ def main() -> None:
         representative_lookup = build_mapping_row_representative_lookup(
             args.mapping_dir,
             args.workbook,
+            sheet_name=args.sheet,
         )
         mapping_rows = apply_derived_representative_genes(mapping_rows, representative_lookup)
         projected_summary_rows, candidate_rows, projection_status_rows = build_projection_tables(
             args.mapping_dir,
             args.workbook,
             args.goa_root,
+            sheet_name=args.sheet,
+            goa_duckdb=args.goa_duckdb,
             fetch_missing_goa=args.fetch_missing_goa,
             goa_cache_dir=args.goa_cache_dir,
         )
