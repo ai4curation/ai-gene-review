@@ -1386,11 +1386,11 @@ def visualize(
         
         # Show statistics if requested
         if show_stats:
-            import yaml
+            import yaml as pyyaml
+            from ai_gene_review.export.annotation_export import _dict_to_obj
             with open(yaml_file) as f:
-                data = yaml.safe_load(f)
-            from ai_gene_review.datamodel.gene_review_model import GeneReview
-            gene_review = GeneReview.model_validate(data)
+                data = pyyaml.safe_load(f)
+            gene_review = _dict_to_obj(data)
             stats = visualizer.get_summary_stats(gene_review)
             
             typer.echo("\nSummary Statistics:")
