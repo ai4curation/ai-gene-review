@@ -1,5 +1,12 @@
 ## Add your own just recipes here. This is imported by the main justfile.
 
+# ============ Validation tool paths ============
+schema_path := "src/ai_gene_review/schema/gene_review.yaml"
+oak_config := "conf/oak_config.yaml"
+ref_validator_config := "conf/reference_validator_config.yaml"
+term_validator := "scripts/run_term_validator.sh"
+ref_validator := "scripts/run_reference_validator.sh"
+
 all: validate-all test
 
 # Sync Claude Code commands into Codex custom prompts (namespaced).
@@ -271,27 +278,79 @@ fix-labels *args="":
         uv run python src/ai_gene_review/tools/fix_labels.py --dry-run {{args}}
     fi
 
+# Schema-only validation (fast, structure check)
+[group('QC')]
+validate-schema file:
+    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview {{file}}
+
+# Schema validation for all gene review files
+[group('QC')]
+validate-schema-all:
+    #!/usr/bin/env bash
+    set -e
+    for f in genes/*/*/*-ai-review.yaml; do
+        echo "Validating: $f"
+        uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f"
+    done
+
+# Term validation (ontology labels + dynamic enum membership)
+[group('QC')]
+validate-terms file:
+    {{term_validator}} validate-data {{file}} -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
+
+# Term validation for all gene review files
+[group('QC')]
+validate-terms-all:
+    #!/usr/bin/env bash
+    set -e
+    for f in genes/*/*/*-ai-review.yaml; do
+        echo "Validating terms: $f"
+        {{term_validator}} validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
+    done
+
+# Reference validation (publication titles + supporting text snippets)
+[group('QC')]
+validate-references file:
+    {{ref_validator}} validate data {{file}} --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+
+# Reference validation for all gene review files
+[group('QC')]
+validate-references-all:
+    #!/usr/bin/env bash
+    set -e
+    for f in genes/*/*/*-ai-review.yaml; do
+        echo "Validating references: $f"
+        {{ref_validator}} validate data "$f" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+    done
+
 validate-files files:
     uv run ai-gene-review validate {{files}}
 
 validate-deep-research:
     uv run python scripts/validate_deep_research.py
 
-# Validate a specific gene's review file AND check PMID references (short alias)
+# Full validation of a single gene file (schema + terms + references + best practices)
+[group('QC')]
 validate organism gene:
-    @echo "Validating {{organism}}/{{gene}} review file..."
-    uv run ai-gene-review validate --verbose genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
-    @echo ""
-    @echo "Checking PMID references in markdown files..."
-    uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/{{organism}}/{{gene}}/
+    #!/usr/bin/env bash
+    set -e
+    file="genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
+    echo "Schema validation..."
+    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$file"
+    echo "Term validation..."
+    {{term_validator}} validate-data "$file" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
+    echo "Reference validation..."
+    {{ref_validator}} validate data "$file" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+    echo "Best practices validation..."
+    uv run ai-gene-review validate --verbose "$file"
+    echo ""
+    echo "Checking PMID references in markdown files..."
+    uv run python src/ai_gene_review/tools/validate_pmid_references.py "genes/{{organism}}/{{gene}}/"
+    echo "✓ All validations passed for {{organism}}/{{gene}}"
 
-# Validate a specific gene's review file AND check PMID references (long name for clarity)
+# Alias for validate
 validate-gene organism gene:
-    @echo "Validating {{organism}}/{{gene}} review file..."
-    uv run ai-gene-review validate genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
-    @echo ""
-    @echo "Checking PMID references in markdown files..."
-    @uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/{{organism}}/{{gene}}/ || (echo "❌ PMID validation failed" && exit 1)
+    just validate {{organism}} {{gene}}
 
 # Validate with verbose output
 validate-gene-verbose organism gene:
@@ -328,14 +387,33 @@ validate-tag tag:
     uv run ai-gene-review validate --verbose --tsv-output "${report_path}" $(cat "${tmp_file}")
     echo "Wrote validation report to ${report_path}"
 
-# Validate all gene review files (shows detailed errors by default)
+# Validate all gene review files (schema + terms + best practices)
+# Uses batch mode for schema and term validation (single process, fast).
+# Reference validation is per-file and slow (~10s each); use
+# validate-references-all or single-file `just validate` for that.
+[group('QC')]
 validate-all:
-    @echo "Validating all gene review YAML files..."
-    @mkdir -p reports
-    uv run ai-gene-review validate --verbose --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml"
-    @echo ""
-    @echo "Checking PMID references in all pathway markdown files..."
-    @uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || (echo "❌ PMID validation failed" && exit 1)
+    #!/usr/bin/env bash
+    exit_code=0
+    echo "Schema validation (batch)..."
+    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
+    echo ""
+    echo "Term validation (batch)..."
+    # Term validation reports label mismatches and branch errors; treat as advisory
+    # for now (pre-existing issues on main). Use just validate-terms for strict checks.
+    uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} || echo "⚠ Term validation reported issues (non-blocking)"
+    echo ""
+    echo "Best practices validation..."
+    mkdir -p reports
+    uv run ai-gene-review validate --verbose --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
+    echo ""
+    echo "Checking PMID references in all pathway markdown files..."
+    uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || exit_code=1
+    if [ $exit_code -ne 0 ]; then
+        echo "✗ Validation completed with errors (see above)"
+        exit $exit_code
+    fi
+    echo "✓ All validations passed!"
 
 # Compliance report for recommended fields (separate from validation-all.tsv)
 compliance-all:

@@ -1,8 +1,9 @@
 """Validation subpackage for ai-gene-review.
 
-This package contains all validation-related modules:
-- Core validation logic (using LTV plugins for term, reference, and supporting text validation)
-- Validation reporting
+Schema, term, and reference validation are handled by CLI tools
+(linkml-validate, linkml-term-validator, linkml-reference-validator)
+invoked from the justfile.  This package contains only the custom
+best-practices checks and validation reporting.
 """
 
 from ai_gene_review.validation.validation_report import (
@@ -12,6 +13,7 @@ from ai_gene_review.validation.validation_report import (
     ValidationSeverity,
 )
 from ai_gene_review.validation.validator import (
+    check_best_practices_rules,
     get_schema_path,
     get_validation_summary,
     load_schema,
@@ -26,6 +28,8 @@ __all__ = [
     "get_validation_summary",
     "get_schema_path",
     "load_schema",
+    # Best practices
+    "check_best_practices_rules",
     # Validation reporting
     "ValidationReport",
     "ValidationIssue",
