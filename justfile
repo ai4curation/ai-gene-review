@@ -36,7 +36,7 @@ install:
 [group('model development')]
 test: pytest doctest mypy format
 
-test-full: test pytest-integration
+test-full: test pytest-integration test-examples
 
 pytest:
   uv run pytest tests
