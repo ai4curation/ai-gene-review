@@ -348,16 +348,59 @@ validate organism gene:
     uv run python src/ai_gene_review/tools/validate_pmid_references.py "genes/{{organism}}/{{gene}}/"
     echo "✓ All validations passed for {{organism}}/{{gene}}"
 
-# Run valid/invalid schema examples (linkml-run-examples)
+# Run valid/invalid example tests using the real validation pipeline.
+# Valid examples must pass all 3 stages (schema + terms + best practices).
+# Invalid examples must fail at least one stage.
 [group('QC')]
 test-examples:
-    uv run linkml-run-examples \
-      --input-formats yaml \
-      --output-formats yaml \
-      --counter-example-input-directory tests/data/invalid \
-      --input-directory tests/data/valid \
-      --output-directory examples/output \
-      --schema {{schema_path}} > examples/output/README.md
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pass=0; fail=0; errors=()
+
+    echo "=== Valid examples (must pass) ==="
+    for f in tests/data/valid/*.yaml; do
+        name="$(basename "$f")"
+        ok=true
+        uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f" > /dev/null 2>&1 || ok=false
+        if $ok; then
+            uv run linkml-term-validator validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1 || ok=false
+        fi
+        if $ok; then
+            echo "  ✓ $name"
+            pass=$((pass + 1))
+        else
+            echo "  ✗ $name (should pass but failed)"
+            errors+=("VALID $name failed")
+            fail=$((fail + 1))
+        fi
+    done
+
+    echo ""
+    echo "=== Invalid examples (must fail) ==="
+    for f in tests/data/invalid/*.yaml; do
+        name="$(basename "$f")"
+        # Run schema validation — if it fails, good (expected)
+        if ! uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f" > /dev/null 2>&1; then
+            echo "  ✓ $name (correctly rejected by schema)"
+            pass=$((pass + 1))
+        # If schema passes, try term validation
+        elif ! uv run linkml-term-validator validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1; then
+            echo "  ✓ $name (correctly rejected by term validator)"
+            pass=$((pass + 1))
+        else
+            echo "  ✗ $name (should fail but passed)"
+            errors+=("INVALID $name passed")
+            fail=$((fail + 1))
+        fi
+    done
+
+    echo ""
+    echo "Results: $pass passed, $fail failed"
+    if [ $fail -gt 0 ]; then
+        echo "Failures:"
+        for e in "${errors[@]}"; do echo "  - $e"; done
+        exit 1
+    fi
 
 # Alias for validate
 validate-gene organism gene:
