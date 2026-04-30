@@ -348,6 +348,17 @@ validate organism gene:
     uv run python src/ai_gene_review/tools/validate_pmid_references.py "genes/{{organism}}/{{gene}}/"
     echo "✓ All validations passed for {{organism}}/{{gene}}"
 
+# Run valid/invalid schema examples (linkml-run-examples)
+[group('QC')]
+test-examples:
+    uv run linkml-run-examples \
+      --input-formats yaml \
+      --output-formats yaml \
+      --counter-example-input-directory tests/data/invalid \
+      --input-directory tests/data/valid \
+      --output-directory examples/output \
+      --schema {{schema_path}} > examples/output/README.md
+
 # Alias for validate
 validate-gene organism gene:
     just validate {{organism}} {{gene}}
