@@ -1,6 +1,5 @@
 """Main visualizer for gene review data."""
 
-import yaml
 from pathlib import Path
 from typing import Union, Optional, Dict, Any, List
 from dataclasses import dataclass
