@@ -124,26 +124,25 @@ Two observations stand out. First, 38 genes (27%) scored 5/5 on correctness, but
 
 Per-organism mean scores are shown in **Table 2**. BioReason-Pro performs best on mammalian model organisms (mouse 4.7, rat 4.4, human 4.2 correctness) and worst on *S. pombe* (2.8). This gradient closely tracks the richness and specificity of InterPro family-level names for each organism's proteins. It also tracks the representation of each organism in the upstream training distribution. We discuss the implications for out-of-distribution deployment in §5.
 
-**Table 2.** Mean correctness and completeness by organism.
-
-| Organism       | n  | Correctness | Completeness |
-|----------------|----|-------------|--------------|
-| mouse          | 11 | 4.7         | 3.6          |
-| rat            | 12 | 4.4         | 3.6          |
-| human          | 19 | 4.2         | 3.4          |
-| *A. thaliana*  | 3  | 4.0         | 3.3          |
-| *S. cerevisiae*| 11 | 3.9         | 2.6          |
-| *B. subtilis*  | 13 | 3.8         | 2.9          |
-| *Drosophila*   | 8  | 3.8         | 2.8          |
-| *C. elegans*   | 15 | 3.5         | 2.3          |
-| *P. putida*    | 8  | 3.4         | 3.0          |
-| *E. coli*      | 13 | 3.2         | 3.0          |
-| *S. pombe*     | 23 | 2.8         | 2.3          |
-| **Overall**    |**139**| **3.7**  | **2.9**      |
+![Per-organism correctness and completeness for BioReason-Pro RL across 11 clades. Mammals score highest; *S. pombe* lowest. Dashed lines show overall means. Sample size shown above each bar pair.](figures/per_organism_scores.png)
 
 ### 4.3 Seven reproducible failure modes
 
 Aggregate scores conceal what is arguably the most important finding of the study. A scalar loss of 0.8 points on the correctness scale is spread very unevenly across genes: for many proteins BioReason-Pro is essentially correct; for a structured minority it is wrong in the same way repeatedly. We identify **seven reproducible failure modes** in the 139-gene set. Each is invisible to an aggregate metric but immediately diagnostic to a reader of the narrative output. Representative examples are summarised in **Table 3**.
+
+To give the reader a sense of what BioReason-Pro narratives look like in practice, we reproduce the functional summaries for three genes below. The first two illustrate failure modes; the third is a success.
+
+> **RAS2** (*S. cerevisiae*, correctness 2/5): "A Ras-family small GTPase in baker's yeast that cycles between GTP- and GDP-bound states to regulate intracellular vesicle traffic converging on the vacuole. Its nucleotide-driven switch mechanism enables transient effector recruitment that times vesicle budding, tethering, and fusion steps."
+>
+> *Ground truth: RAS2 is the primary activator of the cAMP/PKA signaling pathway. The vesicle-trafficking narrative was apparently seeded by a misleading UniProt summary.*
+
+> **Epe1** (*S. pombe*, correctness 2/5): "A nuclear histone demethylase that employs a JmjC oxygenase core to remove methyl groups from lysine residues on histone tails, thereby reshaping chromatin architecture."
+>
+> *Ground truth: Epe1 is a pseudoenzyme — its JmjC domain has degenerate catalytic residues (HVD not HXD) and no detectable demethylase activity. It functions as an anti-silencing factor via HP1/Swi6 binding.*
+
+> **TOR1** (*S. cerevisiae*, correctness 5/5): "A large serine/threonine kinase of the PIKK lineage in baker's yeast that uses extensive HEAT/armadillo repeats to scaffold regulatory assemblies, a central catalytic core to phosphorylate protein substrates, and a C-terminal regulatory gate that modulates access and signaling. By integrating nutrient and stress cues, it drives a signaling axis analogous to TOR pathways."
+>
+> *Ground truth: correct. The FRB domain enabled pathway-level inference beyond what single-domain annotation provides.*
 
 **Failure mode 1: Pseudoenzyme blind spot.** BioReason-Pro assigns ancestral catalytic activity to domains that have demonstrably lost it. In **Epe1** (*S. pombe*), a JmjC-family pseudo-demethylase, the model confidently claims a "JmjC catalytic center dictates a lysine demethylase mechanism"; in fact Epe1 has a degenerate active site (HVD rather than the canonical HXD, and Tyr307 replacing the catalytic histidine), shows no detectable demethylase activity in mass-spec assays, and functions as an anti-silencing factor via HP1/Swi6 binding. In **cts2** (*S. pombe*), an GH18 chitinase-fold protein with no catalytic glutamate, the model calls it an active chitinase. In **pmp20** (*S. pombe*), a peroxiredoxin that has lost its resolving cysteine and acts as a chaperone, the model reports peroxidase activity. Literature-grounded review refutes all three claims; the BioReason-Pro paper itself correctly flags CFAP61 as a pseudoenzyme [§2.6 of 4], so pseudoenzyme detection is not systematically absent from the model, but it is case-dependent and unreliable.
 
@@ -197,6 +196,8 @@ To quantify the gap between CAFA-style GOA agreement and curator-defined biologi
 | Post-AIGR-review | 2,913 | 971 | 10.9 |
 | AIGR core functions only | 933 | 210 | 2.4 |
 
+![GO-GPT prediction overlap at three reference levels (300 genes). The five-fold gap between raw GOA agreement (11.7%) and core-function agreement (2.4%) quantifies the difference between CAFA-style scoring and biological-validity scoring.](figures/three_level_overlap.png)
+
 GO-GPT emitted 8,910 predictions across 300 genes (mean 29.7 per gene). Of these, 11.7% matched a raw GOA term — the number a CAFA-style evaluator would count as correct. When the reference is tightened to only those annotations that survived agentic review (terms not marked REMOVE or MARK_AS_OVER_ANNOTATED), the overlap drops modestly to 10.9%. But when measured against the curator-defined core functions — the terms that capture what the protein actually does, in what compartment, and in what process — only 2.4% of predictions match. The five-fold gap between GOA agreement (11.7%) and core-function agreement (2.4%) is a direct, quantitative measure of the difference between "scores well on CAFA" and "predicts what a curator would consider the gene's real biology."
 
 ### 4.6 SFT GO term predictions: what the model actually predicts vs. what GOA already knows
@@ -217,6 +218,8 @@ The HuggingFace `wanglab/protein_catalogue` [4] provides the SFT model's full ge
 | LSP (less precise) | 12 | 3.6 | Correct direction, but a more specific term exists in GOA |
 | UNC (uncertain) | 9 | 2.7 | Cannot confirm or refute |
 | REP (frequency bias) | 6 | 1.8 | Generic high-frequency term (typically `protein binding`) |
+
+![Post-verification assessment of 335 SFT GO term predictions across 29 genes. CNN (correct, not novel) dominates at 73%; genuinely novel correct predictions (COR) account for only 3.6%.](figures/sft_assessment_distribution.png)
 
 Three-quarters of the model's output reproduces what GOA already knows. The 12 COR predictions — 3.6% of the total — are the fraction a database would actually want to import.
 
@@ -310,13 +313,10 @@ Annotation databases need to know when a new function-prediction method is good 
 
 ## Figures
 
-> Placeholder for final figures. Referenced in text; generation scripts to accompany release.
+Figures are embedded inline. Additional planned figures for final submission:
 
-- **Figure 1.** The AIGR pipeline. Evidence assembly (UniProt, GOA, InterPro, cached literature, deep-research report) → curator-agent three-phase review (annotation-level review, core-function synthesis, prediction review) → LinkML validation → structured output.
-- **Figure 2.** Per-organism correctness and completeness for BioReason-Pro across 11 clades (bar chart, 139 genes; n shown per bar). Mammals score highest; *S. pombe* lowest.
-- **Figure 3.** Failure-mode breakdown. Seven bars, one per failure mode, counting affected genes in the 139-gene corpus; example gene labelled on each bar.
-- **Figure 4.** BioReason-Pro narrative vs InterPro2GO baseline for the 5/5 correctness subset, illustrating the subset of cases where multi-domain architecture enables genuinely novel pathway-level inference (TOR1, NOTCH1, PTEN, EGFR, spo0A) vs the majority of cases where BioReason-Pro restates InterPro2GO.
-- **Figure 5.** de Crécy-Lagard *E. coli* replication. 7-gene confusion matrix of AIGR vs paper classifications — diagonal perfect match.
+- **AIGR pipeline diagram.** Evidence assembly (UniProt, GOA, InterPro, cached literature, deep-research report) → curator-agent three-phase review → LinkML validation → structured output. *(To be created as a schematic.)*
+- **CAFA evaluation context.** For representative CAFA $F_{\max}$ curves illustrating the aggregate evaluation paradigm, see Figure 2 of Radivojac *et al.* [5] and Figure 1 of Zhou *et al.* [7]. Our work addresses the gap between such aggregate curves and the per-protein biological validity that deployment decisions require.
 
 ## References
 
