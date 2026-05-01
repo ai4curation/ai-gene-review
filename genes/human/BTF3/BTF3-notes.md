@@ -15,15 +15,21 @@
   αNAC and βNAC, play important roles in nascent peptide targeting."]
 
 - UniProt summarizes that, when associated with NACA, BTF3 prevents
-  inappropriate targeting of non-secretory polypeptides to the ER by blocking
-  SRP engagement on nascent chains emerging from the ribosome.
-  [file:human/BTF3/BTF3-uniprot.txt "When associated with NACA, prevents
-  inappropriate targeting of non-secretory polypeptides to the endoplasmic
-  reticulum (ER). Binds to nascent polypeptide chains as they emerge from the
-  ribosome and blocks their interaction with the signal recognition particle
-  (SRP), which normally targets nascent secretory peptides to the ER.";
-  PMID:10982809 The alpha and beta subunit of the nascent
-  polypeptide-associated complex have distinct functions.]
+  inappropriate targeting of non-secretory polypeptides to the ER. The cached
+  abstract for PMID:10982809 supports assigning this process to BTF3 directly:
+  both subunits contribute to preventing inappropriate interactions, and
+  betaNAC alone binds ribosomes and is sufficient to prevent ribosome binding
+  to the ER membrane. [file:human/BTF3/BTF3-uniprot.txt "When associated with
+  NACA, prevents inappropriate targeting of non-secretory polypeptides to the
+  endoplasmic reticulum (ER). Binds to nascent polypeptide chains as they
+  emerge from the ribosome and blocks their interaction with the signal
+  recognition particle (SRP), which normally targets nascent secretory peptides
+  to the ER."; PMID:10982809 The alpha and beta subunit of the nascent
+  polypeptide-associated complex have distinct functions., "both subunits are
+  in direct contact with nascent polypeptide chains on the ribosome and that
+  both contribute to the prevention of inappropriate interactions. However,
+  betaNAC alone directly binds to the ribosome and is sufficient to prevent
+  ribosome binding to the endoplasmic reticulum membrane."]
 
 - UniProt also reports BTF3 in both cytoplasm and nucleus, while noting that
   the heterodimer with NACA is cytoplasmic. In PN framing, that supports
@@ -45,11 +51,12 @@
   PMID:33961781 Dual proteome-scale networks reveal cell-specific remodeling of
   the human interactome.]
 
-- PMID:18433331 reports a context-specific interaction between HEPIS/BTF3 and
-  SARS coronavirus nsp10, which supports a physical association claim but not a
-  core GO molecular function for human BTF3. [PMID:18433331 Identification of a
-  novel transcriptional repressor (HEPIS) that interacts with nsp-10 of SARS
-  coronavirus.]
+- PMID:18433331 documents BTF3 interaction with HEPIS (Q86VG3), a SARS
+  nsp10-binding repressor, which supports a context-specific physical
+  association claim but not a core GO molecular function for human BTF3.
+  [PMID:18433331 Identification of a novel transcriptional repressor (HEPIS)
+  that interacts with nsp-10 of SARS coronavirus., "we co-immunoprecipitated
+  HEPIS with BTF3, a component of the RNA pol II initiation complex"]
 
 - PMID:30242148 supports a contextual transcription-related interaction for BTF3
   rather than the PN core role. The paper links BTF3 to Connexin-43-tail and
