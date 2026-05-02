@@ -141,24 +141,23 @@ Only 11 gene products across 7 species have any experimental GO evidence:
 - **Key papers**: Tomarev et al. 1995 ([DOI](https://doi.org/10.1007/BF00173186))
 - **Why review**: Textbook enzyme crystallin co-option
 
-### Tier 3: Additional candidates with good literature
+### Tier 3: Additional candidates with good literature (not yet reviewed)
 
-| Gene | Species | UniProt | Key Finding | PMID |
+| Gene | Species | UniProt (mnemonic) | Key Finding | PMID |
 |------|---------|---------|-------------|------|
 | Protocadherins | *O. bimaculoides* | - | >160 genes; massive expansion for neural wiring | 26268193 |
 | Synaptotagmin | *O. bimaculoides* | - | Temperature-dependent RNA editing tunes Ca2+ binding | 37295402 |
 | Synapsins | *O. vulgaris* | - | Three isoforms in brain and reproductive organs | 31659209 |
 | TLR4-1 | *O. sinensis* | - | RNAi knockdown activates MyD88/TRIF pathways | 39265964 |
-| OJP1/OJP3 | *S. officinalis* | P85067/P85069 | Ovarian peptides with 3 IDA/IEP annotations each | 16434122 |
-| Hemocyanin | *S. officinalis* | P56824/P56825 | Copper-based oxygen transport; dual immune role | multiple |
-| FMRFamide | *S. officinalis* | P91889 | Neuropeptide precursor; 14 bioactive peptides | 11060217 |
-| OPR | *O. vulgaris* | Q5W9T5 | Octopressin receptor (vasopressin superfamily) | - |
-| Complexin | *D. pealeii* | Q95PA1 | Synaptic vesicle fusion regulator | - |
-| Kinesin | *D. pealeii* | P21613 | Axonal transport; RNA editing target | 37295402 |
+| OJP1/OJP3 | *S. officinalis* | P85067/P85069 (OJP1_SEPOF) | Ovarian peptides with 3 IDA/IEP annotations each | 16434122 |
+| Hemocyanin | *S. officinalis* | P56824/P56825 (HCYCD_SEPOF) | Copper-based oxygen transport; dual immune role | multiple |
+| Nautilin-63 | *N. macromphalus* | P86702 (NAU63_NAUMA) | Shell biomineralization; 3 IDA annotations | 21585656 |
+| DFPase | *L. vulgaris* | Q7SIG4 (DFPP_LOLVU) | Diisopropyl-fluorophosphatase; 2 IDA annotations | 11134940 |
+| GnRH receptor | *O. vulgaris* | Q2V2K5 (GNRHR_OCTVU) | Reproductive GPCR | 16367741 |
+| Cephalotocin | *O. vulgaris* | P80027 (CEPHT_OCTVU) | OT/VP neuropeptide ligand | - |
+| Beta-MSP | *D. pealeii* | D2X5V5 (MSPH_DORPE) | Male aggression pheromone; EXP evidence | 21315594 |
 | elav1 | *S. officinalis* | - | First neurogenesis map in a cephalopod | 23047428 |
 | ascl1/neurogenin | *O. vulgaris* | - | Neural progenitors with vertebrate-like migration | 34425939 |
-| Nautilin-63 | *N. macromphalus* | P86702 | Shell biomineralization; 3 IDA annotations | 21585656 |
-| DFPase | *L. vulgaris* | Q7SIG4 | Diisopropyl-fluorophosphatase; 2 IDA annotations | 11134940 |
 | Pax6 | *D. pealeii* | - | Eye development; unconventional expression in gills/suckers | 27510978 |
 | IR25 | *S. officinalis* | - | First cephalopod olfactory receptor | 34718445 |
 
@@ -175,30 +174,39 @@ Only 11 gene products across 7 species have any experimental GO evidence:
 
 ## Organism Directory Naming
 
-Following the existing convention in this repo (UniProt mnemonic style):
+Following UniProt mnemonic codes:
 ```
 genes/
-  OCTVU/    # Octopus vulgaris
-  OCTBI/    # Octopus bimaculoides
-  DORPE/    # Doryteuthis pealeii
-  EUPSC/    # Euprymna scolopes
-  SEPOF/    # Sepia officinalis
+  OCTVU/    # Octopus vulgaris (6645)
+  OCTBM/    # Octopus bimaculoides (37653)
+  DORPE/    # Doryteuthis pealeii (34683)
+  SEPOF/    # Sepia officinalis (6625)
 ```
 
-## Recommended Initial Review Set (10 genes)
+## Completed Reviews
+
+| Gene (symbol) | Dir | Species | UniProt | Key Annotations | Highlights |
+|---------------|-----|---------|---------|-----------------|------------|
+| [DDO](../genes/OCTVU/DDO/DDO-ai-review.yaml) (OXDD_OCTVU) | OCTVU/DDO | *O. vulgaris* | A0A7E6FSU6 | 13 (4 exp) | D-amino-acid oxidase IEA corrected to D-aspartate oxidase |
+| [AP180](../genes/DORPE/AP180/AP180-ai-review.yaml) (AP180_DORPE) | DORPE/AP180 | *D. pealeii* | Q9U6M6 | 24 (4 exp) | Spurious ARBA "locomotion" removed; squid giant synapse |
+| [cpx](../genes/DORPE/cpx/cpx-ai-review.yaml) (CPLX_DORPE) | DORPE/cpx | *D. pealeii* | Q95PA1 | 8 + 2 new | Regulator not component; syntaxin binding (IPI) added |
+| [CTR1](../genes/OCTVU/CTR1/CTR1-ai-review.yaml) (CTR1_OCTVU) | OCTVU/CTR1 | *O. vulgaris* | Q7YW31 | 10 + 2 new | "Vasopressin receptor" corrected to neuropeptide receptor |
+| [OPR](../genes/OCTVU/OPR/OPR-ai-review.yaml) (OPR_OCTVU) | OCTVU/OPR | *O. vulgaris* | Q5W9T5 | 9 + 2 new | Same vasopressin mis-annotation; octopressin-specific |
+| [FMRFa](../genes/SEPOF/FMRFa/FMRFa-ai-review.yaml) (FMRF_SEPOF) | SEPOF/FMRFa | *S. officinalis* | P91889 | 2 + 4 new | Annotation desert → neuropeptide activity, pigmentation, muscle contraction |
+| [khc](../genes/DORPE/P21613/P21613-ai-review.yaml) (KINH_DORPE) | DORPE/P21613 | *D. pealeii* | P21613 | 18 + 3 new | ARBA false positives; RNA editing (Birk 2023 Cell) |
+| [RHO](../genes/SEPOF/RHO/RHO-ai-review.yaml) (OPSD_SEPOF) | SEPOF/RHO | *S. officinalis* | O16005 | 7 + 5 new | Dermal photoreception; GO:0030265 PLC-activating opsin signaling |
+| [CRT1](../genes/OCTBM/OCBIM_22006518mg/OCBIM_22006518mg-ai-review.yaml) (CRT1_OCTBM) | OCTBM/OCBIM_22006518mg | *O. bimaculoides* | A0A0L8FVQ9 | 7 + 3 new | Contact chemosensation, feeding behavior, maternal behavior |
+
+## Remaining Candidates (not yet reviewed)
 
 | Priority | Gene | Species | UniProt | Rationale |
 |----------|------|---------|---------|-----------|
-| 1 | DDO | *O. vulgaris* | A0A7E6FSU6 | Most experimental GO annotations (4); clear enzyme function |
-| 2 | AP180 | *D. pealeii* | Q9U6M6 | 4 exp. annotations incl. IMP; synaptic vesicle biology |
-| 3 | RHO | *T. pacificus* / *O. vulgaris* | P31356 | IDA evidence; dermal photoreception novelty |
-| 4 | CTR1 | *O. vulgaris* | Q7YW31 | IDA; functionally expressed; OT/VP superfamily |
-| 5 | Symplectin | *S. oualaniensis* | C6KYS2 | IDA; novel bioluminescence mechanism |
-| 6 | ADAR2 | *D. pealeii* | - | Cephalopod innovation; >60% neural transcripts edited |
-| 7 | Reflectin | *D. opalescens* | - | Cephalopod-specific; camouflage |
-| 8 | SLC6A4/SERT | *O. bimaculoides* | - | Social behavior pharmacology |
-| 9 | TDO | *E. berryi* | - | CRISPR validated |
-| 10 | S-crystallin | *O. vulgaris* | P27013 | Enzyme crystallin evolution |
+| 1 | Symplectin (SYMP_STHOU) | *S. oualaniensis* | C6KYS2 | IDA; novel bioluminescence mechanism |
+| 2 | ADAR2 | *D. pealeii* | - | Cephalopod innovation; >60% neural transcripts edited |
+| 3 | Reflectin | *D. opalescens* | - | Cephalopod-specific; camouflage |
+| 4 | SLC6A4/SERT | *O. bimaculoides* | - | Social behavior pharmacology |
+| 5 | TDO | *E. berryi* | - | CRISPR validated |
+| 6 | S-crystallin (OCTS1_OCTVU) | *O. vulgaris* | P27013 | Enzyme crystallin evolution |
 
 ## Literature Landscape (PubMed, May 2026)
 
