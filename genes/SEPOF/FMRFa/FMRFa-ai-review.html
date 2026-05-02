@@ -1,0 +1,2807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FMRFa - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FMRFa</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P91889" target="_blank" class="term-link">
+                        P91889
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Sepia officinalis</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FMRFa";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P91889" data-a="DESCRIPTION: FMRFamide-related neuropeptides precursor protein ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FMRFamide-related neuropeptides precursor protein in Sepia officinalis. This 331 amino acid precursor is proteolytically processed into at least 11 bioactive FMRFamide tetrapeptides plus three additional FaRP variants (FIRF-amide, FLRF-amide, ALSGDAFLRF-amide). The mature peptides function as excitatory neurotransmitters at the chromatophore neuromuscular junction, where they act as slow-onset, long-lasting excitors of chromatophore muscles to produce chromatophore expansion. FaRPs are expressed in the posterior chromatophore lobes of the brain and in peripheral nerves around chromatophores, consistent with their role in body patterning and pigmentation control in cephalopods.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91889" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The extracellular region annotation is based on UniProtKB subcellular location mapping. UniProt annotates this protein as &#34;Secreted&#34; based on experimental evidence from PMID:10805923. The mature FMRFamide peptides are released from neurons into the extracellular space at the chromatophore neuromuscular junction, where they act directly on chromatophore muscles (PMID:10805923, PMID:9319020). This is an appropriate cellular component annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The protein is a secreted neuropeptide precursor. After signal peptide cleavage and proteolytic processing, the bioactive peptides are released into the extracellular space at synapses. UniProt annotates this as &#34;Secreted&#34; with experimental evidence from PMID:10805923. The IEA mapping from the subcellular location annotation is correct.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10805923" target="_blank" class="term-link">
+                                        PMID:10805923
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Evidence is also presented suggesting that FMRFamide-related peptides (FaRPs) also function as neurotransmitters at the Sepia chromatophore NMJ. FMRFamide application causes contraction of chromatophore muscles</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9319020" target="_blank" class="term-link">
+                                        PMID:9319020
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FMRFamide-like immunoreactivity was also seen in the periphery, in the nerves around the chromatophores and in close apposition to the muscles in the chromatophore layer of the fin.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007218" target="_blank" class="term-link">
+                                    GO:0007218
+                                </a>
+                            </span>
+                            <span class="term-label">neuropeptide signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91889" data-a="GO:0007218" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The neuropeptide signaling pathway annotation is derived from InterPro2GO mapping via the FMRFamide-related peptide domain (IPR002544). This is well supported by the literature: the FMRFa precursor encodes multiple neuropeptides that function in peptidergic signaling at the chromatophore neuromuscular junction (PMID:9192498, PMID:9319020, PMID:10805923).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core biological process for this gene product. The FMRFa precursor is processed into multiple bioactive neuropeptides that function in neuropeptide signaling at the chromatophore NMJ. All four classes of FaRPs encoded by this precursor (FMRF, FLRF, FIRF, ALSGDAFLRF) cause chromatophore expansion when assayed in bioassays (PMID:9192498). The InterPro2GO mapping is appropriate and well supported.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9192498" target="_blank" class="term-link">
+                                        PMID:9192498
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Each of the four FaRPs encoded by this cDNA causes chromatophore expansion when assayed in an in vitro chromatophore bioassay. Thus, it is likely that one or more of the FaRPs identified in this study are involved in controlling chromatophore activity in cuttlefish.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9319020" target="_blank" class="term-link">
+                                        PMID:9319020
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We present data demonstrating that the chromatophore muscles in the European cuttlefish Sepia officinalis are also regulated by the FMRFamide family of neuropeptides. Using an in vitro chromatophore bioassay, it has been determined that several FMRFamide-related peptides (FaRPs) are potent excitors of the chromatophore muscles, causing chromatophore expansion.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160041" target="_blank" class="term-link">
+                                    GO:0160041
+                                </a>
+                            </span>
+                            <span class="term-label">neuropeptide activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9192498" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9192498
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular analysis of FMRFamide- and FMRFamide-related pepti...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P91889" data-a="GO:0160041" data-r="PMID:9192498" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. The mature FMRFamide peptides function as neuropeptide ligands that activate receptors on chromatophore muscles. GO:0160041 (neuropeptide activity) is defined as &#34;the receptor ligand activity of any polypeptide expressed in, and secreted from a neuron.&#34; FMRFa gene products are expressed in chromatophore motoneurons in the posterior chromatophore lobe and act directly on chromatophore muscles as excitatory neurotransmitters (PMID:10805923, PMID:9192498, PMID:9319020).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most appropriate molecular function term for this gene product. The FMRFamide peptides are neuropeptides secreted from neurons that act as receptor ligands on target muscle cells. This is directly supported by bioassay data showing chromatophore muscle excitation (PMID:9192498), pharmacological evidence of direct action on muscle receptors (PMID:10805923), and immunocytochemical localization in neurons (PMID:10805923, PMID:9319020).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10805923" target="_blank" class="term-link">
+                                        PMID:10805923
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FMRFamide application causes contraction of chromatophore muscles; however, the FMRFamide effect is slower and longer lasting than that of glutamate. Pharmacological data show that FMRFamide acts directly on the chromatophore muscles.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9192498" target="_blank" class="term-link">
+                                        PMID:9192498
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cDNA encodes a precursor protein containing four FaRPs: ALSGDAFLRF, FIRF, FLRF and FMRF.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007268" target="_blank" class="term-link">
+                                    GO:0007268
+                                </a>
+                            </span>
+                            <span class="term-label">chemical synaptic transmission</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10805923" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10805923
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Roles of glutamate and FMRFamide-related peptides at the chr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P91889" data-a="GO:0007268" data-r="PMID:10805923" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. FMRFamide peptides function as neurotransmitters at the chromatophore neuromuscular junction. Loi and Tublitz (2000) demonstrated that FaRPs function as slow transmitters at the chromatophore NMJ, acting alongside glutamate (the fast transmitter). FMRFamide-immunopositive neurons are found in the posterior chromatophore lobe, and some chromatophore motoneurons co-express both FaRP-like immunoreactivity and an FaRP-coding mRNA transcript.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Chemical synaptic transmission is directly supported by multiple lines of evidence: (1) FaRPs cause chromatophore muscle contraction when applied exogenously (PMID:9319020, PMID:10805923); (2) pharmacological data show direct action on chromatophore muscles (PMID:10805923); (3) FMRFamide-immunopositive cells are present in the posterior chromatophore lobe where chromatophore motoneuron somata are located (PMID:10805923); (4) in situ hybridization confirms FaRP mRNA in putative chromatophore motoneurons (PMID:10805923). The peptides function as the slow component of dual neurotransmitter signaling at this synapse.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10805923" target="_blank" class="term-link">
+                                        PMID:10805923
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A combination of immunocytochemistry and in situ hybridization shows that some putative chromatophore motoneurons express FaRP-like immunoreactivity and an FaRP-coding mRNA transcript. Many FMRFamide-immunopositive cells in the posterior chromatophore lobes also express glutamate-like immunoreactivity. We conclude that glutamate and FaRPs likely function as fast and slow transmitters, respectively, at the Sepia chromatophore NMJ.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9319020" target="_blank" class="term-link">
+                                        PMID:9319020
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunocytochemical analyses of the central nervous system using an FMRFamide antibody revealed the presence of FMRFamide-like immunoreactive cell bodies in the posterior chromatophore lobes, the region of the brain containing the chromatophore motoneurons of the fin and mantle.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045933" target="_blank" class="term-link">
+                                    GO:0045933
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of muscle contraction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9319020" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9319020
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Peptidergic regulation of chromatophore function in the Euro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P91889" data-a="GO:0045933" data-r="PMID:9319020" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. FMRFamide peptides are excitatory neurotransmitters that cause contraction of chromatophore muscles, resulting in chromatophore expansion. All four FaRP classes (FMRF, FLRF, FIRF, ALSGDAFLRF) were shown to be potent excitors of chromatophore muscles in in vitro bioassays (PMID:9319020, PMID:9192498). FMRFamide acts directly on the chromatophore muscles (PMID:10805923).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation captures the direct excitatory effect of FMRFamide peptides on chromatophore muscle contraction. The bioassay data from multiple publications consistently show that FaRPs cause chromatophore muscle contraction (leading to chromatophore expansion). This is a core function of the FMRFa gene product in Sepia officinalis. Note the unique biology: chromatophore expansion occurs via muscle contraction (the muscles radially pull the chromatophore sac open).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9319020" target="_blank" class="term-link">
+                                        PMID:9319020
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Using an in vitro chromatophore bioassay, it has been determined that several FMRFamide-related peptides (FaRPs) are potent excitors of the chromatophore muscles, causing chromatophore expansion.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10805923" target="_blank" class="term-link">
+                                        PMID:10805923
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FMRFamide application causes contraction of chromatophore muscles; however, the FMRFamide effect is slower and longer lasting than that of glutamate. Pharmacological data show that FMRFamide acts directly on the chromatophore muscles.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9192498" target="_blank" class="term-link">
+                                        PMID:9192498
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Each of the four FaRPs encoded by this cDNA causes chromatophore expansion when assayed in an in vitro chromatophore bioassay.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043473" target="_blank" class="term-link">
+                                    GO:0043473
+                                </a>
+                            </span>
+                            <span class="term-label">pigmentation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9319020" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9319020
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Peptidergic regulation of chromatophore function in the Euro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P91889" data-a="GO:0043473" data-r="PMID:9319020" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. FMRFamide peptides regulate chromatophore expansion, which is the mechanism underlying body patterning and pigmentation in cephalopods. The FaRPs control chromatophore activity by directly activating chromatophore muscles, causing the pigment-filled sac to expand and display color (PMID:9319020, PMID:9192498). The SOFaRP2 gene is expressed in brain regions involved in chromatophore regulation (PMID:23465584).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Pigmentation in cephalopods is achieved through chromatophore organ expansion/retraction, which is under neural control. FMRFamide peptides are excitatory neurotransmitters at the chromatophore NMJ that cause chromatophore expansion (color display). While the FMRFamide peptides do not regulate pigment synthesis, they regulate the display of pigment through chromatophore expansion, which is part of the pigmentation process in the broader sense.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9319020" target="_blank" class="term-link">
+                                        PMID:9319020
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these data suggest that the FaRPs are likely to be endogenous excitors of the chromatophore muscles in cephalopods.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9192498" target="_blank" class="term-link">
+                                        PMID:9192498
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The display of complex color patterns of the cuttlefish Sepia officinalis is under the regulation of the FMRFamide-related peptide (FaRP) family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>The primary molecular function of FMRFa gene products is neuropeptide receptor ligand activity. The precursor protein is proteolytically processed into multiple bioactive peptides (11 copies of FMRFamide plus FIRF-amide, FLRF-amide, and ALSGDAFLRF-amide) that function as excitatory neurotransmitters at the chromatophore neuromuscular junction. These peptides bind receptors on chromatophore muscles to cause muscle contraction and chromatophore expansion. FaRPs serve as the slow neurotransmitter component alongside glutamate (the fast component) mediating neural control of chromatophore organs for body patterning in cuttlefish.</h3>
+                <span class="vote-buttons" data-g="P91889" data-a="FUNCTION: The primary molecular function of FMRFa gene produ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160041" target="_blank" class="term-link">
+                            neuropeptide activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007218" target="_blank" class="term-link">
+                                neuropeptide signaling pathway
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007268" target="_blank" class="term-link">
+                                chemical synaptic transmission
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045933" target="_blank" class="term-link">
+                                positive regulation of muscle contraction
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10805923" target="_blank" class="term-link">
+                                PMID:10805923
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We conclude that glutamate and FaRPs likely function as fast and slow transmitters, respectively, at the Sepia chromatophore NMJ.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9192498" target="_blank" class="term-link">
+                                PMID:9192498
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Each of the four FaRPs encoded by this cDNA causes chromatophore expansion when assayed in an in vitro chromatophore bioassay.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9192498" target="_blank" class="term-link">
+                            PMID:9192498
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular analysis of FMRFamide- and FMRFamide-related peptides (FaRPS) in the cuttlefish Sepia officinalis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloned full-length FaRP cDNA from S. officinalis brain encoding precursor protein with four FaRPs</div>
+                        
+                        <div class="finding-text">"We report the isolation and characterization of a full-length FaRP cDNA from the brain of S. officinalis. The cDNA encodes a precursor protein containing four FaRPs: ALSGDAFLRF, FIRF, FLRF and FMRF."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Each FaRP propeptide flanked by basic amino acid cleavage sites and has C-terminal glycine for amidation</div>
+                        
+                        <div class="finding-text">"Each propeptide has a C-terminal glycine residue that is presumably converted post-translationally to an amide. Every FaRP propeptide is also flanked by basic amino acid residues at the amino and carboxy termini, indicative of putative cleavage sites."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">All four FaRPs caused chromatophore expansion in in vitro bioassay</div>
+                        
+                        <div class="finding-text">"Each of the four FaRPs encoded by this cDNA causes chromatophore expansion when assayed in an in vitro chromatophore bioassay."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9319020" target="_blank" class="term-link">
+                            PMID:9319020
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Peptidergic regulation of chromatophore function in the European cuttlefish Sepia officinalis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FaRPs are potent excitors of chromatophore muscles causing chromatophore expansion</div>
+                        
+                        <div class="finding-text">"Using an in vitro chromatophore bioassay, it has been determined that several FMRFamide-related peptides (FaRPs) are potent excitors of the chromatophore muscles, causing chromatophore expansion."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FMRFamide-like immunoreactive cell bodies found in posterior chromatophore lobes</div>
+                        
+                        <div class="finding-text">"Immunocytochemical analyses of the central nervous system using an FMRFamide antibody revealed the presence of FMRFamide-like immunoreactive cell bodies in the posterior chromatophore lobes, the region of the brain containing the chromatophore motoneurons of the fin and mantle."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FMRFamide-like immunoreactivity in peripheral nerves in close apposition to chromatophore muscles</div>
+                        
+                        <div class="finding-text">"FMRFamide-like immunoreactivity was also seen in the periphery, in the nerves around the chromatophores and in close apposition to the muscles in the chromatophore layer of the fin."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HPLC identified bioactive FMRFamide-immunoreactive peaks co-eluting with FMRFamide and ALSGDAFLRFamide</div>
+                        
+                        <div class="finding-text">"HPLC analysis of the fin dermis isolated four bioactive peaks that were FMRFamide-immunoreactive when tested on an immunoblot assay. Two of these peaks co-eluted with known FaRPs, FMRFamide and ALSGDAFLRFamide."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10805923" target="_blank" class="term-link">
+                            PMID:10805923
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Roles of glutamate and FMRFamide-related peptides at the chromatophore neuromuscular junction in the cuttlefish, Sepia officinalis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FMRFamide causes chromatophore muscle contraction with slower onset and longer duration than glutamate</div>
+                        
+                        <div class="finding-text">"FMRFamide application causes contraction of chromatophore muscles; however, the FMRFamide effect is slower and longer lasting than that of glutamate."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Pharmacological data show FMRFamide acts directly on chromatophore muscles</div>
+                        
+                        <div class="finding-text">"Pharmacological data show that FMRFamide acts directly on the chromatophore muscles."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In situ hybridization confirms FaRP mRNA in putative chromatophore motoneurons</div>
+                        
+                        <div class="finding-text">"A combination of immunocytochemistry and in situ hybridization shows that some putative chromatophore motoneurons express FaRP-like immunoreactivity and an FaRP-coding mRNA transcript."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Glutamate and FaRPs function as fast and slow transmitters at the chromatophore NMJ</div>
+                        
+                        <div class="finding-text">"We conclude that glutamate and FaRPs likely function as fast and slow transmitters, respectively, at the Sepia chromatophore NMJ."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Many FMRFamide-immunopositive cells co-express glutamate-like immunoreactivity</div>
+                        
+                        <div class="finding-text">"Many FMRFamide-immunopositive cells in the posterior chromatophore lobes also express glutamate-like immunoreactivity."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11060217" target="_blank" class="term-link">
+                            PMID:11060217
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mass spectrometric survey of peptides in cephalopods with an emphasis on the FMRFamide-related peptides</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MALDI MS confirmed presence of FMRFamide-related peptides in Sepia officinalis nerves</div>
+                        
+                        <div class="finding-text">"A MALDI mass spectrometric survey of the major peptides in the stellar, fin and pallial nerves and the posterior chromatophore lobe of the cephalopods Sepia officinalis, Loligo opalescens and Dosidicus gigas has been performed."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FRPs are conserved across cephalopods</div>
+                        
+                        <div class="finding-text">"The FRPs predicted by this gene (FMRFa, FLRFa/FIRFa and ALSGDAFLRFa) are observed in all three species, indicating that members of this peptide family are highly conserved across cephalopods."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21802466" target="_blank" class="term-link">
+                            PMID:21802466
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular analysis of a novel FMRFamide-related peptide gene (SOFaRP2) and its expression pattern in the brain of the European cuttlefish Sepia officinalis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Second FaRP gene (SOFaRP2) cloned in S. officinalis encoding four different FaRPs</div>
+                        
+                        <div class="finding-text">"The complete 835-base pair cDNA sequence of the SOFaRP2 gene contains an open reading frame of 567 base pairs encoding 188 amino acids and four putative FaRPs."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SOFaRP2 expressed in brain regions involved in chromatophore regulation</div>
+                        
+                        <div class="finding-text">"The SOFaRP2 gene appears to be expressed in all brain regions involved in chromatophore regulation."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23465584" target="_blank" class="term-link">
+                            PMID:23465584
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Expression of the SOFaRP2 gene in the central nervous system of the adult cuttlefish Sepia officinalis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SOFaRP2 most intensively expressed in posterior chromatophore lobe and vasomotor lobe</div>
+                        
+                        <div class="finding-text">"The SOFaRP2 gene was found to be expressed most intensively in the posterior chromatophore lobe, vasomotor lobe and subvertical lobe."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression pattern suggests involvement in chromatophore regulation and feeding behavior</div>
+                        
+                        <div class="finding-text">"The expression pattern of SOFaRP2 suggests its involvement in chromatophore regulation, feeding behavior, and learning and memory."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21397478" target="_blank" class="term-link">
+                            PMID:21397478
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">FaRP cell distribution in the developing CNS suggests the involvement of FaRPs in all parts of the chromatophore control pathway in Sepia officinalis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FaRP expression detected in nervous system from beginning of organogenesis</div>
+                        
+                        <div class="finding-text">"We detected FaRP expression and production in the nervous system of embryos from the beginning of organogenesis (stage 16)."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FaRPs involved in all parts of the neural body pattern control system</div>
+                        
+                        <div class="finding-text">"Most of these areas were implicated in the control of body patterns, suggesting that FaRPs are involved in all parts of the neural body pattern control system, from the receptive areas via the CNS to the chromatophore effectors."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the specific receptors for FMRFamide peptides on Sepia chromatophore muscles? Identifying the receptor(s) would enable more precise annotation of the signaling pathway and could clarify whether FMRFamide acts via ionotropic or metabotropic mechanisms.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P91889" data-a="Q: What are the specific receptors for FMRFamide pept..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do different FaRP variants (FMRF vs FLRF vs FIRF vs ALSGDAFLRF) have distinct potencies or receptor specificities at the chromatophore NMJ? The precursor encodes 14 peptides of different sequences, suggesting possible functional diversification.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P91889" data-a="Q: Do different FaRP variants (FMRF vs FLRF vs FIRF v..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there other functional roles for FMRFa gene products beyond chromatophore regulation (e.g., cardiovascular, feeding, reproductive functions)? The broad CNS expression pattern of the related SOFaRP2 gene suggests possible pleiotropic functions.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P91889" data-a="Q: Are there other functional roles for FMRFa gene pr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relationship between the two S. officinalis FaRP genes (FMRFa/SOFaRP1 and SOFaRP2) in terms of functional redundancy or specialization at the chromatophore NMJ?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P91889" data-a="Q: What is the relationship between the two S. offici..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Dose-response curves comparing the four FaRP variants (FMRFamide, FLRFamide, FIRFamide, ALSGDAFLRFamide) for chromatophore expansion potency in the in vitro bioassay, to determine whether different peptides from the same precursor have distinct efficacies.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Different FaRP variants encoded by the same precursor may have distinct potencies at the chromatophore NMJ, reflecting functional specialization within the peptide family.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P91889" data-a="EXPERIMENT: Dose-response curves comparing the four FaRP varia..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vivo gene knockdown (e.g., morpholino injection into embryos) of FMRFa to assess effects on body patterning behavior and chromatophore function in developing cuttlefish.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of FMRFa expression will impair chromatophore-mediated body patterning behavior, confirming the essential role of FaRPs in this process.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P91889" data-a="EXPERIMENT: In vivo gene knockdown (e.g., morpholino injection..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Electrophysiological recording of chromatophore muscle responses to individual FaRP peptides to characterize the receptor pharmacology and ion channel mechanisms underlying FMRFamide excitation at the chromatophore NMJ.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FMRFamide peptides activate specific receptors on chromatophore muscles that produce slow depolarizing currents, distinct from the fast glutamate-mediated response.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P91889" data-a="EXPERIMENT: Electrophysiological recording of chromatophore mu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FMRFa-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P91889" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: false<br />
+start_time: '2026-05-01T14:00:28.168697'<br />
+end_time: '2026-05-01T14:05:45.418957'<br />
+duration_seconds: 317.25<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: SEPOF<br />
+  gene_id: FMRFa<br />
+  gene_symbol: FMRFa<br />
+  uniprot_accession: P91889<br />
+  protein_description: 'RecName: Full=FMRFamide-related neuropeptides {ECO:0000303|PubMed:11060217,<br />
+    ECO:0000303|PubMed:9192498, ECO:0000312|EMBL:CAA72116.1}; Contains: RecName: Full=FIRF-amide<br />
+    {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName:<br />
+    Full=ALSGDAFLRF-amide {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FLRF-amide {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FMRF-amide 1 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FMRF-amide 2 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FMRF-amide 3 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FMRF-amide 4 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FMRF-amide 5 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FMRF-amide 6 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FMRF-amide 7 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FMRF-amide 8 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FMRF-amide 9 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FMRF-amide 10 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Contains: RecName: Full=FMRF-amide 11 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498};<br />
+    Flags: Precursor;'<br />
+  gene_info: Name=FMRFa {ECO:0000303|PubMed:11060217};<br />
+  organism_full: Sepia officinalis (Common cuttlefish).<br />
+  protein_family: Belongs to the FARP (FMRFamide related peptide) family.<br />
+  protein_domains: FMRFamid-related_peptide-like. (IPR002544); FMRFamide-related_np.<br />
+    (IPR051041); FARP (PF01581)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 74</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P91889</li>
+<li><strong>Protein Description:</strong> RecName: Full=FMRFamide-related neuropeptides {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498, ECO:0000312|EMBL:CAA72116.1}; Contains: RecName: Full=FIRF-amide {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=ALSGDAFLRF-amide {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FLRF-amide {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FMRF-amide 1 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FMRF-amide 2 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FMRF-amide 3 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FMRF-amide 4 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FMRF-amide 5 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FMRF-amide 6 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FMRF-amide 7 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FMRF-amide 8 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FMRF-amide 9 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FMRF-amide 10 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Contains: RecName: Full=FMRF-amide 11 {ECO:0000303|PubMed:11060217, ECO:0000303|PubMed:9192498}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=FMRFa {ECO:0000303|PubMed:11060217};</li>
+<li><strong>Organism (full):</strong> Sepia officinalis (Common cuttlefish).</li>
+<li><strong>Protein Family:</strong> Belongs to the FARP (FMRFamide related peptide) family.</li>
+<li><strong>Key Domains:</strong> FMRFamid-related_peptide-like. (IPR002544); FMRFamide-related_np. (IPR051041); FARP (PF01581)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "FMRFa" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Sepia officinalis (Common cuttlefish).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'FMRFa' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>FMRFa</strong> (gene ID: FMRFa, UniProt: P91889) in SEPOF.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="fmrfa-gene-fmrfamide-related-neuropeptide-precursor-functional-annotation-report">FMRFa Gene (FMRFamide-Related Neuropeptide Precursor) – Functional Annotation Report</h1>
+<h2 id="gene-and-protein-overview">Gene and Protein Overview</h2>
+<p><strong>FMRFa</strong> in <em>Sepia officinalis</em> encodes a precursor protein that is processed into multiple <strong>FMRFamide-related peptides (FaRPs)</strong>. FMRFamide (Phe-Met-Arg-Phe-NH₂) is a hallmark tetrapeptide neuropeptide originally discovered in mollusks in 1977 (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=Phe,of%20FMRFamide%20in%20cephalopods%20were">www.frontiersin.org</a>). The <em>S. officinalis</em> FMRFa gene belongs to the FaRP peptide family (UniProt P91889) and produces a ~331 amino acid precursor (~39 kDa) containing an N-terminal signal peptide and numerous repeated neuropeptide sequences (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=open%20reading%20frame%20contained%20996,expression%20of%20SjFMRFamide%20in%20the">pmc.ncbi.nlm.nih.gov</a>). Proteolytic processing of this precursor yields <strong>at least four distinct neuropeptides</strong>, including single copies of <strong>FLRFamide</strong>, <strong>ALSGDAFLRFamide</strong>, <strong>FIRFamide</strong>, and multiple copies (∼11 repeats in cuttlefish) of <strong>FMRFamide</strong> itself (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=9,indicated%20that%20SjFMRFamide%20was%20transcribed">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0196978109005129#:~:text=,the%20bivalve%20precursor%2C%2011%20copies">www.sciencedirect.com</a>). A conserved furin cleavage site (RX[K/R]R) separates the precursor into regions, facilitating the liberation of the active C-terminal RFamide peptides (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=,of%20FMRFamide%20in%20cephalopods%20were">www.frontiersin.org</a>). These peptides all share the C-terminal <strong>–RFamide</strong> motif, characteristic of this neuropeptide family.</p>
+<p><strong>Conservation and Family</strong> – FMRFamide and related RFamide peptides are evolutionarily widespread. Since its initial characterization as a cardio-excitatory neuropeptide in clams, RFamide peptides have been identified across diverse phyla – from cnidarians to arthropods and chordates (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=Since%20FMRFamide%20,are%20involved%20in%20many%20physiological">pmc.ncbi.nlm.nih.gov</a>). In mollusks, the FMRFa gene is one of five major RFamide precursor genes, alongside LFRFamide, luqin, neuropeptide F, and others (<a href="https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=Since%20the%20initial%20characterization%20of,display%20a%20complex%20spatiotemporal%20pattern">www.frontiersin.org</a>). Notably, insects like <em>Drosophila</em> also possess an FMRFamide gene (sometimes denoted <strong>FMRFa</strong>), encoding similar neuropeptides – underscoring the conserved role of RFamide signaling in invertebrate nervous systems. (This report focuses on the <em>S. officinalis</em> FMRFa; care is taken not to confuse it with homologs in other species.)</p>
+<h2 id="expression-and-localization">Expression and Localization</h2>
+<p><strong>Cellular Localization:</strong> The FMRFa precursor contains a signal peptide directing it into the secretory pathway (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=9,indicated%20that%20SjFMRFamide%20was%20transcribed">pmc.ncbi.nlm.nih.gov</a>). It is packaged in neurosecretory vesicles and cleaved into active peptides that are secreted as neurotransmitters or neurohormones. Thus, the mature peptides function <strong>extracellularly</strong>, binding to receptors on target cells. Within neurons, FMRFamide peptides are often localized to dense-core vesicles in synapses or neurohemal release sites.</p>
+<p><strong>Tissue Distribution:</strong> Expression of FMRFa is highly <strong>central nervous system (CNS)</strong>-enriched. A 2018 analysis in a related cuttlefish (<em>Sepiella japonica</em>) showed <strong>highest FMRFa mRNA levels in the brain</strong> (in both sexes) compared to other tissues (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=Results%20of%20phylogenetic%20relation%20analysis,for%20the%20development%20of%20aquaculture">pmc.ncbi.nlm.nih.gov</a>). In <em>S. officinalis</em>, in situ hybridization and immunochemical studies have similarly found FMRFa transcripts and peptides widely distributed across brain lobes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=expression%20analysis%20indicated%20the%20highest,for%20the%20development%20of%20aquaculture">pmc.ncbi.nlm.nih.gov</a>). FMRFamide immunoreactivity is present in many neural circuits of the supraesophageal and subesophageal masses (the cephalopod brain regions) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=expression%20analysis%20indicated%20the%20highest,for%20the%20development%20of%20aquaculture">pmc.ncbi.nlm.nih.gov</a>). Peripheral nervous structures also contain FMRFamide-expressing neurons; for example, <strong>FMRFamide-positive fibers</strong> innervate the optic gland, viscera, and peripheral nerves (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=physical%20processes%20%284%20%29,main%20sites%20to%20synthesize%20FMRFamide">www.frontiersin.org</a>). Notably, FMRFamide-like peptides are present in the <strong>venous blood</strong> of cephalopods, indicating neurohormonal release into circulation (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=physical%20processes%20%284%20%29,are%20the%20main%20sites%20to">www.frontiersin.org</a>). Recent evidence even suggests expression outside the nervous system: <strong>immune cells (hemocytes)</strong> of molluscs can express and synthesize FMRFamide peptides (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=chinensis%20%286%20%29,main%20sites%20to%20synthesize%20FMRFamide">www.frontiersin.org</a>). In cuttlefish and octopus, FMRFamide-expressing neurons project to endocrine glands (optic gland) and peripheral organs, underscoring a neuroendocrine role (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=physical%20processes%20%284%20%29,main%20sites%20to%20synthesize%20FMRFamide">www.frontiersin.org</a>).</p>
+<p><strong>Subcellular Localization:</strong> Within neurons, the FMRFa precursor is processed in the Golgi and packaged in secretory granules. The mature peptides are stored in synaptic terminals or neurohemal areas until stimulus-triggered release. In target cells, FMRFamide receptors are membrane-bound (GPCRs or ion channels, discussed below). For instance, a specialized FMRFamide-gated Na⁺ channel cloned from <em>S. japonica</em> (SjFaNaC) was shown to localize to the cell surface when expressed in HEK293 cells (<a href="https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=optic%20lobe%20and%20brain%20of,functions%20of%20SjFaNaC%20in%20cephalopods">pubmed.ncbi.nlm.nih.gov</a>), consistent with it being an extracellular ligand receptor.</p>
+<h2 id="molecular-function-and-mechanisms">Molecular Function and Mechanisms</h2>
+<p><strong>Neuropeptide Signaling:</strong> FMRFa’s gene product is fundamentally a <strong>neurotransmitter/neuromodulator</strong> precursor. The liberated FMRFamide peptides bind to specific receptors on neurons or muscle cells to modulate their activity. These peptides are considered important neurotransmitters or neuromodulators in invertebrates, influencing a wide range of neural and physiological processes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=neuroactive%20peptides%2C%20FMRFamide,16%2C7">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p><strong>Receptors and Pathways:</strong> Two main types of FMRFamide receptors are known in invertebrates: G protein-coupled receptors and ligand-gated ion channels. Most commonly, FMRFamide-related peptides signal through <strong>G-protein coupled receptors (GPCRs)</strong> on target cell membranes (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=FMRFamide%20%20is%20a%20ubiquitous,of%20SjFaGPCR%20was%20predicted%20using">www.sciencedirect.com</a>). Binding of FMRFamide to its GPCR triggers intracellular second messenger cascades (e.g. via G_q or G_i pathways), ultimately altering neuronal excitability or cellular responses (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=FMRFamide%20%20is%20a%20ubiquitous,residues%2C%20lacking%20a%20signal%20peptide">www.sciencedirect.com</a>). For example, FMRFamide receptors in mollusks are related to the neuropeptide FF receptor family and initiate signaling that modulates ion channel activity and gene expression. <em>Sepiella</em> cuttlefish were recently found to possess an FMRFamide GPCR (418 amino acids, seven-transmembrane structure) expressed in neural tissues (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=receptors%20,of%20SjFaGPCR%20was%20predicted%20using">www.sciencedirect.com</a>). This receptor (SjFaGPCR) is thought to mediate many of the peptide’s physiological effects, such as reproductive maturation signals (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=receptors%20,coupled%20receptor%20of">www.sciencedirect.com</a>).</p>
+<p>Unusually, FMRFamide can also act <strong>directly on ion channels</strong>. A family of <strong>FMRFamide-activated Na⁺ channels (FaNaCs)</strong> has been characterized in mollusks (<a href="https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=FMRFamide%2C%20a%20member%20of%20the,The%20protein">pubmed.ncbi.nlm.nih.gov</a>). These are non-voltage-gated, amiloride-sensitive sodium channels opened by FMRFamide binding, causing rapid depolarization of neurons. The <em>S. japonica</em> FaNaC channel (603 amino acids) is conserved in cephalopods and highly expressed in the brain and optic lobe, as well as in gonadal tissue (<a href="https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=cDNA%20of%20the%20FaNaC%20receptor,Results%20of%20in%20situ">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=Quantitative%20real,functions%20of%20SjFaNaC%20in%20cephalopods">pubmed.ncbi.nlm.nih.gov</a>). FaNaCs provide a fast, excitatory mechanism for FMRFamide signaling, complementing the slower GPCR-mediated modulation. In molluscan neurons (e.g. in snails), FMRFamide can inhibit neural activity by other means as well – for instance, by modulating ion conductances via second messengers. In Aplysia neurons, FMRFamide was shown to <strong>open K⁺ channels and reduce Ca²⁺ currents</strong>, rapidly terminating bursting activity (<a href="https://pubmed.ncbi.nlm.nih.gov/7688803/#:~:text=The%20peptide%20FMRFa%20terminates%20a,C%20H%20Lin%2C%20L">pubmed.ncbi.nlm.nih.gov</a>). Thus, depending on context, FMRFamide peptides can either excite or inhibit target cells through distinct mechanisms – direct channel gating or G-protein signaling – ultimately <strong>tuning neuronal circuit activity</strong>.</p>
+<h2 id="biological-roles-and-processes">Biological Roles and Processes</h2>
+<p><strong>1. Neuromodulation and Behavior:</strong> As a broadly expressed neuropeptide, FMRFamide influences many neural circuits and behaviors in cephalopods. <strong>Motor patterning and chromatophore control</strong> is one such role – FMRFamide-related peptides modulate the expansion of chromatophores (pigment cells) that produce dynamic skin patterns in cuttlefish (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=officinalis%20,16">pmc.ncbi.nlm.nih.gov</a>). Experimental studies in <em>Sepia officinalis</em> showed that applying FMRFamide or related peptides can alter chromatophore muscle contraction, affecting color change and body patterning (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). This indicates FMRFamide’s involvement in the neural control of camouflage and display behaviors (likely via neuromuscular modulation in the skin). More generally, FMRFamide acts within the cephalopod CNS as a <strong>neuromodulator of locomotor and sensory circuits</strong>. It is considered a “broadcast” neurotransmitter that can adjust the excitability of networks, shaping behaviors such as locomotion, feeding, or escape responses (as observed in other mollusks (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=neuroactive%20peptides%2C%20FMRFamide,16%2C7">pmc.ncbi.nlm.nih.gov</a>)). </p>
+<p><strong>2. Cardio-Excretory and Peripheral Effects:</strong> FMRFamide’s discovery as a <strong>cardio-excitatory peptide</strong> highlights its role in modulating muscle tissues. In the clam heart, FMRFamide increases heartbeat frequency and contraction strength (<a href="https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=Since%20the%20initial%20characterization%20of,related%20peptide%20gene%2C%20the">www.frontiersin.org</a>). In cuttlefish, FMRFamide-immunoreactive neurons innervate parts of the gut and blood vessels, suggesting roles in regulating visceral muscle contraction and possibly excretory organs. In one study, a novel RFamide peptide (GNLFRFamide, from a related gene) increased contraction frequency of the cuttlefish rectum at nanomolar concentrations (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0196978109005129#:~:text=the%20peptide%20of%20m%2Fz%20752,9%20that%20is%20not">www.sciencedirect.com</a>). The FMRFa gene’s peptides (like FMRFamide, FLRFamide) likely have similar myotropic effects on smooth muscles in the reproductive and digestive systems (<a href="https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=four%20immunoreactive%20fractions%20detected%20revealed,Indeed%2C%20FMRFa%20modulates%20the%20contractions">pubmed.ncbi.nlm.nih.gov</a>). This modulatory control ensures that physiological rhythms (heart rate, gut motility) can be adjusted by the nervous system.</p>
+<p><strong>3. Reproductive Function:</strong> One of the most well-documented functions of FMRFamide in cephalopods is in <strong>reproduction and egg-laying</strong>. <em>S. officinalis</em> uses FaRP neuropeptides to coordinate ovulation and egg casing production. Henry et al. (1999) purified FMRFamide and related peptides from female optic lobes and demonstrated their effect on oviduct contraction (<a href="https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=four%20immunoreactive%20fractions%20detected%20revealed,Indeed%2C%20FMRFa%20modulates%20the%20contractions">pubmed.ncbi.nlm.nih.gov</a>). The <strong>tetrapeptides FMRFamide and FLRFamide strongly stimulated oviduct muscle contractions</strong>, promoting egg transport, whereas the larger peptides FIRFamide and ALSGDAFLRFamide <strong>reduced contraction frequency and tone</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=four%20immunoreactive%20fractions%20detected%20revealed,Indeed%2C%20FMRFa%20modulates%20the%20contractions">pubmed.ncbi.nlm.nih.gov</a>). This suggests a finely tuned balance: some FaRPs trigger muscular contraction to propel oocytes, while others relax the tract between egg releases. The same study found FMRFamide-positive nerve fibers innervating the accessory sex glands (nidamental glands) that secrete the egg capsule (<a href="https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=oviduct%3A%20the%20tetrapeptides%20FMRFa%20and,ovulation%20and%20egg%20capsule%20coating">pubmed.ncbi.nlm.nih.gov</a>). In vitro, FMRFamide modulated contractions of the nidamental gland, likely <strong>inducing secretion of egg capsule materials during ovulation</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=oviduct%3A%20the%20tetrapeptides%20FMRFa%20and,ovulation%20and%20egg%20capsule%20coating">pubmed.ncbi.nlm.nih.gov</a>). These results show that FMRFa peptides play an integral role in synchronizing ovulation with egg encapsulation and laying in cuttlefish. </p>
+<p>In octopuses, FMRFamide appears to have analogous reproductive roles. <em>Octopus vulgaris</em> expresses FMRFamide in neurons that innervate the optic gland (a neuroendocrine gland controlling sexual maturation) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,5.%20%5BDOI">pmc.ncbi.nlm.nih.gov</a>). Di Cosmo et al. (2003) reported that FMRFamide signalling influences <strong>gonadal development and reproductive timing</strong> in octopus, possibly by modulating optic gland hormone release (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). In <em>Sepiella</em> (Chinese cuttlefish), FMRFamide expression rises during sexual maturation, and experimental evidence suggests it promotes aspects of reproductive development (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=receptors%20,coupled%20receptor%20of">www.sciencedirect.com</a>). Taken together, FMRFa neuropeptides serve as key <strong>neuroendocrine regulators of cephalopod reproduction</strong> – linking the nervous system to reproductive organ function and timing.</p>
+<p><strong>4. Neuroendocrine Regulation (Optic Gland):</strong> The cephalopod optic gland is functionally analogous to the vertebrate pituitary, releasing hormones that trigger sexual maturation and senescence. FMRFamide-like peptides have been found in neurons projecting to the optic gland in cuttlefish (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,4.%20%5BDOI">pmc.ncbi.nlm.nih.gov</a>) and squid, hinting at regulatory control. Early immunohistochemical work (Le Guez et al. 1988) showed FMRFamide-immunoreactive fibers densely innervating the <em>Sepia</em> optic gland (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,4.%20%5BDOI">pmc.ncbi.nlm.nih.gov</a>). This peptidergic innervation suggests FMRFamide could modulate the gland’s endocrine output. Indeed, applying FMRFamide in <em>Octopus</em> can alter optic gland activity and was linked to changes in reproductive hormone levels (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). Thus, FMRFa peptides may act as <strong>neuroendocrine messengers</strong>, ensuring that environmental or neural cues appropriately influence hormone release for reproduction. This role fits into the broader reproductive function described above and highlights FMRFamide as a bridge between nervous and endocrine systems in cephalopods.</p>
+<p><strong>5. Immune System Modulation:</strong>  <em>Sepia</em> FMRFamide is now recognized to also participate in the <strong>neuroimmune axis</strong>. A recent 2022 study demonstrated that FMRFamide has an immunoregulatory role during stress in cuttlefish (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=Neuropeptide%20Phe,PCR%29%2C%20which%20indicated">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=additional%20FMRFamide%20could%20still%20furtherly,and%20other%20invertebrates%20and%20will">www.frontiersin.org</a>). When juvenile <em>S. japonica</em> were challenged with bacterial infection (Vibrio), FMRFa gene expression in neural tissues was significantly upregulated alongside nitric oxide synthase (NOS) expression (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=detailed%20knowledge%20is%20still%20little,NOS%20mRNA%20was%20highly%20significantly">www.frontiersin.org</a>). This co-expression led researchers to investigate FMRFamide’s effect on immune-related nitric oxide (NO) production. Strikingly, <strong>knockdown of the FMRFa precursor gene via RNA interference caused excessive NO production</strong> after immune challenge, whereas adding exogenous FMRFamide peptide <strong>suppressed NO levels</strong> (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=appeared%20colocalization%2C%20suggesting%20that%20at,indeed%20inhibit%20NO%20production%20to">www.frontiersin.org</a>). Whole-mount in situ hybridization showed FMRFa mRNA and NOS mRNA co-localized in certain tissues, suggesting direct interaction (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=that%20both%20were%20likely%20to,of%20the%20NO%20level%20in">www.frontiersin.org</a>). Collectively, these results indicate that FMRFamide <strong>acts as a negative feedback regulator of inflammation</strong>, inhibiting NO synthesis to prevent overshooting cytotoxic immune responses (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=additional%20FMRFamide%20could%20still%20furtherly,and%20other%20invertebrates%20and%20will">www.frontiersin.org</a>). The proposed model is that during late-stage immune responses, neural FMRFamide is released to dampen macrophage or hemocyte activity, curbing nitric oxide-mediated damage (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=additional%20FMRFamide%20could%20still%20furtherly,and%20other%20invertebrates%20and%20will">www.frontiersin.org</a>). This discovery expands FMRFamide’s functional repertoire beyond the nervous system, identifying it as a component of cephalopod innate immune regulation (likely via neuroendocrine-immune signaling pathways). It also underscores cephalopods as “advanced” invertebrates with intricate neuroimmune communication (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=serve%20as%20feedback%20regulation%20at,understanding%20the%20NEIS%20of%20cephalopods">www.frontiersin.org</a>).</p>
+<h2 id="current-research-directions-and-applications">Current Research Directions and Applications</h2>
+<p>FMRFa peptides in <em>Sepia</em> and other cephalopods remain an active research area, with recent studies focusing on receptor characterization and potential applications in aquaculture. <strong>Receptor Identification:</strong> In late 2023, Xie et al. cloned the first FMRFamide-specific GPCR from <em>S. japonica</em>, confirming the molecular target through which FMRFa neuropeptides exert many effects (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=receptors%20,of%20SjFaGPCR%20was%20predicted%20using">www.sciencedirect.com</a>). Similarly, the FaNaC ion channel gene was cloned in 2024, and its expression in reproductive organs hints at a role in mediating FMRFamide’s effects on gonadal maturation (<a href="https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=Quantitative%20real,functions%20of%20SjFaNaC%20in%20cephalopods">pubmed.ncbi.nlm.nih.gov</a>). Characterizing these receptors helps decipher the signal transduction pathways (e.g., which second messengers or ion currents are involved) and could reveal drug targets to modulate FMRFamide signaling. </p>
+<p><strong>Physiological Genomics:</strong> With the sequencing of cephalopod genomes, researchers have identified multiple FMRFamide gene variants. In <em>Sepia officinalis</em>, at least two distinct FaRP precursor genes exist (termed <strong>SOFaRP1 and SOFaRP2</strong>) (<a href="https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=FMRFamide,011">www.frontiersin.org</a>). The second gene (SOFaRP2) was described in 2012 with a distinct expression pattern in the brain (<a href="https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=FMRFamide,011">www.frontiersin.org</a>). The diversity of RFamide peptides from these genes (~75 different RFamide peptides across mollusks) and their spatial expression suggest specialized functions (<a href="https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=peptides%20,display%20a%20complex%20spatiotemporal%20pattern">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=FLPs%20represent%20approximately%2075%20distinct,display%20a%20complex%20spatiotemporal%20pattern">www.frontiersin.org</a>). Ongoing work is examining how different RFamide peptides (e.g. the unique GNLFRFamide vs. FMRFamide) have differentiated roles, and how alternative splicing or gene duplication contributes to neural complexity in cephalopods (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=match%20at%20L273%20to%20multiple,7">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p><strong>Aquaculture and Applied Research:</strong> Understanding FMRFa’s function has practical implications, especially for cephalopod aquaculture and biology. Cuttlefish are short-lived and semelparous (single reproductive cycle), so <strong>manipulating neuropeptide signals could influence reproduction and growth</strong>. The 2018 <em>S. japonica</em> study suggested that knowledge of FMRFamide regulation may aid in developing aquaculture techniques (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=expression%20analysis%20indicated%20the%20highest,methods%20for%20this%20cuttlefish%20species">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=neuropeptide%20evolution%20or%20may%20prove,methods%20for%20this%20cuttlefish%20species">pmc.ncbi.nlm.nih.gov</a>). For instance, if FMRFamide or its analogs can be used to synchronize or induce spawning and egg-laying, hatchery efficiency could improve. Likewise, intervening in FMRFamide signaling might modulate stress responses or immunity in captive cephalopods, improving survival. While these applications are still speculative, they stem from the recognized roles of FMRFamide in coordinating key physiological processes (reproduction, muscle contraction, immune balance). Additionally, FMRFamide is used as a <strong>research tool</strong> in neurobiology – as a known modulator, it’s applied to probe neural circuit function in mollusks. Its ability to activate FaNaC channels, for example, makes it useful for studies of ion channel gating and neuropharmacology (<a href="https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=FMRFamide%2C%20a%20member%20of%20the,The%20protein">pubmed.ncbi.nlm.nih.gov</a>).</p>
+<p>Experts in neuropeptide biology consider FMRFamide and related FaRPs to be <strong>central regulators in molluscan physiology</strong>. They note that a single FMRFa precursor gene can influence an array of systems – “from chromatophore expansion and locomotion to <strong>reproduction and even immune defense</strong>” – by releasing multiple peptides that target different receptors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=officinalis%20,16">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=additional%20FMRFamide%20could%20still%20furtherly,and%20other%20invertebrates%20and%20will">www.frontiersin.org</a>). Such breadth of action is a hallmark of neuromodulators. Despite this pleiotropy, each role of FMRFamide is quite specific in context. In summary, the <em>Sepia officinalis</em> FMRFa gene encodes a multi-peptide neurohormone system that <strong>integrates neural, endocrine, and immune functions</strong>. Its peptides act as messengers that fine-tune muscular activity, developmental timing, and homeostatic responses, making FMRFamide a pivotal molecule for the physiology and behavior of cephalopods.</p>
+<p><strong>References:</strong> Recent key studies and reviews underpinning this annotation include: Henry <em>et al.</em>, 1999 (Peptides) (<a href="https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=four%20immunoreactive%20fractions%20detected%20revealed,Indeed%2C%20FMRFa%20modulates%20the%20contractions">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=oviduct%3A%20the%20tetrapeptides%20FMRFa%20and,ovulation%20and%20egg%20capsule%20coating">pubmed.ncbi.nlm.nih.gov</a>); Di Cosmo <em>et al.</em>, 2003 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>); Loi &amp; Tublitz, 1996/2006 on chromatophores (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>); Le Guez <em>et al.</em>, 1988 on optic gland innervation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,4.%20%5BDOI">pmc.ncbi.nlm.nih.gov</a>); Ying Li <em>et al.</em>, 2018 (Molecules) on cuttlefish FMRFa gene characterization (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=9,indicated%20that%20SjFMRFamide%20was%20transcribed">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=Results%20of%20phylogenetic%20relation%20analysis,for%20the%20development%20of%20aquaculture">pmc.ncbi.nlm.nih.gov</a>); Zheng <em>et al.</em>, 2022 (Front. Immunol.) on neuroimmune function (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=appeared%20colocalization%2C%20suggesting%20that%20at,indeed%20inhibit%20NO%20production%20to">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=additional%20FMRFamide%20could%20still%20furtherly,and%20other%20invertebrates%20and%20will">www.frontiersin.org</a>); and Xie/Li <em>et al.</em>, 2024 (Neuropeptides) on FMRFamide receptors (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=FMRFamide%20%20is%20a%20ubiquitous,of%20SjFaGPCR%20was%20predicted%20using">www.sciencedirect.com</a>), among others. These sources provide detailed experimental evidence of FMRFa’s structure, expression, and diverse functions across physiology. The consensus from authoritative reviews is that <strong>FMRFamide-related peptides are ubiquitous and versatile neuromodulators</strong>, underscoring the importance of the FMRFa gene in molluscan neurobiology (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=neuroactive%20peptides%2C%20FMRFamide,16%2C7">pmc.ncbi.nlm.nih.gov</a>). </p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=531, start_index=366, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=Phe,of%20FMRFamide%20in%20cephalopods%20were')</li>
+<li>AnnotationURLCitation(end_index=918, start_index=753, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=open%20reading%20frame%20contained%20996,expression%20of%20SjFMRFamide%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=1296, start_index=1160, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=9,indicated%20that%20SjFMRFamide%20was%20transcribed')</li>
+<li>AnnotationURLCitation(end_index=1447, start_index=1297, title='Characterization of a novel LFRFamide neuropeptide in the cephalopod Sepia officinalis - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S0196978109005129#:~:text=,the%20bivalve%20precursor%2C%2011%20copies')</li>
+<li>AnnotationURLCitation(end_index=1762, start_index=1600, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=,of%20FMRFamide%20in%20cephalopods%20were')</li>
+<li>AnnotationURLCitation(end_index=2302, start_index=2155, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=Since%20FMRFamide%20,are%20involved%20in%20many%20physiological')</li>
+<li>AnnotationURLCitation(end_index=2627, start_index=2433, title='Frontiers | Diversity of the RFamide Peptide Family in Mollusks', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=Since%20the%20initial%20characterization%20of,display%20a%20complex%20spatiotemporal%20pattern')</li>
+<li>AnnotationURLCitation(end_index=3245, start_index=3109, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=9,indicated%20that%20SjFMRFamide%20was%20transcribed')</li>
+<li>AnnotationURLCitation(end_index=4021, start_index=3845, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=Results%20of%20phylogenetic%20relation%20analysis,for%20the%20development%20of%20aquaculture')</li>
+<li>AnnotationURLCitation(end_index=4359, start_index=4183, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=expression%20analysis%20indicated%20the%20highest,for%20the%20development%20of%20aquaculture')</li>
+<li>AnnotationURLCitation(end_index=4678, start_index=4502, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=expression%20analysis%20indicated%20the%20highest,for%20the%20development%20of%20aquaculture')</li>
+<li>AnnotationURLCitation(end_index=5051, start_index=4854, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=physical%20processes%20%284%20%29,main%20sites%20to%20synthesize%20FMRFamide')</li>
+<li>AnnotationURLCitation(end_index=5372, start_index=5188, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=physical%20processes%20%284%20%29,are%20the%20main%20sites%20to')</li>
+<li>AnnotationURLCitation(end_index=5716, start_index=5530, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=chinensis%20%286%20%29,main%20sites%20to%20synthesize%20FMRFamide')</li>
+<li>AnnotationURLCitation(end_index=6071, start_index=5874, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=physical%20processes%20%284%20%29,main%20sites%20to%20synthesize%20FMRFamide')</li>
+<li>AnnotationURLCitation(end_index=6726, start_index=6572, title='A Na+ channel receptor of FMRFamide in the cephalopod Sepiella japonica: Identification, characterisation, and expression profiling during different stages of gonadal development - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=optic%20lobe%20and%20brain%20of,functions%20of%20SjFaNaC%20in%20cephalopods')</li>
+<li>AnnotationURLCitation(end_index=7343, start_index=7215, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=neuroactive%20peptides%2C%20FMRFamide,16%2C7')</li>
+<li>AnnotationURLCitation(end_index=7803, start_index=7622, title='FMRFamide G protein-coupled receptors (GPCR) in the cuttlefish Sepiella japonica: Identification, characterization and expression profile - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=FMRFamide%20%20is%20a%20ubiquitous,of%20SjFaGPCR%20was%20predicted%20using')</li>
+<li>AnnotationURLCitation(end_index=8169, start_index=7983, title='FMRFamide G protein-coupled receptors (GPCR) in the cuttlefish Sepiella japonica: Identification, characterization and expression profile - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=FMRFamide%20%20is%20a%20ubiquitous,residues%2C%20lacking%20a%20signal%20peptide')</li>
+<li>AnnotationURLCitation(end_index=8654, start_index=8495, title='FMRFamide G protein-coupled receptors (GPCR) in the cuttlefish Sepiella japonica: Identification, characterization and expression profile - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=receptors%20,of%20SjFaGPCR%20was%20predicted%20using')</li>
+<li>AnnotationURLCitation(end_index=8931, start_index=8788, title='FMRFamide G protein-coupled receptors (GPCR) in the cuttlefish Sepiella japonica: Identification, characterization and expression profile - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=receptors%20,coupled%20receptor%20of')</li>
+<li>AnnotationURLCitation(end_index=9220, start_index=9091, title='A Na+ channel receptor of FMRFamide in the cephalopod Sepiella japonica: Identification, characterisation, and expression profiling during different stages of gonadal development - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=FMRFamide%2C%20a%20member%20of%20the,The%20protein')</li>
+<li>AnnotationURLCitation(end_index=9652, start_index=9514, title='A Na+ channel receptor of FMRFamide in the cephalopod Sepiella japonica: Identification, characterisation, and expression profiling during different stages of gonadal development - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=cDNA%20of%20the%20FaNaC%20receptor,Results%20of%20in%20situ')</li>
+<li>AnnotationURLCitation(end_index=9795, start_index=9653, title='A Na+ channel receptor of FMRFamide in the cephalopod Sepiella japonica: Identification, characterisation, and expression profiling during different stages of gonadal development - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=Quantitative%20real,functions%20of%20SjFaNaC%20in%20cephalopods')</li>
+<li>AnnotationURLCitation(end_index=10350, start_index=10215, title='The peptide FMRFa terminates a discharge in Aplysia bag cell neurons by modulating calcium, potassium, and chloride conductances - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/7688803/#:~:text=The%20peptide%20FMRFa%20terminates%20a,C%20H%20Lin%2C%20L')</li>
+<li>AnnotationURLCitation(end_index=11051, start_index=10950, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=officinalis%20,16')</li>
+<li>AnnotationURLCitation(end_index=11336, start_index=11235, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=11438, start_index=11337, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=12024, start_index=11896, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=neuroactive%20peptides%2C%20FMRFamide,16%2C7')</li>
+<li>AnnotationURLCitation(end_index=12447, start_index=12268, title='Frontiers | Diversity of the RFamide Peptide Family in Mollusks', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=Since%20the%20initial%20characterization%20of,related%20peptide%20gene%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=12950, start_index=12791, title='Characterization of a novel LFRFamide neuropeptide in the cephalopod Sepia officinalis - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S0196978109005129#:~:text=the%20peptide%20of%20m%2Fz%20752,9%20that%20is%20not')</li>
+<li>AnnotationURLCitation(end_index=13289, start_index=13104, title='Peptidergic control of egg-laying in the cephalopod Sepia officinalis: involvement of FMRFamide and FMRFamide-related peptides - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=four%20immunoreactive%20fractions%20detected%20revealed,Indeed%2C%20FMRFa%20modulates%20the%20contractions')</li>
+<li>AnnotationURLCitation(end_index=13970, start_index=13785, title='Peptidergic control of egg-laying in the cephalopod Sepia officinalis: involvement of FMRFamide and FMRFamide-related peptides - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=four%20immunoreactive%20fractions%20detected%20revealed,Indeed%2C%20FMRFa%20modulates%20the%20contractions')</li>
+<li>AnnotationURLCitation(end_index=14378, start_index=14193, title='Peptidergic control of egg-laying in the cephalopod Sepia officinalis: involvement of FMRFamide and FMRFamide-related peptides - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=four%20immunoreactive%20fractions%20detected%20revealed,Indeed%2C%20FMRFa%20modulates%20the%20contractions')</li>
+<li>AnnotationURLCitation(end_index=14834, start_index=14667, title='Peptidergic control of egg-laying in the cephalopod Sepia officinalis: involvement of FMRFamide and FMRFamide-related peptides - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=oviduct%3A%20the%20tetrapeptides%20FMRFa%20and,ovulation%20and%20egg%20capsule%20coating')</li>
+<li>AnnotationURLCitation(end_index=15143, start_index=14976, title='Peptidergic control of egg-laying in the cephalopod Sepia officinalis: involvement of FMRFamide and FMRFamide-related peptides - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=oviduct%3A%20the%20tetrapeptides%20FMRFa%20and,ovulation%20and%20egg%20capsule%20coating')</li>
+<li>AnnotationURLCitation(end_index=15586, start_index=15490, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,5.%20%5BDOI')</li>
+<li>AnnotationURLCitation(end_index=15869, start_index=15768, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=16186, start_index=16043, title='FMRFamide G protein-coupled receptors (GPCR) in the cuttlefish Sepiella japonica: Identification, characterization and expression profile - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=receptors%20,coupled%20receptor%20of')</li>
+<li>AnnotationURLCitation(end_index=16754, start_index=16658, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,4.%20%5BDOI')</li>
+<li>AnnotationURLCitation(end_index=17029, start_index=16933, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,4.%20%5BDOI')</li>
+<li>AnnotationURLCitation(end_index=17353, start_index=17252, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=18074, start_index=17905, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=Neuropeptide%20Phe,PCR%29%2C%20which%20indicated')</li>
+<li>AnnotationURLCitation(end_index=18287, start_index=18075, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=additional%20FMRFamide%20could%20still%20furtherly,and%20other%20invertebrates%20and%20will')</li>
+<li>AnnotationURLCitation(end_index=18692, start_index=18487, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=detailed%20knowledge%20is%20still%20little,NOS%20mRNA%20was%20highly%20significantly')</li>
+<li>AnnotationURLCitation(end_index=19223, start_index=19009, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=appeared%20colocalization%2C%20suggesting%20that%20at,indeed%20inhibit%20NO%20production%20to')</li>
+<li>AnnotationURLCitation(end_index=19533, start_index=19353, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=that%20both%20were%20likely%20to,of%20the%20NO%20level%20in')</li>
+<li>AnnotationURLCitation(end_index=19933, start_index=19721, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=additional%20FMRFamide%20could%20still%20furtherly,and%20other%20invertebrates%20and%20will')</li>
+<li>AnnotationURLCitation(end_index=20319, start_index=20107, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=additional%20FMRFamide%20could%20still%20furtherly,and%20other%20invertebrates%20and%20will')</li>
+<li>AnnotationURLCitation(end_index=20836, start_index=20630, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=serve%20as%20feedback%20regulation%20at,understanding%20the%20NEIS%20of%20cephalopods')</li>
+<li>AnnotationURLCitation(end_index=21429, start_index=21270, title='FMRFamide G protein-coupled receptors (GPCR) in the cuttlefish Sepiella japonica: Identification, characterization and expression profile - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=receptors%20,of%20SjFaGPCR%20was%20predicted%20using')</li>
+<li>AnnotationURLCitation(end_index=21744, start_index=21602, title='A Na+ channel receptor of FMRFamide in the cephalopod Sepiella japonica: Identification, characterisation, and expression profiling during different stages of gonadal development - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=Quantitative%20real,functions%20of%20SjFaNaC%20in%20cephalopods')</li>
+<li>AnnotationURLCitation(end_index=22303, start_index=22190, title='Frontiers | Diversity of the RFamide Peptide Family in Mollusks', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=FMRFamide,011')</li>
+<li>AnnotationURLCitation(end_index=22514, start_index=22401, title='Frontiers | Diversity of the RFamide Peptide Family in Mollusks', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=FMRFamide,011')</li>
+<li>AnnotationURLCitation(end_index=22835, start_index=22675, title='Frontiers | Diversity of the RFamide Peptide Family in Mollusks', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=peptides%20,display%20a%20complex%20spatiotemporal%20pattern')</li>
+<li>AnnotationURLCitation(end_index=23033, start_index=22836, title='Frontiers | Diversity of the RFamide Peptide Family in Mollusks', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fendo.2014.00178/full#:~:text=FLPs%20represent%20approximately%2075%20distinct,display%20a%20complex%20spatiotemporal%20pattern')</li>
+<li>AnnotationURLCitation(end_index=23379, start_index=23260, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=match%20at%20L273%20to%20multiple,7')</li>
+<li>AnnotationURLCitation(end_index=23984, start_index=23807, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=expression%20analysis%20indicated%20the%20highest,methods%20for%20this%20cuttlefish%20species')</li>
+<li>AnnotationURLCitation(end_index=24156, start_index=23985, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=neuropeptide%20evolution%20or%20may%20prove,methods%20for%20this%20cuttlefish%20species')</li>
+<li>AnnotationURLCitation(end_index=25031, start_index=24902, title='A Na+ channel receptor of FMRFamide in the cephalopod Sepiella japonica: Identification, characterisation, and expression profiling during different stages of gonadal development - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/38776655/#:~:text=FMRFamide%2C%20a%20member%20of%20the,The%20protein')</li>
+<li>AnnotationURLCitation(end_index=25494, start_index=25393, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=officinalis%20,16')</li>
+<li>AnnotationURLCitation(end_index=25707, start_index=25495, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=additional%20FMRFamide%20could%20still%20furtherly,and%20other%20invertebrates%20and%20will')</li>
+<li>AnnotationURLCitation(end_index=26497, start_index=26312, title='Peptidergic control of egg-laying in the cephalopod Sepia officinalis: involvement of FMRFamide and FMRFamide-related peptides - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=four%20immunoreactive%20fractions%20detected%20revealed,Indeed%2C%20FMRFa%20modulates%20the%20contractions')</li>
+<li>AnnotationURLCitation(end_index=26665, start_index=26498, title='Peptidergic control of egg-laying in the cephalopod Sepia officinalis: involvement of FMRFamide and FMRFamide-related peptides - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/10499423/#:~:text=oviduct%3A%20the%20tetrapeptides%20FMRFa%20and,ovulation%20and%20egg%20capsule%20coating')</li>
+<li>AnnotationURLCitation(end_index=26792, start_index=26691, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=26938, start_index=26837, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=27040, start_index=26939, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=27188, start_index=27092, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=,4.%20%5BDOI')</li>
+<li>AnnotationURLCitation(end_index=27403, start_index=27267, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=9,indicated%20that%20SjFMRFamide%20was%20transcribed')</li>
+<li>AnnotationURLCitation(end_index=27580, start_index=27404, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=Results%20of%20phylogenetic%20relation%20analysis,for%20the%20development%20of%20aquaculture')</li>
+<li>AnnotationURLCitation(end_index=27859, start_index=27645, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=appeared%20colocalization%2C%20suggesting%20that%20at,indeed%20inhibit%20NO%20production%20to')</li>
+<li>AnnotationURLCitation(end_index=28072, start_index=27860, title='Frontiers | Inhibitory Effect of FMRFamide on NO Production During Immune Defense in Sepiella japonica', type='url_citation', url='https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2022.825634/full#:~:text=additional%20FMRFamide%20could%20still%20furtherly,and%20other%20invertebrates%20and%20will')</li>
+<li>AnnotationURLCitation(end_index=28320, start_index=28139, title='FMRFamide G protein-coupled receptors (GPCR) in the cuttlefish Sepiella japonica: Identification, characterization and expression profile - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S0143417924000908#:~:text=FMRFamide%20%20is%20a%20ubiquitous,of%20SjFaGPCR%20was%20predicted%20using')</li>
+<li>AnnotationURLCitation(end_index=28790, start_index=28662, title='Identification, Characterization, and Expression Analysis of a FMRFamide-Like Peptide Gene in the Common Chinese Cuttlefish (Sepiella japonica) - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6017766/#:~:text=neuroactive%20peptides%2C%20FMRFamide,16%2C7')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P91889
+gene_symbol: FMRFa
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:6610
+  label: Sepia officinalis
+description: &gt;-
+  FMRFamide-related neuropeptides precursor protein in Sepia officinalis. This 331 amino acid
+  precursor is proteolytically processed into at least 11 bioactive FMRFamide tetrapeptides plus
+  three additional FaRP variants (FIRF-amide, FLRF-amide, ALSGDAFLRF-amide). The mature peptides
+  function as excitatory neurotransmitters at the chromatophore neuromuscular junction, where they
+  act as slow-onset, long-lasting excitors of chromatophore muscles to produce chromatophore
+  expansion. FaRPs are expressed in the posterior chromatophore lobes of the brain and in peripheral
+  nerves around chromatophores, consistent with their role in body patterning and pigmentation
+  control in cephalopods.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      The extracellular region annotation is based on UniProtKB subcellular location mapping.
+      UniProt annotates this protein as &#34;Secreted&#34; based on experimental evidence from
+      PMID:10805923. The mature FMRFamide peptides are released from neurons into the extracellular
+      space at the chromatophore neuromuscular junction, where they act directly on chromatophore
+      muscles (PMID:10805923, PMID:9319020). This is an appropriate cellular component annotation.
+    action: ACCEPT
+    reason: &gt;-
+      The protein is a secreted neuropeptide precursor. After signal peptide cleavage and
+      proteolytic processing, the bioactive peptides are released into the extracellular space
+      at synapses. UniProt annotates this as &#34;Secreted&#34; with experimental evidence from
+      PMID:10805923. The IEA mapping from the subcellular location annotation is correct.
+    supported_by:
+      - reference_id: PMID:10805923
+        supporting_text: &gt;-
+          Evidence is also presented suggesting that FMRFamide-related peptides (FaRPs) also
+          function as neurotransmitters at the Sepia chromatophore NMJ. FMRFamide application
+          causes contraction of chromatophore muscles
+      - reference_id: PMID:9319020
+        supporting_text: &gt;-
+          FMRFamide-like immunoreactivity was also seen in the periphery, in the nerves around
+          the chromatophores and in close apposition to the muscles in the chromatophore layer of
+          the fin.
+
+- term:
+    id: GO:0007218
+    label: neuropeptide signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      The neuropeptide signaling pathway annotation is derived from InterPro2GO mapping via the
+      FMRFamide-related peptide domain (IPR002544). This is well supported by the literature:
+      the FMRFa precursor encodes multiple neuropeptides that function in peptidergic signaling
+      at the chromatophore neuromuscular junction (PMID:9192498, PMID:9319020, PMID:10805923).
+    action: ACCEPT
+    reason: &gt;-
+      This is the core biological process for this gene product. The FMRFa precursor is processed
+      into multiple bioactive neuropeptides that function in neuropeptide signaling at the
+      chromatophore NMJ. All four classes of FaRPs encoded by this precursor (FMRF, FLRF, FIRF,
+      ALSGDAFLRF) cause chromatophore expansion when assayed in bioassays (PMID:9192498). The
+      InterPro2GO mapping is appropriate and well supported.
+    supported_by:
+      - reference_id: PMID:9192498
+        supporting_text: &gt;-
+          Each of the four FaRPs encoded by this cDNA causes chromatophore expansion when assayed
+          in an in vitro chromatophore bioassay. Thus, it is likely that one or more of the FaRPs
+          identified in this study are involved in controlling chromatophore activity in cuttlefish.
+      - reference_id: PMID:9319020
+        supporting_text: &gt;-
+          We present data demonstrating that the chromatophore muscles in the European cuttlefish
+          Sepia officinalis are also regulated by the FMRFamide family of neuropeptides. Using an
+          in vitro chromatophore bioassay, it has been determined that several FMRFamide-related
+          peptides (FaRPs) are potent excitors of the chromatophore muscles, causing chromatophore
+          expansion.
+
+- term:
+    id: GO:0160041
+    label: neuropeptide activity
+  evidence_type: IDA
+  original_reference_id: PMID:9192498
+  review:
+    summary: &gt;-
+      NEW annotation. The mature FMRFamide peptides function as neuropeptide ligands that activate
+      receptors on chromatophore muscles. GO:0160041 (neuropeptide activity) is defined as
+      &#34;the receptor ligand activity of any polypeptide expressed in, and secreted from a neuron.&#34;
+      FMRFa gene products are expressed in chromatophore motoneurons in the posterior chromatophore
+      lobe and act directly on chromatophore muscles as excitatory neurotransmitters
+      (PMID:10805923, PMID:9192498, PMID:9319020).
+    action: NEW
+    reason: &gt;-
+      This is the most appropriate molecular function term for this gene product. The FMRFamide
+      peptides are neuropeptides secreted from neurons that act as receptor ligands on target
+      muscle cells. This is directly supported by bioassay data showing chromatophore muscle
+      excitation (PMID:9192498), pharmacological evidence of direct action on muscle receptors
+      (PMID:10805923), and immunocytochemical localization in neurons (PMID:10805923, PMID:9319020).
+    supported_by:
+      - reference_id: PMID:10805923
+        supporting_text: &gt;-
+          FMRFamide application causes contraction of chromatophore muscles; however, the
+          FMRFamide effect is slower and longer lasting than that of glutamate. Pharmacological
+          data show that FMRFamide acts directly on the chromatophore muscles.
+      - reference_id: PMID:9192498
+        supporting_text: &gt;-
+          The cDNA encodes a precursor protein containing four FaRPs: ALSGDAFLRF, FIRF, FLRF
+          and FMRF.
+
+- term:
+    id: GO:0007268
+    label: chemical synaptic transmission
+  evidence_type: IDA
+  original_reference_id: PMID:10805923
+  review:
+    summary: &gt;-
+      NEW annotation. FMRFamide peptides function as neurotransmitters at the chromatophore
+      neuromuscular junction. Loi and Tublitz (2000) demonstrated that FaRPs function as slow
+      transmitters at the chromatophore NMJ, acting alongside glutamate (the fast transmitter).
+      FMRFamide-immunopositive neurons are found in the posterior chromatophore lobe, and some
+      chromatophore motoneurons co-express both FaRP-like immunoreactivity and an FaRP-coding
+      mRNA transcript.
+    action: NEW
+    reason: &gt;-
+      Chemical synaptic transmission is directly supported by multiple lines of evidence:
+      (1) FaRPs cause chromatophore muscle contraction when applied exogenously (PMID:9319020,
+      PMID:10805923); (2) pharmacological data show direct action on chromatophore muscles
+      (PMID:10805923); (3) FMRFamide-immunopositive cells are present in the posterior
+      chromatophore lobe where chromatophore motoneuron somata are located (PMID:10805923);
+      (4) in situ hybridization confirms FaRP mRNA in putative chromatophore motoneurons
+      (PMID:10805923). The peptides function as the slow component of dual neurotransmitter
+      signaling at this synapse.
+    supported_by:
+      - reference_id: PMID:10805923
+        supporting_text: &gt;-
+          A combination of immunocytochemistry and in situ hybridization shows that some putative
+          chromatophore motoneurons express FaRP-like immunoreactivity and an FaRP-coding mRNA
+          transcript. Many FMRFamide-immunopositive cells in the posterior chromatophore lobes
+          also express glutamate-like immunoreactivity. We conclude that glutamate and FaRPs
+          likely function as fast and slow transmitters, respectively, at the Sepia chromatophore
+          NMJ.
+      - reference_id: PMID:9319020
+        supporting_text: &gt;-
+          Immunocytochemical analyses of the central nervous system using an FMRFamide antibody
+          revealed the presence of FMRFamide-like immunoreactive cell bodies in the posterior
+          chromatophore lobes, the region of the brain containing the chromatophore motoneurons
+          of the fin and mantle.
+
+- term:
+    id: GO:0045933
+    label: positive regulation of muscle contraction
+  evidence_type: IDA
+  original_reference_id: PMID:9319020
+  review:
+    summary: &gt;-
+      NEW annotation. FMRFamide peptides are excitatory neurotransmitters that cause contraction
+      of chromatophore muscles, resulting in chromatophore expansion. All four FaRP classes
+      (FMRF, FLRF, FIRF, ALSGDAFLRF) were shown to be potent excitors of chromatophore muscles
+      in in vitro bioassays (PMID:9319020, PMID:9192498). FMRFamide acts directly on the
+      chromatophore muscles (PMID:10805923).
+    action: NEW
+    reason: &gt;-
+      This annotation captures the direct excitatory effect of FMRFamide peptides on chromatophore
+      muscle contraction. The bioassay data from multiple publications consistently show that
+      FaRPs cause chromatophore muscle contraction (leading to chromatophore expansion). This
+      is a core function of the FMRFa gene product in Sepia officinalis. Note the unique biology:
+      chromatophore expansion occurs via muscle contraction (the muscles radially pull the
+      chromatophore sac open).
+    supported_by:
+      - reference_id: PMID:9319020
+        supporting_text: &gt;-
+          Using an in vitro chromatophore bioassay, it has been determined that several
+          FMRFamide-related peptides (FaRPs) are potent excitors of the chromatophore muscles,
+          causing chromatophore expansion.
+      - reference_id: PMID:10805923
+        supporting_text: &gt;-
+          FMRFamide application causes contraction of chromatophore muscles; however, the
+          FMRFamide effect is slower and longer lasting than that of glutamate. Pharmacological
+          data show that FMRFamide acts directly on the chromatophore muscles.
+      - reference_id: PMID:9192498
+        supporting_text: &gt;-
+          Each of the four FaRPs encoded by this cDNA causes chromatophore expansion when assayed
+          in an in vitro chromatophore bioassay.
+
+- term:
+    id: GO:0043473
+    label: pigmentation
+  evidence_type: IDA
+  original_reference_id: PMID:9319020
+  review:
+    summary: &gt;-
+      NEW annotation. FMRFamide peptides regulate chromatophore expansion, which is the mechanism
+      underlying body patterning and pigmentation in cephalopods. The FaRPs control chromatophore
+      activity by directly activating chromatophore muscles, causing the pigment-filled sac to
+      expand and display color (PMID:9319020, PMID:9192498). The SOFaRP2 gene is expressed in
+      brain regions involved in chromatophore regulation (PMID:23465584).
+    action: NEW
+    reason: &gt;-
+      Pigmentation in cephalopods is achieved through chromatophore organ expansion/retraction,
+      which is under neural control. FMRFamide peptides are excitatory neurotransmitters at the
+      chromatophore NMJ that cause chromatophore expansion (color display). While the FMRFamide
+      peptides do not regulate pigment synthesis, they regulate the display of pigment through
+      chromatophore expansion, which is part of the pigmentation process in the broader sense.
+    additional_reference_ids:
+      - PMID:23465584
+      - PMID:21802466
+    supported_by:
+      - reference_id: PMID:9319020
+        supporting_text: &gt;-
+          these data suggest that the FaRPs are likely to be endogenous excitors of the
+          chromatophore muscles in cephalopods.
+      - reference_id: PMID:9192498
+        supporting_text: &gt;-
+          The display of complex color patterns of the cuttlefish Sepia officinalis is under
+          the regulation of the FMRFamide-related peptide (FaRP) family.
+
+references:
+- id: PMID:9192498
+  title: Molecular analysis of FMRFamide- and FMRFamide-related peptides (FaRPS) in the cuttlefish Sepia officinalis
+  findings:
+    - statement: Cloned full-length FaRP cDNA from S. officinalis brain encoding precursor protein with four FaRPs
+      supporting_text: &gt;-
+        We report the isolation and characterization of a full-length FaRP cDNA from the brain
+        of S. officinalis. The cDNA encodes a precursor protein containing four FaRPs: ALSGDAFLRF,
+        FIRF, FLRF and FMRF.
+    - statement: Each FaRP propeptide flanked by basic amino acid cleavage sites and has C-terminal glycine for amidation
+      supporting_text: &gt;-
+        Each propeptide has a C-terminal glycine residue that is presumably converted
+        post-translationally to an amide. Every FaRP propeptide is also flanked by basic amino
+        acid residues at the amino and carboxy termini, indicative of putative cleavage sites.
+    - statement: All four FaRPs caused chromatophore expansion in in vitro bioassay
+      supporting_text: &gt;-
+        Each of the four FaRPs encoded by this cDNA causes chromatophore expansion when assayed
+        in an in vitro chromatophore bioassay.
+- id: PMID:9319020
+  title: Peptidergic regulation of chromatophore function in the European cuttlefish Sepia officinalis
+  findings:
+    - statement: FaRPs are potent excitors of chromatophore muscles causing chromatophore expansion
+      supporting_text: &gt;-
+        Using an in vitro chromatophore bioassay, it has been determined that several
+        FMRFamide-related peptides (FaRPs) are potent excitors of the chromatophore muscles,
+        causing chromatophore expansion.
+    - statement: FMRFamide-like immunoreactive cell bodies found in posterior chromatophore lobes
+      supporting_text: &gt;-
+        Immunocytochemical analyses of the central nervous system using an FMRFamide antibody
+        revealed the presence of FMRFamide-like immunoreactive cell bodies in the posterior
+        chromatophore lobes, the region of the brain containing the chromatophore motoneurons
+        of the fin and mantle.
+    - statement: FMRFamide-like immunoreactivity in peripheral nerves in close apposition to chromatophore muscles
+      supporting_text: &gt;-
+        FMRFamide-like immunoreactivity was also seen in the periphery, in the nerves around
+        the chromatophores and in close apposition to the muscles in the chromatophore layer
+        of the fin.
+    - statement: HPLC identified bioactive FMRFamide-immunoreactive peaks co-eluting with FMRFamide and ALSGDAFLRFamide
+      supporting_text: &gt;-
+        HPLC analysis of the fin dermis isolated four bioactive peaks that were
+        FMRFamide-immunoreactive when tested on an immunoblot assay. Two of these peaks
+        co-eluted with known FaRPs, FMRFamide and ALSGDAFLRFamide.
+- id: PMID:10805923
+  title: Roles of glutamate and FMRFamide-related peptides at the chromatophore neuromuscular junction in the cuttlefish, Sepia officinalis
+  findings:
+    - statement: FMRFamide causes chromatophore muscle contraction with slower onset and longer duration than glutamate
+      supporting_text: &gt;-
+        FMRFamide application causes contraction of chromatophore muscles; however, the
+        FMRFamide effect is slower and longer lasting than that of glutamate.
+    - statement: Pharmacological data show FMRFamide acts directly on chromatophore muscles
+      supporting_text: &gt;-
+        Pharmacological data show that FMRFamide acts directly on the chromatophore muscles.
+    - statement: In situ hybridization confirms FaRP mRNA in putative chromatophore motoneurons
+      supporting_text: &gt;-
+        A combination of immunocytochemistry and in situ hybridization shows that some putative
+        chromatophore motoneurons express FaRP-like immunoreactivity and an FaRP-coding mRNA transcript.
+    - statement: Glutamate and FaRPs function as fast and slow transmitters at the chromatophore NMJ
+      supporting_text: &gt;-
+        We conclude that glutamate and FaRPs likely function as fast and slow transmitters,
+        respectively, at the Sepia chromatophore NMJ.
+    - statement: Many FMRFamide-immunopositive cells co-express glutamate-like immunoreactivity
+      supporting_text: &gt;-
+        Many FMRFamide-immunopositive cells in the posterior chromatophore lobes also express
+        glutamate-like immunoreactivity.
+- id: PMID:11060217
+  title: Mass spectrometric survey of peptides in cephalopods with an emphasis on the FMRFamide-related peptides
+  findings:
+    - statement: MALDI MS confirmed presence of FMRFamide-related peptides in Sepia officinalis nerves
+      supporting_text: &gt;-
+        A MALDI mass spectrometric survey of the major peptides in the stellar, fin and pallial
+        nerves and the posterior chromatophore lobe of the cephalopods Sepia officinalis, Loligo
+        opalescens and Dosidicus gigas has been performed.
+    - statement: FRPs are conserved across cephalopods
+      supporting_text: &gt;-
+        The FRPs predicted by this gene (FMRFa, FLRFa/FIRFa and ALSGDAFLRFa) are observed in
+        all three species, indicating that members of this peptide family are highly conserved
+        across cephalopods.
+- id: PMID:21802466
+  title: Molecular analysis of a novel FMRFamide-related peptide gene (SOFaRP2) and its expression pattern in the brain of the European cuttlefish Sepia officinalis
+  findings:
+    - statement: Second FaRP gene (SOFaRP2) cloned in S. officinalis encoding four different FaRPs
+      supporting_text: &gt;-
+        The complete 835-base pair cDNA sequence of the SOFaRP2 gene contains an open reading
+        frame of 567 base pairs encoding 188 amino acids and four putative FaRPs.
+    - statement: SOFaRP2 expressed in brain regions involved in chromatophore regulation
+      supporting_text: &gt;-
+        The SOFaRP2 gene appears to be expressed in all brain regions involved in chromatophore regulation.
+- id: PMID:23465584
+  title: Expression of the SOFaRP2 gene in the central nervous system of the adult cuttlefish Sepia officinalis
+  findings:
+    - statement: SOFaRP2 most intensively expressed in posterior chromatophore lobe and vasomotor lobe
+      supporting_text: &gt;-
+        The SOFaRP2 gene was found to be expressed most intensively in the posterior chromatophore
+        lobe, vasomotor lobe and subvertical lobe.
+    - statement: Expression pattern suggests involvement in chromatophore regulation and feeding behavior
+      supporting_text: &gt;-
+        The expression pattern of SOFaRP2 suggests its involvement in chromatophore regulation,
+        feeding behavior, and learning and memory.
+- id: PMID:21397478
+  title: FaRP cell distribution in the developing CNS suggests the involvement of FaRPs in all parts of the chromatophore control pathway in Sepia officinalis
+  findings:
+    - statement: FaRP expression detected in nervous system from beginning of organogenesis
+      supporting_text: &gt;-
+        We detected FaRP expression and production in the nervous system of embryos from the
+        beginning of organogenesis (stage 16).
+    - statement: FaRPs involved in all parts of the neural body pattern control system
+      supporting_text: &gt;-
+        Most of these areas were implicated in the control of body patterns, suggesting that
+        FaRPs are involved in all parts of the neural body pattern control system, from the
+        receptive areas via the CNS to the chromatophore effectors.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+
+core_functions:
+- molecular_function:
+    id: GO:0160041
+    label: neuropeptide activity
+  description: &gt;-
+    The primary molecular function of FMRFa gene products is neuropeptide receptor ligand activity.
+    The precursor protein is proteolytically processed into multiple bioactive peptides (11 copies
+    of FMRFamide plus FIRF-amide, FLRF-amide, and ALSGDAFLRF-amide) that function as excitatory
+    neurotransmitters at the chromatophore neuromuscular junction. These peptides bind receptors
+    on chromatophore muscles to cause muscle contraction and chromatophore expansion. FaRPs serve
+    as the slow neurotransmitter component alongside glutamate (the fast component) mediating
+    neural control of chromatophore organs for body patterning in cuttlefish.
+  directly_involved_in:
+    - id: GO:0007218
+      label: neuropeptide signaling pathway
+    - id: GO:0007268
+      label: chemical synaptic transmission
+    - id: GO:0045933
+      label: positive regulation of muscle contraction
+  locations:
+    - id: GO:0005576
+      label: extracellular region
+  supported_by:
+    - reference_id: PMID:10805923
+      supporting_text: &gt;-
+        We conclude that glutamate and FaRPs likely function as fast and slow transmitters,
+        respectively, at the Sepia chromatophore NMJ.
+    - reference_id: PMID:9192498
+      supporting_text: &gt;-
+        Each of the four FaRPs encoded by this cDNA causes chromatophore expansion when assayed
+        in an in vitro chromatophore bioassay.
+
+suggested_questions:
+- question: &gt;-
+    What are the specific receptors for FMRFamide peptides on Sepia chromatophore muscles?
+    Identifying the receptor(s) would enable more precise annotation of the signaling pathway
+    and could clarify whether FMRFamide acts via ionotropic or metabotropic mechanisms.
+- question: &gt;-
+    Do different FaRP variants (FMRF vs FLRF vs FIRF vs ALSGDAFLRF) have distinct potencies
+    or receptor specificities at the chromatophore NMJ? The precursor encodes 14 peptides of
+    different sequences, suggesting possible functional diversification.
+- question: &gt;-
+    Are there other functional roles for FMRFa gene products beyond chromatophore regulation
+    (e.g., cardiovascular, feeding, reproductive functions)? The broad CNS expression pattern
+    of the related SOFaRP2 gene suggests possible pleiotropic functions.
+- question: &gt;-
+    What is the relationship between the two S. officinalis FaRP genes (FMRFa/SOFaRP1 and
+    SOFaRP2) in terms of functional redundancy or specialization at the chromatophore NMJ?
+
+suggested_experiments:
+- description: &gt;-
+    Dose-response curves comparing the four FaRP variants (FMRFamide, FLRFamide, FIRFamide,
+    ALSGDAFLRFamide) for chromatophore expansion potency in the in vitro bioassay, to determine
+    whether different peptides from the same precursor have distinct efficacies.
+  hypothesis: &gt;-
+    Different FaRP variants encoded by the same precursor may have distinct potencies at the
+    chromatophore NMJ, reflecting functional specialization within the peptide family.
+- description: &gt;-
+    In vivo gene knockdown (e.g., morpholino injection into embryos) of FMRFa to assess effects
+    on body patterning behavior and chromatophore function in developing cuttlefish.
+  hypothesis: &gt;-
+    Loss of FMRFa expression will impair chromatophore-mediated body patterning behavior,
+    confirming the essential role of FaRPs in this process.
+- description: &gt;-
+    Electrophysiological recording of chromatophore muscle responses to individual FaRP peptides
+    to characterize the receptor pharmacology and ion channel mechanisms underlying FMRFamide
+    excitation at the chromatophore NMJ.
+  hypothesis: &gt;-
+    FMRFamide peptides activate specific receptors on chromatophore muscles that produce slow
+    depolarizing currents, distinct from the fast glutamate-mediated response.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
