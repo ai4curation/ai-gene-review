@@ -1,3 +1,8 @@
+---
+title: Cephalopod Neuro Gene Reviews
+species: [OCTVU, OCTBM, DORPE, SEPOF, STHOU, DOROP, EUPSC]
+status: IN_PROGRESS
+---
 # Project CEPHALOPOD: AI Gene Review for Cephalopod Genes
 
 ## Motivation
@@ -183,30 +188,88 @@ genes/
   SEPOF/    # Sepia officinalis (6625)
 ```
 
-## Completed Reviews
+## Completed Reviews (16 genes, 7 species)
 
-| Gene (symbol) | Dir | Species | UniProt | Key Annotations | Highlights |
-|---------------|-----|---------|---------|-----------------|------------|
-| [DDO](../genes/OCTVU/DDO/DDO-ai-review.yaml) (OXDD_OCTVU) | OCTVU/DDO | *O. vulgaris* | A0A7E6FSU6 | 13 (4 exp) | D-amino-acid oxidase IEA corrected to D-aspartate oxidase |
-| [AP180](../genes/DORPE/AP180/AP180-ai-review.yaml) (AP180_DORPE) | DORPE/AP180 | *D. pealeii* | Q9U6M6 | 24 (4 exp) | Spurious ARBA "locomotion" removed; squid giant synapse |
-| [cpx](../genes/DORPE/cpx/cpx-ai-review.yaml) (CPLX_DORPE) | DORPE/cpx | *D. pealeii* | Q95PA1 | 8 + 2 new | Regulator not component; syntaxin binding (IPI) added |
-| [CTR1](../genes/OCTVU/CTR1/CTR1-ai-review.yaml) (CTR1_OCTVU) | OCTVU/CTR1 | *O. vulgaris* | Q7YW31 | 10 + 2 new | "Vasopressin receptor" corrected to neuropeptide receptor |
-| [OPR](../genes/OCTVU/OPR/OPR-ai-review.yaml) (OPR_OCTVU) | OCTVU/OPR | *O. vulgaris* | Q5W9T5 | 9 + 2 new | Same vasopressin mis-annotation; octopressin-specific |
-| [FMRFa](../genes/SEPOF/FMRFa/FMRFa-ai-review.yaml) (FMRF_SEPOF) | SEPOF/FMRFa | *S. officinalis* | P91889 | 2 + 4 new | Annotation desert → neuropeptide activity, pigmentation, muscle contraction |
-| [khc](../genes/DORPE/P21613/P21613-ai-review.yaml) (KINH_DORPE) | DORPE/P21613 | *D. pealeii* | P21613 | 18 + 3 new | ARBA false positives; RNA editing (Birk 2023 Cell) |
-| [RHO](../genes/SEPOF/RHO/RHO-ai-review.yaml) (OPSD_SEPOF) | SEPOF/RHO | *S. officinalis* | O16005 | 7 + 5 new | Dermal photoreception; GO:0030265 PLC-activating opsin signaling |
-| [CRT1](../genes/OCTBM/OCBIM_22006518mg/OCBIM_22006518mg-ai-review.yaml) (CRT1_OCTBM) | OCTBM/OCBIM_22006518mg | *O. bimaculoides* | A0A0L8FVQ9 | 7 + 3 new | Contact chemosensation, feeding behavior, maternal behavior |
+| Gene | Species | UniProt | Annotations | Highlights |
+|------|---------|---------|-------------|------------|
+| DDO | OCTVU | A0A7E6FSU6 | 13 (4 exp) | D-amino-acid oxidase IEA corrected; D-Asp in retina at 2.30 umol/g |
+| AP180 | DORPE | Q9U6M6 | 24 (4 exp) | Spurious ARBA "locomotion" removed; IDR with 12-19 clathrin motifs |
+| cpx | DORPE | Q95PA1 | 8 + 2 new | Dual clamp/activator; syntaxin binding (IPI) from crystal structure |
+| CTR1 | OCTVU | Q7YW31 | 10 + 2 new | "Vasopressin receptor" corrected; gastric ganglion expression |
+| OPR | OCTVU | Q5W9T5 | 9 + 2 new | Antidiuretic function via hemolymph osmolarity |
+| FMRFa | SEPOF | P91889 | 2 + 4 new | Differential oviduct effects; immune regulation (NO inhibition) |
+| khc | DORPE | P21613 | 18 + 3 new | 8nm step/ATP (Vale 1985); tissue-specific velocities via RNA editing |
+| RHO | SEPOF | O16005 | 7 + 5 new | GO:0030265 PLC-activating opsin signaling; dermal photoreception |
+| OCBIM_22006518mg | OCTBM | A0A0L8FVQ9 | 7 + 3 new | CRT1: contact chemosensation, feeding, maternal behavior |
+| sympp | STHOU | C6KYS2 | 1 + 3 new | Novel bioluminescence; K+ > Rb+ > Na+ cation specificity |
+| CTR2 | OCTVU | Q5WA50 | 11 + 2 new | Peripheral expression (branchia, vas deferens); positions 2-5 selectivity |
+| OCTS1 | OCTVU | P27013 | 2 + 3 new | GST over-annotated (1/700 kcat); PDB 5B7C; colloidal gel assembly |
+| TDO | DORPE | A0A7G4RN94 | 4 + 2 new | First CRISPR target; *D. pealeii* lacks IDO unlike *E. berryi* |
+| OCBIM_22008529mg | OCTBM | A0A0L8FU48 | 0 + 9 new | SLC6A4/SERT: all NEW; social behavior (MDMA, Edsinger 2018) |
+| Q6WDN4 | EUPSC | Q6WDN4 | 0 + 6 new | Reflectin: 380 mg/mL in platelets; condensate scaffold activity |
+| ADAR2 | DOROP | C1JAR3 | 10 + 3 new | tRNA deaminase REMOVED; axon cytoplasm; 37 editing sites in motor domain |
 
-## Remaining Candidates (not yet reviewed)
+## Surprises and Lessons from Deep Research
 
-| Priority | Gene | Species | UniProt | Rationale |
-|----------|------|---------|---------|-----------|
-| 1 | Symplectin (SYMP_STHOU) | *S. oualaniensis* | C6KYS2 | IDA; novel bioluminescence mechanism |
-| 2 | ADAR2 | *D. pealeii* | - | Cephalopod innovation; >60% neural transcripts edited |
-| 3 | Reflectin | *D. opalescens* | - | Cephalopod-specific; camouflage |
-| 4 | SLC6A4/SERT | *O. bimaculoides* | - | Social behavior pharmacology |
-| 5 | TDO | *E. berryi* | - | CRISPR validated |
-| 6 | S-crystallin (OCTS1_OCTVU) | *O. vulgaris* | P27013 | Enzyme crystallin evolution |
+### Annotation errors systematically exposed
+
+1. **Vasopressin receptor mis-annotation is pervasive**: All three OT/VP receptors (CTR1, CTR2, OPR)
+   had GO:0005000 (vasopressin receptor activity) from IEA. None bind vasopressin. The correct term
+   is GO:0008188 (neuropeptide receptor activity). This is a systematic IEA pipeline failure for
+   invertebrate OT/VP superfamily members.
+
+2. **ARBA generates false positives for non-model organisms**: Kinesin annotated with "locomotion",
+   "nuclear migration", "isomerase activity"; AP180 with "locomotion", "Golgi apparatus". These
+   are transferred from vertebrate biology without cephalopod evidence.
+
+3. **Ancestral function annotations persist after functional divergence**: S-crystallin (OCTS1)
+   retains GO:0004364 (GST activity) despite having 1/700 the catalytic efficiency of real GST.
+   The protein binds GSH 43-fold tighter than GST-sigma — for structural stabilization (raises Tm
+   by 7C), not catalysis. A textbook case of over-annotation from sequence homology.
+
+4. **tRNA deaminase vs RNA deaminase confusion**: ADAR2 was annotated with GO:0008251
+   (tRNA-specific adenosine deaminase activity) — this is ADAT function, not ADAR. TreeGrafter
+   confused the two related but distinct enzyme families.
+
+### Novel biology captured for the first time in GO
+
+5. **Dermal photoreception**: Rhodopsin expressed in skin chromatophores mediates LACE (light-
+   activated chromatophore expansion). The most precise GO term is GO:0030265 (PLC-activating
+   opsin-mediated signaling pathway) — a child of BOTH GPCR signaling AND phototransduction.
+
+6. **Contact chemosensation**: CRT1 is a cephalopod-specific ion channel (no homologs outside
+   Cephalopoda) that evolved from nAChRs via retrotransposition (26 intronless genes on one
+   chromosome). It detects hydrophobic molecules by direct contact, mediating feeding behavior
+   AND maternal care. The 2025 Sepela paper (Cell) showed bacterial metabolites on eggs activate
+   CRT1 for brooding behavior — a remarkable microbiome-receptor-behavior circuit.
+
+7. **Annotation deserts are real**: FMRFa (2 annotations), SLC6A4 (0), reflectin (0) — all
+   well-characterized genes with extensive literature but near-zero GO coverage. The project
+   proposed 19 new annotations across these 3 genes alone.
+
+### Deep research integration insights
+
+8. **DDO has a visual system role**: Deep research revealed D-aspartate at 2.30 umol/g in
+   octopus retina (PMID:15491279), with radiotracer evidence for D-Asp transport from optic
+   lobes to retina. DDO controls D-Asp levels in visual circuits, not just liver/kidney.
+
+9. **Symplectin may be bifunctional**: Conserved pantetheinase catalytic triad (E60-K163-C196)
+   suggests symplectin retains ancestral hydrolase activity alongside its bioluminescence
+   function. The monovalent cation specificity (K+ > Rb+ > Na+, NOT Ca2+) is unique among
+   photoproteins.
+
+10. **Kinesin velocities are tissue-specific via RNA editing**: Single-molecule assays show
+    optic lobe variants at ~520 nm/s, unedited at ~587 nm/s, stellate ganglion at ~620-674 nm/s.
+    37 editing sites in the motor domain alone. This is the most direct functional demonstration
+    of RNA editing tuning protein properties in any organism.
+
+11. **Complexin has a dual clamp/activator role**: Not just a fusion clamp — the N-terminal
+    domain (residues 1-26) actively promotes fusion while the central helix clamps spontaneous
+    release. The squid giant synapse was where this was first demonstrated.
+
+12. **OPR is an antidiuretic hormone receptor**: Deep research added the Sakamoto 2015 paper
+    showing octopressin injection decreases hemolymph osmolarity and reduces Ca2+/Na+ in blood
+    and urine — a parallel to vertebrate vasopressin/ADH function that wasn't in the initial review.
 
 ## Literature Landscape (PubMed, May 2026)
 
