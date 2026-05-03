@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import Enum
 
 from ai_gene_review.datamodel.gene_review_model import Term
 
 
-class MappingPolicy(StrEnum):
+class MappingPolicy(str, Enum):
     """How aggressively the wrapper should treat a family-to-GO mapping."""
 
     AUTOMATIC = "automatic"

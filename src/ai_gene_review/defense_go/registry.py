@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable
+from typing import Any, cast
 
 import yaml
 
@@ -61,9 +62,12 @@ class DefenseGoRegistry:
 def load_registry(path: Path | None = None) -> DefenseGoRegistry:
     """Load a defense-family registry from YAML."""
     registry_path = path or default_registry_path()
-    payload = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
+    raw_payload = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
+    if not isinstance(raw_payload, Mapping):
+        raise ValueError(f"Defense GO registry must be a mapping: {registry_path}")
+    payload = cast(Mapping[str, Any], raw_payload)
     version = str(payload.get("version", "0"))
-    family_rows = payload.get("families", [])
+    family_rows = _as_mapping_sequence(payload.get("families", ()), "families")
 
     families_by_id: dict[str, DefenseFamily] = {}
     aliases_to_id: dict[str, str] = {}
@@ -117,14 +121,19 @@ def wrap_predictions(
     return [wrap_prediction(prediction, registry=active_registry) for prediction in predictions]
 
 
-def _load_family(row: dict[str, object]) -> DefenseFamily:
+def _load_family(row: Mapping[str, Any]) -> DefenseFamily:
     """Build a DefenseFamily from registry YAML."""
     family_id = str(row["id"])
     label = str(row["label"])
     description = str(row.get("description", ""))
-    aliases = tuple(str(alias) for alias in row.get("aliases", []))
-    go_terms = tuple(_load_go_term_mapping(mapping) for mapping in row.get("go_terms", []))
-    review_notes = tuple(str(note) for note in row.get("review_notes", []))
+    aliases = tuple(str(alias) for alias in _as_sequence(row.get("aliases", ()), f"{family_id}.aliases"))
+    go_terms = tuple(
+        _load_go_term_mapping(mapping)
+        for mapping in _as_mapping_sequence(row.get("go_terms", ()), f"{family_id}.go_terms")
+    )
+    review_notes = tuple(
+        str(note) for note in _as_sequence(row.get("review_notes", ()), f"{family_id}.review_notes")
+    )
     return DefenseFamily(
         id=family_id,
         label=label,
@@ -135,9 +144,9 @@ def _load_family(row: dict[str, object]) -> DefenseFamily:
     )
 
 
-def _load_go_term_mapping(row: dict[str, object]) -> GoTermMapping:
+def _load_go_term_mapping(row: Mapping[str, Any]) -> GoTermMapping:
     """Build a GoTermMapping from registry YAML."""
-    term_payload = dict(row["term"])
+    term_payload = _as_mapping(row["term"], "go_terms.term")
     term = Term(
         id=str(term_payload["id"]),
         label=str(term_payload["label"]),
@@ -150,6 +159,27 @@ def _load_go_term_mapping(row: dict[str, object]) -> GoTermMapping:
         policy=policy,
         rationale=str(row.get("rationale", "")),
     )
+
+
+def _as_sequence(value: object, path: str) -> tuple[object, ...]:
+    """Return a registry list-like value as an immutable sequence."""
+    if value is None:
+        return ()
+    if isinstance(value, (str, bytes)) or not isinstance(value, Iterable):
+        raise ValueError(f"Defense GO registry field {path} must be a list")
+    return tuple(value)
+
+
+def _as_mapping(value: object, path: str) -> Mapping[str, Any]:
+    """Return a registry mapping value with a typed string-key view."""
+    if not isinstance(value, Mapping):
+        raise ValueError(f"Defense GO registry field {path} must be a mapping")
+    return cast(Mapping[str, Any], value)
+
+
+def _as_mapping_sequence(value: object, path: str) -> tuple[Mapping[str, Any], ...]:
+    """Return a registry list whose members are mappings."""
+    return tuple(_as_mapping(item, f"{path}[]") for item in _as_sequence(value, path))
 
 
 def _register_alias(alias: str, family_id: str, aliases_to_id: dict[str, str]) -> None:
