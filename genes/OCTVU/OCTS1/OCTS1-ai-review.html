@@ -1,0 +1,2544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCTS1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OCTS1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P27013" target="_blank" class="term-link">
+                        P27013
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Octopus vulgaris</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "OCTS1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P27013" data-a="DESCRIPTION: S-crystallin 1 (OCTS1, UniProt: SCRY1_OCTVU) is a ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>S-crystallin 1 (OCTS1, UniProt: SCRY1_OCTVU) is a major structural protein of the Octopus vulgaris eye lens. It belongs to the S-crystallin multigene family, a textbook example of enzyme-crystallin co-option: S-crystallins evolved from glutathione S-transferase (GST) by gene duplication and neofunctionalization. OCTS1 retains the canonical GST fold (N-terminal and C-terminal GST domains) but has lost nearly all GST enzymatic activity (~1/700 of octopus digestive gland GST-sigma, ~1/1000 of mammalian GST). The protein preferentially binds glutathione (GSH) with high affinity, which stabilizes the protein and prevents aggregation, contributing to lens transparency. OCTS1 is a &#34;long-loop&#34; S-crystallin containing a unique inserted peptide between the alpha4 and alpha5 helices that enhances GSH binding while interfering with electrophilic substrate binding, thus further suppressing catalytic activity. The crystal structure of a closely related octopus S-crystallin mutant (PDB: 5B7C) at 2.35 angstrom resolution confirms the GST-like fold with a collapsed hydrophobic pocket that disfavors binding of aromatic electrophilic substrates. S-crystallins are expressed specifically in the lens, where they are differentially distributed in a radial gradient to create the graded refractive index required for vision in aquatic camera-type eyes. The evolution from active GST enzyme to structural lens protein involved a tradeoff between enzymatic activity and protein stability via GSH-mediated protection against aggregation.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004364" target="_blank" class="term-link">
+                                    GO:0004364
+                                </a>
+                            </span>
+                            <span class="term-label">glutathione transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P27013" data-a="GO:0004364" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The TreeGrafter IEA annotation of GO:0004364 (glutathione transferase activity) is based on sequence homology to the PANTHER GST superfamily (PTHR11571). While OCTS1 retains the GST fold and can catalyze GSH conjugation at a basal level, multiple independent studies demonstrate that S-crystallin 1 has negligible GST enzymatic activity in vivo. Chiou et al. 1995 (PMID:7639695) showed that recombinant octopus S-crystallin &#34;possessed much lower GST activity than the authentic GSTs from other tissues.&#34; Tan et al. 2016 (PMID:27499004) quantified this precisely: the catalytic rate (kcat) of wild-type octopus S-crystallin is ~1/700 that of octopus GST-sigma, and ~1/6000 by catalytic efficiency (kcat/Km). The UniProt entry (P27013) states the protein &#34;contains relatively little GST activity (1/1000 of that of mammalian GST enzyme).&#34; Tomarev et al. 1995 (PMID:8587103) showed that long-loop S-crystallins like OCTS1 &#34;have no GST activity&#34; using CDNB as substrate, and that activity was lost through gradual sequence drift plus insertion of the long-loop peptide by exon shuffling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0004364 implies functional GST catalytic activity, but OCTS1 has lost this function through evolutionary co-option. The residual activity (~1/700 to 1/6000 of authentic GST) is biologically negligible. The protein&#39;s actual molecular function is as a structural constituent of the eye lens. Four key mutations (L100, D101, M104, Q108 relative to GST-sigma) collapsed the hydrophobic electrophilic-substrate-binding pocket, and the inserted long loop further suppresses catalysis while enhancing GSH binding for protein stabilization. Annotating this protein with GST activity misrepresents its biological role and is a classic case of over-annotation based on sequence homology to an ancestral enzymatic function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7639695" target="_blank" class="term-link">
+                                        PMID:7639695
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We found that the expressed octopus S-crystallin possessed much lower GST activity than the authentic GSTs from other tissues.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499004" target="_blank" class="term-link">
+                                        PMID:27499004
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The GST catalytic activity (kcat) of the wild-type S-crystallin is 0.24 s−1, which is about the same to that of the S-crystallins purified from octopus lens18 but only ~1/700, of that of GST-σ (it will be ~1/6000 if compared their catalytic efficiency by kcat/Km,CDNB) (Table 1).</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8587103" target="_blank" class="term-link">
+                                        PMID:8587103
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SL20-1 of O. pacificus and Lops12 of L. opalescens (which are encoded by abundant lens mRNAs) have no GST activity. [...] GST activity was lost by gradual drift in sequence as well as by insertion of an extra peptide by exon shuffling.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006749" target="_blank" class="term-link">
+                                    GO:0006749
+                                </a>
+                            </span>
+                            <span class="term-label">glutathione metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P27013" data-a="GO:0006749" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The TreeGrafter IEA annotation of GO:0006749 (glutathione metabolic process) is a biological process annotation propagated alongside GO:0004364. While OCTS1 does bind GSH with high affinity, it does so for structural stabilization rather than for glutathione metabolism. Tan et al. 2016 (PMID:27499004) demonstrated that GSH binding stabilizes S-crystallin (raising the melting temperature by 7 degrees C and preventing denaturant-induced aggregation) and that OCTS1 retains GSH rather than catalyzing its conjugation and release. The protein&#39;s role is to sequester GSH for self-stabilization in the lens, not to participate in glutathione metabolic pathways.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The biological process &#34;glutathione metabolic process&#34; implies that OCTS1 functions in the metabolism of glutathione. In reality, OCTS1 binds GSH as a structural cofactor to prevent its own aggregation and maintain lens transparency, not to metabolize glutathione. The catalytic turnover is negligible (~1/700 to 1/6000 of authentic GST). This annotation propagates from the over-annotation of GST activity and misrepresents the protein&#39;s actual biological role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499004" target="_blank" class="term-link">
+                                        PMID:27499004
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the presence of GSH, the melting temperature (Tm) of S-crystallin was higher by 7 °C than that of the protein in the absence of GSH</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499004" target="_blank" class="term-link">
+                                        PMID:27499004
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">If we considered the situation of S-crystallin in the lens, it is important for this protein to capture GSH for as long as possible and to minimize its catalytic activity, otherwise the GSH will be released as a product conjugate.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005212" target="_blank" class="term-link">
+                                    GO:0005212
+                                </a>
+                            </span>
+                            <span class="term-label">structural constituent of eye lens</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7639695" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7639695
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Octopus S-crystallins with endogenous glutathione S-transfer...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P27013" data-a="GO:0005212" data-r="PMID:7639695" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0005212 (structural constituent of eye lens) is the core molecular function of OCTS1. S-crystallins are the dominant structural proteins of cephalopod eye lenses, analogous to alpha/beta/gamma crystallins in vertebrate lenses. Lin and Chiou 1992 (PMID:1627174) cloned OCTS1 from octopus lens tissue. The UniProt entry states: &#34;S-crystallins are structural components of squids and octopi eye lens.&#34; Sweeney et al. 2007 (PMID:17293312) showed that S-crystallins are &#34;differentially expressed in a radial gradient, suggesting a role in refractive index&#34; and that they form the graded refractive index structure essential for vision in cephalopod camera-type eyes. This annotation is present in UniProt via keyword mapping (GO_REF:0000043) but absent from the QuickGO/GOA export; it should be added as a curated annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the primary molecular function of OCTS1. The protein has been co-opted from an ancestral GST enzyme to serve as a structural/refractive lens protein. Multiple studies confirm lens-specific expression and structural role. Although present in UniProt via keyword mapping, it is not in the GOA export and should be formally annotated. This is the most important annotation for this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1627174" target="_blank" class="term-link">
+                                        PMID:1627174
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">S-crystallin is a major lens protein present in the octopus and squid of Cephalopods.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7639695" target="_blank" class="term-link">
+                                        PMID:7639695
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">S-Crystallin is a major protein present in the lenses of cephalopods (octopus and squid).</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17293312" target="_blank" class="term-link">
+                                        PMID:17293312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">S-crystallins are differentially expressed in a radial gradient, suggesting a role in refractive index.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043295" target="_blank" class="term-link">
+                                    GO:0043295
+                                </a>
+                            </span>
+                            <span class="term-label">glutathione binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499004" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499004
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of a Highly Active Cephalopod S-crystallin Mutant:...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P27013" data-a="GO:0043295" data-r="PMID:27499004" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OCTS1 binds glutathione (GSH) with high affinity, significantly tighter than authentic GST-sigma. Tan et al. 2016 (PMID:27499004) determined the crystal structure of octopus S-crystallin in complex with GSH (PDB: 5B7C) and showed a 43-fold lower Km for GSH compared to GST-sigma. GSH binds in the active site via a polar interaction network involving residues Arg14, His49, Met51, Gln64, Ser65, Tyr97, and Gly110, plus a disulfide bond with Cys112 in the long loop. This tight GSH binding is the functional replacement of catalytic activity: it stabilizes S-crystallin against thermal denaturation and prevents aggregation, contributing to lens transparency.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0043295 (glutathione binding) accurately describes the demonstrated molecular function of OCTS1. The protein has evolved enhanced GSH binding affinity (43-fold tighter than GST-sigma) as its primary molecular function, using GSH as a structural cofactor for protein stabilization rather than as a catalytic substrate. The crystal structure (PDB: 5B7C) directly demonstrates the GSH-protein complex. This is the most informative molecular function term for this protein alongside GO:0005212.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499004" target="_blank" class="term-link">
+                                        PMID:27499004
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The apparent binding affinity of GSH with S-crystallin is significantly tighter than that with GST-sigma, with a 43-fold decrease in Km.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499004" target="_blank" class="term-link">
+                                        PMID:27499004
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we observed the presence of a GSH molecule within the active site of S-crystallin, located between the N-domain (βA to α3) and C-domain (α4 to α10) of the protein (Fig. 1b). There is a disulfide-bond between the thiol group of the GSH and residue Cys112 of S-crystallin.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007601" target="_blank" class="term-link">
+                                    GO:0007601
+                                </a>
+                            </span>
+                            <span class="term-label">visual perception</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17293312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17293312
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evolution of graded refractive index in squid lenses
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P27013" data-a="GO:0007601" data-r="PMID:17293312" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As the dominant structural protein of the cephalopod eye lens, S-crystallin 1 plays an essential role in visual perception by contributing to the graded refractive index that focuses light onto the retina. Sweeney et al. 2007 (PMID:17293312) demonstrated that &#34;a lens with a graded refractive index is required for vision in aquatic animals with camera-type eyes&#34; and that S-crystallins create this gradient through differential expression at different radial positions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As a structural lens protein essential for light refraction, OCTS1 participates in the biological process of visual perception. This is appropriate as a non-core process annotation because the protein is not a signaling component of the visual pathway, but rather a structural prerequisite for optical function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17293312" target="_blank" class="term-link">
+                                        PMID:17293312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A lens with a graded refractive index is required for vision in aquatic animals with camera-type eyes. This optical design entails a radial gradient of protein density.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>OCTS1 is a major structural protein of the Octopus vulgaris eye lens. S-crystallins are the dominant lens proteins in cephalopods, analogous to alpha/beta/gamma crystallins in vertebrates. They are expressed specifically in the lens and contribute to the graded refractive index necessary for image formation in aquatic camera-type eyes. The protein evolved from glutathione S-transferase by gene duplication and neofunctionalization, trading enzymatic activity for enhanced protein stability via high-affinity GSH binding.</h3>
+                <span class="vote-buttons" data-g="P27013" data-a="FUNCTION: OCTS1 is a major structural protein of the Octopus..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005212" target="_blank" class="term-link">
+                            structural constituent of eye lens
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007601" target="_blank" class="term-link">
+                                visual perception
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1627174" target="_blank" class="term-link">
+                                PMID:1627174
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">S-crystallin is a major lens protein present in the octopus and squid of Cephalopods.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7639695" target="_blank" class="term-link">
+                                PMID:7639695
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">S-Crystallin is a major protein present in the lenses of cephalopods (octopus and squid).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17293312" target="_blank" class="term-link">
+                                PMID:17293312
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">S-crystallins are differentially expressed in a radial gradient, suggesting a role in refractive index.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499004" target="_blank" class="term-link">
+                                PMID:27499004
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We suggest that a tradeoff between enzyme activity and the stability of the lens protein might have been one of the major driving force behind lens evolution.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1627174" target="_blank" class="term-link">
+                            PMID:1627174
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Facile cloning and sequencing of S-crystallin genes from octopus lenses based on polymerase chain reaction</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloned OCTS1 cDNA from octopus lens poly(A)+RNA using PCR</div>
+                        
+                        <div class="finding-text">"S-crystallin is a major lens protein present in the octopus and squid of Cephalopods. To facilitate the cloning of the protein, cDNA was constructed from the poly(A)+RNA of octopus lenses, and amplification by polymerase chain reaction (PCR) was carried out."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">S-crystallins exist as a multigene family with 37-44% nucleotide similarity and 23-30% amino acid similarity to mammalian GSTs</div>
+                        
+                        <div class="finding-text">"Sequencing two of 15 positive clones obtained shows 37-44% similarity in nucleotide and 23-30% similarity in amino acid sequences as compared with mammalian glutathione S-transferases (GST), revealing that S-crystallins exist as a multigene family and probably derived from GST by gene duplication and subsequent mutational base replacements."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7639695" target="_blank" class="term-link">
+                            PMID:7639695
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Octopus S-crystallins with endogenous glutathione S-transferase (GST) activity: sequence comparison and evolutionary relationships with authentic GST enzymes</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Three distinct S-crystallin isoforms identified with 61-64% nucleotide identity</div>
+                        
+                        <div class="finding-text">"Sequencing of 10 of 15 positive clones coding for this crystallin revealed three distinct S-crystallin isoforms with 61-64% identity in nucleotide sequences and 42-58% similarity in amino acid sequences when compared with homologous crystallins in squid lenses."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant octopus S-crystallin has much lower GST activity than authentic GSTs</div>
+                        
+                        <div class="finding-text">"We found that the expressed octopus S-crystallin possessed much lower GST activity than the authentic GSTs from other tissues."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">S-crystallins are structurally related to Alpha-class GSTs and derived from ancestral GST</div>
+                        
+                        <div class="finding-text">"Sequence comparison and construction of phylogenetic trees for S-crystallins from squid and octopus lenses and various classes of GSTs revealed that S-crystallins represent a multigene family which is structurally related to Alpha-class GSTs and probably derived from the ancestral GST by gene duplication and subsequent multiple mutational substitutions."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8587103" target="_blank" class="term-link">
+                            PMID:8587103
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Glutathione S-transferase and S-crystallins of cephalopods: evolution from active enzyme to lens-refractive proteins</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">At least 24 different S-crystallins in squid Loligo opalescens, 46-99% identical</div>
+                        
+                        <div class="finding-text">"Here we show by cDNA cloning that there are at least 24 different S-crystallins that are 46-99% identical to each other by amino acid sequence in the squid Loligo opalescens."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Long-loop S-crystallins have no GST activity; short-loop retain some</div>
+                        
+                        <div class="finding-text">"Squid GST (which is expressed little in the lens) has very high enzymatic activity using 1-chloro-2,4-dinitrobenzene (CDNB) as a substrate; by contrast, SL20-1 of O. pacificus and Lops12 of L. opalescens (which are encoded by abundant lens mRNAs) have no GST activity. Interestingly, SL11 and Lops4 have some enzymatic activity with the CDNB substrate."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GST activity lost by gradual sequence drift plus insertion of central peptide by exon shuffling</div>
+                        
+                        <div class="finding-text">"These data indicate that the S-crystallins consist of a family of enzymatically inactive proteins which is considerably larger than previously believed and that GST activity was lost by gradual drift in sequence as well as by insertion of an extra peptide by exon shuffling."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27499004" target="_blank" class="term-link">
+                            PMID:27499004
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of a Highly Active Cephalopod S-crystallin Mutant: New Molecular Evidence for Evolution from an Active Enzyme into Lens-Refractive Protein</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of octopus S-crystallin Q108F mutant in complex with GSH at 2.35 angstrom resolution (PDB 5B7C)</div>
+                        
+                        <div class="finding-text">"Here we report the structural and biochemical characterization of novel S-crystallin-glutathione complex. The 2.35 angstrom crystal structure of a S-crystallin mutant from Octopus vulgaris reveals an active-site architecture that is different from that of GST."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Wild-type S-crystallin kcat is ~1/700 of GST-sigma; catalytic efficiency ~1/6000</div>
+                        
+                        <div class="finding-text">"The GST catalytic activity (kcat) of the wild-type S-crystallin is 0.24 s-1, which is about the same to that of the S-crystallins purified from octopus lens but only ~1/700, of that of GST-sigma (it will be ~1/6000 if compared their catalytic efficiency by kcat/Km)."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">S-crystallin binds GSH 43-fold tighter than GST-sigma</div>
+                        
+                        <div class="finding-text">"The apparent binding affinity of GSH with S-crystallin is significantly tighter than that with GST-sigma, with a 43-fold decrease in Km."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GSH binding raises melting temperature by 7 degrees C and prevents denaturant-induced aggregation</div>
+                        
+                        <div class="finding-text">"In the presence of GSH, the melting temperature (Tm) of S-crystallin was higher by 7 degrees C than that of the protein in the absence of GSH. [...] S-crystallin aggregation is prevented by the presence of GSH in a dose-dependent manner."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Four key mutations can restore GST activity with 518-fold increase in kcat/Km</div>
+                        
+                        <div class="finding-text">"The quadruple mutant of S-crystallin, L100F/D101N/M104V/Q108F, had the lowest Km (0.18 mM) and the highest Kcat. Although there was only a 23-fold increase in activity, the catalytic efficiency (kcat/Km) has a 518-fold increase."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Tradeoff between enzyme activity and protein stability via GSH binding drove evolution</div>
+                        
+                        <div class="finding-text">"We suggest that a tradeoff between enzyme activity and the stability of the lens protein might have been one of the major driving force behind lens evolution."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1373730" target="_blank" class="term-link">
+                            PMID:1373730
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of squid crystallin genes. Comparison with mammalian glutathione S-transferase genes</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Squid lens crystallins confirmed as a family of GST-like proteins by peptide sequencing</div>
+                        
+                        <div class="finding-text">"Previous experiments have indicated that the crystallins of the squid lens (S-crystallins) are evolutionarily related to glutathione S-transferases (GST). Here we confirm by peptide sequencing that the crystallins of the lens of the squid comprise a family of GST-like proteins."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Squid lens extracts showed 400 times less GST activity than liver</div>
+                        
+                        <div class="finding-text">"Squid lens extracts showed 400 times less GST activity than those of liver using 1-chloro-2,4-dinitrobenzene as a substrate, suggesting that the abundant GST-like crystallins lack enzymatic activity."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17293312" target="_blank" class="term-link">
+                            PMID:17293312
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Evolution of graded refractive index in squid lenses</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">S-crystallins differentially expressed in a radial gradient correlating with refractive index</div>
+                        
+                        <div class="finding-text">"S-crystallins are differentially expressed in a radial gradient, suggesting a role in refractive index. This gradient in S-crystallin expression is correlated with their evolutionary history and biochemistry."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">S-crystallins have been under positive selection for protein stabilization</div>
+                        
+                        <div class="finding-text">"S-crystallins have been under positive selection. This selection appears to have resulted in stabilization of derived S-crystallins via mutations in the dimer interface and extended electrostatic fields."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7987197" target="_blank" class="term-link">
+                            PMID:7987197
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The evolutionary kinship of the crystallins of cephalopods and vertebrates with heat-shock proteins and stress-induced proteins</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">S-crystallins show no enzymatic activity despite homology with squid GST</div>
+                        
+                        <div class="finding-text">"S-crystallins of the squid and the octopus are related, but not identical to glutathione S-transferases. S-crystallins show no enzymatic activity, though they have 42-44% homology with a squid glutathione-S-transferase."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Vertebrates and cephalopods converged on same strategy of enzyme co-option for lens function</div>
+                        
+                        <div class="finding-text">"In the course of evolution vertebrates and cephalopods used the same strategy of recruitment of ancestral proteins (primarily enzymes, whose activity is related with stress and detoxification) for structural functions in the lens."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does OCTS1 specifically form homodimers like canonical GSTs, or does it heterodimerize with other S-crystallin family members in the lens? The crystal structure shows a GST-like dimer via crystallographic symmetry, but the in vivo oligomeric state in the lens has not been determined.</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Chi-Yuan Chou, Wei-Hung Tan</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P27013" data-a="Q: Does OCTS1 specifically form homodimers like canon..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the in vivo GSH occupancy of OCTS1 in the octopus lens? Given the high GSH concentration in lenses (2-10 mM) and the tight binding, is OCTS1 constitutively GSH-bound under physiological conditions?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Chi-Yuan Chou</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P27013" data-a="Q: What is the in vivo GSH occupancy of OCTS1 in the ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there S-crystallin family members in O. vulgaris that retain significant GST activity (analogous to the short-loop SL11/Lops4 in squid), and if so, could they serve a dual antioxidant/structural role in the lens?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Joram Piatigorsky, Shyh-Horng Chiou</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P27013" data-a="Q: Are there S-crystallin family members in O. vulgar..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Mass spectrometry of octopus lens extracts from concentric layers to determine the relative abundance of different S-crystallin isoforms and their spatial distribution (cortex vs. nucleus) to map the protein-density gradient underlying the refractive index.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Different S-crystallin isoforms are spatially segregated in the octopus lens to create the graded refractive index</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: mass spectrometry proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P27013" data-a="EXPERIMENT: Mass spectrometry of octopus lens extracts from co..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Isothermal titration calorimetry (ITC) of OCTS1 with GSH to precisely measure binding affinity (Kd) and stoichiometry under physiological conditions, complementing the Km-based estimates from kinetic assays.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: OCTS1 binds GSH with high affinity under physiological conditions</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biophysical binding assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P27013" data-a="EXPERIMENT: Isothermal titration calorimetry (ITC) of OCTS1 wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Mutagenesis of the four key residues (L100F/D101N/M104V/Q108F) in OCTS1 specifically to test whether the activity restoration seen in the related OctS4 crystallin also applies to this isoform, and whether the stability/activity tradeoff is conserved across S-crystallin paralogs.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The four key active-site mutations identified in OctS4 also restore GST activity in OCTS1</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: site-directed mutagenesis and enzyme kinetics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P27013" data-a="EXPERIMENT: Mutagenesis of the four key residues (L100F/D101N/..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P27013
+gene_symbol: OCTS1
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:6645
+  label: Octopus vulgaris
+description: &gt;-
+  S-crystallin 1 (OCTS1, UniProt: SCRY1_OCTVU) is a major structural protein of the Octopus
+  vulgaris eye lens. It belongs to the S-crystallin multigene family, a textbook example of
+  enzyme-crystallin co-option: S-crystallins evolved from glutathione S-transferase (GST) by
+  gene duplication and neofunctionalization. OCTS1 retains the canonical GST fold (N-terminal
+  and C-terminal GST domains) but has lost nearly all GST enzymatic activity (~1/700 of
+  octopus digestive gland GST-sigma, ~1/1000 of mammalian GST). The protein preferentially
+  binds glutathione (GSH) with high affinity, which stabilizes the protein and prevents
+  aggregation, contributing to lens transparency. OCTS1 is a &#34;long-loop&#34; S-crystallin
+  containing a unique inserted peptide between the alpha4 and alpha5 helices that enhances
+  GSH binding while interfering with electrophilic substrate binding, thus further suppressing
+  catalytic activity. The crystal structure of a closely related octopus S-crystallin mutant
+  (PDB: 5B7C) at 2.35 angstrom resolution confirms the GST-like fold with a collapsed
+  hydrophobic pocket that disfavors binding of aromatic electrophilic substrates. S-crystallins
+  are expressed specifically in the lens, where they are differentially distributed in a
+  radial gradient to create the graded refractive index required for vision in aquatic
+  camera-type eyes. The evolution from active GST enzyme to structural lens protein involved
+  a tradeoff between enzymatic activity and protein stability via GSH-mediated protection
+  against aggregation.
+
+existing_annotations:
+- term:
+    id: GO:0004364
+    label: glutathione transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      The TreeGrafter IEA annotation of GO:0004364 (glutathione transferase activity) is based
+      on sequence homology to the PANTHER GST superfamily (PTHR11571). While OCTS1 retains the
+      GST fold and can catalyze GSH conjugation at a basal level, multiple independent studies
+      demonstrate that S-crystallin 1 has negligible GST enzymatic activity in vivo. Chiou et al.
+      1995 (PMID:7639695) showed that recombinant octopus S-crystallin &#34;possessed much lower GST
+      activity than the authentic GSTs from other tissues.&#34; Tan et al. 2016 (PMID:27499004)
+      quantified this precisely: the catalytic rate (kcat) of wild-type octopus S-crystallin is
+      ~1/700 that of octopus GST-sigma, and ~1/6000 by catalytic efficiency (kcat/Km). The
+      UniProt entry (P27013) states the protein &#34;contains relatively little GST activity (1/1000
+      of that of mammalian GST enzyme).&#34; Tomarev et al. 1995 (PMID:8587103) showed that
+      long-loop S-crystallins like OCTS1 &#34;have no GST activity&#34; using CDNB as substrate, and
+      that activity was lost through gradual sequence drift plus insertion of the long-loop
+      peptide by exon shuffling.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0004364 implies functional GST catalytic activity, but OCTS1 has lost this function
+      through evolutionary co-option. The residual activity (~1/700 to 1/6000 of authentic GST)
+      is biologically negligible. The protein&#39;s actual molecular function is as a structural
+      constituent of the eye lens. Four key mutations (L100, D101, M104, Q108 relative to
+      GST-sigma) collapsed the hydrophobic electrophilic-substrate-binding pocket, and the
+      inserted long loop further suppresses catalysis while enhancing GSH binding for protein
+      stabilization. Annotating this protein with GST activity misrepresents its biological role
+      and is a classic case of over-annotation based on sequence homology to an ancestral
+      enzymatic function.
+    additional_reference_ids:
+    - PMID:8587103
+    - PMID:1373730
+    supported_by:
+    - reference_id: PMID:7639695
+      supporting_text: &gt;-
+        We found that the expressed octopus S-crystallin possessed much lower GST activity than
+        the authentic GSTs from other tissues.
+    - reference_id: PMID:27499004
+      supporting_text: &gt;-
+        The GST catalytic activity (kcat) of the wild-type S-crystallin is 0.24 s−1, which is
+        about the same to that of the S-crystallins purified from octopus lens18 but only
+        ~1/700, of that of GST-σ (it will be ~1/6000 if compared their catalytic efficiency
+        by kcat/Km,CDNB) (Table 1).
+    - reference_id: PMID:8587103
+      supporting_text: &gt;-
+        SL20-1 of O. pacificus and Lops12 of L. opalescens (which are encoded by abundant lens
+        mRNAs) have no GST activity. [...] GST activity was lost by gradual drift in sequence
+        as well as by insertion of an extra peptide by exon shuffling.
+
+- term:
+    id: GO:0006749
+    label: glutathione metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      The TreeGrafter IEA annotation of GO:0006749 (glutathione metabolic process) is a
+      biological process annotation propagated alongside GO:0004364. While OCTS1 does bind GSH
+      with high affinity, it does so for structural stabilization rather than for glutathione
+      metabolism. Tan et al. 2016 (PMID:27499004) demonstrated that GSH binding stabilizes
+      S-crystallin (raising the melting temperature by 7 degrees C and preventing
+      denaturant-induced aggregation) and that OCTS1 retains GSH rather than catalyzing its
+      conjugation and release. The protein&#39;s role is to sequester GSH for self-stabilization
+      in the lens, not to participate in glutathione metabolic pathways.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The biological process &#34;glutathione metabolic process&#34; implies that OCTS1 functions in
+      the metabolism of glutathione. In reality, OCTS1 binds GSH as a structural cofactor to
+      prevent its own aggregation and maintain lens transparency, not to metabolize glutathione.
+      The catalytic turnover is negligible (~1/700 to 1/6000 of authentic GST). This annotation
+      propagates from the over-annotation of GST activity and misrepresents the protein&#39;s
+      actual biological role.
+    supported_by:
+    - reference_id: PMID:27499004
+      supporting_text: &gt;-
+        In the presence of GSH, the melting temperature (Tm) of S-crystallin was higher by
+        7 °C than that of the protein in the absence of GSH
+    - reference_id: PMID:27499004
+      supporting_text: &gt;-
+        If we considered the situation of S-crystallin in the lens, it is important for this
+        protein to capture GSH for as long as possible and to minimize its catalytic activity,
+        otherwise the GSH will be released as a product conjugate.
+
+- term:
+    id: GO:0005212
+    label: structural constituent of eye lens
+  evidence_type: NAS
+  original_reference_id: PMID:7639695
+  review:
+    summary: &gt;-
+      GO:0005212 (structural constituent of eye lens) is the core molecular function of OCTS1.
+      S-crystallins are the dominant structural proteins of cephalopod eye lenses, analogous to
+      alpha/beta/gamma crystallins in vertebrate lenses. Lin and Chiou 1992 (PMID:1627174)
+      cloned OCTS1 from octopus lens tissue. The UniProt entry states: &#34;S-crystallins are
+      structural components of squids and octopi eye lens.&#34; Sweeney et al. 2007 (PMID:17293312)
+      showed that S-crystallins are &#34;differentially expressed in a radial gradient, suggesting
+      a role in refractive index&#34; and that they form the graded refractive index structure
+      essential for vision in cephalopod camera-type eyes. This annotation is present in UniProt
+      via keyword mapping (GO_REF:0000043) but absent from the QuickGO/GOA export; it should
+      be added as a curated annotation.
+    action: NEW
+    reason: &gt;-
+      This is the primary molecular function of OCTS1. The protein has been co-opted from an
+      ancestral GST enzyme to serve as a structural/refractive lens protein. Multiple studies
+      confirm lens-specific expression and structural role. Although present in UniProt via
+      keyword mapping, it is not in the GOA export and should be formally annotated. This is
+      the most important annotation for this protein.
+    supported_by:
+    - reference_id: PMID:1627174
+      supporting_text: &gt;-
+        S-crystallin is a major lens protein present in the octopus and squid of Cephalopods.
+    - reference_id: PMID:7639695
+      supporting_text: &gt;-
+        S-Crystallin is a major protein present in the lenses of cephalopods (octopus and squid).
+    - reference_id: PMID:17293312
+      supporting_text: &gt;-
+        S-crystallins are differentially expressed in a radial gradient, suggesting a role in
+        refractive index.
+
+- term:
+    id: GO:0043295
+    label: glutathione binding
+  evidence_type: NAS
+  original_reference_id: PMID:27499004
+  review:
+    summary: &gt;-
+      OCTS1 binds glutathione (GSH) with high affinity, significantly tighter than authentic
+      GST-sigma. Tan et al. 2016 (PMID:27499004) determined the crystal structure of octopus
+      S-crystallin in complex with GSH (PDB: 5B7C) and showed a 43-fold lower Km for GSH
+      compared to GST-sigma. GSH binds in the active site via a polar interaction network
+      involving residues Arg14, His49, Met51, Gln64, Ser65, Tyr97, and Gly110, plus a
+      disulfide bond with Cys112 in the long loop. This tight GSH binding is the functional
+      replacement of catalytic activity: it stabilizes S-crystallin against thermal denaturation
+      and prevents aggregation, contributing to lens transparency.
+    action: NEW
+    reason: &gt;-
+      GO:0043295 (glutathione binding) accurately describes the demonstrated molecular function
+      of OCTS1. The protein has evolved enhanced GSH binding affinity (43-fold tighter than
+      GST-sigma) as its primary molecular function, using GSH as a structural cofactor for
+      protein stabilization rather than as a catalytic substrate. The crystal structure (PDB:
+      5B7C) directly demonstrates the GSH-protein complex. This is the most informative
+      molecular function term for this protein alongside GO:0005212.
+    supported_by:
+    - reference_id: PMID:27499004
+      supporting_text: &gt;-
+        The apparent binding affinity of GSH with S-crystallin is significantly tighter than that
+        with GST-sigma, with a 43-fold decrease in Km.
+    - reference_id: PMID:27499004
+      supporting_text: &gt;-
+        we observed the presence of a GSH molecule within the active site of S-crystallin,
+        located between the N-domain (βA to α3) and C-domain (α4 to α10) of the protein
+        (Fig. 1b). There is a disulfide-bond between the thiol group of the GSH and residue
+        Cys112 of S-crystallin.
+
+- term:
+    id: GO:0007601
+    label: visual perception
+  evidence_type: NAS
+  original_reference_id: PMID:17293312
+  review:
+    summary: &gt;-
+      As the dominant structural protein of the cephalopod eye lens, S-crystallin 1 plays an
+      essential role in visual perception by contributing to the graded refractive index that
+      focuses light onto the retina. Sweeney et al. 2007 (PMID:17293312) demonstrated that
+      &#34;a lens with a graded refractive index is required for vision in aquatic animals with
+      camera-type eyes&#34; and that S-crystallins create this gradient through differential
+      expression at different radial positions.
+    action: NEW
+    reason: &gt;-
+      As a structural lens protein essential for light refraction, OCTS1 participates in the
+      biological process of visual perception. This is appropriate as a non-core process
+      annotation because the protein is not a signaling component of the visual pathway, but
+      rather a structural prerequisite for optical function.
+    supported_by:
+    - reference_id: PMID:17293312
+      supporting_text: &gt;-
+        A lens with a graded refractive index is required for vision in aquatic animals with
+        camera-type eyes. This optical design entails a radial gradient of protein density.
+
+references:
+- id: PMID:1627174
+  title: &gt;-
+    Facile cloning and sequencing of S-crystallin genes from octopus lenses based on
+    polymerase chain reaction
+  findings:
+  - statement: Cloned OCTS1 cDNA from octopus lens poly(A)+RNA using PCR
+    supporting_text: &gt;-
+      S-crystallin is a major lens protein present in the octopus and squid of Cephalopods.
+      To facilitate the cloning of the protein, cDNA was constructed from the poly(A)+RNA of
+      octopus lenses, and amplification by polymerase chain reaction (PCR) was carried out.
+  - statement: &gt;-
+      S-crystallins exist as a multigene family with 37-44% nucleotide similarity and 23-30%
+      amino acid similarity to mammalian GSTs
+    supporting_text: &gt;-
+      Sequencing two of 15 positive clones obtained shows 37-44% similarity in nucleotide and
+      23-30% similarity in amino acid sequences as compared with mammalian glutathione
+      S-transferases (GST), revealing that S-crystallins exist as a multigene family and
+      probably derived from GST by gene duplication and subsequent mutational base replacements.
+- id: PMID:7639695
+  title: &gt;-
+    Octopus S-crystallins with endogenous glutathione S-transferase (GST) activity: sequence
+    comparison and evolutionary relationships with authentic GST enzymes
+  findings:
+  - statement: &gt;-
+      Three distinct S-crystallin isoforms identified with 61-64% nucleotide identity
+    supporting_text: &gt;-
+      Sequencing of 10 of 15 positive clones coding for this crystallin revealed three distinct
+      S-crystallin isoforms with 61-64% identity in nucleotide sequences and 42-58% similarity
+      in amino acid sequences when compared with homologous crystallins in squid lenses.
+  - statement: &gt;-
+      Recombinant octopus S-crystallin has much lower GST activity than authentic GSTs
+    supporting_text: &gt;-
+      We found that the expressed octopus S-crystallin possessed much lower GST activity than
+      the authentic GSTs from other tissues.
+  - statement: &gt;-
+      S-crystallins are structurally related to Alpha-class GSTs and derived from ancestral GST
+    supporting_text: &gt;-
+      Sequence comparison and construction of phylogenetic trees for S-crystallins from squid
+      and octopus lenses and various classes of GSTs revealed that S-crystallins represent a
+      multigene family which is structurally related to Alpha-class GSTs and probably derived
+      from the ancestral GST by gene duplication and subsequent multiple mutational substitutions.
+- id: PMID:8587103
+  title: &gt;-
+    Glutathione S-transferase and S-crystallins of cephalopods: evolution from active enzyme
+    to lens-refractive proteins
+  findings:
+  - statement: &gt;-
+      At least 24 different S-crystallins in squid Loligo opalescens, 46-99% identical
+    supporting_text: &gt;-
+      Here we show by cDNA cloning that there are at least 24 different S-crystallins that are
+      46-99% identical to each other by amino acid sequence in the squid Loligo opalescens.
+  - statement: &gt;-
+      Long-loop S-crystallins have no GST activity; short-loop retain some
+    supporting_text: &gt;-
+      Squid GST (which is expressed little in the lens) has very high enzymatic activity using
+      1-chloro-2,4-dinitrobenzene (CDNB) as a substrate; by contrast, SL20-1 of O. pacificus
+      and Lops12 of L. opalescens (which are encoded by abundant lens mRNAs) have no GST
+      activity. Interestingly, SL11 and Lops4 have some enzymatic activity with the CDNB
+      substrate.
+  - statement: &gt;-
+      GST activity lost by gradual sequence drift plus insertion of central peptide by exon
+      shuffling
+    supporting_text: &gt;-
+      These data indicate that the S-crystallins consist of a family of enzymatically inactive
+      proteins which is considerably larger than previously believed and that GST activity was
+      lost by gradual drift in sequence as well as by insertion of an extra peptide by exon
+      shuffling.
+- id: PMID:27499004
+  title: &gt;-
+    Structure of a Highly Active Cephalopod S-crystallin Mutant: New Molecular Evidence for
+    Evolution from an Active Enzyme into Lens-Refractive Protein
+  findings:
+  - statement: &gt;-
+      Crystal structure of octopus S-crystallin Q108F mutant in complex with GSH at 2.35
+      angstrom resolution (PDB 5B7C)
+    supporting_text: &gt;-
+      Here we report the structural and biochemical characterization of novel
+      S-crystallin-glutathione complex. The 2.35 angstrom crystal structure of a S-crystallin
+      mutant from Octopus vulgaris reveals an active-site architecture that is different from
+      that of GST.
+  - statement: &gt;-
+      Wild-type S-crystallin kcat is ~1/700 of GST-sigma; catalytic efficiency ~1/6000
+    supporting_text: &gt;-
+      The GST catalytic activity (kcat) of the wild-type S-crystallin is 0.24 s-1, which is
+      about the same to that of the S-crystallins purified from octopus lens but only ~1/700,
+      of that of GST-sigma (it will be ~1/6000 if compared their catalytic efficiency by
+      kcat/Km).
+  - statement: S-crystallin binds GSH 43-fold tighter than GST-sigma
+    supporting_text: &gt;-
+      The apparent binding affinity of GSH with S-crystallin is significantly tighter than that
+      with GST-sigma, with a 43-fold decrease in Km.
+  - statement: &gt;-
+      GSH binding raises melting temperature by 7 degrees C and prevents denaturant-induced
+      aggregation
+    supporting_text: &gt;-
+      In the presence of GSH, the melting temperature (Tm) of S-crystallin was higher by 7
+      degrees C than that of the protein in the absence of GSH. [...] S-crystallin aggregation
+      is prevented by the presence of GSH in a dose-dependent manner.
+  - statement: &gt;-
+      Four key mutations can restore GST activity with 518-fold increase in kcat/Km
+    supporting_text: &gt;-
+      The quadruple mutant of S-crystallin, L100F/D101N/M104V/Q108F, had the lowest Km
+      (0.18 mM) and the highest Kcat. Although there was only a 23-fold increase in activity,
+      the catalytic efficiency (kcat/Km) has a 518-fold increase.
+  - statement: &gt;-
+      Tradeoff between enzyme activity and protein stability via GSH binding drove evolution
+    supporting_text: &gt;-
+      We suggest that a tradeoff between enzyme activity and the stability of the lens protein
+      might have been one of the major driving force behind lens evolution.
+- id: PMID:1373730
+  title: &gt;-
+    Characterization of squid crystallin genes. Comparison with mammalian glutathione
+    S-transferase genes
+  findings:
+  - statement: &gt;-
+      Squid lens crystallins confirmed as a family of GST-like proteins by peptide sequencing
+    supporting_text: &gt;-
+      Previous experiments have indicated that the crystallins of the squid lens (S-crystallins)
+      are evolutionarily related to glutathione S-transferases (GST). Here we confirm by peptide
+      sequencing that the crystallins of the lens of the squid comprise a family of GST-like
+      proteins.
+  - statement: Squid lens extracts showed 400 times less GST activity than liver
+    supporting_text: &gt;-
+      Squid lens extracts showed 400 times less GST activity than those of liver using
+      1-chloro-2,4-dinitrobenzene as a substrate, suggesting that the abundant GST-like
+      crystallins lack enzymatic activity.
+- id: PMID:17293312
+  title: &gt;-
+    Evolution of graded refractive index in squid lenses
+  findings:
+  - statement: &gt;-
+      S-crystallins differentially expressed in a radial gradient correlating with refractive
+      index
+    supporting_text: &gt;-
+      S-crystallins are differentially expressed in a radial gradient, suggesting a role in
+      refractive index. This gradient in S-crystallin expression is correlated with their
+      evolutionary history and biochemistry.
+  - statement: S-crystallins have been under positive selection for protein stabilization
+    supporting_text: &gt;-
+      S-crystallins have been under positive selection. This selection appears to have resulted
+      in stabilization of derived S-crystallins via mutations in the dimer interface and
+      extended electrostatic fields.
+- id: PMID:7987197
+  title: &gt;-
+    The evolutionary kinship of the crystallins of cephalopods and vertebrates with heat-shock
+    proteins and stress-induced proteins
+  findings:
+  - statement: S-crystallins show no enzymatic activity despite homology with squid GST
+    supporting_text: &gt;-
+      S-crystallins of the squid and the octopus are related, but not identical to glutathione
+      S-transferases. S-crystallins show no enzymatic activity, though they have 42-44%
+      homology with a squid glutathione-S-transferase.
+  - statement: &gt;-
+      Vertebrates and cephalopods converged on same strategy of enzyme co-option for lens
+      function
+    supporting_text: &gt;-
+      In the course of evolution vertebrates and cephalopods used the same strategy of
+      recruitment of ancestral proteins (primarily enzymes, whose activity is related with
+      stress and detoxification) for structural functions in the lens.
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+
+core_functions:
+- molecular_function:
+    id: GO:0005212
+    label: structural constituent of eye lens
+  description: &gt;-
+    OCTS1 is a major structural protein of the Octopus vulgaris eye lens. S-crystallins are
+    the dominant lens proteins in cephalopods, analogous to alpha/beta/gamma crystallins in
+    vertebrates. They are expressed specifically in the lens and contribute to the graded
+    refractive index necessary for image formation in aquatic camera-type eyes. The protein
+    evolved from glutathione S-transferase by gene duplication and neofunctionalization,
+    trading enzymatic activity for enhanced protein stability via high-affinity GSH binding.
+  directly_involved_in:
+  - id: GO:0007601
+    label: visual perception
+  supported_by:
+  - reference_id: PMID:1627174
+    supporting_text: &gt;-
+      S-crystallin is a major lens protein present in the octopus and squid of Cephalopods.
+  - reference_id: PMID:7639695
+    supporting_text: &gt;-
+      S-Crystallin is a major protein present in the lenses of cephalopods (octopus and squid).
+  - reference_id: PMID:17293312
+    supporting_text: &gt;-
+      S-crystallins are differentially expressed in a radial gradient, suggesting a role in
+      refractive index.
+  - reference_id: PMID:27499004
+    supporting_text: &gt;-
+      We suggest that a tradeoff between enzyme activity and the stability of the lens protein
+      might have been one of the major driving force behind lens evolution.
+
+proposed_new_terms: []
+
+suggested_questions:
+- question: &gt;-
+    Does OCTS1 specifically form homodimers like canonical GSTs, or does it heterodimerize with
+    other S-crystallin family members in the lens? The crystal structure shows a GST-like dimer
+    via crystallographic symmetry, but the in vivo oligomeric state in the lens has not been
+    determined.
+  experts:
+  - Chi-Yuan Chou
+  - Wei-Hung Tan
+- question: &gt;-
+    What is the in vivo GSH occupancy of OCTS1 in the octopus lens? Given the high GSH
+    concentration in lenses (2-10 mM) and the tight binding, is OCTS1 constitutively GSH-bound
+    under physiological conditions?
+  experts:
+  - Chi-Yuan Chou
+- question: &gt;-
+    Are there S-crystallin family members in O. vulgaris that retain significant GST activity
+    (analogous to the short-loop SL11/Lops4 in squid), and if so, could they serve a dual
+    antioxidant/structural role in the lens?
+  experts:
+  - Joram Piatigorsky
+  - Shyh-Horng Chiou
+
+suggested_experiments:
+- hypothesis: &gt;-
+    Different S-crystallin isoforms are spatially segregated in the octopus lens to create the
+    graded refractive index
+  description: &gt;-
+    Mass spectrometry of octopus lens extracts from concentric layers to determine the relative
+    abundance of different S-crystallin isoforms and their spatial distribution (cortex vs.
+    nucleus) to map the protein-density gradient underlying the refractive index.
+  experiment_type: mass spectrometry proteomics
+- hypothesis: &gt;-
+    OCTS1 binds GSH with high affinity under physiological conditions
+  description: &gt;-
+    Isothermal titration calorimetry (ITC) of OCTS1 with GSH to precisely measure binding
+    affinity (Kd) and stoichiometry under physiological conditions, complementing the
+    Km-based estimates from kinetic assays.
+  experiment_type: biophysical binding assay
+- hypothesis: &gt;-
+    The four key active-site mutations identified in OctS4 also restore GST activity in OCTS1
+  description: &gt;-
+    Mutagenesis of the four key residues (L100F/D101N/M104V/Q108F) in OCTS1 specifically to
+    test whether the activity restoration seen in the related OctS4 crystallin also applies to
+    this isoform, and whether the stability/activity tradeoff is conserved across S-crystallin
+    paralogs.
+  experiment_type: site-directed mutagenesis and enzyme kinetics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

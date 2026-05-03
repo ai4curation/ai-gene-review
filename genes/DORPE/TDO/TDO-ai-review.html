@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TDO - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TDO</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A7G4RN94" target="_blank" class="term-link">
+                        A0A7G4RN94
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Doryteuthis pealeii</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TDO";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A7G4RN94" data-a="DESCRIPTION: Tryptophan 2,3-dioxygenase (TDO) is a heme-depende..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Tryptophan 2,3-dioxygenase (TDO) is a heme-dependent oxidoreductase that catalyzes the first committed step in ommochrome pigment biosynthesis in D. pealeii, converting L-tryptophan to N-formylkynurenine via oxidative cleavage of the indole ring. TDO is expressed in the retina and chromatophore layer of the skin, the two principal ommochrome-pigmented tissues. Crawford et al. (2020) demonstrated that CRISPR-Cas9 knockout of TDO in D. pealeii embryos efficiently eliminated pigmentation in both eyes and chromatophores with &gt;90% disruption efficiency, while ink sac melanin pigmentation was unaffected. This was the first gene knockout achieved in any cephalopod. TDO inhibition with 680C91 also completely blocked pigmentation, confirming the enzyme is required for ommochrome synthesis. Notably, D. pealeii lacks an IDO (indoleamine 2,3-dioxygenase) ortholog, unlike Euprymna berryi where IDO can compensate for TDO loss. TDO belongs to the PANTHER family PTHR10138 (Tryptophan 2,3-dioxygenase), is predicted to function as a homotetramer (dimer of dimers), and contains a single heme cofactor per subunit. The gene spans 13 exons over 120 kb of genomic DNA.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004833" target="_blank" class="term-link">
+                                    GO:0004833
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan 2,3-dioxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7G4RN94" data-a="GO:0004833" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> L-tryptophan 2,3-dioxygenase activity (EC 1.13.11.11) is the defining enzymatic function of TDO. This IEA annotation is based on combined automated methods (InterPro, ARBA, PANTHER, UniRule). In D. pealeii, Crawford et al. (2020) demonstrated that CRISPR-Cas9 knockout of TDO eliminated ommochrome pigmentation, and pharmacological inhibition with 680C91 (a TDO-selective inhibitor) blocked pigmentation in both eyes and chromatophores [PMID:32735817]. The UniProt entry confirms TDO catalyzes L-tryptophan + O2 = N-formylkynurenine (Rhea:RHEA:24536). Phylogenetic analysis confirmed this gene as a bona fide TDO (distinct from IDO) [PMID:32735817].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core enzymatic function of TDO, supported by sequence homology, PANTHER family assignment (PTHR10138), HAMAP rule MF_03020, and functional knockout data in this species showing loss of ommochrome pigmentation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link">
+                                        PMID:32735817
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In invertebrates, Tryptophan, 2,3 Dioxygenase (TDO) catalyzes the first committed step in ommochrome biosynthesis, converting Tryptophan to N-Formylkyneurenine.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link">
+                                        PMID:32735817
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A phylogenetic comparison of this sequence with diverse TDOs, and indolamine-2,3-dioxygenases (a different enzyme that catalyzes the same reaction), supported its identity as TDO.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7G4RN94" data-a="GO:0006569" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> L-tryptophan catabolic process is annotated via ARBA machine learning. TDO catalyzes the oxidative cleavage of L-tryptophan as the first step in the kynurenine pathway. Crawford et al. (2020) showed that TDO knockout eliminates ommochrome biosynthesis from tryptophan in D. pealeii [PMID:32735817]. This term is correct but could be more specific. The UniProt record lists both GO:0019441 (L-tryptophan catabolic process to kynurenine) and GO:0019442 (L-tryptophan catabolic process to acetyl-CoA), and GO:0019441 more precisely captures TDO function as it catalyzes the first step to kynurenine specifically.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> L-tryptophan catabolic process correctly describes the biological process TDO participates in. While a more specific term like L-tryptophan catabolic process to kynurenine (GO:0019441) would be ideal, that term is now obsolete in GO. GO:0006569 is the most appropriate active term for this function. Crawford et al. (2020) showed TDO knockout eliminates the tryptophan-to-ommochrome pathway in D. pealeii [PMID:32735817].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link">
+                                        PMID:32735817
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">TDO catalyzes the first committed step in ommochrome biosynthesis, converting Tryptophan to N-Formylkyneurenine.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7G4RN94" data-a="GO:0020037" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Heme binding is annotated by combined IEA methods (InterPro, ARBA, PANTHER, UniRule). The UniProt record explicitly states: &#34;Binds 1 heme group per subunit&#34; (HAMAP-Rule:MF_03020), and lists heme as a cofactor (ChEBI:30413). TDO is a heme-dependent dioxygenase, and heme is essential for its catalytic mechanism. This is well-established for TDO family members across all species.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Heme binding is integral to TDO catalytic function. The enzyme requires bound heme to catalyze oxidative cleavage of the tryptophan indole ring. This is confirmed by UniProt cofactor annotation and is a defining feature of the TDO family (HAMAP MF_03020, Pfam PF03301 Trp_dioxygenase).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link">
+                                        PMID:32735817
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we determined whether a TDO-selective inhibitor (680C91) impeded pigmentation in developing embryos.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7G4RN94" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Metal ion binding is annotated via InterPro2GO mapping (IPR037217). This is correct as TDO binds iron through its heme prosthetic group. However, this term is very generic and redundant with the more informative heme binding (GO:0020037) annotation already present, which more precisely captures the nature of the metal cofactor interaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct (TDO binds iron via heme), GO:0046872 (metal ion binding) is too generic to be informative. The heme binding annotation (GO:0020037) already captures this function at a more appropriate level of specificity. The metal ion binding term does not add useful functional information beyond what heme binding conveys.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006727" target="_blank" class="term-link">
+                                    GO:0006727
+                                </a>
+                            </span>
+                            <span class="term-label">ommochrome biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32735817
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Highly Efficient Knockout of a Squid Pigmentation Gene
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7G4RN94" data-a="GO:0006727" data-r="PMID:32735817" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. Crawford et al. (2020) demonstrated by CRISPR-Cas9 knockout that TDO is required for ommochrome biosynthesis in D. pealeii. TDO knockout eliminated pigmentation in both chromatophores and eyes, which contain ommochrome pigments. The TDO-selective inhibitor 680C91 also blocked pigmentation. In situ hybridization confirmed TDO expression in chromatophore precursors and eyes. This is the most biologically meaningful annotation for this gene in cephalopods, as ommochrome pigmentation is the primary downstream biological process served by TDO in this organism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Ommochrome biosynthesis is the key biological process requiring TDO in cephalopods. CRISPR knockout and pharmacological inhibition both demonstrate TDO is essential for ommochrome production. This annotation is not present in the existing GOA set but is strongly supported by direct experimental evidence in this species.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link">
+                                        PMID:32735817
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In cephalopods, the pigments in the eyes and chromatophores are ommochromes, a derivative of tryptophan</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link">
+                                        PMID:32735817
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Knocking out TDO in squid embryos efficiently eliminated pigmentation. By precisely timing CRISPR-Cas9 delivery during early development, the degree of pigmentation could be finely controlled. Genotyping revealed knockout efficiencies routinely greater than 90%.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link">
+                                        PMID:32735817
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We added 680C91 to developing embryos at stage 20, and it clearly blocked pigmentation in both the eyes and chromatophores, with animals developing normally otherwise.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043473" target="_blank" class="term-link">
+                                    GO:0043473
+                                </a>
+                            </span>
+                            <span class="term-label">pigmentation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32735817
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Highly Efficient Knockout of a Squid Pigmentation Gene
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7G4RN94" data-a="GO:0043473" data-r="PMID:32735817" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. Crawford et al. (2020) showed that TDO knockout by CRISPR-Cas9 resulted in loss of pigmentation in D. pealeii embryos, with chromatophore and eye pigmentation eliminated. Ink sac melanin was unaffected, demonstrating TDO specifically contributes to ommochrome-based pigmentation. Ahuja et al. (2023) further showed in E. berryi that TDO knockout delays pigmentation and TDO+IDO double knockout produces complete albinism [PMID:37343558].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Pigmentation is the primary phenotype affected by TDO loss of function. The knockout phenotype directly demonstrates involvement in pigmentation. This is a core biological role for TDO in cephalopods, where ommochrome pigments color the chromatophores and retina.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link">
+                                        PMID:32735817
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">pigmentation is completely absent from the chromatophores and is minimal in the eyes which are light red</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37343558" target="_blank" class="term-link">
+                                        PMID:37343558
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The knockout of tdo in D. pealeii completely inhibited pigmentation but had little to no effect in E. berryi.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TDO catalyzes the oxidative cleavage of L-tryptophan to N-formylkynurenine, the first committed step in the kynurenine pathway and ommochrome biosynthesis in D. pealeii. CRISPR-Cas9 knockout eliminated ommochrome pigmentation in both eyes and chromatophores with &gt;90% efficiency, and pharmacological inhibition with 680C91 confirmed the enzyme is required. D. pealeii lacks an IDO ortholog, making TDO the sole enzyme for this reaction. TDO is a heme-dependent dioxygenase that binds one heme group per subunit.</h3>
+                <span class="vote-buttons" data-g="A0A7G4RN94" data-a="FUNCTION: TDO catalyzes the oxidative cleavage of L-tryptoph..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004833" target="_blank" class="term-link">
+                            L-tryptophan 2,3-dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006727" target="_blank" class="term-link">
+                                ommochrome biosynthetic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                L-tryptophan catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link">
+                                PMID:32735817
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Tryptophan, 2,3 Dioxygenase (TDO) catalyzes the first committed step in ommochrome biosynthesis, converting Tryptophan to N-Formylkyneurenine</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link">
+                                PMID:32735817
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Knocking out TDO in squid embryos efficiently eliminated pigmentation</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32735817" target="_blank" class="term-link">
+                            PMID:32735817
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Highly Efficient Knockout of a Squid Pigmentation Gene</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TDO was selected as a knockout target because ommochromes pigment cephalopod eyes and chromatophores, and TDO catalyzes the first committed step in their biosynthesis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A single TDO gene was identified in the D. pealeii genome, spanning 13 exons over 120 kb. Phylogenetic analysis confirmed the gene as a bona fide TDO distinct from IDO.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In situ hybridization showed TDO expression in chromatophore precursors on arms and mantle, and in eyes; RNAseq confirmed highest expression in retina and chromatophore layer of skin.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TDO-selective inhibitor 680C91 completely blocked pigmentation in both eyes and chromatophores, with animals developing normally otherwise.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CRISPR-Cas9 knockout with two sgRNAs targeting exons 1 and 2 eliminated pigmentation with &gt;90% disruption efficiency. Ink sac melanin was unaffected, confirming specificity for the ommochrome pathway.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">This was the first gene knockout achieved in any cephalopod.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37343558" target="_blank" class="term-link">
+                            PMID:37343558
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Creation of an albino squid line by CRISPR-Cas9 and its application for in vivo functional imaging of neural activity</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In E. berryi, TDO knockout alone did not eliminate pigmentation despite &gt;90% disruption efficiency, due to compensation by IDO. D. pealeii genome lacks IDO orthologs, explaining why TDO knockout alone is sufficient in that species.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">E. berryi homozygous TDO knockout showed slightly delayed pigmentation during development. TDO+IDO double knockout produced complete albinism.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TDO expression in E. berryi is approximately 20-fold higher than IDO in stage 24 embryos. TDO is expressed in eyes and chromatophores, similar to D. pealeii.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Albino E. berryi enabled the first in vivo calcium imaging of neural activity in a cephalopod using two-photon microscopy.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does D. pealeii TDO have any role in tryptophan catabolism beyond ommochrome biosynthesis (e.g. kynurenine pathway metabolites for immune or neural signaling)?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Rosenthal JJC, Albertin CB</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A7G4RN94" data-a="Q: Does D. pealeii TDO have any role in tryptophan ca..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the consequences of partial TDO loss on chromatophore function and dynamic color change in adult squid?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Crawford K</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A7G4RN94" data-a="Q: What are the consequences of partial TDO loss on c..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is there any post-translational regulation of TDO activity in cephalopods, as seen with substrate activation in mammalian TDO?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A7G4RN94" data-a="Q: Is there any post-translational regulation of TDO ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Characterize the enzymatic kinetics of recombinant D. pealeii TDO, including heme stoichiometry and substrate specificity, to confirm in vitro activity.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: D. pealeii TDO has similar catalytic properties to mammalian TDO, with strict specificity for L-tryptophan over other indoleamine substrates.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biochemistry</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A7G4RN94" data-a="EXPERIMENT: Characterize the enzymatic kinetics of recombinant..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use single-cell RNA-seq to map TDO expression across chromatophore subtypes and developmental stages in D. pealeii embryos.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TDO expression is restricted to ommochrome-producing cell types (chromatophores and retinal pigment cells) and onset correlates with pigmentation timing.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: transcriptomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A7G4RN94" data-a="EXPERIMENT: Use single-cell RNA-seq to map TDO expression acro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure kynurenine pathway metabolite levels (N-formylkynurenine, kynurenine, 3-hydroxykynurenine, xanthurenic acid) in TDO knockout vs wildtype D. pealeii embryos by LC-MS/MS.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TDO knockout eliminates kynurenine pathway flux entirely in D. pealeii due to the absence of IDO, unlike in E. berryi where IDO provides compensation.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: metabolomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A7G4RN94" data-a="EXPERIMENT: Measure kynurenine pathway metabolite levels (N-fo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test whether partial TDO knockout in adult squid affects chromatophore expansion dynamics and camouflage behavior using video analysis.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Reduced ommochrome content from partial TDO loss impairs chromatophore opacity and dynamic range of color change.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: behavioral/physiological</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A7G4RN94" data-a="EXPERIMENT: Test whether partial TDO knockout in adult squid a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A7G4RN94
+gene_symbol: TDO
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:1051067
+  label: Doryteuthis pealeii
+description: &gt;-
+  Tryptophan 2,3-dioxygenase (TDO) is a heme-dependent oxidoreductase that catalyzes
+  the first committed step in ommochrome pigment biosynthesis in D. pealeii, converting
+  L-tryptophan to N-formylkynurenine via oxidative cleavage of the indole ring. TDO
+  is expressed in the retina and chromatophore layer of the skin, the two principal
+  ommochrome-pigmented tissues. Crawford et al. (2020) demonstrated that CRISPR-Cas9
+  knockout of TDO in D. pealeii embryos efficiently eliminated pigmentation in both
+  eyes and chromatophores with &gt;90% disruption efficiency, while ink sac melanin
+  pigmentation was unaffected. This was the first gene knockout achieved in any
+  cephalopod. TDO inhibition with 680C91 also completely blocked pigmentation,
+  confirming the enzyme is required for ommochrome synthesis. Notably, D. pealeii
+  lacks an IDO (indoleamine 2,3-dioxygenase) ortholog, unlike Euprymna berryi where
+  IDO can compensate for TDO loss. TDO belongs to the PANTHER family PTHR10138
+  (Tryptophan 2,3-dioxygenase), is predicted to function as a homotetramer (dimer
+  of dimers), and contains a single heme cofactor per subunit. The gene spans 13
+  exons over 120 kb of genomic DNA.
+existing_annotations:
+- term:
+    id: GO:0004833
+    label: L-tryptophan 2,3-dioxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      L-tryptophan 2,3-dioxygenase activity (EC 1.13.11.11) is the defining enzymatic
+      function of TDO. This IEA annotation is based on combined automated methods
+      (InterPro, ARBA, PANTHER, UniRule). In D. pealeii, Crawford et al. (2020)
+      demonstrated that CRISPR-Cas9 knockout of TDO eliminated ommochrome pigmentation,
+      and pharmacological inhibition with 680C91 (a TDO-selective inhibitor) blocked
+      pigmentation in both eyes and chromatophores [PMID:32735817]. The UniProt entry
+      confirms TDO catalyzes L-tryptophan + O2 = N-formylkynurenine (Rhea:RHEA:24536).
+      Phylogenetic analysis confirmed this gene as a bona fide TDO (distinct from IDO)
+      [PMID:32735817].
+    action: ACCEPT
+    reason: &gt;-
+      This is the core enzymatic function of TDO, supported by sequence homology,
+      PANTHER family assignment (PTHR10138), HAMAP rule MF_03020, and functional
+      knockout data in this species showing loss of ommochrome pigmentation.
+    supported_by:
+      - reference_id: PMID:32735817
+        supporting_text: &gt;-
+          In invertebrates, Tryptophan, 2,3 Dioxygenase (TDO) catalyzes the first
+          committed step in ommochrome biosynthesis, converting Tryptophan to
+          N-Formylkyneurenine.
+      - reference_id: PMID:32735817
+        supporting_text: &gt;-
+          A phylogenetic comparison of this sequence with diverse TDOs, and
+          indolamine-2,3-dioxygenases (a different enzyme that catalyzes the same
+          reaction), supported its identity as TDO.
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      L-tryptophan catabolic process is annotated via ARBA machine learning. TDO
+      catalyzes the oxidative cleavage of L-tryptophan as the first step in the
+      kynurenine pathway. Crawford et al. (2020) showed that TDO knockout eliminates
+      ommochrome biosynthesis from tryptophan in D. pealeii [PMID:32735817]. This
+      term is correct but could be more specific. The UniProt record lists both
+      GO:0019441 (L-tryptophan catabolic process to kynurenine) and GO:0019442
+      (L-tryptophan catabolic process to acetyl-CoA), and GO:0019441 more precisely
+      captures TDO function as it catalyzes the first step to kynurenine specifically.
+    action: ACCEPT
+    reason: &gt;-
+      L-tryptophan catabolic process correctly describes the biological process TDO
+      participates in. While a more specific term like L-tryptophan catabolic process
+      to kynurenine (GO:0019441) would be ideal, that term is now obsolete in GO.
+      GO:0006569 is the most appropriate active term for this function. Crawford et al.
+      (2020) showed TDO knockout eliminates the tryptophan-to-ommochrome pathway in
+      D. pealeii [PMID:32735817].
+    supported_by:
+      - reference_id: PMID:32735817
+        supporting_text: &gt;-
+          TDO catalyzes the first committed step in ommochrome biosynthesis, converting
+          Tryptophan to N-Formylkyneurenine.
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Heme binding is annotated by combined IEA methods (InterPro, ARBA, PANTHER,
+      UniRule). The UniProt record explicitly states: &#34;Binds 1 heme group per subunit&#34;
+      (HAMAP-Rule:MF_03020), and lists heme as a cofactor (ChEBI:30413). TDO is a
+      heme-dependent dioxygenase, and heme is essential for its catalytic mechanism.
+      This is well-established for TDO family members across all species.
+    action: ACCEPT
+    reason: &gt;-
+      Heme binding is integral to TDO catalytic function. The enzyme requires bound
+      heme to catalyze oxidative cleavage of the tryptophan indole ring. This is
+      confirmed by UniProt cofactor annotation and is a defining feature of the
+      TDO family (HAMAP MF_03020, Pfam PF03301 Trp_dioxygenase).
+    supported_by:
+      - reference_id: PMID:32735817
+        supporting_text: &gt;-
+          we determined whether a TDO-selective inhibitor
+          (680C91) impeded pigmentation in developing embryos.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Metal ion binding is annotated via InterPro2GO mapping (IPR037217). This is
+      correct as TDO binds iron through its heme prosthetic group. However, this
+      term is very generic and redundant with the more informative heme binding
+      (GO:0020037) annotation already present, which more precisely captures the
+      nature of the metal cofactor interaction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While technically correct (TDO binds iron via heme), GO:0046872 (metal ion
+      binding) is too generic to be informative. The heme binding annotation
+      (GO:0020037) already captures this function at a more appropriate level of
+      specificity. The metal ion binding term does not add useful functional
+      information beyond what heme binding conveys.
+- term:
+    id: GO:0006727
+    label: ommochrome biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:32735817
+  review:
+    summary: &gt;-
+      NEW annotation. Crawford et al. (2020) demonstrated by CRISPR-Cas9 knockout
+      that TDO is required for ommochrome biosynthesis in D. pealeii. TDO knockout
+      eliminated pigmentation in both chromatophores and eyes, which contain ommochrome
+      pigments. The TDO-selective inhibitor 680C91 also blocked pigmentation.
+      In situ hybridization confirmed TDO expression in chromatophore precursors
+      and eyes. This is the most biologically meaningful annotation for this gene
+      in cephalopods, as ommochrome pigmentation is the primary downstream
+      biological process served by TDO in this organism.
+    action: NEW
+    reason: &gt;-
+      Ommochrome biosynthesis is the key biological process requiring TDO in
+      cephalopods. CRISPR knockout and pharmacological inhibition both demonstrate
+      TDO is essential for ommochrome production. This annotation is not present
+      in the existing GOA set but is strongly supported by direct experimental
+      evidence in this species.
+    supported_by:
+      - reference_id: PMID:32735817
+        supporting_text: &gt;-
+          In cephalopods, the pigments in the eyes
+          and chromatophores are ommochromes, a derivative of tryptophan
+      - reference_id: PMID:32735817
+        supporting_text: &gt;-
+          Knocking out TDO in squid embryos efficiently eliminated pigmentation. By
+          precisely timing CRISPR-Cas9 delivery during early development, the degree
+          of pigmentation could be finely controlled. Genotyping revealed knockout
+          efficiencies routinely greater than 90%.
+      - reference_id: PMID:32735817
+        supporting_text: &gt;-
+          We added 680C91 to developing embryos at stage 20, and it clearly blocked
+          pigmentation in both the eyes and chromatophores, with animals developing
+          normally otherwise.
+- term:
+    id: GO:0043473
+    label: pigmentation
+  evidence_type: IMP
+  original_reference_id: PMID:32735817
+  review:
+    summary: &gt;-
+      NEW annotation. Crawford et al. (2020) showed that TDO knockout by CRISPR-Cas9
+      resulted in loss of pigmentation in D. pealeii embryos, with chromatophore and
+      eye pigmentation eliminated. Ink sac melanin was unaffected, demonstrating TDO
+      specifically contributes to ommochrome-based pigmentation. Ahuja et al. (2023)
+      further showed in E. berryi that TDO knockout delays pigmentation and TDO+IDO
+      double knockout produces complete albinism [PMID:37343558].
+    action: NEW
+    reason: &gt;-
+      Pigmentation is the primary phenotype affected by TDO loss of function. The
+      knockout phenotype directly demonstrates involvement in pigmentation. This
+      is a core biological role for TDO in cephalopods, where ommochrome pigments
+      color the chromatophores and retina.
+    supported_by:
+      - reference_id: PMID:32735817
+        supporting_text: &gt;-
+          pigmentation is completely absent from the chromatophores and is
+          minimal in the eyes which are light red
+      - reference_id: PMID:37343558
+        supporting_text: &gt;-
+          The knockout of tdo in D. pealeii completely inhibited pigmentation but had
+          little to no effect in E. berryi.
+core_functions:
+- description: &gt;-
+    TDO catalyzes the oxidative cleavage of L-tryptophan to N-formylkynurenine,
+    the first committed step in the kynurenine pathway and ommochrome biosynthesis
+    in D. pealeii. CRISPR-Cas9 knockout eliminated ommochrome pigmentation in both
+    eyes and chromatophores with &gt;90% efficiency, and pharmacological inhibition
+    with 680C91 confirmed the enzyme is required. D. pealeii lacks an IDO ortholog,
+    making TDO the sole enzyme for this reaction. TDO is a heme-dependent dioxygenase
+    that binds one heme group per subunit.
+  molecular_function:
+    id: GO:0004833
+    label: L-tryptophan 2,3-dioxygenase activity
+  directly_involved_in:
+  - id: GO:0006727
+    label: ommochrome biosynthetic process
+  - id: GO:0006569
+    label: L-tryptophan catabolic process
+  supported_by:
+    - reference_id: PMID:32735817
+      supporting_text: &gt;-
+        Tryptophan, 2,3 Dioxygenase (TDO) catalyzes
+        the first committed step in ommochrome biosynthesis, converting Tryptophan to
+        N-Formylkyneurenine
+    - reference_id: PMID:32735817
+      supporting_text: &gt;-
+        Knocking out TDO in squid embryos efficiently eliminated pigmentation
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:32735817
+  title: Highly Efficient Knockout of a Squid Pigmentation Gene
+  findings:
+    - statement: &gt;-
+        TDO was selected as a knockout target because ommochromes pigment cephalopod
+        eyes and chromatophores, and TDO catalyzes the first committed step in their
+        biosynthesis.
+    - statement: &gt;-
+        A single TDO gene was identified in the D. pealeii genome, spanning 13 exons
+        over 120 kb. Phylogenetic analysis confirmed the gene as a bona fide TDO
+        distinct from IDO.
+    - statement: &gt;-
+        In situ hybridization showed TDO expression in chromatophore precursors on
+        arms and mantle, and in eyes; RNAseq confirmed highest expression in retina
+        and chromatophore layer of skin.
+    - statement: &gt;-
+        TDO-selective inhibitor 680C91 completely blocked pigmentation in both eyes
+        and chromatophores, with animals developing normally otherwise.
+    - statement: &gt;-
+        CRISPR-Cas9 knockout with two sgRNAs targeting exons 1 and 2 eliminated
+        pigmentation with &gt;90% disruption efficiency. Ink sac melanin was unaffected,
+        confirming specificity for the ommochrome pathway.
+    - statement: &gt;-
+        This was the first gene knockout achieved in any cephalopod.
+- id: PMID:37343558
+  title: Creation of an albino squid line by CRISPR-Cas9 and its application for
+    in vivo functional imaging of neural activity
+  findings:
+    - statement: &gt;-
+        In E. berryi, TDO knockout alone did not eliminate pigmentation despite &gt;90%
+        disruption efficiency, due to compensation by IDO. D. pealeii genome lacks
+        IDO orthologs, explaining why TDO knockout alone is sufficient in that species.
+    - statement: &gt;-
+        E. berryi homozygous TDO knockout showed slightly delayed pigmentation during
+        development. TDO+IDO double knockout produced complete albinism.
+    - statement: &gt;-
+        TDO expression in E. berryi is approximately 20-fold higher than IDO in
+        stage 24 embryos. TDO is expressed in eyes and chromatophores, similar to
+        D. pealeii.
+    - statement: &gt;-
+        Albino E. berryi enabled the first in vivo calcium imaging of neural activity
+        in a cephalopod using two-photon microscopy.
+suggested_questions:
+  - question: &gt;-
+      Does D. pealeii TDO have any role in tryptophan catabolism beyond ommochrome
+      biosynthesis (e.g. kynurenine pathway metabolites for immune or neural signaling)?
+    experts:
+      - Rosenthal JJC
+      - Albertin CB
+  - question: &gt;-
+      What are the consequences of partial TDO loss on chromatophore function and
+      dynamic color change in adult squid?
+    experts:
+      - Crawford K
+  - question: &gt;-
+      Is there any post-translational regulation of TDO activity in cephalopods, as
+      seen with substrate activation in mammalian TDO?
+    experts: []
+suggested_experiments:
+  - description: &gt;-
+      Characterize the enzymatic kinetics of recombinant D. pealeii TDO, including
+      heme stoichiometry and substrate specificity, to confirm in vitro activity.
+    experiment_type: biochemistry
+    hypothesis: &gt;-
+      D. pealeii TDO has similar catalytic properties to mammalian TDO, with
+      strict specificity for L-tryptophan over other indoleamine substrates.
+  - description: &gt;-
+      Use single-cell RNA-seq to map TDO expression across chromatophore subtypes
+      and developmental stages in D. pealeii embryos.
+    experiment_type: transcriptomics
+    hypothesis: &gt;-
+      TDO expression is restricted to ommochrome-producing cell types (chromatophores
+      and retinal pigment cells) and onset correlates with pigmentation timing.
+  - description: &gt;-
+      Measure kynurenine pathway metabolite levels (N-formylkynurenine, kynurenine,
+      3-hydroxykynurenine, xanthurenic acid) in TDO knockout vs wildtype D. pealeii
+      embryos by LC-MS/MS.
+    experiment_type: metabolomics
+    hypothesis: &gt;-
+      TDO knockout eliminates kynurenine pathway flux entirely in D. pealeii due to
+      the absence of IDO, unlike in E. berryi where IDO provides compensation.
+  - description: &gt;-
+      Test whether partial TDO knockout in adult squid affects chromatophore
+      expansion dynamics and camouflage behavior using video analysis.
+    experiment_type: behavioral/physiological
+    hypothesis: &gt;-
+      Reduced ommochrome content from partial TDO loss impairs chromatophore
+      opacity and dynamic range of color change.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
