@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 import yaml
 
+from ai_gene_review.validation import validate_gene_review
 from ai_gene_review.validation.goa_validator import GOAValidator, GOAAnnotation
 
 
@@ -785,6 +786,101 @@ UniProtKB	Q12345	TEST		GO:0005515	protein binding	MF	ECO:0000353	IPI	PMID:12345	
     # Clean up
     yaml_path.unlink()
     goa_path.unlink()
+
+
+def test_new_action_with_existing_go_id_different_source_fails():
+    """NEW is invalid if the GO term already exists in GOA with another source."""
+    validator = GOAValidator()
+
+    goa_content = """GENE PRODUCT DB	GENE PRODUCT ID	SYMBOL	QUALIFIER	GO TERM	GO NAME	GO ASPECT	ECO ID	GO EVIDENCE CODE	REFERENCE	WITH/FROM	TAXON ID	TAXON NAME	ASSIGNED BY	GENE NAME	DATE
+UniProtKB	Q12345	TEST	involved_in	GO:0050907	detection of chemical stimulus involved in sensory perception	BP	ECO:0000318	IBA	GO_REF:0000033	PTN000123456	NCBITaxon:9606	Homo sapiens	GO_Central	Test protein	20260428"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as goa_file:
+        goa_file.write(goa_content)
+        goa_path = Path(goa_file.name)
+
+    yaml_data = {
+        "id": "Q12345",
+        "gene_symbol": "TEST",
+        "existing_annotations": [
+            {
+                "term": {
+                    "id": "GO:0050907",
+                    "label": "detection of chemical stimulus involved in sensory perception",
+                },
+                "evidence_type": "IDA",
+                "original_reference_id": "PMID:99999",
+                "review": {
+                    "summary": "Incorrectly marked as novel despite an existing TreeGrafter/IBA annotation",
+                    "action": "NEW",
+                },
+            },
+        ],
+    }
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as yaml_file:
+        yaml.dump(yaml_data, yaml_file)
+        yaml_path = Path(yaml_file.name)
+
+    result = validator.validate_against_goa(yaml_path, goa_path)
+
+    assert not result.is_valid
+    assert result.error_message is not None
+    assert "action=NEW exists in GOA: GO:0050907" in result.error_message
+    assert "IBA, GO_REF:0000033" in result.error_message
+
+    yaml_path.unlink()
+    goa_path.unlink()
+
+
+def test_validate_gene_review_blocks_new_action_existing_in_goa():
+    """Integrated best-practices validation should hard-fail NEW-vs-GOA conflicts."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        gene_dir = Path(tmpdir)
+        yaml_path = gene_dir / "TEST-ai-review.yaml"
+        goa_path = gene_dir / "TEST-goa.tsv"
+
+        goa_path.write_text(
+            "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+            "UniProtKB\tQ12345\tTEST\tinvolved_in\tGO:0050907\tdetection of chemical stimulus involved in sensory perception\tBP\tECO:0000318\tIBA\tGO_REF:0000033\tPTN000123456\tNCBITaxon:9606\tHomo sapiens\tGO_Central\tTest protein\t20260428\n"
+        )
+        yaml_path.write_text(
+            yaml.dump(
+                {
+                    "id": "Q12345",
+                    "gene_symbol": "TEST",
+                    "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+                    "description": "Test gene for validating NEW action conflicts",
+                    "references": [
+                        {"id": "PMID:99999", "title": "Novel experimental paper"},
+                        {"id": "GO_REF:0000033", "title": "TreeGrafter annotations"},
+                    ],
+                    "existing_annotations": [
+                        {
+                            "term": {
+                                "id": "GO:0050907",
+                                "label": "detection of chemical stimulus involved in sensory perception",
+                            },
+                            "evidence_type": "IDA",
+                            "original_reference_id": "PMID:99999",
+                            "review": {
+                                "summary": "Incorrectly marked as novel despite existing GOA support",
+                                "action": "NEW",
+                            },
+                        }
+                    ],
+                }
+            )
+        )
+
+        report = validate_gene_review(yaml_path)
+
+        assert not report.is_valid
+        assert report.error_count >= 1
+        assert any(
+            issue.check_type == "new_annotation_exists_in_goa"
+            for issue in report.issues
+        )
 
 
 def test_seed_with_isoform_annotation():
