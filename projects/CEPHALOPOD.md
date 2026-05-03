@@ -162,24 +162,24 @@ genes/
 
 ## Completed Reviews (16 genes, 7 species)
 
-| Gene | Species | UniProt | Annotations | Highlights |
-|------|---------|---------|-------------|------------|
-| DDO | OCTVU | A0A7E6FSU6 | 13 (4 exp) | D-amino-acid oxidase IEA corrected; D-Asp in retina at 2.30 umol/g |
-| AP180 | DORPE | Q9U6M6 | 24 (4 exp) | Spurious ARBA "locomotion" removed; IDR with 12-19 clathrin motifs |
-| cpx | DORPE | Q95PA1 | 8 + 2 new | Dual clamp/activator; syntaxin binding (IPI) from crystal structure |
-| CTR1 | OCTVU | Q7YW31 | 10 + 2 new | "Vasopressin receptor" corrected; gastric ganglion expression |
-| OPR | OCTVU | Q5W9T5 | 9 + 2 new | Antidiuretic function via hemolymph osmolarity |
-| FMRFa | SEPOF | P91889 | 2 + 4 new | Differential oviduct effects; immune regulation (NO inhibition) |
-| khc | DORPE | P21613 | 18 + 3 new | 8nm step/ATP (Vale 1985); tissue-specific velocities via RNA editing |
-| RHO | SEPOF | O16005 | 7 + 5 new | GO:0030265 PLC-activating opsin signaling; dermal photoreception |
-| OCBIM_22006518mg | OCTBM | A0A0L8FVQ9 | 7 + 3 new | CRT1: contact chemosensation, feeding, maternal behavior |
-| sympp | STHOU | C6KYS2 | 1 + 3 new | Novel bioluminescence; K+ > Rb+ > Na+ cation specificity |
-| CTR2 | OCTVU | Q5WA50 | 11 + 2 new | Peripheral expression (branchia, vas deferens); positions 2-5 selectivity |
-| OCTS1 | OCTVU | P27013 | 2 + 3 new | GST over-annotated (1/700 kcat); PDB 5B7C; colloidal gel assembly |
-| TDO | DORPE | A0A7G4RN94 | 4 + 2 new | First CRISPR target; *D. pealeii* lacks IDO unlike *E. berryi* |
-| OCBIM_22008529mg | OCTBM | A0A0L8FU48 | 0 + 9 new | SLC6A4/SERT: all NEW; social behavior (MDMA, Edsinger 2018) |
-| Q6WDN4 | EUPSC | Q6WDN4 | 0 + 6 new | Reflectin: 380 mg/mL in platelets; condensate scaffold activity |
-| ADAR2 | DOROP | C1JAR3 | 10 + 3 new | tRNA deaminase REMOVED; axon cytoplasm; 37 editing sites in motor domain |
+| Gene | Species | UniProt | Highlights |
+|------|---------|---------|------------|
+| DDO | OCTVU | A0A7E6FSU6 | D-amino-acid oxidase IEA corrected; D-Asp in retina at 2.30 umol/g |
+| AP180 | DORPE | Q9U6M6 | Spurious ARBA "locomotion" removed; IDR with 12-19 clathrin motifs |
+| cpx | DORPE | Q95PA1 | Dual clamp/activator; syntaxin binding (IPI) from crystal structure |
+| CTR1 | OCTVU | Q7YW31 | "Vasopressin receptor" corrected; gastric ganglion expression |
+| OPR | OCTVU | Q5W9T5 | Antidiuretic function via hemolymph osmolarity |
+| FMRFa | SEPOF | P91889 | Differential oviduct effects; immune regulation (NO inhibition) |
+| khc | DORPE | P21613 | 8nm step/ATP (Vale 1985); tissue-specific velocities via RNA editing |
+| RHO | SEPOF | O16005 | GO:0030265 PLC-activating opsin signaling; dermal photoreception |
+| OCBIM_22006518mg | OCTBM | A0A0L8FVQ9 | CRT1: contact chemosensation, feeding, maternal behavior |
+| sympp | STHOU | C6KYS2 | Novel bioluminescence; K+ > Rb+ > Na+ cation specificity |
+| CTR2 | OCTVU | Q5WA50 | Peripheral expression (branchia, vas deferens); positions 2-5 selectivity |
+| OCTS1 | OCTVU | P27013 | GST over-annotated (1/700 kcat); PDB 5B7C; colloidal gel assembly |
+| TDO | DORPE | A0A7G4RN94 | First CRISPR target; *D. pealeii* lacks IDO unlike *E. berryi* |
+| OCBIM_22008529mg | OCTBM | A0A0L8FU48 | SLC6A4/SERT: social behavior (MDMA, Edsinger 2018) |
+| Q6WDN4 | EUPSC | Q6WDN4 | Reflectin: 380 mg/mL in platelets; condensate scaffold activity |
+| ADAR2 | DOROP | C1JAR3 | tRNA deaminase removed; axon cytoplasm; 37 editing sites in motor domain |
 
 ## Surprises and Lessons from Deep Research
 
@@ -217,7 +217,7 @@ genes/
 
 7. **Annotation deserts are real**: FMRFa (2 annotations), SLC6A4 (0), reflectin (0) — all
    well-characterized genes with extensive literature but near-zero GO coverage. The project
-   proposed 19 new annotations across these 3 genes alone.
+   proposed 19 annotations across these 3 genes alone.
 
 ### Deep research integration insights
 
