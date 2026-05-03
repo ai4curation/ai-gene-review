@@ -172,7 +172,7 @@ genes/
 | FMRFa | SEPOF | P91889 | Differential oviduct effects; immune regulation (NO inhibition) |
 | khc | DORPE | P21613 | 8nm step/ATP (Vale 1985); tissue-specific velocities via RNA editing |
 | RHO | SEPOF | O16005 | GO:0030265 PLC-activating opsin signaling; dermal photoreception |
-| OCBIM_22006518mg | OCTBM | A0A0L8FVQ9 | CRT1: contact chemosensation, feeding, maternal behavior |
+| CRT1 | OCTBM | A0A0L8FVQ9 | CRT1: contact chemosensation, feeding, maternal behavior |
 | sympp | STHOU | C6KYS2 | Novel bioluminescence; K+ > Rb+ > Na+ cation specificity |
 | CTR2 | OCTVU | Q5WA50 | Peripheral expression (branchia, vas deferens); positions 2-5 selectivity |
 | OCTS1 | OCTVU | P27013 | GST over-annotated (1/700 kcat); PDB 5B7C; colloidal gel assembly |
