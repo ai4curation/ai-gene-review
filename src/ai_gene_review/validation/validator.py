@@ -758,9 +758,12 @@ def check_best_practices_rules(
         if not goa_result.is_valid:
             if goa_result.error_message:
                 report.add_issue(
-                    ValidationSeverity.WARNING,
+                    ValidationSeverity.ERROR,
                     f"GOA validation: {goa_result.error_message}",
                     path="existing_annotations",
+                    suggestion="Use a non-NEW review action for annotations already present in GOA, or remove the duplicate NEW entry",
+                    validation_category="GOAValidator",
+                    check_type="new_annotation_exists_in_goa",
                 )
 
             if goa_result.missing_in_yaml:

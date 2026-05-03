@@ -247,12 +247,14 @@ class GOAValidator:
         # Key: (go_id, evidence_code, reference, negated)
         goa_tuples = set()
         goa_by_tuple: Dict[Tuple[str, str, str, bool], GOAAnnotation] = {}
+        goa_by_go_id: Dict[str, List[GOAAnnotation]] = {}
         for ann in goa_annotations:
             qualifier = getattr(ann, "qualifier", "")
             is_negated = self._qualifier_is_negated(qualifier)
             tuple_key = (ann.go_id, ann.evidence_code, ann.reference, is_negated)
             goa_tuples.add(tuple_key)
             goa_by_tuple[tuple_key] = ann
+            goa_by_go_id.setdefault(ann.go_id, []).append(ann)
 
         # Check each YAML annotation against GOA
         for yaml_ann in yaml_annotations:
@@ -270,16 +272,26 @@ class GOAValidator:
                 term = yaml_ann.get("term", {})
                 if isinstance(term, dict):
                     go_id = term.get("id", "")
-                    evidence_type = yaml_ann.get("evidence_type", "")
-                    original_ref = yaml_ann.get("original_reference_id", "")
 
-                    # Check if this annotation exists in GOA
-                    negated = yaml_ann.get("negated", False)
-                    yaml_tuple = (go_id, evidence_type, original_ref, negated)
-                    if yaml_tuple in goa_tuples:
+                    # Check if this GO term exists in GOA under any source.
+                    if go_id in goa_by_go_id:
+                        sources = sorted(
+                            {
+                                f"{ann.evidence_code}, {ann.reference}"
+                                for ann in goa_by_go_id[go_id]
+                            }
+                        )
+                        source_summary = "; ".join(sources[:3])
+                        if len(sources) > 3:
+                            source_summary += f"; ... and {len(sources) - 3} more"
+
                         # This is an error - NEW annotation should not exist in GOA
+                        # under any evidence/reference source, including TreeGrafter/IBA.
                         result.is_valid = False
-                        result.error_message = f"Annotation with action=NEW exists in GOA: {go_id} ({evidence_type}, {original_ref})"
+                        result.error_message = (
+                            f"Annotation with action=NEW exists in GOA: {go_id} "
+                            f"(GOA source(s): {source_summary})"
+                        )
                 # Skip further validation for NEW annotations
                 continue
 
