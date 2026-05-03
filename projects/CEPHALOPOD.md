@@ -118,35 +118,7 @@ Only 11 gene products across 7 species have any experimental GO evidence:
 - **Key papers**: Francis et al. 2017 ([DOI](https://doi.org/10.7717/peerj.3633)); Galeazzo et al. 2019 ([DOI](https://doi.org/10.1111/php.13106))
 - **Why review**: Novel luciferase unrelated to any other bioluminescence system
 
-### Tier 2: Strong literature but no/few existing GO annotations
-
-#### 6. ADAR1/ADAR2 — RNA editing enzymes — *Doryteuthis pealeii*
-- **Function**: Adenosine deaminase acting on RNA; recodes >60% of neural transcripts
-- **Key papers**: Vallecillo-Viejo et al. 2023 (novel sqADAR1 domain, [DOI](https://doi.org/10.3389/fgeed.2023.1181713)); Voss & Rosenthal 2023 ([DOI](https://doi.org/10.1093/bfgp/elad034))
-- **Why review**: Cephalopod-defining innovation; unprecedented scale of protein recoding
-
-#### 7. Reflectin — *Doryteuthis spp., Euprymna scolopes*
-- **Function**: Structural protein in iridophores; phosphorylation-driven Bragg reflectance
-- **Key papers**: 29 papers; Naughton et al. 2016 ([DOI](https://doi.org/10.1002/adma.201601666)); Chatterjee et al. 2018 ([DOI](https://doi.org/10.1088/1748-3190/aab804)); origin traced to *V. fischeri* transposon (Crookes et al. 2017, [DOI](https://doi.org/10.1016/j.cub.2017.07.061))
-- **Why review**: Cephalopod-specific; no homologs in other animals; key to adaptive camouflage
-
-#### 8. SLC6A4/SERT (serotonin transporter) — *Octopus bimaculoides*
-- **Function**: Serotonin reuptake transporter; mediates prosocial behavior
-- **Key papers**: Edsinger & Dölen 2018 (MDMA-induced social behavior, [DOI](https://doi.org/10.1016/j.cub.2018.07.061))
-- **Why review**: Conserved MDMA binding site; remarkable behavioral pharmacology study
-
-#### 9. TDO/IDO — *Euprymna berryi, Doryteuthis pealeii*
-- **Function**: Tryptophan/indoleamine 2,3-dioxygenases; ommochrome pigment biosynthesis
-- **Key papers**: Ahuja et al. 2023 (CRISPR albino line, [DOI](https://doi.org/10.1016/j.cub.2023.05.066)); Crawford et al. 2020 (first squid knockout, [DOI](https://doi.org/10.1016/j.cub.2020.06.099))
-- **Why review**: First CRISPR knockouts in any cephalopod; reverse genetics proof of function
-
-#### 10. S-crystallins — *Multiple species*
-- **UniProt**: P18425/P18426 (*N. sloanii*), P27009-P27012 (*E. dofleini*), P27013-P27015 (*O. vulgaris*)
-- **Function**: Lens structural proteins evolved from GST; 24+ family members
-- **Key papers**: Tomarev et al. 1995 ([DOI](https://doi.org/10.1007/BF00173186))
-- **Why review**: Textbook enzyme crystallin co-option
-
-### Tier 3: Additional candidates with good literature (not yet reviewed)
+### Future candidates (not yet reviewed)
 
 | Gene | Species | UniProt (mnemonic) | Key Finding | PMID |
 |------|---------|---------|-------------|------|
