@@ -16,6 +16,8 @@ import yaml
 from ai_gene_review.tools.report_pn_mapping_coverage import LEVELS
 from ai_gene_review.tools.report_pn_projected_annotations import (
     DEFAULT_GOA_CACHE_DIR,
+    DEFAULT_GOA_DUCKDB,
+    DEFAULT_WORKBOOK_SHEET,
     derive_representative_genes,
     load_mapping_specs as load_projection_mapping_specs,
     load_workbook_rows as load_projection_workbook_rows,
@@ -55,12 +57,12 @@ README_ROWS = [
     (
         "Summary tab",
         "Count summary by mapping YAML file, including the number of curated mappings "
-        "and explicit unmapped subjects.",
+        "and unmapped subjects.",
     ),
     (
         "Per-file tabs",
         "Each additional sheet corresponds to one mapping YAML file and includes both "
-        "mapped and explicit_unmapped rows for that file.",
+        "mapped and unmapped rows for that file.",
     ),
     (
         "Projection tabs",
@@ -80,7 +82,9 @@ README_ROWS = [
         "mapping_scope",
         "exact means the PN code and GO term are treated as semantically equivalent. "
         "ok_for_propagation_to_go means the PN code is not identical to the GO term, "
-        "but genes in that PN bucket can reasonably propagate to the GO target.",
+        "but genes in that PN bucket can reasonably propagate to the GO target. "
+        "too_broad_to_propagate means the PN-to-GO relationship is real and worth "
+        "recording, but projecting it onto member genes would over-annotate them.",
     ),
     (
         "target_go_id / target_go_label",
@@ -117,9 +121,12 @@ README_ROWS = [
         "Projection status relative to local GOA. already_in_goa_exact means the exact "
         "GO term is already present. entailed_by_goa_closure means local GOA already "
         "contains a more specific descendant. more_specific_than_existing_goa means the "
-        "PN projection is more specific than an existing broader GOA term. new_to_goa "
-        "means no exact or closure-based support was found. no_local_goa means no local "
-        "or cached GOA was available for that gene during the export run.",
+        "PN projection is more specific than an existing broader GOA term. "
+        "supported_by_goa_regulation means GOA already contains regulation of the "
+        "projected process, so the projection may still be useful but should not be "
+        "treated as wholly novel. new_to_goa means no exact, closure-based, or "
+        "regulation-based support was found. no_local_goa means no GOA record was "
+        "available for that gene from the configured GOA source during the export run.",
     ),
 ]
 
@@ -150,13 +157,14 @@ class MappingRow:
 
 @dataclass(frozen=True)
 class UnmappedRow:
-    """Flat exported view of one explicit unmapped subject."""
+    """Flat exported view of one unmapped subject."""
 
     mapping_file: str
     mapping_set_id: str
     mapping_set_label: str
     subject_level: str
     subject_code: str
+    unmapped_status: str
     branch: str
     class_name: str
     group: str
@@ -254,6 +262,7 @@ def load_mapping_rows(mapping_dir: Path) -> tuple[list[MappingRow], list[Unmappe
                     mapping_set_label=mapping_set_label,
                     subject_level=_clean_value(entry.get("subject_level")),
                     subject_code=_clean_value(entry.get("subject_code")),
+                    unmapped_status=_clean_value(entry.get("unmapped_status")),
                     branch=split["branch"],
                     class_name=split["class"],
                     group=split["group"],
@@ -278,9 +287,10 @@ def _format_condition_tuples(conditions: tuple[tuple[str, str], ...]) -> str:
 def build_mapping_row_representative_lookup(
     mapping_dir: Path,
     workbook_path: Path,
+    sheet_name: str = DEFAULT_WORKBOOK_SHEET,
 ) -> dict[tuple[str, str, str, str, str], str]:
     """Derive example genes for mapping rows from matched workbook members."""
-    workbook_rows = load_projection_workbook_rows(workbook_path)
+    workbook_rows = load_projection_workbook_rows(workbook_path, sheet_name=sheet_name)
     mapping_specs = load_projection_mapping_specs(mapping_dir)
     representative_genes_by_spec = derive_representative_genes(workbook_rows, mapping_specs)
 
@@ -329,16 +339,19 @@ def build_projection_tables(
     mapping_dir: Path,
     workbook_path: Path,
     goa_root: Path,
+    sheet_name: str = DEFAULT_WORKBOOK_SHEET,
+    goa_duckdb: Path | None = None,
     fetch_missing_goa: bool = False,
     goa_cache_dir: Path | None = None,
 ) -> tuple[list[dict[str, str]], list[dict[str, str]], list[list[str]]]:
     """Build projection-derived tables for embedding in the XLSX export."""
-    workbook_rows = load_projection_workbook_rows(workbook_path)
+    workbook_rows = load_projection_workbook_rows(workbook_path, sheet_name=sheet_name)
     mapping_specs = load_projection_mapping_specs(mapping_dir)
     projected_rows = project_annotations(
         workbook_rows,
         mapping_specs,
         goa_root,
+        goa_duckdb=goa_duckdb,
         fetch_missing_goa=fetch_missing_goa,
         goa_cache_dir=goa_cache_dir,
     )
@@ -346,7 +359,12 @@ def build_projection_tables(
     candidate_rows = [
         row
         for row in summary_rows
-        if row["goa_status"] in {"new_to_goa", "more_specific_than_existing_goa"}
+        if row["goa_status"]
+        in {
+            "new_to_goa",
+            "more_specific_than_existing_goa",
+            "supported_by_goa_regulation",
+        }
     ]
 
     status_counts = Counter(row["goa_status"] for row in summary_rows)
@@ -359,6 +377,10 @@ def build_projection_tables(
         [
             "more_specific_than_existing_goa",
             str(status_counts.get("more_specific_than_existing_goa", 0)),
+        ],
+        [
+            "supported_by_goa_regulation",
+            str(status_counts.get("supported_by_goa_regulation", 0)),
         ],
         ["new_to_goa", str(status_counts.get("new_to_goa", 0))],
         ["no_local_goa", str(status_counts.get("no_local_goa", 0))],
@@ -458,7 +480,7 @@ def build_workbook(
         "mapping_set_id",
         "mapping_set_label",
         "mapping_count",
-        "explicit_unmapped_count",
+        "unmapped_count",
     ]
     mapping_counts = Counter(row.mapping_file for row in mapping_rows)
     unmapped_counts = Counter(row.mapping_file for row in unmapped_rows)
@@ -534,6 +556,7 @@ def build_workbook(
         "mapping_set_label",
         "subject_level",
         "subject_code",
+        "unmapped_status",
         "branch",
         "class",
         "group",
@@ -551,6 +574,7 @@ def build_workbook(
             row.mapping_set_label,
             row.subject_level,
             row.subject_code,
+            row.unmapped_status,
             row.branch,
             row.class_name,
             row.group,
@@ -611,6 +635,7 @@ def build_workbook(
                 row.type_name,
                 row.subtype,
                 row.mapping_scope,
+                "",
                 row.target_go_id,
                 row.target_go_label,
                 row.representative_genes,
@@ -623,7 +648,7 @@ def build_workbook(
     for row in unmapped_rows:
         by_file_rows.setdefault(row.mapping_file, []).append(
             [
-                "explicit_unmapped",
+                row.unmapped_status or "unmapped",
                 row.subject_level,
                 row.subject_code,
                 row.branch,
@@ -632,6 +657,7 @@ def build_workbook(
                 row.type_name,
                 row.subtype,
                 "",
+                row.unmapped_status,
                 "",
                 "",
                 "",
@@ -652,6 +678,7 @@ def build_workbook(
         "type",
         "subtype",
         "mapping_scope",
+        "unmapped_status",
         "target_go_id",
         "target_go_label",
         "representative_genes",
@@ -689,10 +716,24 @@ def build_argument_parser() -> argparse.ArgumentParser:
         help="Optional PN workbook XLSX path. When provided, projection tabs are embedded.",
     )
     parser.add_argument(
+        "--sheet",
+        default=DEFAULT_WORKBOOK_SHEET,
+        help=f"Workbook sheet to read when --workbook is provided (default: {DEFAULT_WORKBOOK_SHEET})",
+    )
+    parser.add_argument(
         "--goa-root",
         type=Path,
         default=DEFAULT_GOA_ROOT,
         help=f"Root directory containing local GOA gene folders (default: {DEFAULT_GOA_ROOT})",
+    )
+    parser.add_argument(
+        "--goa-duckdb",
+        type=Path,
+        default=None,
+        help=(
+            "Optional DuckDB GOA database to use as the primary GOA source, "
+            f"for example {DEFAULT_GOA_DUCKDB}"
+        ),
     )
     parser.add_argument(
         "--fetch-missing-goa",
@@ -720,12 +761,15 @@ def main() -> None:
         representative_lookup = build_mapping_row_representative_lookup(
             args.mapping_dir,
             args.workbook,
+            sheet_name=args.sheet,
         )
         mapping_rows = apply_derived_representative_genes(mapping_rows, representative_lookup)
         projected_summary_rows, candidate_rows, projection_status_rows = build_projection_tables(
             args.mapping_dir,
             args.workbook,
             args.goa_root,
+            sheet_name=args.sheet,
+            goa_duckdb=args.goa_duckdb,
             fetch_missing_goa=args.fetch_missing_goa,
             goa_cache_dir=args.goa_cache_dir,
         )
@@ -741,7 +785,7 @@ def main() -> None:
     workbook.save(args.output)
     print(
         f"Wrote {args.output} "
-        f"(mappings={len(mapping_rows)} explicit_unmapped={len(unmapped_rows)})"
+        f"(mappings={len(mapping_rows)} unmapped={len(unmapped_rows)})"
     )
 
 

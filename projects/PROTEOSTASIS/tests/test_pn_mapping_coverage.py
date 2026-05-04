@@ -76,6 +76,7 @@ def test_coverage_distinguishes_mapped_unmapped_and_uncovered(tmp_path: Path) ->
             {
                 "subject_code": "Translation|Cytosolic translation|Translation initiation|eIF4F complex",
                 "subject_level": "type",
+                "unmapped_status": "no_mapping_appropriate",
                 "rationale": "Test explicit unmapped entry.",
             }
         ],
@@ -99,7 +100,7 @@ def test_coverage_distinguishes_mapped_unmapped_and_uncovered(tmp_path: Path) ->
     )
     assert (
         status_by_code["Translation|Cytosolic translation|Translation initiation|eIF4F complex"]
-        == "explicit_unmapped"
+        == "no_mapping"
     )
     assert (
         status_by_code[

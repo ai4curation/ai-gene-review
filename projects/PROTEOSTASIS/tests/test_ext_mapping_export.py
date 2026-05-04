@@ -44,6 +44,7 @@ def test_export_builds_biologist_friendly_workbook(tmp_path: Path) -> None:
             {
                 "subject_code": "Translation|Mitochondrial translation|Ribosome",
                 "subject_level": "group",
+                "unmapped_status": "deferred",
                 "rationale": "No term available in current cache.",
                 "references": ["proteostasis-ms1"],
             }
@@ -89,14 +90,15 @@ def test_export_builds_biologist_friendly_workbook(tmp_path: Path) -> None:
 
     unmapped = reopened["Unmapped"]
     assert unmapped["E2"].value == "Translation|Mitochondrial translation|Ribosome"
-    assert unmapped["F2"].value == "Translation"
-    assert unmapped["G2"].value == "Mitochondrial translation"
-    assert unmapped["H2"].value == "Ribosome"
+    assert unmapped["F2"].value == "deferred"
+    assert unmapped["G2"].value == "Translation"
+    assert unmapped["H2"].value == "Mitochondrial translation"
+    assert unmapped["I2"].value == "Ribosome"
 
     per_file = reopened["Translation"]
     assert per_file["A2"].value == "mapped"
-    assert per_file["A3"].value == "explicit_unmapped"
-    assert per_file["L2"].value == "EIF2S1; EIF2S2"
+    assert per_file["A3"].value == "deferred"
+    assert per_file["M2"].value == "EIF2S1; EIF2S2"
 
 
 def test_export_can_embed_projection_tabs(tmp_path: Path) -> None:

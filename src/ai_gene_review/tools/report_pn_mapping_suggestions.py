@@ -453,6 +453,11 @@ def build_argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--workbook", required=True, type=Path, help="Path to the PN workbook")
     parser.add_argument(
+        "--sheet-name",
+        default="dense",
+        help="Workbook sheet name to use (default: dense)",
+    )
+    parser.add_argument(
         "--mapping-dir",
         type=Path,
         default=DEFAULT_MAPPING_DIR,
@@ -484,7 +489,7 @@ def main() -> None:
     parser = build_argument_parser()
     args = parser.parse_args()
 
-    code_records = load_workbook_codes(args.workbook)
+    code_records = load_workbook_codes(args.workbook, sheet_name=args.sheet_name)
     mapping_specs = load_subject_specs(args.mapping_dir, slot_name="mappings")
     unmapped_specs = load_subject_specs(args.mapping_dir, slot_name="unmapped_subjects")
     coverage_rows = summarize_coverage(code_records, mapping_specs, unmapped_specs)

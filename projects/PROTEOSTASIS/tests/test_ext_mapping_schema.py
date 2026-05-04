@@ -22,6 +22,8 @@ def test_ext_mapping_schema_has_go_term_binding() -> None:
     assert binding["binds_value_of"] == "id"
     assert binding["range"] == "GOTermEnum"
     assert schema["slots"]["unmapped_subjects"]["range"] == "UnmappedSubject"
+    assert schema["slots"]["unmapped_status"]["range"] == "UnmappedStatusEnum"
+    assert schema["slots"]["unmapped_status"]["required"] is True
     assert schema["enums"]["GOTermEnum"]["reachable_from"]["source_nodes"] == [
         "GO:0003674",
         "GO:0008150",
@@ -29,6 +31,7 @@ def test_ext_mapping_schema_has_go_term_binding() -> None:
     ]
     assert schema["classes"]["GOTerm"]["slot_usage"]["label"]["required"] is True
     assert schema["slots"]["representative_genes"]["multivalued"] is True
+    assert "too_broad_to_propagate" in schema["enums"]["MappingScopeEnum"]["permissible_values"]
 
 
 def test_ext_mapping_sets_use_schema_values() -> None:
@@ -41,6 +44,7 @@ def test_ext_mapping_sets_use_schema_values() -> None:
 
     subject_levels = set(schema["enums"]["SourceHierarchyLevelEnum"]["permissible_values"])
     scopes = set(schema["enums"]["MappingScopeEnum"]["permissible_values"])
+    unmapped_statuses = set(schema["enums"]["UnmappedStatusEnum"]["permissible_values"])
 
     assert set(mapping_sets) == {
         "autophagy_lysosome_pathway.yaml",
@@ -56,7 +60,22 @@ def test_ext_mapping_sets_use_schema_values() -> None:
     assert sum(len(mapping_set["mappings"]) for mapping_set in mapping_sets.values()) >= 100
     assert (
         sum(len(mapping_set.get("unmapped_subjects", [])) for mapping_set in mapping_sets.values())
-        >= 2
+        >= 1700
+    )
+    assert all(
+        unmapped["unmapped_status"] in unmapped_statuses
+        for mapping_set in mapping_sets.values()
+        for unmapped in mapping_set.get("unmapped_subjects", [])
+    )
+    assert any(
+        unmapped["unmapped_status"] == "pending_review"
+        for mapping_set in mapping_sets.values()
+        for unmapped in mapping_set.get("unmapped_subjects", [])
+    )
+    assert any(
+        unmapped["unmapped_status"] == "no_mapping_appropriate"
+        for mapping_set in mapping_sets.values()
+        for unmapped in mapping_set.get("unmapped_subjects", [])
     )
 
     example_set = mapping_sets["autophagy_lysosome_pathway.yaml"]
@@ -112,6 +131,13 @@ def test_ext_mapping_sets_use_schema_values() -> None:
     )
     assert importin_alpha_mapping["target_term"]["id"] == "GO:0006913"
     assert importin_alpha_mapping["target_term"]["label"] == "nucleocytoplasmic transport"
+    histone_chaperone_mapping = next(
+        mapping
+        for mapping in mapping_sets["nuclear_proteostasis.yaml"]["mappings"]
+        if mapping["subject_code"] == "Nuclear proteostasis|Chaperone|Histone chaperone"
+    )
+    assert histone_chaperone_mapping["target_term"]["id"] == "GO:0140713"
+    assert histone_chaperone_mapping["target_term"]["label"] == "histone chaperone activity"
     nuclear_receptor_group = next(
         mapping
         for mapping in mapping_sets["nuclear_proteostasis.yaml"]["mappings"]
@@ -142,27 +168,58 @@ def test_ext_mapping_sets_use_schema_values() -> None:
         eif3_mapping["target_term"]["label"]
         == "eukaryotic translation initiation factor 3 complex"
     )
+    translation_branch_mapping = next(
+        mapping
+        for mapping in mapping_sets["translation.yaml"]["mappings"]
+        if mapping["subject_code"] == "Translation"
+    )
+    assert translation_branch_mapping["mapping_scope"] == "too_broad_to_propagate"
+    cytosolic_translation_mapping = next(
+        mapping
+        for mapping in mapping_sets["translation.yaml"]["mappings"]
+        if mapping["subject_code"] == "Translation|Cytosolic translation"
+    )
+    assert cytosolic_translation_mapping["mapping_scope"] == "too_broad_to_propagate"
+    ribosome_biogenesis_mapping = next(
+        mapping
+        for mapping in mapping_sets["translation.yaml"]["mappings"]
+        if mapping["subject_code"] == "Translation|Cytosolic translation|Ribosome biogenesis factor"
+    )
+    assert ribosome_biogenesis_mapping["target_term"]["id"] == "GO:0042254"
+    assert ribosome_biogenesis_mapping["target_term"]["label"] == "ribosome biogenesis"
     explicit_unmapped = mapping_sets["translation.yaml"]["unmapped_subjects"][0]
     assert (
         explicit_unmapped["subject_code"]
         == "Translation|Cytosolic translation|Translation initiation|eIF4F complex"
     )
     assert explicit_unmapped["subject_level"] == "type"
+    assert explicit_unmapped["unmapped_status"] == "deferred"
     explicit_unmapped_2 = mapping_sets["translation.yaml"]["unmapped_subjects"][1]
     assert (
         explicit_unmapped_2["subject_code"]
         == "Translation|Mitochondrial translation|Ribosome"
     )
     assert explicit_unmapped_2["subject_level"] == "group"
+    assert explicit_unmapped_2["unmapped_status"] == "deferred"
 
     ups_mapping = next(
         mapping
         for mapping in mapping_sets["ubiquitin_proteasome_system.yaml"]["mappings"]
         if mapping["subject_code"]
-        == "Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|Anaphase Promoting Complex"
+        == (
+            "Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|"
+            "idiosyncratic RING complex|Anaphase Promoting Complex"
+        )
     )
     assert ups_mapping["target_term"]["id"] == "GO:0005680"
     assert ups_mapping["target_term"]["label"] == "anaphase-promoting complex"
+    ups_translation_mapping = next(
+        mapping
+        for mapping in mapping_sets["ubiquitin_proteasome_system.yaml"]["mappings"]
+        if mapping["subject_code"]
+        == "Ubiquitin Proteasome System|Ubiquitin and UBL binding|translation"
+    )
+    assert ups_translation_mapping["mapping_scope"] == "too_broad_to_propagate"
     pi3k_group_mapping = next(
         mapping
         for mapping in mapping_sets["autophagy_lysosome_pathway.yaml"]["mappings"]
@@ -191,3 +248,17 @@ def test_ext_mapping_sets_use_schema_values() -> None:
     )
     assert sumo_e2_mapping["target_term"]["id"] == "GO:0019789"
     assert sumo_e2_mapping["target_term"]["label"] == "SUMO transferase activity"
+    jdomain_mapping = next(
+        mapping
+        for mapping in mapping_sets["chaperone_systems.yaml"]["mappings"]
+        if mapping["subject_code"] == "J-domain containing HSP70 cochaperone"
+    )
+    assert jdomain_mapping["target_term"]["id"] == "GO:0030544"
+    assert jdomain_mapping["target_term"]["label"] == "Hsp70 protein binding"
+    mitochondrial_unmapped = next(
+        unmapped
+        for unmapped in mapping_sets["mitochondrial_proteostasis.yaml"]["unmapped_subjects"]
+        if unmapped["subject_code"] == "Mitochondrial proteostasis|Chaperone"
+    )
+    assert mitochondrial_unmapped["subject_level"] == "class"
+    assert mitochondrial_unmapped["unmapped_status"] == "no_mapping_appropriate"

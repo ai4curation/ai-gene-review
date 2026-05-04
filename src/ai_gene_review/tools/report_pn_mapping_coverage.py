@@ -4,7 +4,9 @@ This tool compares canonical PN codes extracted from the workbook against the
 curated mapping-set YAML files. It distinguishes among:
 
 - mapped: covered by at least one completed mapping
-- explicit_unmapped: reviewed and recorded in `unmapped_subjects`
+- no_mapping: reviewed and concluded no GO mapping is appropriate
+- deferred: reviewed but deferred pending evidence, a better term, or narrower handling
+- pending_review: tracked in `unmapped_subjects` but not yet manually analyzed in depth
 - uncovered: neither mapped nor explicitly tracked as unmapped
 
 The coverage report is code-centric rather than gene-centric. Codes are
@@ -40,6 +42,20 @@ WORKBOOK_COLUMNS = {
     "subtype": "Subtype",
 }
 MISSING_MARKERS = {"", "(no Branch)", "(no Class)", "(no Group)", "(no Type)", "(no Subtype)"}
+UNMAPPED_STATUS_TO_COVERAGE_STATUS = {
+    "no_mapping_appropriate": "no_mapping",
+    "deferred": "deferred",
+    "pending_review": "pending_review",
+}
+UNMAPPED_STATUS_PRIORITY = ("no_mapping_appropriate", "deferred", "pending_review")
+COVERAGE_STATUSES = (
+    "mapped",
+    "no_mapping",
+    "deferred",
+    "pending_review",
+    "uncovered",
+    "mapped_and_unmapped",
+)
 
 
 @dataclass(frozen=True)
@@ -63,6 +79,7 @@ class SubjectSpec:
     subject_code: str
     subject_level: str
     conditions: tuple[tuple[str, str], ...]
+    unmapped_status: str = ""
 
 
 def _clean_value(value: Any) -> str:
@@ -161,6 +178,7 @@ def load_subject_specs(
                     subject_code=_clean_value(entry.get("subject_code")),
                     subject_level=_clean_value(entry.get("subject_level")),
                     conditions=_normalize_conditions(entry.get("conditions")),
+                    unmapped_status=_clean_value(entry.get("unmapped_status")),
                 )
             )
     return specs
@@ -216,6 +234,15 @@ def _subject_matches_record(record: PNCodeRecord, spec: SubjectSpec) -> bool:
     return True
 
 
+def _combined_unmapped_status(specs: list[SubjectSpec]) -> str:
+    """Return the highest-priority unmapped status represented by matching specs."""
+    statuses = {spec.unmapped_status for spec in specs if spec.unmapped_status}
+    for status in UNMAPPED_STATUS_PRIORITY:
+        if status in statuses:
+            return UNMAPPED_STATUS_TO_COVERAGE_STATUS[status]
+    return "pending_review"
+
+
 def summarize_coverage(
     code_records: list[PNCodeRecord],
     mapping_specs: list[SubjectSpec],
@@ -232,12 +259,14 @@ def summarize_coverage(
             spec for spec in unmapped_specs if _subject_matches_record(record, spec)
         ]
 
+        unmapped_status = _combined_unmapped_status(matched_unmapped) if matched_unmapped else ""
+
         if matched_mappings and matched_unmapped:
-            status = "mapped_and_explicit_unmapped"
+            status = "mapped_and_unmapped"
         elif matched_mappings:
             status = "mapped"
         elif matched_unmapped:
-            status = "explicit_unmapped"
+            status = unmapped_status
         else:
             status = "uncovered"
 
@@ -255,11 +284,14 @@ def summarize_coverage(
                 "mapping_subjects": ";".join(
                     sorted({spec.subject_code for spec in matched_mappings})
                 ),
-                "explicit_unmapped_files": ";".join(
+                "unmapped_files": ";".join(
                     sorted({spec.file_name for spec in matched_unmapped})
                 ),
-                "explicit_unmapped_subjects": ";".join(
+                "unmapped_subjects": ";".join(
                     sorted({spec.subject_code for spec in matched_unmapped})
+                ),
+                "unmapped_statuses": ";".join(
+                    sorted({spec.unmapped_status for spec in matched_unmapped if spec.unmapped_status})
                 ),
             }
         )
@@ -283,8 +315,9 @@ def write_coverage_outputs(rows: list[dict[str, str]], output_dir: Path) -> None
         "status",
         "mapping_files",
         "mapping_subjects",
-        "explicit_unmapped_files",
-        "explicit_unmapped_subjects",
+        "unmapped_files",
+        "unmapped_subjects",
+        "unmapped_statuses",
     ]
     with detail_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=detail_fields, delimiter="\t")
@@ -292,7 +325,16 @@ def write_coverage_outputs(rows: list[dict[str, str]], output_dir: Path) -> None
         writer.writerows(rows)
 
     summary_path = output_dir / "pn_mapping_level_summary.tsv"
-    summary_fields = ["level", "total_codes", "mapped", "explicit_unmapped", "uncovered"]
+    summary_fields = [
+        "level",
+        "total_codes",
+        "mapped",
+        "no_mapping",
+        "deferred",
+        "pending_review",
+        "uncovered",
+        "mapped_and_unmapped",
+    ]
     with summary_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=summary_fields, delimiter="\t")
         writer.writeheader()
@@ -302,11 +344,10 @@ def write_coverage_outputs(rows: list[dict[str, str]], output_dir: Path) -> None
                 {
                     "level": level,
                     "total_codes": len(level_rows),
-                    "mapped": sum(row["status"] == "mapped" for row in level_rows),
-                    "explicit_unmapped": sum(
-                        row["status"] == "explicit_unmapped" for row in level_rows
-                    ),
-                    "uncovered": sum(row["status"] == "uncovered" for row in level_rows),
+                    **{
+                        status: sum(row["status"] == status for row in level_rows)
+                        for status in COVERAGE_STATUSES
+                    },
                 }
             )
 
@@ -350,14 +391,17 @@ def main() -> None:
 
     total = len(rows)
     mapped = sum(row["status"] == "mapped" for row in rows)
-    explicit_unmapped = sum(row["status"] == "explicit_unmapped" for row in rows)
+    no_mapping = sum(row["status"] == "no_mapping" for row in rows)
+    deferred = sum(row["status"] == "deferred" for row in rows)
+    pending_review = sum(row["status"] == "pending_review" for row in rows)
     uncovered = sum(row["status"] == "uncovered" for row in rows)
-    conflicts = sum(row["status"] == "mapped_and_explicit_unmapped" for row in rows)
+    conflicts = sum(row["status"] == "mapped_and_unmapped" for row in rows)
 
     print(f"Wrote coverage reports to {args.output_dir}")
     print(
         "Coverage summary: "
-        f"total={total} mapped={mapped} explicit_unmapped={explicit_unmapped} "
+        f"total={total} mapped={mapped} no_mapping={no_mapping} "
+        f"deferred={deferred} pending_review={pending_review} "
         f"uncovered={uncovered} conflicts={conflicts}"
     )
 

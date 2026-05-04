@@ -16,7 +16,7 @@ related_projects:
   - INTEGRATED_STRESS_RESPONSE.md
   - ER_PHAGY.md
 external_sources:
-  - Human Proteostasis Network Annotation 2.0 workbook (release 2024-04-15)
+  - Human Proteostasis Network Annotation 4.3.11 workbook (release 2026-04-17)
   - Survey of the Human PN MS1 Translation Folding Transport
   - Survey of the Human PN MS2 ALP
   - Survey of the Human PN MS3 UPS
@@ -30,7 +30,7 @@ supports protein synthesis, folding, trafficking, quality control, sequestration
 and degradation.
 
 The source resource analyzed in this project is the **Human Proteostasis Network
-Annotation 2.0** workbook together with three Proteostasis Consortium survey
+Annotation 4.3.11** workbook together with three Proteostasis Consortium survey
 manuscripts:
 
 - `MS1` introduces the overall PN framework and covers translation, folding,
@@ -40,9 +40,9 @@ manuscripts:
 - `MS3` covers the ubiquitin-proteasome system (`UPS`) and explains the
   domain-heavy inclusion and classification logic used for that branch.
 
-The workbook used here is the `2024-04-15` PN release downloaded from the
-Proteostasis Consortium PN annotation site, matching the supplementary
-annotation release cited in the manuscript data-availability sections.
+The mapping and browser artifacts now use the `2026-04-17` PN `4.3.11`
+workbook. Earlier 2024 release artifacts are kept only as provenance for
+individual curation comments that were started against that release.
 
 ## Overview
 
@@ -66,15 +66,22 @@ Within this project:
 See:
 
 - [Priority genes](PROTEOSTASIS/priority_genes.tsv)
+- [PN tree browser](PROTEOSTASIS/pn.html)
 - [ALP mapping set](PROTEOSTASIS/mappings/autophagy_lysosome_pathway.yaml)
 - [Chaperone mapping set](PROTEOSTASIS/mappings/chaperone_systems.yaml)
 - [ER proteostasis mapping set](PROTEOSTASIS/mappings/er_proteostasis.yaml)
+- [Extracellular proteostasis mapping set](PROTEOSTASIS/mappings/extracellular_proteostasis.yaml)
 - [Mitochondrial proteostasis mapping set](PROTEOSTASIS/mappings/mitochondrial_proteostasis.yaml)
 - [Nuclear proteostasis mapping set](PROTEOSTASIS/mappings/nuclear_proteostasis.yaml)
 - [PN regulation mapping set](PROTEOSTASIS/mappings/pn_regulation.yaml)
 - [Translation mapping set](PROTEOSTASIS/mappings/translation.yaml)
+- [UPS mapping set](PROTEOSTASIS/mappings/ubiquitin_proteasome_system.yaml)
 - [Project-local tests](PROTEOSTASIS/tests)
 - [Project-local reports](PROTEOSTASIS/reports)
+- [Report-local PN tree browser](PROTEOSTASIS/reports/pn_taxonomy_tree/pn_taxonomy_tree.html)
+- [Mapping scrutiny report](PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv)
+- [Unusual propagation report](PROTEOSTASIS/reports/pn_mapping_audit/unusual_propagations.tsv)
+- [Mapping export workbook](PROTEOSTASIS/reports/pn_mappings/pn_mappings.xlsx)
 - [UPB gene list](UNFOLDED_PROTEIN_BINDING/genes.csv)
 - [Unfolded Protein Binding project](UNFOLDED_PROTEIN_BINDING.md)
 - [Ribosome Quality Control project](RIBOSOME_QUALITY_CONTROL.md)
@@ -85,25 +92,125 @@ See:
 
 The workbook is a row-per-role annotation table, not a gene-centered review file.
 
-- `2989` unique genes
-- `3774` annotation rows
-- `312` genes with cross-branch annotations
-- `274` genes with multiple annotations within one branch
-- `2403` genes with a single annotation
+- `3123` unique genes
+- `4000` annotation rows
+- `323` genes with cross-branch annotations
+- `318` genes with multiple annotations within one branch
+- `2482` genes with a single annotation
 
 The custom hierarchy has:
 
 - `9` Branches
-- `32` Classes
-- `253` Groups
-- `562` Types
-- `385` Subtypes
+- `33` Classes
+- `277` Groups
+- `676` Types
+- `536` Subtypes
 
 This is their own vocabulary:
 
 - the workbook contains **no GO IDs or explicit GO term mappings**
 - the papers explicitly describe the PN hierarchy as a taxonomy that **complements** structured vocabularies such as GO
 - the manuscripts say GO, Reactome, KEGG, UniProt, and InterPro were used as **inputs** for building preliminary lists, not as the target representation
+
+### Current Mapping Completion Status
+
+The current curated mapping pass is complete for the `Human Proteostasis Network
+Annotation 4.3.11` workbook release dated `2026-04-17`.
+
+Coverage after the completion pass:
+
+| Level | Total source codes | Mapped | No mapping | Deferred | Pending review | Uncovered |
+|-------|--------------------|--------|------------|----------|----------------|-----------|
+| Branch | 9 | 1 | 0 | 0 | 8 | 0 |
+| Class | 42 | 11 | 1 | 0 | 30 | 0 |
+| Group | 297 | 62 | 1 | 5 | 229 | 0 |
+| Type | 800 | 121 | 14 | 4 | 661 | 0 |
+| Subtype | 881 | 65 | 14 | 7 | 795 | 0 |
+
+This means every `2026-04-17` PN source code is now accounted for as either:
+
+- a curated PN-to-GO mapping in one of the branch mapping sets, with a
+  `mapping_scope` category
+- an unmapped item in that same branch mapping set, with explicit
+  `unmapped_status`
+
+The current hierarchy has `2029` total source nodes and `1348` leaf nodes. The
+completed YAML inventory contains `241` curated mapping records and `1769`
+unmapped subjects:
+
+| Unmapped status | Records | Meaning |
+|-----------------|---------|---------|
+| `no_mapping_appropriate` | 30 | Reviewed and concluded that no GO mapping should be made |
+| `deferred` | 16 | Reviewed, but needs more evidence, a better GO term, or narrower handling |
+| `pending_review` | 1723 | Tracked for coverage, but not yet manually analyzed in depth |
+
+Mapping scopes are:
+
+| Mapping scope | Records | Use |
+|---------------|---------|-----|
+| `exact` | 4 | Direct semantic match |
+| `ok_for_propagation_to_go` | 229 | May produce candidate gene-GO propagations |
+| `too_broad_to_propagate` | 8 | Real contextual alignment, but excluded from propagation |
+
+Most PN source codes are not yet final non-map calls. They are explicitly
+tracked as pending review so curators can distinguish coverage bookkeeping from
+completed curation decisions.
+
+Projection against the human GOA DuckDB at
+`~/repos/go-db/db/goa_human.ddb` produced:
+
+| Projection status | Unique gene-GO pairs |
+|-------------------|----------------------|
+| already in GOA exactly | 703 |
+| entailed by GOA closure | 403 |
+| more specific than existing GOA | 239 |
+| supported by GOA regulation | 77 |
+| new to GOA | 767 |
+| no local GOA available | 16 |
+
+Only the `1083` candidate additions (`more_specific_than_existing_goa` +
+`supported_by_goa_regulation` + `new_to_goa`) should enter manual AIGR
+rereview queues. The `no_local_goa` class is mostly a data-availability state,
+not biological evidence; with the DuckDB source it is now a small residual
+category.
+
+### Extra-Scrutiny Findings
+
+The mapping audit flags `172/241` current mappings as requiring manual
+gene-level review before they are used to change a gene review. These are not
+necessarily wrong mappings; they are places where propagation can mislead if the
+projected GO term is treated as an asserted gene function.
+
+Main flagged patterns:
+
+- `153` mappings have regulatory, recruitment, localization, sensing, or other
+  contextual PN source labels.
+- `37` mappings use broad or context-losing GO targets such as generic
+  translation, protein transport, DNA repair, DNA binding, or stress-response
+  terms.
+- `15` mappings include domain, family, or subtype metadata in the source label.
+- `12` mappings are at branch or class level.
+- `8` mappings are explicitly categorized as `too_broad_to_propagate` and are
+  excluded from propagation reports.
+
+Representative cases that should stay in the manual review queue:
+
+- `Translation -> GO:0006412 translation`: useful as high-level context but too
+  broad for many PN rows; `EDF1` showed that only the RQC term survived manual
+  rereview.
+- `Mitochondrial proteostasis|Protein transport|Protein import ->
+  GO:0017038 protein import`: can be broader than an existing route-specific
+  mitochondrial import term, as seen for `TOMM20`.
+- `Autophagosome/endosome docking` and related ALP docking labels ->
+  `GO:0061909 autophagosome-lysosome fusion`: plausible pathway-stage
+  propagation, but `RAB7A` showed that fusion versus post-fusion maturation must
+  be checked gene by gene.
+- HSPA8-like CMA/aggrephagy boundary cases: PN aggregate-handling context does
+  not automatically justify aggrephagy when direct CMA annotations are better
+  supported.
+- UPS ubiquitin/UBL-binding context buckets: many are useful triage labels, but
+  the UPS branch is intentionally inclusive and domain-heavy, so these should
+  not be imported into GO without independent evidence.
 
 ### Evidence Shape By Branch
 
@@ -377,6 +484,8 @@ The PN project is broader:
 
 ## Next Steps
 
-- Create a row-level PN-to-GO mapping table with provenance tags.
 - Audit the highest-priority genes in [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv).
-- Separate PN roles that belong in GO from roles better treated as prediction review inputs or systems metadata.
+- Work through the `1083` projected candidate additions, using the unusual
+  propagation report as a blocklist for automatic review edits.
+- Promote only gene-level decisions that survive evidence review into AIGR
+  YAML; leave broad PN context as project metadata.
