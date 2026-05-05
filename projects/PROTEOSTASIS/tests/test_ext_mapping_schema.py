@@ -12,6 +12,33 @@ SCHEMA_PATH = REPO_ROOT / "src/ai_gene_review/schema/ext_mapping.yaml"
 MAPPING_DIR = REPO_ROOT / "projects/PROTEOSTASIS/mappings"
 
 
+def _mapping_sets() -> dict[str, dict]:
+    return {
+        path.name: yaml.safe_load(path.read_text(encoding="utf-8"))
+        for path in sorted(MAPPING_DIR.glob("*.yaml"))
+    }
+
+
+def _curations(mapping_sets: dict[str, dict]) -> list[dict]:
+    rows = []
+    for file_name, mapping_set in mapping_sets.items():
+        for curation in mapping_set["subject_curations"]:
+            row = dict(curation)
+            row["mapping_file"] = file_name
+            rows.append(row)
+    return rows
+
+
+def _find_curation(mapping_sets: dict[str, dict], subject_code: str) -> dict:
+    matches = [
+        curation
+        for curation in _curations(mapping_sets)
+        if curation["subject_code"] == subject_code
+    ]
+    assert len(matches) == 1
+    return matches[0]
+
+
 def test_ext_mapping_schema_has_go_term_binding() -> None:
     """The schema should bind GO target IDs to the GO dynamic enum."""
     schema = yaml.safe_load(SCHEMA_PATH.read_text(encoding="utf-8"))
@@ -21,7 +48,9 @@ def test_ext_mapping_schema_has_go_term_binding() -> None:
 
     assert binding["binds_value_of"] == "id"
     assert binding["range"] == "GOTermEnum"
-    assert schema["slots"]["unmapped_subjects"]["range"] == "UnmappedSubject"
+    assert schema["slots"]["subject_curations"]["range"] == "SubjectCuration"
+    assert schema["slots"]["curation_status"]["range"] == "CurationStatusEnum"
+    assert schema["slots"]["curation_status"]["required"] is True
     assert schema["enums"]["GOTermEnum"]["reachable_from"]["source_nodes"] == [
         "GO:0003674",
         "GO:0008150",
@@ -29,17 +58,24 @@ def test_ext_mapping_schema_has_go_term_binding() -> None:
     ]
     assert schema["classes"]["GOTerm"]["slot_usage"]["label"]["required"] is True
     assert schema["slots"]["representative_genes"]["multivalued"] is True
-
-
-def test_ext_mapping_sets_use_schema_values() -> None:
-    """The curated mapping sets should use declared scope and level values."""
-    schema = yaml.safe_load(SCHEMA_PATH.read_text(encoding="utf-8"))
-    mapping_sets = {
-        path.name: yaml.safe_load(path.read_text(encoding="utf-8"))
-        for path in sorted(MAPPING_DIR.glob("*.yaml"))
+    assert "too_broad_to_propagate" in schema["enums"]["MappingScopeEnum"]["permissible_values"]
+    assert set(schema["enums"]["CurationStatusEnum"]["permissible_values"]) == {
+        "pending_review",
+        "mapped",
+        "context_only",
+        "no_mapping",
+        "deferred",
     }
 
+
+def test_ext_mapping_sets_use_unified_subject_curations() -> None:
+    """Every PN node should be represented as one explicit curation record."""
+    schema = yaml.safe_load(SCHEMA_PATH.read_text(encoding="utf-8"))
+    mapping_sets = _mapping_sets()
+    curations = _curations(mapping_sets)
+
     subject_levels = set(schema["enums"]["SourceHierarchyLevelEnum"]["permissible_values"])
+    statuses = set(schema["enums"]["CurationStatusEnum"]["permissible_values"])
     scopes = set(schema["enums"]["MappingScopeEnum"]["permissible_values"])
 
     assert set(mapping_sets) == {
@@ -53,141 +89,67 @@ def test_ext_mapping_sets_use_schema_values() -> None:
         "translation.yaml",
         "ubiquitin_proteasome_system.yaml",
     }
-    assert sum(len(mapping_set["mappings"]) for mapping_set in mapping_sets.values()) >= 100
-    assert (
-        sum(len(mapping_set.get("unmapped_subjects", [])) for mapping_set in mapping_sets.values())
-        >= 2
-    )
+    assert sum("mappings" in mapping_set for mapping_set in mapping_sets.values()) == 0
+    assert sum("unmapped_subjects" in mapping_set for mapping_set in mapping_sets.values()) == 0
+    assert len(curations) == 2029
+    assert len({(row["subject_level"], row["subject_code"]) for row in curations}) == 2029
 
-    example_set = mapping_sets["autophagy_lysosome_pathway.yaml"]
-    example = example_set["mappings"][0]
+    for row in curations:
+        assert row["subject_level"] in subject_levels
+        assert row["curation_status"] in statuses
+        if row["curation_status"] in {"mapped", "context_only"}:
+            assert row["target_term"]["id"].startswith("GO:")
+            assert row["target_term"]["label"]
+            assert row["mapping_scope"] in scopes
+        else:
+            assert "target_term" not in row
+            assert "mapping_scope" not in row
 
-    assert example_set["id"] == "pn_mapping_set:autophagy_lysosome_pathway"
-    assert len(example_set["mappings"]) >= 40
-    assert "subject_code" in example
-    assert "id" not in example
-    assert "label" not in example
-    assert example["subject_level"] in subject_levels
-    assert example["mapping_scope"] in scopes
-    assert example["subject_code"] == "Autophagy-Lysosome Pathway|Chaperone-mediated autophagy"
-    assert example["target_term"]["id"] == "GO:0061684"
-    assert example["target_term"]["label"] == "chaperone-mediated autophagy"
+    status_counts = {
+        status: sum(row["curation_status"] == status for row in curations)
+        for status in statuses
+    }
+    assert status_counts == {
+        "pending_review": 0,
+        "mapped": 483,
+        "context_only": 88,
+        "no_mapping": 1458,
+        "deferred": 0,
+    }
 
-    hsp90_mapping = next(
-        mapping
-        for mapping in mapping_sets["chaperone_systems.yaml"]["mappings"]
-        if mapping["subject_code"] == "HSP90"
-    )
-    assert hsp90_mapping["conditions"] == [
-        {"condition_level": "class", "condition_code": "Chaperone"},
-        {"condition_level": "group", "condition_code": "HSP90 system"},
-    ]
-    ferritinophagy_mapping = next(
-        mapping
-        for mapping in example_set["mappings"]
-        if mapping["subject_code"].endswith("|Ferritinophagy")
-    )
-    assert ferritinophagy_mapping["target_term"]["id"] == "GO:0160247"
-    assert ferritinophagy_mapping["target_term"]["label"] == "autophagy cargo adaptor activity"
-    alp_class_mapping = next(
-        mapping
-        for mapping in example_set["mappings"]
-        if mapping["subject_code"] == "Autophagy-Lysosome Pathway|Autophagophore initiation and elongation"
-    )
-    assert alp_class_mapping["target_term"]["id"] == "GO:0016236"
-    assert alp_class_mapping["target_term"]["label"] == "macroautophagy"
 
-    nuclear_mapping = next(
-        mapping
-        for mapping in mapping_sets["nuclear_proteostasis.yaml"]["mappings"]
-        if mapping["subject_code"] == "Nuclear proteostasis|Protein transport|Nuclear pore complex"
-    )
-    assert nuclear_mapping["target_term"]["id"] == "GO:0005643"
-    assert nuclear_mapping["target_term"]["label"] == "nuclear pore"
-    importin_alpha_mapping = next(
-        mapping
-        for mapping in mapping_sets["nuclear_proteostasis.yaml"]["mappings"]
-        if mapping["subject_code"]
-        == "Nuclear proteostasis|Protein transport|Nuclear transport receptor|Importin, alpha type"
-    )
-    assert importin_alpha_mapping["target_term"]["id"] == "GO:0006913"
-    assert importin_alpha_mapping["target_term"]["label"] == "nucleocytoplasmic transport"
-    nuclear_receptor_group = next(
-        mapping
-        for mapping in mapping_sets["nuclear_proteostasis.yaml"]["mappings"]
-        if mapping["subject_code"] == "Nuclear proteostasis|Protein transport|Nuclear transport receptor"
-    )
-    assert nuclear_receptor_group["representative_genes"] == [
-        "KPNB1",
-        "KPNA2",
-        "XPO1",
-        "HIKESHI",
-    ]
-    extracellular_mapping = next(
-        mapping
-        for mapping in mapping_sets["extracellular_proteostasis.yaml"]["mappings"]
-        if mapping["subject_code"] == "Extracellular proteostasis|Protease|Plasma membrane"
-    )
-    assert extracellular_mapping["target_term"]["id"] == "GO:0005886"
-    assert extracellular_mapping["target_term"]["label"] == "plasma membrane"
+def test_representative_curations_survived_migration() -> None:
+    """Key curated records should retain status, target, and rationale fields."""
+    mapping_sets = _mapping_sets()
 
-    eif3_mapping = next(
-        mapping
-        for mapping in mapping_sets["translation.yaml"]["mappings"]
-        if mapping["subject_code"]
-        == "Translation|Cytosolic translation|Translation initiation|eIF3 complex"
+    alp_class = _find_curation(
+        mapping_sets,
+        "Autophagy-Lysosome Pathway|Autophagophore initiation and elongation",
     )
-    assert eif3_mapping["target_term"]["id"] == "GO:0005852"
-    assert (
-        eif3_mapping["target_term"]["label"]
-        == "eukaryotic translation initiation factor 3 complex"
-    )
-    explicit_unmapped = mapping_sets["translation.yaml"]["unmapped_subjects"][0]
-    assert (
-        explicit_unmapped["subject_code"]
-        == "Translation|Cytosolic translation|Translation initiation|eIF4F complex"
-    )
-    assert explicit_unmapped["subject_level"] == "type"
-    explicit_unmapped_2 = mapping_sets["translation.yaml"]["unmapped_subjects"][1]
-    assert (
-        explicit_unmapped_2["subject_code"]
-        == "Translation|Mitochondrial translation|Ribosome"
-    )
-    assert explicit_unmapped_2["subject_level"] == "group"
+    assert alp_class["curation_status"] == "context_only"
+    assert alp_class["target_term"]["id"] == "GO:0016236"
+    assert alp_class["mapping_scope"] == "too_broad_to_propagate"
 
-    ups_mapping = next(
-        mapping
-        for mapping in mapping_sets["ubiquitin_proteasome_system.yaml"]["mappings"]
-        if mapping["subject_code"]
-        == "Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|Anaphase Promoting Complex"
+    hsp90 = _find_curation(
+        mapping_sets,
+        "Cytonuclear proteostasis|Chaperone|HSP90 system|HSP90",
     )
-    assert ups_mapping["target_term"]["id"] == "GO:0005680"
-    assert ups_mapping["target_term"]["label"] == "anaphase-promoting complex"
-    pi3k_group_mapping = next(
-        mapping
-        for mapping in mapping_sets["autophagy_lysosome_pathway.yaml"]["mappings"]
-        if mapping["subject_code"]
-        == "Autophagy-Lysosome Pathway|Autophagophore initiation and elongation|Class 3 PI3K complex 1, direct"
+    assert hsp90["curation_status"] == "mapped"
+    assert hsp90["target_term"]["id"] == "GO:0140662"
+
+    translation_branch = _find_curation(mapping_sets, "Translation")
+    assert translation_branch["curation_status"] == "context_only"
+    assert translation_branch["mapping_scope"] == "too_broad_to_propagate"
+
+    eif4f = _find_curation(
+        mapping_sets,
+        "Translation|Cytosolic translation|Translation initiation|eIF4F complex",
     )
-    assert pi3k_group_mapping["target_term"]["id"] == "GO:0035032"
-    assert (
-        pi3k_group_mapping["target_term"]["label"]
-        == "phosphatidylinositol 3-kinase complex, class III"
+    assert eif4f["curation_status"] == "mapped"
+    assert eif4f["target_term"]["id"] == "GO:0016281"
+
+    mitochondrial_chaperone = _find_curation(
+        mapping_sets,
+        "Mitochondrial proteostasis|Chaperone",
     )
-    oxidative_stress_mapping = next(
-        mapping
-        for mapping in mapping_sets["pn_regulation.yaml"]["mappings"]
-        if mapping["subject_code"] == "PN regulation|Transcription factor|Oxidative stress response"
-    )
-    assert oxidative_stress_mapping["target_term"]["id"] == "GO:1900407"
-    assert (
-        oxidative_stress_mapping["target_term"]["label"]
-        == "regulation of cellular response to oxidative stress"
-    )
-    sumo_e2_mapping = next(
-        mapping
-        for mapping in mapping_sets["ubiquitin_proteasome_system.yaml"]["mappings"]
-        if mapping["subject_code"] == "Ubiquitin Proteasome System|E2 conjugating enzymes|SUMOylation"
-    )
-    assert sumo_e2_mapping["target_term"]["id"] == "GO:0019789"
-    assert sumo_e2_mapping["target_term"]["label"] == "SUMO transferase activity"
+    assert mitochondrial_chaperone["curation_status"] == "no_mapping"

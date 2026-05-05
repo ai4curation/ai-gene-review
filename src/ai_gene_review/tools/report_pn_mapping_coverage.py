@@ -1,11 +1,15 @@
 """Report mapping coverage for Proteostasis Network source codes.
 
-This tool compares canonical PN codes extracted from the workbook against the
-curated mapping-set YAML files. It distinguishes among:
+This tool compares canonical PN codes extracted from the workbook against one
+curator-facing record per PN node in the mapping-set YAML files. It distinguishes
+among:
 
-- mapped: covered by at least one completed mapping
-- explicit_unmapped: reviewed and recorded in `unmapped_subjects`
-- uncovered: neither mapped nor explicitly tracked as unmapped
+- pending_review: accounted for in YAML, but not yet manually analyzed in depth
+- mapped: reviewed and mapped to GO
+- context_only: related GO context recorded, but unsafe to propagate
+- no_mapping: reviewed and concluded no GO mapping is appropriate
+- deferred: reviewed but deferred pending evidence, a better term, or narrower handling
+- missing_from_yaml: present in the workbook but absent from curation YAML
 
 The coverage report is code-centric rather than gene-centric. Codes are
 canonicalized as hierarchy-aware path strings:
@@ -40,6 +44,15 @@ WORKBOOK_COLUMNS = {
     "subtype": "Subtype",
 }
 MISSING_MARKERS = {"", "(no Branch)", "(no Class)", "(no Group)", "(no Type)", "(no Subtype)"}
+COVERAGE_STATUSES = (
+    "pending_review",
+    "mapped",
+    "context_only",
+    "no_mapping",
+    "deferred",
+    "missing_from_yaml",
+    "curation_conflict",
+)
 
 
 @dataclass(frozen=True)
@@ -57,11 +70,13 @@ class PNCodeRecord:
 
 @dataclass(frozen=True)
 class SubjectSpec:
-    """A mapping or explicit-unmapped subject from a mapping-set file."""
+    """A source-node curation record from a mapping-set file."""
 
     file_name: str
     subject_code: str
     subject_level: str
+    curation_status: str
+    mapping_scope: str
     conditions: tuple[tuple[str, str], ...]
 
 
@@ -146,20 +161,19 @@ def _normalize_conditions(raw_conditions: Any) -> tuple[tuple[str, str], ...]:
     return tuple(conditions)
 
 
-def load_subject_specs(
-    mapping_dir: Path,
-    slot_name: str,
-) -> list[SubjectSpec]:
-    """Load mapping or explicit-unmapped subject specs from mapping-set files."""
+def load_subject_specs(mapping_dir: Path) -> list[SubjectSpec]:
+    """Load source-node curation specs from mapping-set files."""
     specs: list[SubjectSpec] = []
     for path in sorted(mapping_dir.glob("*.yaml")):
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        for entry in data.get(slot_name, []):
+        for entry in data.get("subject_curations", []):
             specs.append(
                 SubjectSpec(
                     file_name=path.name,
                     subject_code=_clean_value(entry.get("subject_code")),
                     subject_level=_clean_value(entry.get("subject_level")),
+                    curation_status=_clean_value(entry.get("curation_status")),
+                    mapping_scope=_clean_value(entry.get("mapping_scope")),
                     conditions=_normalize_conditions(entry.get("conditions")),
                 )
             )
@@ -218,28 +232,22 @@ def _subject_matches_record(record: PNCodeRecord, spec: SubjectSpec) -> bool:
 
 def summarize_coverage(
     code_records: list[PNCodeRecord],
-    mapping_specs: list[SubjectSpec],
-    unmapped_specs: list[SubjectSpec],
+    curation_specs: list[SubjectSpec],
 ) -> list[dict[str, str]]:
     """Compute code-level mapping coverage rows."""
     rows: list[dict[str, str]] = []
 
     for record in code_records:
-        matched_mappings = [
-            spec for spec in mapping_specs if _subject_matches_record(record, spec)
-        ]
-        matched_unmapped = [
-            spec for spec in unmapped_specs if _subject_matches_record(record, spec)
+        matched_curations = [
+            spec for spec in curation_specs if _subject_matches_record(record, spec)
         ]
 
-        if matched_mappings and matched_unmapped:
-            status = "mapped_and_explicit_unmapped"
-        elif matched_mappings:
-            status = "mapped"
-        elif matched_unmapped:
-            status = "explicit_unmapped"
+        if not matched_curations:
+            status = "missing_from_yaml"
+        elif len(matched_curations) > 1:
+            status = "curation_conflict"
         else:
-            status = "uncovered"
+            status = matched_curations[0].curation_status
 
         rows.append(
             {
@@ -251,15 +259,17 @@ def summarize_coverage(
                 "type": record.type_name,
                 "subtype": record.subtype,
                 "status": status,
-                "mapping_files": ";".join(sorted({spec.file_name for spec in matched_mappings})),
-                "mapping_subjects": ";".join(
-                    sorted({spec.subject_code for spec in matched_mappings})
+                "curation_files": ";".join(
+                    sorted({spec.file_name for spec in matched_curations})
                 ),
-                "explicit_unmapped_files": ";".join(
-                    sorted({spec.file_name for spec in matched_unmapped})
+                "curation_subjects": ";".join(
+                    sorted({spec.subject_code for spec in matched_curations})
                 ),
-                "explicit_unmapped_subjects": ";".join(
-                    sorted({spec.subject_code for spec in matched_unmapped})
+                "curation_statuses": ";".join(
+                    sorted({spec.curation_status for spec in matched_curations})
+                ),
+                "mapping_scopes": ";".join(
+                    sorted({spec.mapping_scope for spec in matched_curations if spec.mapping_scope})
                 ),
             }
         )
@@ -281,20 +291,40 @@ def write_coverage_outputs(rows: list[dict[str, str]], output_dir: Path) -> None
         "type",
         "subtype",
         "status",
-        "mapping_files",
-        "mapping_subjects",
-        "explicit_unmapped_files",
-        "explicit_unmapped_subjects",
+        "mapping_scopes",
+        "curation_files",
+        "curation_subjects",
+        "curation_statuses",
     ]
     with detail_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=detail_fields, delimiter="\t")
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=detail_fields,
+            delimiter="\t",
+            lineterminator="\n",
+        )
         writer.writeheader()
         writer.writerows(rows)
 
     summary_path = output_dir / "pn_mapping_level_summary.tsv"
-    summary_fields = ["level", "total_codes", "mapped", "explicit_unmapped", "uncovered"]
+    summary_fields = [
+        "level",
+        "total_codes",
+        "pending_review",
+        "mapped",
+        "context_only",
+        "no_mapping",
+        "deferred",
+        "missing_from_yaml",
+        "curation_conflict",
+    ]
     with summary_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=summary_fields, delimiter="\t")
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=summary_fields,
+            delimiter="\t",
+            lineterminator="\n",
+        )
         writer.writeheader()
         for level in LEVELS:
             level_rows = [row for row in rows if row["level"] == level]
@@ -302,11 +332,10 @@ def write_coverage_outputs(rows: list[dict[str, str]], output_dir: Path) -> None
                 {
                     "level": level,
                     "total_codes": len(level_rows),
-                    "mapped": sum(row["status"] == "mapped" for row in level_rows),
-                    "explicit_unmapped": sum(
-                        row["status"] == "explicit_unmapped" for row in level_rows
-                    ),
-                    "uncovered": sum(row["status"] == "uncovered" for row in level_rows),
+                    **{
+                        status: sum(row["status"] == status for row in level_rows)
+                        for status in COVERAGE_STATUSES
+                    },
                 }
             )
 
@@ -343,22 +372,26 @@ def main() -> None:
     args = parser.parse_args()
 
     code_records = load_workbook_codes(args.workbook, sheet_name=args.sheet_name)
-    mapping_specs = load_subject_specs(args.mapping_dir, slot_name="mappings")
-    unmapped_specs = load_subject_specs(args.mapping_dir, slot_name="unmapped_subjects")
-    rows = summarize_coverage(code_records, mapping_specs, unmapped_specs)
+    curation_specs = load_subject_specs(args.mapping_dir)
+    rows = summarize_coverage(code_records, curation_specs)
     write_coverage_outputs(rows, args.output_dir)
 
     total = len(rows)
     mapped = sum(row["status"] == "mapped" for row in rows)
-    explicit_unmapped = sum(row["status"] == "explicit_unmapped" for row in rows)
-    uncovered = sum(row["status"] == "uncovered" for row in rows)
-    conflicts = sum(row["status"] == "mapped_and_explicit_unmapped" for row in rows)
+    no_mapping = sum(row["status"] == "no_mapping" for row in rows)
+    deferred = sum(row["status"] == "deferred" for row in rows)
+    pending_review = sum(row["status"] == "pending_review" for row in rows)
+    context_only = sum(row["status"] == "context_only" for row in rows)
+    missing = sum(row["status"] == "missing_from_yaml" for row in rows)
+    conflicts = sum(row["status"] == "curation_conflict" for row in rows)
 
     print(f"Wrote coverage reports to {args.output_dir}")
     print(
         "Coverage summary: "
-        f"total={total} mapped={mapped} explicit_unmapped={explicit_unmapped} "
-        f"uncovered={uncovered} conflicts={conflicts}"
+        f"total={total} pending_review={pending_review} mapped={mapped} "
+        f"context_only={context_only} no_mapping={no_mapping} "
+        f"deferred={deferred} "
+        f"missing_from_yaml={missing} conflicts={conflicts}"
     )
 
 

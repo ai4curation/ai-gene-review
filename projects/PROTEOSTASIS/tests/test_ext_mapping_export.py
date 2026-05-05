@@ -22,10 +22,11 @@ def test_export_builds_biologist_friendly_workbook(tmp_path: Path) -> None:
         "id": "pn_mapping_set:test",
         "label": "Test mapping set",
         "references": ["proteostasis-workbook-2024"],
-        "mappings": [
+        "subject_curations": [
             {
                 "subject_code": "Translation|Cytosolic translation|Ribosome",
                 "subject_level": "group",
+                "curation_status": "mapped",
                 "target_term": {
                     "id": "GO:0022626",
                     "label": "cytosolic ribosome",
@@ -38,12 +39,11 @@ def test_export_builds_biologist_friendly_workbook(tmp_path: Path) -> None:
                 "rationale": "Test mapping.",
                 "notes": "Test note.",
                 "references": ["proteostasis-ms1"],
-            }
-        ],
-        "unmapped_subjects": [
+            },
             {
                 "subject_code": "Translation|Mitochondrial translation|Ribosome",
                 "subject_level": "group",
+                "curation_status": "deferred",
                 "rationale": "No term available in current cache.",
                 "references": ["proteostasis-ms1"],
             }
@@ -79,24 +79,26 @@ def test_export_builds_biologist_friendly_workbook(tmp_path: Path) -> None:
 
     mappings = reopened["Mappings"]
     assert mappings["E2"].value == "Translation|Cytosolic translation|Ribosome"
-    assert mappings["F2"].value == "Translation"
-    assert mappings["G2"].value == "Cytosolic translation"
-    assert mappings["H2"].value == "Ribosome"
-    assert mappings["L2"].value == "GO:0022626"
-    assert mappings["M2"].value == "cytosolic ribosome"
-    assert mappings["N2"].value == "EIF2S1; EIF2S2"
-    assert mappings["O2"].value == "branch=Translation"
+    assert mappings["F2"].value == "mapped"
+    assert mappings["G2"].value == "Translation"
+    assert mappings["H2"].value == "Cytosolic translation"
+    assert mappings["I2"].value == "Ribosome"
+    assert mappings["M2"].value == "GO:0022626"
+    assert mappings["N2"].value == "cytosolic ribosome"
+    assert mappings["O2"].value == "EIF2S1; EIF2S2"
+    assert mappings["P2"].value == "branch=Translation"
 
     unmapped = reopened["Unmapped"]
     assert unmapped["E2"].value == "Translation|Mitochondrial translation|Ribosome"
-    assert unmapped["F2"].value == "Translation"
-    assert unmapped["G2"].value == "Mitochondrial translation"
-    assert unmapped["H2"].value == "Ribosome"
+    assert unmapped["F2"].value == "deferred"
+    assert unmapped["G2"].value == "Translation"
+    assert unmapped["H2"].value == "Mitochondrial translation"
+    assert unmapped["I2"].value == "Ribosome"
 
     per_file = reopened["Translation"]
     assert per_file["A2"].value == "mapped"
-    assert per_file["A3"].value == "explicit_unmapped"
-    assert per_file["L2"].value == "EIF2S1; EIF2S2"
+    assert per_file["A3"].value == "deferred"
+    assert per_file["M2"].value == "EIF2S1; EIF2S2"
 
 
 def test_export_can_embed_projection_tabs(tmp_path: Path) -> None:
@@ -106,10 +108,11 @@ def test_export_can_embed_projection_tabs(tmp_path: Path) -> None:
         "id": "pn_mapping_set:test",
         "label": "Test mapping set",
         "references": ["proteostasis-workbook-2024"],
-        "mappings": [
+        "subject_curations": [
             {
                 "subject_code": "Cytonuclear proteostasis|Chaperone",
                 "subject_level": "class",
+                "curation_status": "mapped",
                 "target_term": {
                     "id": "GO:0044183",
                     "label": "protein folding chaperone",
@@ -122,6 +125,7 @@ def test_export_can_embed_projection_tabs(tmp_path: Path) -> None:
             {
                 "subject_code": "HSP70",
                 "subject_level": "type",
+                "curation_status": "mapped",
                 "target_term": {
                     "id": "GO:0140662",
                     "label": "ATP-dependent protein folding chaperone",
@@ -257,10 +261,11 @@ def test_export_can_fill_blank_representative_genes_from_workbook(tmp_path: Path
         "id": "pn_mapping_set:test",
         "label": "Test mapping set",
         "references": ["proteostasis-workbook-2024"],
-        "mappings": [
+        "subject_curations": [
             {
                 "subject_code": "Cytonuclear proteostasis|Chaperone",
                 "subject_level": "class",
+                "curation_status": "mapped",
                 "target_term": {
                     "id": "GO:0044183",
                     "label": "protein folding chaperone",
@@ -306,4 +311,4 @@ def test_export_can_fill_blank_representative_genes_from_workbook(tmp_path: Path
     reopened = load_workbook(output_path)
 
     mappings = reopened["Mappings"]
-    assert mappings["N2"].value == "GENE1; GENE2"
+    assert mappings["O2"].value == "GENE1; GENE2"

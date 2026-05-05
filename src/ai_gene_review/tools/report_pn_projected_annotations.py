@@ -7,6 +7,7 @@ import csv
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from collections import defaultdict
 
 from openpyxl import load_workbook
 import yaml
@@ -20,9 +21,12 @@ DEFAULT_MAPPING_DIR = Path("projects/PROTEOSTASIS/mappings")
 DEFAULT_GOA_ROOT = Path("genes/human")
 DEFAULT_OUTPUT_DIR = Path("projects/PROTEOSTASIS/reports/pn_projection")
 DEFAULT_GOA_CACHE_DIR = Path("projects/PROTEOSTASIS/cache/goa")
+DEFAULT_GOA_DUCKDB = Path.home() / "repos" / "go-db" / "db" / "goa_human.ddb"
 DEFAULT_REPRESENTATIVE_GENE_LIMIT = 5
 MISSING_MARKERS = {"", "(no Branch)", "(no Class)", "(no Group)", "(no Type)", "(no Subtype)"}
 GO_CLOSURE_PREDICATES = ("rdfs:subClassOf", "BFO:0000050")
+GO_REGULATION_PREDICATES = ("RO:0002211", "RO:0002212", "RO:0002213")
+PROPAGATING_MAPPING_SCOPES = {"exact", "ok_for_propagation_to_go"}
 
 
 @dataclass(frozen=True)
@@ -52,6 +56,7 @@ class MappingSpec:
     mapping_scope: str
     representative_genes: tuple[str, ...]
     conditions: tuple[tuple[str, str], ...]
+    excluded_subjects: tuple[tuple[str, str], ...]
     rationale: str
     notes: str
     references: tuple[str, ...]
@@ -179,6 +184,25 @@ def _matches(row: PNWorkbookRow, spec: MappingSpec) -> bool:
     return True
 
 
+def _matches_level_code(row: PNWorkbookRow, level: str, code: str) -> bool:
+    if _level_value(row, level) == "":
+        return False
+    if "|" in code:
+        return _code_at_level(row, level) == code
+    return _level_value(row, level) == code
+
+
+def _is_excluded(row: PNWorkbookRow, spec: MappingSpec) -> bool:
+    return any(
+        _matches_level_code(row, exclusion_level, exclusion_code)
+        for exclusion_level, exclusion_code in spec.excluded_subjects
+    )
+
+
+def _mapping_applies(row: PNWorkbookRow, spec: MappingSpec) -> bool:
+    return _matches(row, spec) and not _is_excluded(row, spec)
+
+
 def derive_representative_genes(
     workbook_rows: list[PNWorkbookRow],
     mapping_specs: list[MappingSpec],
@@ -198,7 +222,7 @@ def derive_representative_genes(
         for row in sorted_rows:
             if row.gene_symbol in seen:
                 continue
-            if not _matches(row, spec):
+            if not _mapping_applies(row, spec):
                 continue
             seen.add(row.gene_symbol)
             examples.append(row.gene_symbol)
@@ -221,25 +245,31 @@ def load_workbook_rows(
     header = next(rows)
     index = {str(name).strip(): i for i, name in enumerate(header)}
 
+    def cell(row: tuple[Any, ...], column: str) -> str:
+        if column not in index:
+            return ""
+        return _clean_value(row[index[column]])
+
     workbook_rows: list[PNWorkbookRow] = []
     for row in rows:
-        gene_symbol = _clean_value(row[index["Gene Symbol"]])
+        gene_symbol = cell(row, "Gene Symbol")
         if not gene_symbol:
             continue
 
         raw_order = row[index["order"]] if "order" in index else None
         order = int(raw_order) if raw_order not in (None, "") else None
+        gene_name = cell(row, "Gene Name") or cell(row, "Protein Name")
         workbook_rows.append(
             PNWorkbookRow(
                 order=order,
                 gene_symbol=gene_symbol,
-                gene_name=_clean_value(row[index["Gene Name"]]),
-                branch=_clean_value(row[index[WORKBOOK_COLUMNS["branch"]]]),
-                class_name=_clean_value(row[index[WORKBOOK_COLUMNS["class"]]]),
-                group=_clean_value(row[index[WORKBOOK_COLUMNS["group"]]]),
-                type_name=_clean_value(row[index[WORKBOOK_COLUMNS["type"]]]),
-                subtype=_clean_value(row[index[WORKBOOK_COLUMNS["subtype"]]]),
-                uniprot_id=_clean_value(row[index["UniProt ID"]]) if "UniProt ID" in index else "",
+                gene_name=gene_name,
+                branch=cell(row, WORKBOOK_COLUMNS["branch"]),
+                class_name=cell(row, WORKBOOK_COLUMNS["class"]),
+                group=cell(row, WORKBOOK_COLUMNS["group"]),
+                type_name=cell(row, WORKBOOK_COLUMNS["type"]),
+                subtype=cell(row, WORKBOOK_COLUMNS["subtype"]),
+                uniprot_id=cell(row, "UniProt ID"),
             )
         )
 
@@ -247,12 +277,16 @@ def load_workbook_rows(
 
 
 def load_mapping_specs(mapping_dir: Path) -> list[MappingSpec]:
-    """Load mapping entries from YAML mapping-set files."""
+    """Load GO-bearing curation entries from YAML mapping-set files."""
     specs: list[MappingSpec] = []
     for path in sorted(mapping_dir.glob("*.yaml")):
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        for entry in data.get("mappings", []):
+        for entry in data.get("subject_curations", []):
+            if entry.get("curation_status") not in {"mapped", "context_only"}:
+                continue
             target_term = entry.get("target_term", {}) or {}
+            if not target_term or not entry.get("mapping_scope"):
+                continue
             specs.append(
                 MappingSpec(
                     file_name=path.name,
@@ -267,6 +301,7 @@ def load_mapping_specs(mapping_dir: Path) -> list[MappingSpec]:
                         if _clean_value(gene)
                     ),
                     conditions=_normalize_conditions(entry.get("conditions")),
+                    excluded_subjects=_normalize_conditions(entry.get("excluded_subjects")),
                     rationale=_clean_value(entry.get("rationale")),
                     notes=_clean_value(entry.get("notes")),
                     references=tuple(
@@ -287,6 +322,7 @@ class GOClosureClassifier:
 
         self.adapter = get_adapter(adapter_string)
         self._ancestor_cache: dict[str, set[str]] = {}
+        self._regulation_descendant_cache: dict[str, set[str]] = {}
 
     def ancestors(self, term_id: str) -> set[str]:
         if term_id not in self._ancestor_cache:
@@ -304,6 +340,22 @@ class GOClosureClassifier:
             self._ancestor_cache[term_id] = ancestors
         return self._ancestor_cache[term_id]
 
+    def regulation_descendants(self, term_id: str) -> set[str]:
+        if term_id not in self._regulation_descendant_cache:
+            descendants = set()
+            try:
+                descendants = {
+                    descendant
+                    for descendant in self.adapter.descendants(
+                        term_id, predicates=list(GO_REGULATION_PREDICATES)
+                    )
+                    if str(descendant).startswith("GO:") and descendant != term_id
+                }
+            except Exception:
+                descendants = set()
+            self._regulation_descendant_cache[term_id] = descendants
+        return self._regulation_descendant_cache[term_id]
+
     def classify(
         self,
         projected_go_id: str,
@@ -315,7 +367,9 @@ class GOClosureClassifier:
 
         entailing_terms: set[str] = set()
         projected_ancestors = self.ancestors(projected_go_id)
+        regulation_descendants = self.regulation_descendants(projected_go_id)
         broader_terms: set[str] = set()
+        regulation_terms: set[str] = set()
 
         for goa_id, goa_label in goa_terms.items():
             goa_ancestors = self.ancestors(goa_id)
@@ -323,18 +377,105 @@ class GOClosureClassifier:
                 entailing_terms.add(f"{goa_id} {goa_label}")
             elif goa_id in projected_ancestors:
                 broader_terms.add(f"{goa_id} {goa_label}")
+            elif goa_id in regulation_descendants:
+                regulation_terms.add(f"{goa_id} {goa_label}")
 
         if entailing_terms:
             return "entailed_by_goa_closure", tuple(sorted(entailing_terms))
         if broader_terms:
             return "more_specific_than_existing_goa", tuple(sorted(broader_terms))
+        if regulation_terms:
+            return "supported_by_goa_regulation", tuple(sorted(regulation_terms))
         return "new_to_goa", ()
+
+
+def load_goa_terms_from_duckdb(
+    workbook_rows: list[PNWorkbookRow],
+    duckdb_path: Path,
+) -> dict[tuple[str, str], dict[str, str]]:
+    """Bulk-load GOA terms for workbook genes from a DuckDB GOA database.
+
+    The lookup prefers exact UniProt accession matches when available, and falls
+    back to symbol matches for rows without a usable accession.
+    """
+    import duckdb
+
+    requested_keys = sorted(
+        {
+            (row.gene_symbol, row.uniprot_id)
+            for row in workbook_rows
+            if row.gene_symbol
+        }
+    )
+    if not requested_keys:
+        return {}
+
+    con = duckdb.connect(str(duckdb_path), read_only=True)
+    con.execute(
+        "create temp table pn_projection_rows(gene_symbol varchar, uniprot_id varchar)"
+    )
+    con.executemany(
+        "insert into pn_projection_rows values (?, ?)",
+        requested_keys,
+    )
+
+    by_uniprot_rows = con.execute(
+        """
+        select
+            p.gene_symbol,
+            p.uniprot_id,
+            ga.ontology_class_ref,
+            coalesce(tl.label, ga.ontology_class_ref) as go_label
+        from pn_projection_rows as p
+        join gaf_association as ga
+          on p.uniprot_id <> ''
+         and ga.db_object_id = p.uniprot_id
+        left join term_label as tl
+          on tl.id = ga.ontology_class_ref
+        where coalesce(ga.is_negation, false) = false
+        """
+    ).fetchall()
+
+    by_symbol_rows = con.execute(
+        """
+        select
+            p.gene_symbol,
+            p.uniprot_id,
+            ga.ontology_class_ref,
+            coalesce(tl.label, ga.ontology_class_ref) as go_label
+        from pn_projection_rows as p
+        join gaf_association as ga
+          on p.gene_symbol <> ''
+         and ga.db_object_symbol = p.gene_symbol
+        left join term_label as tl
+          on tl.id = ga.ontology_class_ref
+        where coalesce(ga.is_negation, false) = false
+        """
+    ).fetchall()
+
+    by_uniprot: dict[tuple[str, str], dict[str, str]] = defaultdict(dict)
+    for gene_symbol, uniprot_id, go_id, go_label in by_uniprot_rows:
+        by_uniprot[(gene_symbol, uniprot_id)][go_id] = go_label
+
+    by_symbol: dict[tuple[str, str], dict[str, str]] = defaultdict(dict)
+    for gene_symbol, uniprot_id, go_id, go_label in by_symbol_rows:
+        by_symbol[(gene_symbol, uniprot_id)][go_id] = go_label
+
+    resolved: dict[tuple[str, str], dict[str, str]] = {}
+    for key in requested_keys:
+        if by_uniprot.get(key):
+            resolved[key] = dict(by_uniprot[key])
+        elif by_symbol.get(key):
+            resolved[key] = dict(by_symbol[key])
+
+    return resolved
 
 
 def project_annotations(
     workbook_rows: list[PNWorkbookRow],
     mapping_specs: list[MappingSpec],
     goa_root: Path,
+    goa_duckdb: Path | None = None,
     fetch_missing_goa: bool = False,
     goa_cache_dir: Path | None = None,
 ) -> list[ProjectedAnnotation]:
@@ -346,6 +487,9 @@ def project_annotations(
     representative_genes_by_spec = derive_representative_genes(workbook_rows, mapping_specs)
     if goa_cache_dir is None:
         goa_cache_dir = DEFAULT_GOA_CACHE_DIR
+    duckdb_goa: dict[tuple[str, str], dict[str, str]] = {}
+    if goa_duckdb is not None:
+        duckdb_goa = load_goa_terms_from_duckdb(workbook_rows, goa_duckdb)
 
     def load_cached_or_remote_goa(row: PNWorkbookRow) -> tuple[bool, dict[str, str]]:
         if not fetch_missing_goa or not row.uniprot_id:
@@ -367,25 +511,32 @@ def project_annotations(
             return False, {}
 
     def load_goa_terms(row: PNWorkbookRow) -> tuple[bool, dict[str, str]]:
-        gene_symbol = row.gene_symbol
-        if gene_symbol not in goa_cache:
+        key = (row.gene_symbol, row.uniprot_id)
+        if key not in goa_cache:
+            if key in duckdb_goa:
+                goa_cache[key] = (True, duckdb_goa[key])
+                return goa_cache[key]
+
+            gene_symbol = row.gene_symbol
             goa_file = goa_root / gene_symbol / f"{gene_symbol}-goa.tsv"
             if goa_file.exists():
                 terms = {
                     annotation.go_id: annotation.go_term
                     for annotation in validator.parse_goa_file(goa_file)
                 }
-                goa_cache[gene_symbol] = (True, terms)
+                goa_cache[key] = (True, terms)
             else:
-                goa_cache[gene_symbol] = load_cached_or_remote_goa(row)
-        return goa_cache[gene_symbol]
+                goa_cache[key] = load_cached_or_remote_goa(row)
+        return goa_cache[key]
 
     for row in workbook_rows:
         has_goa_file, goa_terms = load_goa_terms(row)
         pn_code = _deepest_code(row)
 
         for spec in mapping_specs:
-            if not _matches(row, spec):
+            if spec.mapping_scope not in PROPAGATING_MAPPING_SCOPES:
+                continue
+            if not _mapping_applies(row, spec):
                 continue
 
             if not has_goa_file:
@@ -478,7 +629,7 @@ def write_projection_reports(
 
     row_level_path = output_dir / "pn_projected_annotations.tsv"
     with row_level_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle, delimiter="\t")
+        writer = csv.writer(handle, delimiter="\t", lineterminator="\n")
         writer.writerow(
             [
                 "gene_symbol",
@@ -536,6 +687,7 @@ def write_projection_reports(
         writer = csv.DictWriter(
             handle,
             delimiter="\t",
+            lineterminator="\n",
             fieldnames=[
                 "gene_symbol",
                 "gene_name",
@@ -547,8 +699,8 @@ def write_projection_reports(
                 "mapping_subjects",
                 "pn_codes",
                 "representative_genes",
-                "projection_count",
                 "supporting_goa_terms",
+                "projection_count",
             ],
         )
         writer.writeheader()
@@ -559,6 +711,7 @@ def write_projection_reports(
         writer = csv.DictWriter(
             handle,
             delimiter="\t",
+            lineterminator="\n",
             fieldnames=[
                 "gene_symbol",
                 "gene_name",
@@ -570,8 +723,8 @@ def write_projection_reports(
                 "mapping_subjects",
                 "pn_codes",
                 "representative_genes",
-                "projection_count",
                 "supporting_goa_terms",
+                "projection_count",
             ],
         )
         writer.writeheader()
@@ -582,6 +735,7 @@ def write_projection_reports(
         writer = csv.DictWriter(
             handle,
             delimiter="\t",
+            lineterminator="\n",
             fieldnames=[
                 "gene_symbol",
                 "gene_name",
@@ -593,15 +747,20 @@ def write_projection_reports(
                 "mapping_subjects",
                 "pn_codes",
                 "representative_genes",
-                "projection_count",
                 "supporting_goa_terms",
+                "projection_count",
             ],
         )
         writer.writeheader()
         writer.writerows(
             row
             for row in summary_rows
-            if row["goa_status"] in {"new_to_goa", "more_specific_than_existing_goa"}
+            if row["goa_status"]
+            in {
+                "new_to_goa",
+                "more_specific_than_existing_goa",
+                "supported_by_goa_regulation",
+            }
         )
 
     status_counts: dict[str, int] = {}
@@ -609,7 +768,7 @@ def write_projection_reports(
         status_counts[row["goa_status"]] = status_counts.get(row["goa_status"], 0) + 1
     status_summary_path = output_dir / "pn_projected_status_summary.tsv"
     with status_summary_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle, delimiter="\t")
+        writer = csv.writer(handle, delimiter="\t", lineterminator="\n")
         writer.writerow(["metric", "value"])
         writer.writerow(["row_level_projections", str(len(projected_rows))])
         writer.writerow(["unique_gene_go_pairs", str(len(summary_rows))])
@@ -620,7 +779,12 @@ def write_projection_reports(
                     sum(
                         1
                         for row in summary_rows
-                        if row["goa_status"] in {"new_to_goa", "more_specific_than_existing_goa"}
+                        if row["goa_status"]
+                        in {
+                            "new_to_goa",
+                            "more_specific_than_existing_goa",
+                            "supported_by_goa_regulation",
+                        }
                     )
                 ),
             ]
@@ -629,6 +793,7 @@ def write_projection_reports(
             "already_in_goa_exact",
             "entailed_by_goa_closure",
             "more_specific_than_existing_goa",
+            "supported_by_goa_regulation",
             "new_to_goa",
             "no_local_goa",
         ):
@@ -656,6 +821,15 @@ def build_argument_parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_GOA_ROOT,
         help=f"Root directory containing per-gene GOA folders (default: {DEFAULT_GOA_ROOT})",
+    )
+    parser.add_argument(
+        "--goa-duckdb",
+        type=Path,
+        default=None,
+        help=(
+            "Optional DuckDB GOA database to use as the primary GOA source, "
+            f"for example {DEFAULT_GOA_DUCKDB}"
+        ),
     )
     parser.add_argument(
         "--fetch-missing-goa",
@@ -687,6 +861,7 @@ def main() -> None:
         workbook_rows,
         mapping_specs,
         args.goa_root,
+        goa_duckdb=args.goa_duckdb,
         fetch_missing_goa=args.fetch_missing_goa,
         goa_cache_dir=args.goa_cache_dir,
     )
@@ -703,6 +878,7 @@ def main() -> None:
         f"already_in_goa_exact={status_counts.get('already_in_goa_exact', 0)} "
         f"entailed_by_goa_closure={status_counts.get('entailed_by_goa_closure', 0)} "
         f"more_specific_than_existing_goa={status_counts.get('more_specific_than_existing_goa', 0)} "
+        f"supported_by_goa_regulation={status_counts.get('supported_by_goa_regulation', 0)} "
         f"new_to_goa={status_counts.get('new_to_goa', 0)} "
         f"no_local_goa={status_counts.get('no_local_goa', 0)})"
     )

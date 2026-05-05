@@ -50,7 +50,7 @@ def _write_minimal_workbook(path: Path) -> None:
     workbook.save(path)
 
 
-def test_coverage_distinguishes_mapped_unmapped_and_uncovered(tmp_path: Path) -> None:
+def test_coverage_distinguishes_curation_statuses_and_missing_yaml(tmp_path: Path) -> None:
     workbook_path = tmp_path / "mini_pn.xlsx"
     _write_minimal_workbook(workbook_path)
 
@@ -60,22 +60,22 @@ def test_coverage_distinguishes_mapped_unmapped_and_uncovered(tmp_path: Path) ->
         "id": "pn_mapping_set:test",
         "label": "Test mapping set",
         "references": ["proteostasis-workbook-2024"],
-        "mappings": [
+        "subject_curations": [
             {
                 "subject_code": "Translation|Cytosolic translation|Translation initiation|eIF2 complex",
                 "subject_level": "type",
+                "curation_status": "mapped",
                 "target_term": {
                     "id": "GO:0005850",
                     "label": "eukaryotic translation initiation factor 2 complex",
                 },
                 "mapping_scope": "ok_for_propagation_to_go",
                 "rationale": "Test mapped entry.",
-            }
-        ],
-        "unmapped_subjects": [
+            },
             {
                 "subject_code": "Translation|Cytosolic translation|Translation initiation|eIF4F complex",
                 "subject_level": "type",
+                "curation_status": "no_mapping",
                 "rationale": "Test explicit unmapped entry.",
             }
         ],
@@ -86,9 +86,8 @@ def test_coverage_distinguishes_mapped_unmapped_and_uncovered(tmp_path: Path) ->
     )
 
     code_records = load_workbook_codes(workbook_path)
-    mapping_specs = load_subject_specs(mapping_dir, slot_name="mappings")
-    unmapped_specs = load_subject_specs(mapping_dir, slot_name="unmapped_subjects")
-    coverage_rows = summarize_coverage(code_records, mapping_specs, unmapped_specs)
+    curation_specs = load_subject_specs(mapping_dir)
+    coverage_rows = summarize_coverage(code_records, curation_specs)
 
     status_by_code = {
         row["code"]: row["status"] for row in coverage_rows if row["level"] == "type"
@@ -99,11 +98,11 @@ def test_coverage_distinguishes_mapped_unmapped_and_uncovered(tmp_path: Path) ->
     )
     assert (
         status_by_code["Translation|Cytosolic translation|Translation initiation|eIF4F complex"]
-        == "explicit_unmapped"
+        == "no_mapping"
     )
     assert (
         status_by_code[
             "Translation|Cytosolic translation|Translation initiation|assorted initiation factors"
         ]
-        == "uncovered"
+        == "missing_from_yaml"
     )
