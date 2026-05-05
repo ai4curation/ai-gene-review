@@ -1,8 +1,8 @@
 # Jak1 review notes
 
-Falcon deep research was unavailable for this corrected batch after the provider
-timeout observed during the batch run; no `Jak1-deep-research-falcon.md` file
-was produced. Review decisions used the cached UniProt record and publications.
+Falcon deep research is now available at `Jak1-deep-research-falcon.md` after
+the initial provider timeout was retried. Review decisions used the cached
+UniProt record, cached publications, and Falcon research where relevant.
 
 Core function judgment: JAK1 is a receptor-associated, non-receptor protein
 tyrosine kinase that phosphorylates receptor tails and STAT proteins in

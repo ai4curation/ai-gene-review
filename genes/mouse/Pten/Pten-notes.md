@@ -1,9 +1,9 @@
 # Pten review notes
 
-Falcon deep research attempt timed out on 2026-05-04 while running
-`just deep-research-falcon mouse Pten`; no `Pten-deep-research-falcon.md` file
-was produced. Review decisions used the cached UniProt record, cached
-publications, and existing BioReason/Perplexity research.
+Falcon deep research is now available at `Pten-deep-research-falcon.md` after
+the initial 2026-05-04 provider timeout was retried. Review decisions used the
+cached UniProt record, cached publications, Falcon research, and existing
+BioReason/Perplexity research.
 
 Core function judgment: PTEN is primarily a dual-specificity phosphatase whose
 most characteristic activity is dephosphorylation of PtdIns(3,4,5)P3 at the D3
