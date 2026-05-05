@@ -45,3 +45,8 @@ GO:0036503 ERAD pathway is justified because the strongest mechanistic evidence 
 - Which BCAP31 client proteins are physiologically most important in neurons and oligodendrocyte lineage cells affected in DDCH syndrome?
 - Can separation-of-function variants distinguish the ERAD/cargo-export role from the TOMM40/MAM mitochondrial homeostasis role?
 - Are the apoptosis annotations better represented by annotations to the p20 cleavage product context, or should they remain pathway-context-only references rather than BCAP31 core function terms?
+
+## Resolution Notes
+
+- The plasma membrane (`GO:0005886`) call referenced under "Localization Calls" was resolved as `MARK_AS_OVER_ANNOTATED` in PR #317. The PMID:8706661 surface-antigen detection is real but represents a trafficking intermediate / overexpression artifact in transfected cells; later work establishes ER/ERGIC residency as the primary biology, consistent with the cytoplasmic KKXX retrieval motif.
+- The clathrin-coated vesicle (`GO:0030136`) IEA was resolved as `MARK_AS_OVER_ANNOTATED` in the same PR — Ensembl rat transfer with no human-specific support, and BCAP31 traffics via COPI/COPII machinery rather than the clathrin pathway.

@@ -1,0 +1,211 @@
+name: PR Shepherd
+
+on:
+  schedule:
+    # Run every 4 hours, offset from other workflows.
+    - cron: "37 1/4 * * *"
+  workflow_dispatch:
+    inputs:
+      max_prs:
+        description: "Maximum stuck PRs to tend in this run"
+        default: "1"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "3"
+      pr_number:
+        description: "Specific PR number to tend instead of scanning"
+        required: false
+        type: string
+      dry_run:
+        description: "Inspect and report without changing PRs"
+        required: false
+        default: false
+        type: boolean
+      model:
+        description: "Claude model to use"
+        default: claude-opus-4-7
+        type: choice
+        options:
+          - claude-sonnet-4-6
+          - claude-haiku-4-5-20251001
+          - claude-opus-4-7
+
+concurrency:
+  group: pr-shepherd
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+  checks: read
+  id-token: write
+
+jobs:
+  shepherd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_FOR_PR }}
+
+      - name: Configure git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install python tools
+        run: uv sync
+
+      - name: Install just
+        run: uv tool install rust-just
+
+      - name: Run PR Shepherd
+        id: pr-shepherd
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FOR_PR }}
+          GITHUB_TOKEN: ${{ secrets.PAT_FOR_PR }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.PAT_FOR_PR }}
+          show_full_output: true
+          allowed_bots: "claude,github-actions"
+          claude_args: |
+            --dangerously-skip-permissions
+            --mcp-config '{"mcpServers": {"ols": {"command": "uvx", "args": ["ols-mcp"]}}}'
+            --model ${{ inputs.model || 'claude-opus-4-7' }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            TRIGGER: ${{ github.event_name }}
+            MAX_PRS: ${{ inputs.max_prs || '1' }}
+            SPECIFIC_PR: ${{ inputs.pr_number || '' }}
+            DRY_RUN: ${{ inputs.dry_run || false }}
+
+            You are the automated PR Shepherd for the ai-gene-review repository. Your job is to
+            tend stuck bot-authored pull requests and move at most MAX_PRS of them forward in
+            this run.
+
+            Start by reading the full contents of CLAUDE.md. Follow all repository conventions.
+            In particular:
+            - Never edit derived files: *-uniprot.txt, *-goa.tsv, *-deep-research*.md,
+              publications/PMID_*.md. If these need updating, use `just fetch-gene` or
+              `just deep-research` to regenerate them.
+            - Use `just validate <organism> <gene>` to validate changes before pushing.
+            - Never guess GO IDs, PMIDs, UniProt accessions, or evidence text.
+            - Use the OLS MCP server to look up or verify GO terms when needed.
+
+            Candidate PRs:
+            - If SPECIFIC_PR is set, inspect only that PR.
+            - Otherwise list open PRs in REPO and consider PRs that match EITHER criterion:
+              (a) authored by: `app/claude`, `app/github-actions`, `github-actions[bot]`,
+                  or any bot/app author, OR
+              (b) the head branch name starts with `feat/review-`, `chore/`, `claude/`,
+                  `auto/`, or `curation/` (these are agent-created branches).
+            - A PR matching either (a) or (b) is a candidate. Do not act on PRs that match
+              neither criterion.
+
+            Gather enough context for each candidate before choosing:
+            - PR metadata: author, draft state, base/head refs, head SHA, updated/created time,
+              reviewDecision, mergeStateStatus, statusCheckRollup, and labels.
+            - Reviews and review comments, especially the latest review state per reviewer.
+            - Recent workflow/check status, including cancelled Claude review runs.
+            - Existing discussion so you do not repeat an action already taken.
+
+            IMPORTANT — understanding review state in this repo:
+            The `claude-code-review` workflow cannot formally approve PRs due to GitHub Actions
+            permissions. Reviews posted by the bot often show as CHANGES_REQUESTED even when
+            the review body says "approve" or "no blocking issues". You MUST read the actual
+            review body text to determine whether issues are truly blocking. If the latest
+            review body indicates approval with only non-blocking suggestions, treat the PR
+            as effectively APPROVED.
+
+            Classify each candidate into one of these states:
+            - APPROVED + CLEAN: latest effective review is approval and branch is mergeable.
+            - APPROVED + DIRTY: latest effective review is approval but branch is behind or
+              conflicted.
+            - CHANGES_REQUESTED: latest effective review has genuinely blocking issues.
+            - REVIEW_REQUIRED + cancelled review: the PR still requires review and the current
+              or latest Claude review run was cancelled or never completed after the latest
+              head SHA.
+
+            Prioritize the most stuck PRs in this order:
+            1. APPROVED + CLEAN or approved-but-merge-blocked quick wins.
+            2. APPROVED + DIRTY PRs that can be updated without a rebase or force-push.
+            3. Stale CHANGES_REQUESTED PRs, oldest updated first.
+            4. REVIEW_REQUIRED PRs whose review was cancelled or missing after the latest push.
+
+            Then process only the highest-ranked PRs up to MAX_PRS.
+
+            Allowed actions by state:
+            - APPROVED + CLEAN:
+              - If the PR is draft, mark it ready for review.
+              - Squash merge it directly when required checks are complete, or enable squash
+                auto-merge when checks are still pending.
+            - APPROVED + DIRTY:
+              - First try GitHub's update-branch API with the current head SHA.
+              - If update-branch reports conflicts, you may attempt a local merge from the base
+                branch into the PR branch, but never rebase and never force-push.
+              - If conflicts are not safely resolvable, post a concise comment explaining the
+                blocker and leave the PR otherwise untouched.
+            - CHANGES_REQUESTED:
+              - Read the review and inline comments carefully.
+              - Checkout the PR branch and address clear, safe feedback.
+              - Only edit curation-scope files: genes/**/*-ai-review.yaml,
+                genes/**/*-predictions-review.yaml, genes/**/*-notes.md, and tooling/workflow
+                files. If the review requires changes outside that scope, post a clarifying
+                comment instead of guessing.
+              - Common fixes in this repo:
+                - Replacing a wrong or over-generic GO term with a more specific one
+                - Fixing supported_by text that contradicts the annotation action
+                - Changing REMOVE to MARK_AS_OVER_ANNOTATED for protein binding annotations
+                - Adding missing PMID references to supported_by
+                - Populating empty core_functions from the review evidence
+                - Fixing misattributed or contradictory findings statements
+              - Validate changed files with `just validate <organism> <gene>` before
+                committing and pushing.
+              - Commit a small fix on top of the PR branch and push normally. Do not rebase,
+                reset, or force-push.
+            - REVIEW_REQUIRED + cancelled review:
+              - Re-trigger the review workflow with:
+                `gh workflow run claude-code-review.yml --repo "$REPO" --ref main -f pr_number=PR_NUMBER`
+              - Leave a short comment only if useful to explain the re-trigger.
+
+            Guardrails:
+            - Respect DRY_RUN. If DRY_RUN is true, inspect and report what you would do without
+              modifying branches, comments, reviews, workflows, or merge state.
+            - Never force-push, rebase, reset, or rewrite PR history.
+            - Never modify human-authored PRs.
+            - If you are unsure about a biological, ontological, or evidence fix, post a
+              clarifying comment on the PR instead of guessing.
+            - Spend this run on the selected PRs only.
+
+            Observability:
+            - For EVERY PR you act on (merge, update branch, push fixes, re-trigger review),
+              post a comment on the PR with this format:
+              🐑 **PR Shepherd** (action run) — [what you did]. [what happens next].
+              Example: "🐑 **PR Shepherd** (action run) — Squash-merged after checks passed. No further action needed."
+            - If you scan candidates but find nothing actionable, do NOT post comments.
+              Instead, print your summary to stdout so it can be captured in GITHUB_STEP_SUMMARY.
+
+            End by posting or logging a concise summary of candidates scanned, selected PRs,
+            actions taken, validation run, and any blockers that remain.
+
+      - name: Write step summary
+        if: always()
+        run: |
+          echo "## 🐑 PR Shepherd Run" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.pr-shepherd.outputs.result }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

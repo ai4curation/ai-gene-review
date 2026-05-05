@@ -1,0 +1,2881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cpx - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cpx</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q95PA1" target="_blank" class="term-link">
+                        Q95PA1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Doryteuthis pealeii</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cpx";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q95PA1" data-a="DESCRIPTION: Complexin (synaphin) is a cytosolic protein that a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Complexin (synaphin) is a cytosolic protein that acts as a dual regulator of synaptic vesicle exocytosis at the squid giant synapse: it both clamps SNARE complexes to prevent spontaneous fusion and facilitates rapid Ca2+-triggered synchronous release. It binds preferentially to syntaxin within the assembled SNARE core complex (containing syntaxin-1, synaptobrevin, and SNAP-25), and promotes SNARE complex oligomerization into higher-order structures that form a scaffold for efficient, regulated vesicle fusion. The crystal structure of squid complexin bound to the SNARE complex (2.95 A resolution; PMID:12004067) reveals an alpha-helical segment (residues 25-98) that binds in antiparallel fashion to the SNARE four-helix bundle, contacting syntaxin and synaptobrevin around the ionic zero layer. The N-terminal tip (~residues 1-26) is critical for activating fast Ca2+-triggered fusion but dispensable for clamping. The central and accessory helices mediate the inhibitory clamp function, stabilizing a partially zippered SNARE state. The C-terminal tail is amphipathic, enabling membrane association via curvature sensing (non-CAAX variant, unlike retinal complexin-3/4 isoforms). Complexin cooperates with synaptotagmin-1 to synergistically clamp SNARE assembly, and Ca2+-bound synaptotagmin releases the clamp to trigger synchronous neurotransmitter release. In mammals, complexin knockout causes 3-4 fold increase in spontaneous miniature release and abolishes fast synchronous release. Human CPLX1 loss-of-function mutations cause infantile epileptic encephalopathies (SNAREopathies).</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000149" target="_blank" class="term-link">
+                                    GO:0000149
+                                </a>
+                            </span>
+                            <span class="term-label">SNARE binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95PA1" data-a="GO:0000149" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter-predicted SNARE binding is strongly supported by direct experimental evidence from the squid giant synapse. Tokumaru et al. (2001) demonstrated that complexin/synaphin preferentially binds to syntaxin within the SNARE complex [PMID:11239399]. Bracher et al. (2002) resolved the crystal structure of squid complexin bound to the SNARE core complex at 2.95 angstrom resolution, showing detailed molecular contacts [PMID:12004067]. SNARE binding is the core molecular function of complexin. The term is appropriate, though syntaxin binding (GO:0019905) would also be valid as a more specific child term given the preferential syntaxin interaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SNARE binding is the defining molecular function of complexin, demonstrated directly in this species by both biochemical and structural studies. The term is at the right level of specificity since complexin binds the assembled SNARE complex as a whole, not just syntaxin alone.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                                        PMID:11239399
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Synaphin/complexin is a cytosolic protein that preferentially binds to syntaxin within the SNARE complex.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12004067" target="_blank" class="term-link">
+                                        PMID:12004067
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A helical segment of complexin binds in anti-parallel fashion to the four-helix bundle of the core SNARE complex and interacts at its C terminus with syntaxin and synaptobrevin around the ionic zero layer of the SNARE complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95PA1" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol localization is supported by UniProt subcellular location annotation and by direct experimental evidence. Tokumaru et al. (2001) identified complexin as a cytosolic protein in squid optic lobe [PMID:11239399]. The UniProt record confirms cytoplasm/cytosol localization with experimental evidence (ECO:0000269|PubMed:11239399).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytosol localization is experimentally confirmed in this species. Complexin is primarily a soluble cytosolic protein that associates with the SNARE complex at the membrane.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                                        PMID:11239399
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Synaphin/complexin is a cytosolic protein that preferentially binds to syntaxin within the SNARE complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006836" target="_blank" class="term-link">
+                                    GO:0006836
+                                </a>
+                            </span>
+                            <span class="term-label">neurotransmitter transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q95PA1" data-a="GO:0006836" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping from the Synaphin domain (IPR008849) to neurotransmitter transport. This is an overly broad and somewhat imprecise annotation. Complexin does not function as a neurotransmitter transporter; rather, it regulates the exocytotic release of neurotransmitter-containing synaptic vesicles. The more accurate biological process terms are synaptic vesicle exocytosis (GO:0016079) and positive regulation of synaptic vesicle exocytosis (GO:2000302), both of which are already annotated or proposed.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Neurotransmitter transport implies a direct role in moving neurotransmitter molecules, which is misleading. Complexin regulates exocytosis of neurotransmitter-containing synaptic vesicles at a late prefusion step. The correct process is regulation of neurotransmitter secretion or synaptic vesicle exocytosis, not transport per se.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000302" target="_blank" class="term-link">
+                                    positive regulation of synaptic vesicle exocytosis
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                                        PMID:11239399
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Injection of this peptide into squid giant presynaptic terminals inhibited neurotransmitter release at a late prefusion step of synaptic vesicle exocytosis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95PA1" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane association is supported by UniProt annotation indicating lipid-anchor (farnesylation) at Cys149. The UniProt record lists membrane localization via lipid-anchor. While complexin is primarily cytosolic, the C-terminal farnesyl modification enables membrane association. This is a very broad CC term but is not incorrect.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Complexin is farnesylated at Cys149 (S-farnesyl cysteine), providing a lipid anchor for membrane association. The membrane annotation is consistent with this post-translational modification. Although a more specific membrane compartment (e.g. presynaptic membrane) would be preferable, the broad membrane term is acceptable given only the farnesylation evidence without specific membrane subcompartment localization data.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016079" target="_blank" class="term-link">
+                                    GO:0016079
+                                </a>
+                            </span>
+                            <span class="term-label">synaptic vesicle exocytosis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q95PA1" data-a="GO:0016079" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter-predicted involvement in synaptic vesicle exocytosis is strongly supported by experimental evidence from the squid giant synapse. Tokumaru et al. (2001) showed that injection of an inhibitory complexin peptide into squid giant presynaptic terminals blocked neurotransmitter release at a late prefusion step of synaptic vesicle exocytosis [PMID:11239399]. Bracher et al. (2002) proposed that complexin is part of a multiprotein fusion machinery that regulates vesicle fusion at a late pre-fusion stage [PMID:12004067]. However, complexin is a regulator of this process rather than a direct participant; a more precise annotation would be positive regulation of synaptic vesicle exocytosis (GO:2000302).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While complexin is clearly involved in the synaptic vesicle exocytosis pathway, it functions as a positive regulator rather than a core component of the fusion machinery itself. The term GO:2000302 (positive regulation of synaptic vesicle exocytosis) more accurately captures the regulatory role demonstrated by the antibody and peptide inhibition experiments.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000302" target="_blank" class="term-link">
+                                    positive regulation of synaptic vesicle exocytosis
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                                        PMID:11239399
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Injection of this peptide into squid giant presynaptic terminals inhibited neurotransmitter release at a late prefusion step of synaptic vesicle exocytosis.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12004067" target="_blank" class="term-link">
+                                        PMID:12004067
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We propose that this structure is part of a multiprotein fusion machinery that regulates vesicle fusion at a late pre-fusion stage.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031201" target="_blank" class="term-link">
+                                    GO:0031201
+                                </a>
+                            </span>
+                            <span class="term-label">SNARE complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q95PA1" data-a="GO:0031201" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter-predicted localization to the SNARE complex. Complexin binds the assembled SNARE complex but is not a core subunit of it. The SNARE complex consists of syntaxin-1, synaptobrevin, and SNAP-25; complexin is an accessory regulatory protein that binds to the outside of the assembled four-helix bundle. Bracher et al. (2002) solved the crystal structure showing complexin bound to the SNARE complex surface [PMID:12004067]. Being a binding partner rather than a subunit, the part_of relationship implied by this CC annotation is questionable.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Complexin is not a core subunit of the SNARE complex; it binds to the exterior surface of the assembled SNARE four-helix bundle as an accessory regulatory protein. The part_of qualifier used in the GOA annotation implies complexin is a structural component of the SNARE complex, which is inaccurate. The SNARE binding MF annotation (GO:0000149) already captures this interaction appropriately.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12004067" target="_blank" class="term-link">
+                                        PMID:12004067
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A helical segment of complexin binds in anti-parallel fashion to the four-helix bundle of the core SNARE complex and interacts at its C terminus with syntaxin and synaptobrevin around the ionic zero layer of the SNARE complex.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                                        PMID:11239399
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Synaphin/complexin is a cytosolic protein that preferentially binds to syntaxin within the SNARE complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043195" target="_blank" class="term-link">
+                                    GO:0043195
+                                </a>
+                            </span>
+                            <span class="term-label">terminal bouton</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95PA1" data-a="GO:0043195" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter-predicted localization to terminal bouton. Tokumaru et al. (2001) performed experiments by injecting reagents into squid giant presynaptic terminals, confirming that complexin functions at synaptic terminals [PMID:11239399]. While the squid giant synapse is anatomically distinct from a typical bouton, the general concept of presynaptic terminal localization is supported. This annotation is reasonable for a phylogenetically inferred term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Terminal bouton localization is consistent with the known function of complexin at presynaptic terminals. The squid giant synapse experiments directly demonstrate complexin activity at the presynaptic terminal. While the squid giant synapse is not a classical bouton, the TreeGrafter inference from mammalian complexin orthologs is phylogenetically sound.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                                        PMID:11239399
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Injection of this peptide into squid giant presynaptic terminals inhibited neurotransmitter release at a late prefusion step of synaptic vesicle exocytosis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046928" target="_blank" class="term-link">
+                                    GO:0046928
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of neurotransmitter secretion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95PA1" data-a="GO:0046928" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter-predicted involvement in regulation of neurotransmitter secretion. This is well supported by experimental evidence. Tokumaru et al. (2001) demonstrated that complexin is essential for neurotransmitter release at the squid giant synapse, and that blocking complexin-syntaxin interaction inhibits neurotransmitter release [PMID:11239399]. This term is acceptable but slightly less specific than positive regulation of synaptic vesicle exocytosis (GO:2000302), which better captures the mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Regulation of neurotransmitter secretion is an accurate annotation for complexin. While GO:2000302 (positive regulation of synaptic vesicle exocytosis) is more mechanistically precise, this broader regulatory term is also correct and captures the physiological outcome. Keeping both provides complementary granularity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                                        PMID:11239399
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Injection of this peptide into squid giant presynaptic terminals inhibited neurotransmitter release at a late prefusion step of synaptic vesicle exocytosis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000302" target="_blank" class="term-link">
+                                    GO:2000302
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of synaptic vesicle exocytosis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11239399
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SNARE complex oligomerization by synaphin/complexin is essen...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q95PA1" data-a="GO:2000302" data-r="PMID:11239399" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation based on direct experimental evidence from the squid giant synapse. Tokumaru et al. (2001) demonstrated that complexin positively regulates synaptic vesicle exocytosis: blocking complexin function with antibodies or inhibitory peptides inhibited neurotransmitter release at a late prefusion step [PMID:11239399]. UniProt also annotates this protein as positively regulating a late step in synaptic vesicle exocytosis. This is the most precise biological process term for complexin function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term precisely captures the experimentally demonstrated positive regulatory role of complexin in synaptic vesicle exocytosis, which is the core biological function of this protein. It is more specific than both GO:0016079 (synaptic vesicle exocytosis) and GO:0046928 (regulation of neurotransmitter secretion).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                                        PMID:11239399
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SNARE complex oligomerization by synaphin/complexin is essential for synaptic vesicle exocytosis.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                                        PMID:11239399
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Injection of this peptide into squid giant presynaptic terminals inhibited neurotransmitter release at a late prefusion step of synaptic vesicle exocytosis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019905" target="_blank" class="term-link">
+                                    GO:0019905
+                                </a>
+                            </span>
+                            <span class="term-label">syntaxin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11239399
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SNARE complex oligomerization by synaphin/complexin is essen...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q95PA1" data-a="GO:0019905" data-r="PMID:11239399" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation for syntaxin binding, which is noted in the UniProt DR lines (from InterPro) but absent from the GOA TSV. Both key publications demonstrate direct complexin-syntaxin interaction. Tokumaru et al. (2001) showed that complexin preferentially binds to syntaxin within the SNARE complex and that a peptide from the syntaxin-binding domain competitively inhibits this interaction [PMID:11239399]. Bracher et al. (2002) resolved the structural basis showing complexin contacts syntaxin around the ionic zero layer [PMID:12004067].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Syntaxin binding is a more specific child term of SNARE binding that is directly demonstrated in this species. It captures the preferential interaction of complexin with syntaxin within the SNARE complex. This complements the broader SNARE binding annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                                        PMID:11239399
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Synaphin/complexin is a cytosolic protein that preferentially binds to syntaxin within the SNARE complex. We find that synaphin promotes SNAREs to form precomplexes that oligomerize into higher order structures. A peptide from the central, syntaxin binding domain of synaphin competitively inhibits these two proteins from interacting.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12004067" target="_blank" class="term-link">
+                                        PMID:12004067
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A helical segment of complexin binds in anti-parallel fashion to the four-helix bundle of the core SNARE complex and interacts at its C terminus with syntaxin and synaptobrevin around the ionic zero layer of the SNARE complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Complexin binds the assembled SNARE core complex containing syntaxin-1, synaptobrevin, and SNAP-25. The central helical region (residues 25-98 in the squid crystal structure) binds antiparallel to the SNARE four-helix bundle, promoting SNARE complex oligomerization into higher-order structures that scaffold vesicle fusion. Complexin has a dual function: (1) the central and accessory helices clamp the SNARE complex in a partially zippered pre-fusion state, preventing spontaneous vesicle fusion (demonstrated by 3-4 fold increase in miniature release frequency upon complexin knockdown in mammals); and (2) the N-terminal tip (~residues 1-26) is critical for activating fast Ca2+-triggered synchronous release, cooperating with the Ca2+ sensor synaptotagmin-1. Complexin and synaptotagmin-1 synergistically maintain docked vesicles in a release-ready state; Ca2+-bound synaptotagmin then releases the clamp to trigger fusion. The C-terminal amphipathic tail targets complexin to curved synaptic vesicle membranes, increasing local concentration at release sites. This protein is essential for the temporal precision of neurotransmitter release.</h3>
+                <span class="vote-buttons" data-g="Q95PA1" data-a="FUNCTION: Complexin binds the assembled SNARE core complex c..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000149" target="_blank" class="term-link">
+                            SNARE binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000302" target="_blank" class="term-link">
+                                positive regulation of synaptic vesicle exocytosis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043195" target="_blank" class="term-link">
+                                terminal bouton
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                                PMID:11239399
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Synaphin/complexin is a cytosolic protein that preferentially binds to syntaxin within the SNARE complex. We find that synaphin promotes SNAREs to form precomplexes that oligomerize into higher order structures.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12004067" target="_blank" class="term-link">
+                                PMID:12004067
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">A helical segment of complexin binds in anti-parallel fashion to the four-helix bundle of the core SNARE complex and interacts at its C terminus with syntaxin and synaptobrevin around the ionic zero layer of the SNARE complex.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11239399" target="_blank" class="term-link">
+                            PMID:11239399
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">SNARE complex oligomerization by synaphin/complexin is essential for synaptic vesicle exocytosis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Synaphin/complexin is a cytosolic protein that preferentially binds to syntaxin within the SNARE complex and promotes SNARE complex oligomerization into higher order structures.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Injection of an inhibitory peptide from the syntaxin-binding domain of complexin into squid giant presynaptic terminals inhibited neurotransmitter release at a late prefusion step of synaptic vesicle exocytosis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Oligomerization of SNARE complexes into a higher order structure creates a SNARE scaffold for efficient, regulated fusion of synaptic vesicles.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12004067" target="_blank" class="term-link">
+                            PMID:12004067
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">X-ray structure of a neuronal complexin-SNARE complex from squid</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure at 2.95 angstrom resolution shows a helical segment of squid complexin (residues 25-98) binds in antiparallel fashion to the SNARE four-helix bundle, contacting syntaxin and synaptobrevin at the ionic zero layer.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The structure is part of a multiprotein fusion machinery that regulates vesicle fusion at a late pre-fusion stage. Ca2+ may initiate membrane fusion by acting directly or indirectly on complexin.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Complexin&#39;s binding position on the SNARE bundle strategically prevents the final zippering of the SNAREs at the membrane-proximal end, blocking fusion until Ca2+ signaling occurs.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35377328" target="_blank" class="term-link">
+                            PMID:35377328
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular determinants of complexin clamping and activation function.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The accessory-central helical domains of complexin are essential for its inhibitory (clamping) function, and also contribute to rapid Ca2+-synchronized vesicle release.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Complexin and synaptotagmin-1 synergistically clamp SNARE assembly, maintaining a pool of docked vesicles ready for fast release upon Ca2+ influx.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The C-terminal membrane-binding domain of complexin aids clamping by tethering complexin to membranes, increasing local concentration at release sites.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19164750" target="_blank" class="term-link">
+                            PMID:19164750
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complexin controls the force transfer from SNARE complexes to membranes in fusion.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Complexin knockdown in mouse neurons causes a 3-4 fold increase in miniature neurotransmitter release frequency (enhanced spontaneous vesicle fusion).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Complexin knockdown reduces evoked EPSC amplitude by ~3-4 fold and specifically abolishes fast synchronous release triggered by action potentials.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Deletion of the N-terminal 26 amino acids abolishes complexin&#39;s ability to synchronize rapid release without affecting its SNARE-binding or baseline clamp.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37065827" target="_blank" class="term-link">
+                            PMID:37065827
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic disorders of neurotransmitter release machinery.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Four disease-associated CPLX1 mutations have been reported: two nonsense (E108*, C105*), one frameshift (D23Rfs*69), and one missense (L128M), causing infantile epileptic encephalopathies classified as SNAREopathies.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Priming of a vesicle is completed when SNAREs assemble and complexin binds to the SNARE complex, preventing it from disassembling or fully fusing the membranes.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ca2+ binding to synaptotagmin-1 releases the clamp and allows SNARE complexes to rapidly complete zippering and drive membrane fusion.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cpx-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q95PA1" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: false<br />
+start_time: '2026-05-01T14:00:28.167272'<br />
+end_time: '2026-05-01T14:07:06.960962'<br />
+duration_seconds: 398.79<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DORPE<br />
+  gene_id: cpx<br />
+  gene_symbol: cpx<br />
+  uniprot_accession: Q95PA1<br />
+  protein_description: 'RecName: Full=Complexin; AltName: Full=Synaphin; Flags: Precursor;'<br />
+  gene_info: Name=cpx;<br />
+  organism_full: Doryteuthis pealeii (Longfin inshore squid) (Loligo pealeii).<br />
+  protein_family: Belongs to the complexin/synaphin family. .<br />
+  protein_domains: Synaphin. (IPR008849); Synaphin (PF05835)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 86</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q95PA1</li>
+<li><strong>Protein Description:</strong> RecName: Full=Complexin; AltName: Full=Synaphin; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=cpx;</li>
+<li><strong>Organism (full):</strong> Doryteuthis pealeii (Longfin inshore squid) (Loligo pealeii).</li>
+<li><strong>Protein Family:</strong> Belongs to the complexin/synaphin family. .</li>
+<li><strong>Key Domains:</strong> Synaphin. (IPR008849); Synaphin (PF05835)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "cpx" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Doryteuthis pealeii (Longfin inshore squid) (Loligo pealeii).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'cpx' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>cpx</strong> (gene ID: cpx, UniProt: Q95PA1) in DORPE.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="complexin-cpx-in-doryteuthis-pealeii-structure-function-and-current-insights">Complexin (cpx) in Doryteuthis Pealeii: Structure, Function, and Current Insights</h1>
+<h2 id="gene-identity-and-overview">Gene Identity and Overview</h2>
+<p>The <strong>cpx</strong> gene in <em>Doryteuthis pealeii</em> (longfin squid; formerly <em>Loligo pealeii</em>) encodes <strong>complexin</strong>, also known as synaphin. Complexin is an evolutionarily conserved <strong>cytosolic</strong> protein that binds to SNARE complexes and regulates synaptic vesicle fusion (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,1995%3B%20Huntwork%20and%20Littleton%2C%202007">pmc.ncbi.nlm.nih.gov</a>). This small protein (~130 amino acids in most species) belongs to the complexin/synaphin family (InterPro IPR008849), characterized by a largely alpha-helical structure (the <strong>synaphin domain</strong>) responsible for SNARE binding. Notably, “cpx” can be an ambiguous symbol in other organisms, but in the squid it specifically refers to this synaptic <strong>Complexin</strong> protein (distinct from unrelated CPX proteins in bacteria or other contexts). The squid complexin shares the defining features of the family, confirming that we are examining the correct gene product (UniProt Q95PA1) and not a different gene.</p>
+<h2 id="protein-structure-and-domain-architecture">Protein Structure and Domain Architecture</h2>
+<p>Squid complexin is composed predominantly of an extended <strong>alpha-helix</strong> that constitutes its core functional domain. In the crystal structure of the squid complexin–SNARE complex, a segment of complexin forms an <strong>anti-parallel helix</strong> bound to the four-helix bundle of the SNARE core (<a href="https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane">pubmed.ncbi.nlm.nih.gov</a>). This helix of complexin inserts into the groove of the SNARE complex, contacting the SNARE proteins (syntaxin and synaptobrevin) near the central <em>“ionic zero layer”</em> of the SNARE complex (<a href="https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane">pubmed.ncbi.nlm.nih.gov</a>). Key regions of complexin are defined as follows: </p>
+<ul>
+<li><strong>Central Helical Region:</strong> The middle of complexin (~residues 30–85) is the conserved synaphin domain that directly <strong>binds the assembled SNARE complex</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane">pubmed.ncbi.nlm.nih.gov</a>). This binding region is necessary for complexin’s function as it allows complexin to attach to the SNARE bundle and modulate its activity.  </li>
+<li><strong>N-terminal Region (Accessory Helix):</strong> The extreme N-terminus (up to ~residue 26) is relatively flexible/unstructured but is crucial for function. This region includes an “accessory” α-helix that lies adjacent to the SNARE-binding helix. Functional analyses show the N-terminal segment is <strong>essential for activating fast fusion</strong> of vesicles, even though it is not required to block spontaneous release (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=sequence%20%28Cpx%5E%7B41,dual%20activating%2Fclamping%20functions%20of%20complexin">pmc.ncbi.nlm.nih.gov</a>). In other words, deleting the first ~30–40 residues abolishes complexin’s ability to promote synchronous Ca²⁺-triggered neurotransmitter release, while a truncated protein retaining the central helix can still bind SNAREs and clamp fusion (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=sequence%20%28Cpx%5E%7B41,dual%20activating%2Fclamping%20functions%20of%20complexin">pmc.ncbi.nlm.nih.gov</a>). This suggests distinct parts of complexin carry out its dual roles (see below).  </li>
+<li><strong>C-terminal Region:</strong> The C-terminus of complexin (after the central helix) is a flexible <strong>tail</strong> that plays a role in membrane targeting. Complexin lacks any transmembrane domain; instead, in many species its tail is <strong>amphipathic</strong> and can associate with lipid membranes. Recent studies show that complexin’s C-terminal domain helps target it to synaptic vesicle or plasma membranes – for example, mammalian complexin-1 localizes to <strong>highly curved membranes</strong> (like small synaptic vesicles) via its C-terminus (<a href="https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=">www.sciencedirect.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=central%20domains%20of%20Complexin%20are,Independent%20of">pmc.ncbi.nlm.nih.gov</a>). This membrane interaction serves to increase the local concentration of complexin at release sites, enhancing its ability to clamp vesicle fusion (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=central%20domains%20of%20Complexin%20are,Independent%20of">pmc.ncbi.nlm.nih.gov</a>). Some complexin family members even possess a CAAX motif for lipid anchoring: notably, in mammals the retina-specific isoforms (complexin-3 and -4) have a C-terminal prenylation sequence (CAAX box) that anchors them to membranes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=Mammals%20express%20four%20complexin%20isoforms%2C,Specifically%2C%20these%20mice%20exhibited%20a">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=Reim%20et%20al,of%20synchronous%20neurotransmitter%20release%2C%20without">pmc.ncbi.nlm.nih.gov</a>). The common neuronal isoforms (complexin-1 and -2) lack a CAAX box and instead use an amphipathic lipid-binding tail. Evolutionary analyses in 2023 suggest that <strong>ancestral complexin</strong> proteins were membrane-anchored via a CAAX motif, and later variants (like most brain isoforms) evolved a non-CAAX, curvature-sensing tail for membrane association (<a href="https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=Both%20CAAX%20and%20non,from%20an%20ancestral%20CAAX%20protein">www.sciencedirect.com</a>). In the squid <em>D. pealeii</em>, complexin is likely a non-CAAX variant (akin to vertebrate complexin-1/2), containing a conserved amphipathic C-terminus for membrane binding (the UniProt entry flags it as a “precursor,” possibly reflecting a propeptide or processing of a C-terminal element, although it functions as a cytosolic protein). </li>
+</ul>
+<p>In summary, the squid complexin protein consists of a central SNARE-binding helix (synaphin domain) flanked by a modulatory N-terminal segment and a membrane-associating C-terminal tail. This simple architecture underlies its ability to regulate neurotransmitter release.</p>
+<h2 id="function-in-neurotransmitter-release">Function in Neurotransmitter Release</h2>
+<p>Complexin’s primary role is as a <strong>regulatory adaptor</strong> in the process of synaptic vesicle exocytosis (neurotransmitter release). It acts at the presynaptic nerve terminal, where synaptic vesicles filled with neurotransmitter are docked and primed for release. The core <strong>fusion machinery</strong> for release is the SNARE complex: a tight four-helix bundle formed by proteins on the vesicle and plasma membranes (synaptobrevin/VAMP on the vesicle, and syntaxin-1 plus SNAP-25 on the plasma membrane) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=controlled%20by%20activity,evoked%20neurotransmitter">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=at%20the%20presynaptic%20active%20zone,2019">pmc.ncbi.nlm.nih.gov</a>). The SNARE complex <strong>zippers</strong> together, pulling the vesicle membrane into contact with the cell membrane to drive fusion (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=%28S%C3%BCdhof%2C%202013%20%3B%20%2010%29,evoked%20neurotransmitter">pmc.ncbi.nlm.nih.gov</a>). However, in neurons this fusion is not constitutive — it is temporally controlled so that neurotransmitter release occurs in response to an electrical signal (an action potential) and the resultant Ca²⁺ influx. Complexin is a key regulator that ensures vesicle fusion occurs at the proper time and not before.</p>
+<p>After a vesicle is docked and a partial SNARE complex has assembled (a state often called “primed”), complexin binds to the SNARE bundle and <strong>stabilizes it in a poised state</strong> (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=et%20al,Release%20of%20the">www.frontiersin.org</a>). In fact, priming of a vesicle is completed when the SNAREs assemble and <strong>complexin binds to the SNARE complex, preventing it from disassembling or fully fusing the membranes</strong> (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=et%20al,Release%20of%20the">www.frontiersin.org</a>). By binding the SNARE complex, complexin essentially acts as a <strong>clamp</strong>: it allows SNAREs to form but blocks them from proceeding to membrane fusion in the absence of a trigger. This clamping function prevents <strong>premature (spontaneous) neurotransmitter release</strong>. Indeed, <strong>complexin is widely considered the “brake” on synaptic vesicle fusion</strong>, counteracting the inherent tendency of SNARE complexes to drive fusion. Experimental evidence strongly supports this clamping role – for example, when complexin is removed, neurons exhibit a dramatic increase in spontaneous fusion events. In mouse neurons, knockdown of complexin-1/2 causes a <strong>3–4 fold increase in miniature neurotransmitter release frequency</strong> (enhanced spontaneous vesicle fusion) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=The%20complexin%20knock,Finally%2C%20the">pmc.ncbi.nlm.nih.gov</a>). Similarly, knockout of complexin in <em>Drosophila</em> or <em>C. elegans</em> leads to abnormally high spontaneous neurotransmitter release at synapses (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=The%20complexin%20knock,Finally%2C%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=complexin%20knock,15">pmc.ncbi.nlm.nih.gov</a>). This indicates that, normally, complexin tightly restrains vesicles from fusing on their own. At the same time, complexin deficiency <em>impairs</em> the evoked, synchronous release of neurotransmitter: complexin knockdown in mammals reduces evoked excitatory postsynaptic current amplitude by ~3-4 fold and specifically <strong>abolishes fast synchronous release</strong> triggered by action potentials (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=The%20complexin%20knock,Finally%2C%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=complexin%20knock,15">pmc.ncbi.nlm.nih.gov</a>). In other words, without complexin, vesicles fuse at the wrong time (randomly at rest) and fail to fuse efficiently when Ca²⁺ is elevated, underscoring that complexin is critical both for preventing unwanted fusion and for enabling rapid, Ca-triggered fusion.</p>
+<p><strong>How does complexin achieve this dual effect?</strong> It operates in concert with the Ca²⁺ sensor <strong>synaptotagmin-1</strong> as part of the finely tuned release machinery. In the resting state (low Ca²⁺), complexin and synaptotagmin-1 work together to keep the SNARE complex in a ready-but-held state. Complexin binding <em>partially</em> arrests the SNARE complex in a <strong>partially zippered, pre-fusion configuration</strong> (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=et%20al,Release%20of%20the">www.frontiersin.org</a>). (Structural and biophysical studies indicate that complexin may “freeze” the SNARE complex with its C-terminal portion zippered and N-terminal portion unzippered, a state ready to complete fusion (<a href="https://pubmed.ncbi.nlm.nih.gov/33692090/#:~:text=PubMed%20pubmed,2">pubmed.ncbi.nlm.nih.gov</a>).) This clamped state is sometimes described as <strong>“SNAREpins”</strong>: several SNARE complexes are engaged but prevented from fully zipping and fusing (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=at%20the%20presynaptic%20active%20zone,2019">pmc.ncbi.nlm.nih.gov</a>). Complexin’s presence is thought to introduce a kinetic barrier to fusion – effectively a brake – that prevents these primed SNAREpins from spontaneously proceeding to merge the membranes. Importantly, complexin does not act alone: <strong>synaptotagmin-1 (Syt1)</strong>, which is localized on synaptic vesicles, also contributes to the clamp. Recent single-vesicle experiments showed that <strong>complexin and synaptotagmin-1 <em>synergistically</em> clamp SNARE assembly</strong>, maintaining a pool of docked vesicles that are ready for fast release upon Ca²⁺ influx (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Previously%20we%20reported%20that%20Synaptotagmin,vesicle%20fusion%20assay%2C%20we%20determine">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>When an action potential invades the nerve terminal, voltage-gated Ca²⁺ channels open and Ca²⁺ floods in. <strong>Ca²⁺ binding to synaptotagmin-1 triggers a switch</strong>: synaptotagmin-1 interacts with the SNARE–complexin complex and membranes, thereby releasing the clamp and allowing SNARE complexes to rapidly zipper the final 50% and drive membrane fusion (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=2015%20%29,Release%20of%20the">www.frontiersin.org</a>). In essence, complexin holds the vesicle in check until it receives the “go” signal from Ca²⁺-bound synaptotagmin. Upon Ca²⁺ influx, synaptotagmin-1 is thought to displace or conformationally alter complexin’s hold on the SNARE complex, <strong>unleashing full SNARE zippering and synchronous neurotransmitter release</strong> (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=2015%20%29,Release%20of%20the">www.frontiersin.org</a>). This model explains why complexin is required for fast, synchronized release: it creates an arrested intermediate state that can be synchronously released by a common trigger (Ca²⁺). If complexin is absent (or cannot bind SNAREs), vesicles either fuse too early (raising baseline noise of release) or are not held in a primed state and thus fail to respond efficiently to the Ca²⁺ signal, resulting in weaker evoked release (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=complexin%20knock,15">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Multiple lines of evidence confirm complexin’s dual functions. For example, targeted mutations show that different parts of the complexin molecule mediate clamping vs. activating roles. The <strong>central and accessory α-helices</strong> (residues ~26–83) are absolutely required for the <strong>inhibitory “clamp” function</strong> – these helical domains together bind the SNARE complex and prevent fusion (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,helical%20accessory">pmc.ncbi.nlm.nih.gov</a>). Specific disruption of the accessory helix’s interaction with SNAREs reduces the clamping efficacy (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,helical%20accessory">pmc.ncbi.nlm.nih.gov</a>). Meanwhile, the very <strong>N-terminal tip</strong> of complexin (residues 1–20, which is unstructured) is dispensable for clamping spontaneous release but is <strong>critical for promoting fast Ca²⁺-triggered fusion</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=sequence%20%28Cpx%5E%7B41,dual%20activating%2Fclamping%20functions%20of%20complexin">pmc.ncbi.nlm.nih.gov</a>). Deletion of the N-terminal 26 amino acids abolishes complexin’s ability to synchronize rapid release without affecting its SNARE-binding or baseline clamp ability (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=sequence%20%28Cpx%5E%7B41,dual%20activating%2Fclamping%20functions%20of%20complexin">pmc.ncbi.nlm.nih.gov</a>). This indicates that complexin contains a dedicated “activator” element at its extreme N-terminus that somehow helps <strong>stimulate fusion once Ca²⁺ arrives</strong>, possibly by cooperating with synaptotagmin or the SNAREs to accelerate final fusion steps (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=sequence%20%28Cpx%5E%7B41,dual%20activating%2Fclamping%20functions%20of%20complexin">pmc.ncbi.nlm.nih.gov</a>). In summary, complexin acts as a <strong>fusion clamp at rest and a fusion facilitator during stimulation</strong>. It occupies the SNARE complex to stabilize and block it, but also primes the complex in a conformation that is ultra-responsive to the Ca²⁺ signal.</p>
+<p>On a biochemical level, complexin binding has been shown to <strong>compete with synaptotagmin for the SNARE complex</strong> – suggesting that when Ca²⁺-synaptotagmin arrives, it replaces complexin on the SNARE, lifting the clamp. Structural studies (X-ray crystallography and NMR) of complexin–SNARE complexes (including the squid complexin bound to squid SNARE complex) show complexin’s helix lying alongside the SNARE bundle (<a href="https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane">pubmed.ncbi.nlm.nih.gov</a>). Interestingly, complexin’s binding is <em>anti-parallel</em> to the SNARE helices (complexin’s N- to C-terminus runs opposite to the direction of SNARE core assembly) (<a href="https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=squid%20core%20complexin,We%20propose%20that%20this%20structure">pubmed.ncbi.nlm.nih.gov</a>). The complexin helix interfaces primarily with the SNARE complex at the center and C-terminal portion of the SNARE bundle, near the ionic layer (<a href="https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=squid%20core%20complexin,thought%20to%20drive%20membrane%20fusion">pubmed.ncbi.nlm.nih.gov</a>). This strategic binding position is thought to <strong>prevent the final <em>“zippering”</em> of the SNAREs</strong> at the membrane-proximal end, thus blocking fusion until Ca²⁺ signaling occurs (<a href="https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=SNARE%20complex%20and%20interacts%20at,thought%20to%20drive%20membrane%20fusion">pubmed.ncbi.nlm.nih.gov</a>). Upon Ca²⁺ influx, synaptotagmin may bind to the SNARE–phospholipid interface and induce conformational changes that dislodge complexin or otherwise relieve the block, allowing the SNAREs to complete the fusion process (<a href="https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=SNARE%20complex%20and%20interacts%20at,thought%20to%20drive%20membrane%20fusion">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=2015%20%29,Release%20of%20the">www.frontiersin.org</a>).</p>
+<h2 id="cellular-localization-and-pathways">Cellular Localization and Pathways</h2>
+<p>Within the cell, complexin operates at the <strong>presynaptic terminal</strong> of neurons. It is a <strong>cytosolic</strong> protein that transiently associates with synaptic vesicle and plasma membranes via its interactions with SNARE complexes and its membrane-binding C-terminus. Complexin does <strong>not</strong> span membranes itself; instead, it likely diffuses in the cytosol of the nerve terminal and concentrates at <strong>active zones</strong> (sites of neurotransmitter release) by binding to partially assembled SNARE complexes on docked vesicles. As mentioned, complexin-1 and -2 in mammals are cytosolic but enriched at synapses by virtue of an ability to bind curved vesicle membranes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=central%20domains%20of%20Complexin%20are,Independent%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=">www.sciencedirect.com</a>). In <em>Doryteuthis</em> squid neurons (such as the classic giant synapse), complexin would similarly localize to presynaptic terminals, attaching to SNARE complexes that tether synaptic vesicles awaiting Ca²⁺ signals. This localization is dynamic: complexin likely comes on and off SNARE complexes as vesicles cycle through docking, fusion, and recycling. The <strong>biological pathway</strong> involving complexin is the synaptic vesicle cycle – specifically, complexin acts in the <strong>vesicle priming and fusion step</strong> of neurotransmission. Complexin interacts directly with core components of the release machinery (SNARE proteins) and functionally with synaptotagmin-1 (Ca²⁺ sensor) and other accessory factors (Munc13, Munc18 which organize SNARE assembly (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=On%20the%20presynaptic%20membrane%2C%20syntaxin,16%20Rizo%20and%20Xu">www.frontiersin.org</a>)). It does not function in unrelated cellular pathways; its role is fairly specific to regulating neuronal exocytosis (though complexin homologs may also act in hormone or dense-core vesicle release in neuroendocrine cells, given the conserved mechanism). Overall, complexin is a dedicated component of the <strong>presynaptic release machinery</strong>, ensuring that synaptic vesicle fusion is temporally and spatially controlled.</p>
+<h2 id="conservation-and-isoforms">Conservation and Isoforms</h2>
+<p>Complexin’s function is highly conserved across species, from invertebrates to humans (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,1995%3B%20Huntwork%20and%20Littleton%2C%202007">pmc.ncbi.nlm.nih.gov</a>). Homologs of squid complexin are found in <strong>fruit flies, nematodes, mammals, and other organisms</strong>, all of which share the same general domain architecture and role in synaptic release. In <em>Drosophila</em>, the single complexin gene (cpx) regulates neurotransmitter release at the neuromuscular junction much like vertebrate complexins (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,1995%3B%20Huntwork%20and%20Littleton%2C%202007">pmc.ncbi.nlm.nih.gov</a>). <em>C. elegans</em> also has a complexin that maintains vesicles in a primed state and prevents premature fusion in its neurons (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=13,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). This broad conservation highlights that the mechanism of clamping and Ca²⁺ triggering is a fundamental feature of nervous system function. In mammals, there are <strong>four complexin genes</strong> encoding isoforms with specialized expression patterns: <strong>complexin-1</strong> and <strong>complexin-2</strong> are the major brain isoforms (widely expressed in the CNS), whereas <strong>complexin-3</strong> and <strong>complexin-4</strong> are predominantly expressed in the retina (especially at ribbon synapses) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=Mammals%20express%20four%20complexin%20isoforms%2C,Specifically%2C%20these%20mice%20exhibited%20a">pmc.ncbi.nlm.nih.gov</a>). All isoforms share the central SNARE-binding domain, but complexin-3 and -4 are unique in having a CAAX prenylation motif at the C-terminus, which anchors them to membranes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=Reim%20et%20al,of%20synchronous%20neurotransmitter%20release%2C%20without">pmc.ncbi.nlm.nih.gov</a>). The widely expressed isoforms (1 and 2) lack this lipid anchor and instead use an amphipathic tail to associate with membranes. The presence or absence of a membrane anchor illustrates how evolution tweaked complexin’s localization mechanism: <strong>early ancestors of complexin likely had a membrane-anchoring sequence (CAAX)</strong>, and this feature was retained in some specialized isoforms (like in retinal neurons) but lost in others in favor of a more transient membrane interaction (<a href="https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=Both%20CAAX%20and%20non,from%20an%20ancestral%20CAAX%20protein">www.sciencedirect.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=Reim%20et%20al,of%20synchronous%20neurotransmitter%20release%2C%20without">pmc.ncbi.nlm.nih.gov</a>). The squid complexin is more similar to the brain-type (non-CAAX) complexins, relying on an amphipathic C-terminus for membrane association. This adaptability in membrane targeting mechanisms may relate to different speeds or modes of neurotransmitter release in various synapse types, but the core function of the protein remains the same.</p>
+<h2 id="physiological-and-clinical-significance">Physiological and Clinical Significance</h2>
+<p>Complexin is essential for normal synaptic physiology. Mice lacking complexin-1 and -2 show phenotypes resembling a milder form of synaptotagmin-1 knockout, with perinatal lethality or severe neurological deficits due to impaired neurotransmission (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=isoprenylation%20sequence%20that%20is%20absent,of%20synchronous%20neurotransmitter%20release%2C%20without">pmc.ncbi.nlm.nih.gov</a>). Complexin mutants cannot sustain normal synchronous synaptic responses, leading to defects in neuronal communication. The importance of complexin is further underscored by rare <strong>human genetic disorders</strong> linked to the CPLX1 gene (which encodes complexin-1). To date, only a handful of pathogenic variants in <strong>human complexin-1</strong> have been documented, but their effects are dramatic. <strong>Four disease-associated CPLX1 mutations</strong> have been reported: two nonsense mutations (premature stop codons at E108<em> and C105</em>), one frameshift (D23Rfs<em>69), and one missense mutation (L128M) in the C-terminal region (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=To%20date%2C%20only%20four%20Cplx1,epilepsy%2C%20accompanied%20by%20cortical%20atrophy">www.frontiersin.org</a>). These loss-of-function mutations cause severe early-onset neurological symptoms. Patients typically present with </em><em>infantile epileptic encephalopathies</em><em>, such as migrating myoclonic seizures, developmental delays, and intellectual disability (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=To%20date%2C%20only%20four%20Cplx1,epilepsy%2C%20accompanied%20by%20cortical%20atrophy">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=presented%20with%20migrating%20malignant%20epilepsy%2C,could%20interfere%20with%20its%20proper">www.frontiersin.org</a>). For example, a homozygous E108X nonsense mutation in CPLX1 was identified in infants with malignant migrating epilepsy and cortical atrophy (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=developmental%20delay%20and%20intellectual%20disability,terminus">www.frontiersin.org</a>). Other truncating variants (like C105X) and a C-terminal missense (L128M) were found in children with refractory myoclonic epilepsy and neurodevelopmental impairments (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=presented%20with%20migrating%20malignant%20epilepsy%2C,could%20interfere%20with%20its%20proper">www.frontiersin.org</a>). These clinical cases echo the experimental findings: loss of complexin function unleashes uncontrolled synchronous firing (seizures likely due to excessive spontaneous release) and disrupts normal synaptic signaling needed for neural development. Notably, the L128M mutation lies in complexin’s C-terminal tail, which is known to be important for proper presynaptic localization and for restraining spontaneous vesicle fusion (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=these%20variants%2C%20L128M%20missense%20amino,studied%2C%20and%20how%20different%20Cplx1">www.frontiersin.org</a>). Disrupting the C-terminus presumably mislocalizes complexin or weakens its clamp on vesicles, leading to hyperactive synapses and epilepsy (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=these%20variants%2C%20L128M%20missense%20amino,studied%2C%20and%20how%20different%20Cplx1">www.frontiersin.org</a>). While such mutations are rare, they firmly establish complexin as a critical factor for human brain function. This has led researchers to classify complexin-related disorders under emerging categories like “</em><em>SNAREopathies</em>*” – diseases of the synaptic release machinery (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=Mutations%20in%20the%20components%20of,with%20neurodevelopmental%20delays%20in%20language">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=To%20date%2C%20only%20four%20Cplx1,present%20with%20migrating%20myoclonic%20epilepsies">www.frontiersin.org</a>). Understanding complexin’s mechanism thus has direct relevance for neurological disease, as even subtle perturbations in the release machinery can cause severe network dysfunction.</p>
+<p>Beyond pathology, complexin is important in a variety of real-world contexts. In neuroscience research, the squid <em>Doryteuthis pealeii</em> has been a historically important model – its giant synapse was pivotal for studying synaptic transmission. The <strong>X-ray structure of squid complexin with SNAREs (solved in 2002) was a landmark</strong> that provided a molecular picture of how complexin clamps the fusion machinery (<a href="https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane">pubmed.ncbi.nlm.nih.gov</a>). This structural insight, obtained from the same species as our gene of interest, has informed countless subsequent studies and theoretical models of neurotransmitter release. Complexin continues to be a focus of cutting-edge research: for instance, a 2022 single-vesicle fusion study dissected the <strong>molecular determinants of complexin’s clamp vs. activation functions</strong>, revealing how the <strong>accessory helix and central helix must work in tandem to inhibit fusion</strong> and how the complexin C-terminus aids clamping by tethering to membranes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,helical%20accessory">pmc.ncbi.nlm.nih.gov</a>). In 2023, evolutionary analyses of complexin’s membrane interaction domain shed light on how this protein adapted to different synapse types, highlighting an ancient membrane-targeting role that remains crucial for synaptic efficiency (<a href="https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=Both%20CAAX%20and%20non,from%20an%20ancestral%20CAAX%20protein">www.sciencedirect.com</a>) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=">www.sciencedirect.com</a>). Such research not only deepens basic understanding, but also suggests that modulating complexin or its interactions could be a strategy to control synaptic release in therapeutic contexts (for example, dampening excessive neurotransmitter release in epilepsy). While no direct clinical treatments target complexin today, the protein is part of the fundamental synaptic machinery that is often indirectly affected by neuromodulatory drugs and is considered in the broader context of synaptic dysfunction in disorders. </p>
+<p>It is also worth noting that with advances in genetic tools, even non-model organisms like <em>D. pealeii</em> are becoming accessible to functional studies. The first gene knockouts in squid have recently been achieved (using CRISPR in <em>Doryteuthis</em> embryos) (<a href="https://www.sciencedirect.com/science/article/pii/S0960982220309854#:~:text=ScienceDirect%20www.sciencedirect.com%20%20...Pages%20R986,efficient%20in%20squid%20embryos">www.sciencedirect.com</a>), raising the possibility that researchers could experimentally disrupt the squid <strong>cpx</strong> gene to study its role in the squid’s nervous system and confirm the conservation of function. Such cross-species studies can illuminate how complexin contributes to synaptic performance in unique systems (e.g. the giant axon synapse, which employs similar proteins in an extreme physiology context).</p>
+<h2 id="expert-commentary-and-current-understanding">Expert Commentary and Current Understanding</h2>
+<p>Leading neuroscientists view complexin as an essential “tuner” of synaptic release – a protein that both <strong>brakes and accelerates</strong> the fusion process in a calcium-dependent manner. According to a 2013 review by Thomas Südhof, complexin and synaptotagmin together constitute the trigger control of the neurotransmitter release apparatus, with complexin clamping vesicles in a primed state and synaptotagmin acting as the Ca²⁺-dependent unclutching device (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=vesicles%20are%20completed%20when%20Syb2,Release%20of%20the">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=2015%20%29,Release%20of%20the">www.frontiersin.org</a>). In the words of one group, complexin <strong>“stabilizes newly primed synaptic vesicles and prevents their premature fusion”</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=match%20at%20L1237%203,14.2015.%20%5BDOI">pmc.ncbi.nlm.nih.gov</a>), yet also <strong>“synchronizes primed vesicle exocytosis”</strong> when Ca²⁺ signals arrive (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Schirra%20C%2C%20Rettig%20J%2C%20Reim,PMC%20free%20article">pmc.ncbi.nlm.nih.gov</a>). This dualistic action has resolved prior controversies: early experiments saw paradoxical effects (some suggesting complexin was inhibitory, others that it was facilitatory), but it’s now clear that both observations were correct – complexin is a <strong>fusion clamp at rest and a fusion facilitator during stimulation</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=complexin%20knock,15">pmc.ncbi.nlm.nih.gov</a>). As an expert analysis in <em>eLife</em> 2022 summarized, <em>“the accessory-central helical domains of Complexin are essential for its inhibitory function… [and] also contribute to rapid Ca²⁺-synchronized vesicle release”</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=central%20domains%20of%20Complexin%20are,Independent%20of">pmc.ncbi.nlm.nih.gov</a>). In practical terms, this means complexin sets the stage so that synapses can achieve high-fidelity, high-speed communication: it prevents errant signals (noise) and enables a precisely timed response to an action potential. This understanding, built from structural biology, genetics, and electrophysiology, makes complexin a textbook example of a <strong>regulatory adaptor protein</strong> that is crucial for neural signaling. Current research (2023–2024) continues to refine this picture – for instance, investigating how complexin’s C-terminal membrane interactions might fine-tune release probability or how multiple complexin molecules might cross-link SNARE complexes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3410656/#:~:text=based%20model%20for%20complexin%20clamping,model%20for%20complexin%20clamping%20Daniel">pmc.ncbi.nlm.nih.gov</a>). Such studies keep complexin at the forefront of synaptic biology research.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>Bracher et al., <em>J. Biol. Chem.</em> (2002 Jul 19) – “X-ray structure of a neuronal complexin–SNARE complex from squid” (<a href="https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=Nerve%20terminals%20release%20neurotransmitters%20from,regulates%20vesicle%20fusion%20at%20a">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane">pubmed.ncbi.nlm.nih.gov</a>). <em>(Provides the structural basis for complexin binding to SNAREs; DOI: 10.1074/jbc.M203460200)</em>  </li>
+<li>Frontiers in Synaptic Neuroscience (Uzay &amp; Kavalali, 2023 Mar 31) – “Genetic disorders of neurotransmitter release machinery” (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=et%20al,Release%20of%20the">www.frontiersin.org</a>) (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=To%20date%2C%20only%20four%20Cplx1,epilepsy%2C%20accompanied%20by%20cortical%20atrophy">www.frontiersin.org</a>). <em>(Overview of synaptic release process and human diseases; discusses complexin’s role and disease mutations; PMID: 37065827)</em>  </li>
+<li>Bera et al., <em>eLife</em> 11:e71938 (Apr 20, 2022) – “Molecular determinants of complexin clamping and activation function” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=central%20domains%20of%20Complexin%20are,Independent%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Previously%20we%20reported%20that%20Synaptotagmin,vesicle%20fusion%20assay%2C%20we%20determine">pmc.ncbi.nlm.nih.gov</a>). <em>(Detailed dissection of complexin domains in regulating fusion in vitro; PMC9020821)</em>  </li>
+<li>Radoff et al., <em>eLife</em> 3:e04553 (2014 Nov 10) – “Accessory helix of complexin stabilizes central helix secondary structure” (<a href="https://pubmed.ncbi.nlm.nih.gov/33692090/#:~:text=The%20Accessory%20Helix%20of%20Complexin,2">pubmed.ncbi.nlm.nih.gov</a>). <em>(Shows how complexin’s accessory helix stabilizes a partially zippered SNARE state to mediate clamping)</em>  </li>
+<li>Chang et al., <em>J. Neurosci.</em> 35(20):8272 (2015) – “Complexin stabilizes newly primed vesicles and prevents premature fusion at the calyx of Held” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=match%20at%20L1237%203,14.2015.%20%5BDOI">pmc.ncbi.nlm.nih.gov</a>). <em>(Electrophysiological evidence in mammalian synapse for complexin’s clamp function)</em>  </li>
+<li>Maximov et al., <em>Science</em> 323(5913):516 (2009) – “Complexin controls the force transfer from SNARE complexes to membranes in fusion” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=The%20complexin%20knock,Finally%2C%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=complexin%20knock,15">pmc.ncbi.nlm.nih.gov</a>). <em>(Demonstrates increased minis and reduced evoked release upon complexin knockdown; PMID: 19164750)</em>  </li>
+<li>Gong et al., <em>PNAS</em> 113(32):E7590 (2016) – “Mammalian complexin-1 localizes to highly curved membranes” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=mammalian%20complexin,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). <em>(Shows the C-terminus targets complexin to synaptic vesicle-like membranes, supporting curvature-sensing role)</em>  </li>
+<li>Karaca et al., <em>Eur. J. Hum. Genet.</em> 23(8):889 (2015) – <strong>(First report of CPLX1 E108X mutation in humans)</strong> (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=developmental%20delay%20and%20intellectual%20disability,terminus">www.frontiersin.org</a>). <em>(Links complexin-1 truncation to early infantile epilepsy; illustrates importance of complexin in human synapses)</em>  </li>
+<li>Redler et al., <em>Neurology Genetics</em> 3(6):e200 (2017) – <strong>(Reports additional CPLX1 mutations C105X, L128M)</strong> (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=presented%20with%20migrating%20malignant%20epilepsy%2C,could%20interfere%20with%20its%20proper">www.frontiersin.org</a>). <em>(Reinforces that loss of complexin’s C-terminus causes epilepsy; discusses C-terminal role in function)</em>  </li>
+<li>Kaeser &amp; Regehr, <em>Annu. Rev. Physiol.</em> 76:333 (2014) – “Molecular mechanisms for synchronous, asynchronous, and spontaneous neurotransmission”. <em>(General review of release modes; complexin’s clamp role summarized)</em> (<a href="https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=vesicles%20are%20completed%20when%20Syb2,Release%20of%20the">www.frontiersin.org</a>).  </li>
+</ul>
+<p><em>(All claims in this report are supported by the cited literature. Publication dates and sources are included to emphasize the timeliness and authority of the information. The focus has been on recent (2022–2023) research advances and well-established evidence from leading journals.)</em></p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=524, start_index=380, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,1995%3B%20Huntwork%20and%20Littleton%2C%202007')</li>
+<li>AnnotationURLCitation(end_index=1617, start_index=1461, title='X-ray structure of a neuronal complexin-SNARE complex from squid - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane')</li>
+<li>AnnotationURLCitation(end_index=1963, start_index=1807, title='X-ray structure of a neuronal complexin-SNARE complex from squid - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane')</li>
+<li>AnnotationURLCitation(end_index=2329, start_index=2173, title='X-ray structure of a neuronal complexin-SNARE complex from squid - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane')</li>
+<li>AnnotationURLCitation(end_index=3045, start_index=2878, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=sequence%20%28Cpx%5E%7B41,dual%20activating%2Fclamping%20functions%20of%20complexin')</li>
+<li>AnnotationURLCitation(end_index=3452, start_index=3285, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=sequence%20%28Cpx%5E%7B41,dual%20activating%2Fclamping%20functions%20of%20complexin')</li>
+<li>AnnotationURLCitation(end_index=4160, start_index=4053, title='Complexin Membrane Interactions: Implications for Synapse Evolution and Function - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=')</li>
+<li>AnnotationURLCitation(end_index=4302, start_index=4161, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=central%20domains%20of%20Complexin%20are,Independent%20of')</li>
+<li>AnnotationURLCitation(end_index=4591, start_index=4450, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=central%20domains%20of%20Complexin%20are,Independent%20of')</li>
+<li>AnnotationURLCitation(end_index=5002, start_index=4821, title='Calcium Control of Neurotransmitter Release - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=Mammals%20express%20four%20complexin%20isoforms%2C,Specifically%2C%20these%20mice%20exhibited%20a')</li>
+<li>AnnotationURLCitation(end_index=5160, start_index=5003, title='Calcium Control of Neurotransmitter Release - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=Reim%20et%20al,of%20synchronous%20neurotransmitter%20release%2C%20without')</li>
+<li>AnnotationURLCitation(end_index=5679, start_index=5510, title='Complexin Membrane Interactions: Implications for Synapse Evolution and Function - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=Both%20CAAX%20and%20non,from%20an%20ancestral%20CAAX%20protein')</li>
+<li>AnnotationURLCitation(end_index=6962, start_index=6826, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=controlled%20by%20activity,evoked%20neurotransmitter')</li>
+<li>AnnotationURLCitation(end_index=7090, start_index=6963, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=at%20the%20presynaptic%20active%20zone,2019')</li>
+<li>AnnotationURLCitation(end_index=7364, start_index=7213, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=%28S%C3%BCdhof%2C%202013%20%3B%20%2010%29,evoked%20neurotransmitter')</li>
+<li>AnnotationURLCitation(end_index=7982, start_index=7854, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=et%20al,Release%20of%20the')</li>
+<li>AnnotationURLCitation(end_index=8289, start_index=8161, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=et%20al,Release%20of%20the')</li>
+<li>AnnotationURLCitation(end_index=9163, start_index=9039, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=The%20complexin%20knock,Finally%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=9428, start_index=9304, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=The%20complexin%20knock,Finally%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=9533, start_index=9429, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=complexin%20knock,15')</li>
+<li>AnnotationURLCitation(end_index=10043, start_index=9919, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=The%20complexin%20knock,Finally%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=10148, start_index=10044, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=complexin%20knock,15')</li>
+<li>AnnotationURLCitation(end_index=10938, start_index=10810, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=et%20al,Release%20of%20the')</li>
+<li>AnnotationURLCitation(end_index=11232, start_index=11136, title='The Accessory Helix of Complexin Stabilizes a Partially Unzippered State of the SNARE Complex and Mediates the Complexin Clamping Function In Vivo - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/33692090/#:~:text=PubMed%20pubmed,2')</li>
+<li>AnnotationURLCitation(end_index=11504, start_index=11377, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=at%20the%20presynaptic%20active%20zone,2019')</li>
+<li>AnnotationURLCitation(end_index=12222, start_index=12044, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Previously%20we%20reported%20that%20Synaptotagmin,vesicle%20fusion%20assay%2C%20we%20determine')</li>
+<li>AnnotationURLCitation(end_index=12707, start_index=12576, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=2015%20%29,Release%20of%20the')</li>
+<li>AnnotationURLCitation(end_index=13153, start_index=13022, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=2015%20%29,Release%20of%20the')</li>
+<li>AnnotationURLCitation(end_index=13683, start_index=13579, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=complexin%20knock,15')</li>
+<li>AnnotationURLCitation(end_index=14187, start_index=14070, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,helical%20accessory')</li>
+<li>AnnotationURLCitation(end_index=14405, start_index=14288, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,helical%20accessory')</li>
+<li>AnnotationURLCitation(end_index=14774, start_index=14607, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=sequence%20%28Cpx%5E%7B41,dual%20activating%2Fclamping%20functions%20of%20complexin')</li>
+<li>AnnotationURLCitation(end_index=15106, start_index=14939, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=sequence%20%28Cpx%5E%7B41,dual%20activating%2Fclamping%20functions%20of%20complexin')</li>
+<li>AnnotationURLCitation(end_index=15521, start_index=15354, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=sequence%20%28Cpx%5E%7B41,dual%20activating%2Fclamping%20functions%20of%20complexin')</li>
+<li>AnnotationURLCitation(end_index=16346, start_index=16190, title='X-ray structure of a neuronal complexin-SNARE complex from squid - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane')</li>
+<li>AnnotationURLCitation(end_index=16650, start_index=16508, title='X-ray structure of a neuronal complexin-SNARE complex from squid - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=squid%20core%20complexin,We%20propose%20that%20this%20structure')</li>
+<li>AnnotationURLCitation(end_index=16939, start_index=16795, title='X-ray structure of a neuronal complexin-SNARE complex from squid - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=squid%20core%20complexin,thought%20to%20drive%20membrane%20fusion')</li>
+<li>AnnotationURLCitation(end_index=17274, start_index=17116, title='X-ray structure of a neuronal complexin-SNARE complex from squid - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=SNARE%20complex%20and%20interacts%20at,thought%20to%20drive%20membrane%20fusion')</li>
+<li>AnnotationURLCitation(end_index=17652, start_index=17494, title='X-ray structure of a neuronal complexin-SNARE complex from squid - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=SNARE%20complex%20and%20interacts%20at,thought%20to%20drive%20membrane%20fusion')</li>
+<li>AnnotationURLCitation(end_index=17784, start_index=17653, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=2015%20%29,Release%20of%20the')</li>
+<li>AnnotationURLCitation(end_index=18622, start_index=18481, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=central%20domains%20of%20Complexin%20are,Independent%20of')</li>
+<li>AnnotationURLCitation(end_index=18730, start_index=18623, title='Complexin Membrane Interactions: Implications for Synapse Evolution and Function - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=')</li>
+<li>AnnotationURLCitation(end_index=19642, start_index=19472, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=On%20the%20presynaptic%20membrane%2C%20syntaxin,16%20Rizo%20and%20Xu')</li>
+<li>AnnotationURLCitation(end_index=20324, start_index=20180, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,1995%3B%20Huntwork%20and%20Littleton%2C%202007')</li>
+<li>AnnotationURLCitation(end_index=20801, start_index=20657, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,1995%3B%20Huntwork%20and%20Littleton%2C%202007')</li>
+<li>AnnotationURLCitation(end_index=21027, start_index=20924, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=13,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=21666, start_index=21485, title='Calcium Control of Neurotransmitter Release - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=Mammals%20express%20four%20complexin%20isoforms%2C,Specifically%2C%20these%20mice%20exhibited%20a')</li>
+<li>AnnotationURLCitation(end_index=21998, start_index=21841, title='Calcium Control of Neurotransmitter Release - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=Reim%20et%20al,of%20synchronous%20neurotransmitter%20release%2C%20without')</li>
+<li>AnnotationURLCitation(end_index=22648, start_index=22479, title='Complexin Membrane Interactions: Implications for Synapse Evolution and Function - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=Both%20CAAX%20and%20non,from%20an%20ancestral%20CAAX%20protein')</li>
+<li>AnnotationURLCitation(end_index=22806, start_index=22649, title='Calcium Control of Neurotransmitter Release - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=Reim%20et%20al,of%20synchronous%20neurotransmitter%20release%2C%20without')</li>
+<li>AnnotationURLCitation(end_index=23631, start_index=23442, title='Calcium Control of Neurotransmitter Release - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3249630/#:~:text=isoprenylation%20sequence%20that%20is%20absent,of%20synchronous%20neurotransmitter%20release%2C%20without')</li>
+<li>AnnotationURLCitation(end_index=24424, start_index=24236, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=To%20date%2C%20only%20four%20Cplx1,epilepsy%2C%20accompanied%20by%20cortical%20atrophy')</li>
+<li>AnnotationURLCitation(end_index=24857, start_index=24669, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=To%20date%2C%20only%20four%20Cplx1,epilepsy%2C%20accompanied%20by%20cortical%20atrophy')</li>
+<li>AnnotationURLCitation(end_index=25054, start_index=24858, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=presented%20with%20migrating%20malignant%20epilepsy%2C,could%20interfere%20with%20its%20proper')</li>
+<li>AnnotationURLCitation(end_index=25362, start_index=25196, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=developmental%20delay%20and%20intellectual%20disability,terminus')</li>
+<li>AnnotationURLCitation(end_index=25726, start_index=25530, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=presented%20with%20migrating%20malignant%20epilepsy%2C,could%20interfere%20with%20its%20proper')</li>
+<li>AnnotationURLCitation(end_index=26345, start_index=26154, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=these%20variants%2C%20L128M%20missense%20amino,studied%2C%20and%20how%20different%20Cplx1')</li>
+<li>AnnotationURLCitation(end_index=26677, start_index=26486, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=these%20variants%2C%20L128M%20missense%20amino,studied%2C%20and%20how%20different%20Cplx1')</li>
+<li>AnnotationURLCitation(end_index=27141, start_index=26950, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=Mutations%20in%20the%20components%20of,with%20neurodevelopmental%20delays%20in%20language')</li>
+<li>AnnotationURLCitation(end_index=27330, start_index=27142, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=To%20date%2C%20only%20four%20Cplx1,present%20with%20migrating%20myoclonic%20epilepsies')</li>
+<li>AnnotationURLCitation(end_index=28079, start_index=27923, title='X-ray structure of a neuronal complexin-SNARE complex from squid - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane')</li>
+<li>AnnotationURLCitation(end_index=28737, start_index=28620, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Synaptotagmin,helical%20accessory')</li>
+<li>AnnotationURLCitation(end_index=29142, start_index=28973, title='Complexin Membrane Interactions: Implications for Synapse Evolution and Function - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=Both%20CAAX%20and%20non,from%20an%20ancestral%20CAAX%20protein')</li>
+<li>AnnotationURLCitation(end_index=29250, start_index=29143, title='Complexin Membrane Interactions: Implications for Synapse Evolution and Function - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S002228362200376X#:~:text=')</li>
+<li>AnnotationURLCitation(end_index=30218, start_index=30024, title='Highly Efficient Knockout of a Squid Pigmentation Gene - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/pii/S0960982220309854#:~:text=ScienceDirect%20www.sciencedirect.com%20%20...Pages%20R986,efficient%20in%20squid%20embryos')</li>
+<li>AnnotationURLCitation(end_index=31275, start_index=31114, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=vesicles%20are%20completed%20when%20Syb2,Release%20of%20the')</li>
+<li>AnnotationURLCitation(end_index=31407, start_index=31276, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=2015%20%29,Release%20of%20the')</li>
+<li>AnnotationURLCitation(end_index=31654, start_index=31530, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=match%20at%20L1237%203,14.2015.%20%5BDOI')</li>
+<li>AnnotationURLCitation(end_index=31877, start_index=31735, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Schirra%20C%2C%20Rettig%20J%2C%20Reim,PMC%20free%20article')</li>
+<li>AnnotationURLCitation(end_index=32299, start_index=32195, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=complexin%20knock,15')</li>
+<li>AnnotationURLCitation(end_index=32655, start_index=32514, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=central%20domains%20of%20Complexin%20are,Independent%20of')</li>
+<li>AnnotationURLCitation(end_index=33490, start_index=33320, title='Complexin cross-links pre-fusion SNAREs into a zig-zag array: a structure-based model for complexin clamping - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3410656/#:~:text=based%20model%20for%20complexin%20clamping,model%20for%20complexin%20clamping%20Daniel')</li>
+<li>AnnotationURLCitation(end_index=33873, start_index=33702, title='X-ray structure of a neuronal complexin-SNARE complex from squid - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=Nerve%20terminals%20release%20neurotransmitters%20from,regulates%20vesicle%20fusion%20at%20a')</li>
+<li>AnnotationURLCitation(end_index=34030, start_index=33874, title='X-ray structure of a neuronal complexin-SNARE complex from squid - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/12004067/#:~:text=proteins%20including%20the%20complexins,are%20thought%20to%20drive%20membrane')</li>
+<li>AnnotationURLCitation(end_index=34385, start_index=34257, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=et%20al,Release%20of%20the')</li>
+<li>AnnotationURLCitation(end_index=34574, start_index=34386, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=To%20date%2C%20only%20four%20Cplx1,epilepsy%2C%20accompanied%20by%20cortical%20atrophy')</li>
+<li>AnnotationURLCitation(end_index=34966, start_index=34825, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=central%20domains%20of%20Complexin%20are,Independent%20of')</li>
+<li>AnnotationURLCitation(end_index=35145, start_index=34967, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=Previously%20we%20reported%20that%20Synaptotagmin,vesicle%20fusion%20assay%2C%20we%20determine')</li>
+<li>AnnotationURLCitation(end_index=35483, start_index=35362, title='The Accessory Helix of Complexin Stabilizes a Partially Unzippered State of the SNARE Complex and Mediates the Complexin Clamping Function In Vivo - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/33692090/#:~:text=The%20Accessory%20Helix%20of%20Complexin,2')</li>
+<li>AnnotationURLCitation(end_index=35865, start_index=35741, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=match%20at%20L1237%203,14.2015.%20%5BDOI')</li>
+<li>AnnotationURLCitation(end_index=36214, start_index=36090, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=The%20complexin%20knock,Finally%2C%20the')</li>
+<li>AnnotationURLCitation(end_index=36319, start_index=36215, title='Complexin Controls the Force Transfer from SNARE Complexes to Membranes in Fusion - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3235366/#:~:text=complexin%20knock,15')</li>
+<li>AnnotationURLCitation(end_index=36652, start_index=36530, title='Molecular determinants of complexin clamping and activation function - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC9020821/#:~:text=mammalian%20complexin,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=37046, start_index=36880, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=developmental%20delay%20and%20intellectual%20disability,terminus')</li>
+<li>AnnotationURLCitation(end_index=37473, start_index=37277, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=presented%20with%20migrating%20malignant%20epilepsy%2C,could%20interfere%20with%20its%20proper')</li>
+<li>AnnotationURLCitation(end_index=37961, start_index=37800, title='Frontiers | Genetic disorders of neurotransmitter release machinery', type='url_citation', url='https://www.frontiersin.org/articles/10.3389/fnsyn.2023.1148957/full#:~:text=vesicles%20are%20completed%20when%20Syb2,Release%20of%20the')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q95PA1
+gene_symbol: cpx
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:1051067
+  label: Doryteuthis pealeii
+description: &gt;-
+  Complexin (synaphin) is a cytosolic protein that acts as a dual regulator of
+  synaptic vesicle exocytosis at the squid giant synapse: it both clamps SNARE
+  complexes to prevent spontaneous fusion and facilitates rapid Ca2+-triggered
+  synchronous release. It binds preferentially to syntaxin within the assembled
+  SNARE core complex (containing syntaxin-1, synaptobrevin, and SNAP-25), and
+  promotes SNARE complex oligomerization into higher-order structures that form
+  a scaffold for efficient, regulated vesicle fusion. The crystal structure of
+  squid complexin bound to the SNARE complex (2.95 A resolution; PMID:12004067)
+  reveals an alpha-helical segment (residues 25-98) that binds in antiparallel
+  fashion to the SNARE four-helix bundle, contacting syntaxin and synaptobrevin
+  around the ionic zero layer. The N-terminal tip (~residues 1-26) is critical for
+  activating fast Ca2+-triggered fusion but dispensable for clamping. The central
+  and accessory helices mediate the inhibitory clamp function, stabilizing a
+  partially zippered SNARE state. The C-terminal tail is amphipathic, enabling
+  membrane association via curvature sensing (non-CAAX variant, unlike retinal
+  complexin-3/4 isoforms). Complexin cooperates with synaptotagmin-1 to
+  synergistically clamp SNARE assembly, and Ca2+-bound synaptotagmin releases
+  the clamp to trigger synchronous neurotransmitter release. In mammals,
+  complexin knockout causes 3-4 fold increase in spontaneous miniature release
+  and abolishes fast synchronous release. Human CPLX1 loss-of-function mutations
+  cause infantile epileptic encephalopathies (SNAREopathies).
+existing_annotations:
+- term:
+    id: GO:0000149
+    label: SNARE binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      TreeGrafter-predicted SNARE binding is strongly supported by direct experimental
+      evidence from the squid giant synapse. Tokumaru et al. (2001) demonstrated that
+      complexin/synaphin preferentially binds to syntaxin within the SNARE complex
+      [PMID:11239399]. Bracher et al. (2002) resolved the crystal structure of squid
+      complexin bound to the SNARE core complex at 2.95 angstrom resolution, showing
+      detailed molecular contacts [PMID:12004067]. SNARE binding is the core molecular
+      function of complexin. The term is appropriate, though syntaxin binding
+      (GO:0019905) would also be valid as a more specific child term given the
+      preferential syntaxin interaction.
+    action: ACCEPT
+    reason: &gt;-
+      SNARE binding is the defining molecular function of complexin, demonstrated
+      directly in this species by both biochemical and structural studies. The term
+      is at the right level of specificity since complexin binds the assembled SNARE
+      complex as a whole, not just syntaxin alone.
+    supported_by:
+      - reference_id: PMID:11239399
+        supporting_text: &gt;-
+          Synaphin/complexin is a cytosolic protein that preferentially binds to
+          syntaxin within the SNARE complex.
+      - reference_id: PMID:12004067
+        supporting_text: &gt;-
+          A helical segment of complexin binds in anti-parallel fashion to the
+          four-helix bundle of the core SNARE complex and interacts at its C terminus
+          with syntaxin and synaptobrevin around the ionic zero layer of the SNARE
+          complex.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Cytosol localization is supported by UniProt subcellular location annotation
+      and by direct experimental evidence. Tokumaru et al. (2001) identified
+      complexin as a cytosolic protein in squid optic lobe [PMID:11239399]. The
+      UniProt record confirms cytoplasm/cytosol localization with experimental
+      evidence (ECO:0000269|PubMed:11239399).
+    action: ACCEPT
+    reason: &gt;-
+      Cytosol localization is experimentally confirmed in this species. Complexin
+      is primarily a soluble cytosolic protein that associates with the SNARE complex
+      at the membrane.
+    supported_by:
+      - reference_id: PMID:11239399
+        supporting_text: &gt;-
+          Synaphin/complexin is a cytosolic protein that preferentially binds to
+          syntaxin within the SNARE complex.
+- term:
+    id: GO:0006836
+    label: neurotransmitter transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      InterPro2GO mapping from the Synaphin domain (IPR008849) to neurotransmitter
+      transport. This is an overly broad and somewhat imprecise annotation.
+      Complexin does not function as a neurotransmitter transporter; rather, it
+      regulates the exocytotic release of neurotransmitter-containing synaptic
+      vesicles. The more accurate biological process terms are synaptic vesicle
+      exocytosis (GO:0016079) and positive regulation of synaptic vesicle exocytosis
+      (GO:2000302), both of which are already annotated or proposed.
+    action: MODIFY
+    reason: &gt;-
+      Neurotransmitter transport implies a direct role in moving neurotransmitter
+      molecules, which is misleading. Complexin regulates exocytosis of
+      neurotransmitter-containing synaptic vesicles at a late prefusion step.
+      The correct process is regulation of neurotransmitter secretion or synaptic
+      vesicle exocytosis, not transport per se.
+    proposed_replacement_terms:
+      - id: GO:2000302
+        label: positive regulation of synaptic vesicle exocytosis
+    supported_by:
+      - reference_id: PMID:11239399
+        supporting_text: &gt;-
+          Injection of this peptide into squid giant presynaptic terminals inhibited
+          neurotransmitter release at a late prefusion step of synaptic vesicle
+          exocytosis.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Membrane association is supported by UniProt annotation indicating lipid-anchor
+      (farnesylation) at Cys149. The UniProt record lists membrane localization via
+      lipid-anchor. While complexin is primarily cytosolic, the C-terminal farnesyl
+      modification enables membrane association. This is a very broad CC term but is
+      not incorrect.
+    action: ACCEPT
+    reason: &gt;-
+      Complexin is farnesylated at Cys149 (S-farnesyl cysteine), providing a
+      lipid anchor for membrane association. The membrane annotation is consistent
+      with this post-translational modification. Although a more specific membrane
+      compartment (e.g. presynaptic membrane) would be preferable, the broad
+      membrane term is acceptable given only the farnesylation evidence without
+      specific membrane subcompartment localization data.
+- term:
+    id: GO:0016079
+    label: synaptic vesicle exocytosis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      TreeGrafter-predicted involvement in synaptic vesicle exocytosis is strongly
+      supported by experimental evidence from the squid giant synapse. Tokumaru et al.
+      (2001) showed that injection of an inhibitory complexin peptide into squid giant
+      presynaptic terminals blocked neurotransmitter release at a late prefusion step
+      of synaptic vesicle exocytosis [PMID:11239399]. Bracher et al. (2002)
+      proposed that complexin is part of a multiprotein fusion machinery that
+      regulates vesicle fusion at a late pre-fusion stage [PMID:12004067]. However,
+      complexin is a regulator of this process rather than a direct participant;
+      a more precise annotation would be positive regulation of synaptic vesicle
+      exocytosis (GO:2000302).
+    action: MODIFY
+    reason: &gt;-
+      While complexin is clearly involved in the synaptic vesicle exocytosis pathway,
+      it functions as a positive regulator rather than a core component of the fusion
+      machinery itself. The term GO:2000302 (positive regulation of synaptic vesicle
+      exocytosis) more accurately captures the regulatory role demonstrated by the
+      antibody and peptide inhibition experiments.
+    proposed_replacement_terms:
+      - id: GO:2000302
+        label: positive regulation of synaptic vesicle exocytosis
+    supported_by:
+      - reference_id: PMID:11239399
+        supporting_text: &gt;-
+          Injection of this peptide into squid giant presynaptic terminals inhibited
+          neurotransmitter release at a late prefusion step of synaptic vesicle
+          exocytosis.
+      - reference_id: PMID:12004067
+        supporting_text: &gt;-
+          We propose that this structure is part of a multiprotein fusion machinery
+          that regulates vesicle fusion at a late pre-fusion stage.
+- term:
+    id: GO:0031201
+    label: SNARE complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      TreeGrafter-predicted localization to the SNARE complex. Complexin binds
+      the assembled SNARE complex but is not a core subunit of it. The SNARE complex
+      consists of syntaxin-1, synaptobrevin, and SNAP-25; complexin is an accessory
+      regulatory protein that binds to the outside of the assembled four-helix
+      bundle. Bracher et al. (2002) solved the crystal structure showing complexin
+      bound to the SNARE complex surface [PMID:12004067]. Being a binding partner
+      rather than a subunit, the part_of relationship implied by this CC annotation
+      is questionable.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Complexin is not a core subunit of the SNARE complex; it binds to the
+      exterior surface of the assembled SNARE four-helix bundle as an accessory
+      regulatory protein. The part_of qualifier used in the GOA annotation
+      implies complexin is a structural component of the SNARE complex, which
+      is inaccurate. The SNARE binding MF annotation (GO:0000149) already
+      captures this interaction appropriately.
+    supported_by:
+      - reference_id: PMID:12004067
+        supporting_text: &gt;-
+          A helical segment of complexin binds in anti-parallel fashion to the
+          four-helix bundle of the core SNARE complex and interacts at its C terminus
+          with syntaxin and synaptobrevin around the ionic zero layer of the SNARE
+          complex.
+      - reference_id: PMID:11239399
+        supporting_text: &gt;-
+          Synaphin/complexin is a cytosolic protein that preferentially binds to
+          syntaxin within the SNARE complex.
+- term:
+    id: GO:0043195
+    label: terminal bouton
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      TreeGrafter-predicted localization to terminal bouton. Tokumaru et al. (2001)
+      performed experiments by injecting reagents into squid giant presynaptic
+      terminals, confirming that complexin functions at synaptic terminals
+      [PMID:11239399]. While the squid giant synapse is anatomically distinct from
+      a typical bouton, the general concept of presynaptic terminal localization
+      is supported. This annotation is reasonable for a phylogenetically inferred
+      term.
+    action: ACCEPT
+    reason: &gt;-
+      Terminal bouton localization is consistent with the known function of complexin
+      at presynaptic terminals. The squid giant synapse experiments directly
+      demonstrate complexin activity at the presynaptic terminal. While the squid
+      giant synapse is not a classical bouton, the TreeGrafter inference from
+      mammalian complexin orthologs is phylogenetically sound.
+    supported_by:
+      - reference_id: PMID:11239399
+        supporting_text: &gt;-
+          Injection of this peptide into squid giant presynaptic terminals inhibited
+          neurotransmitter release at a late prefusion step of synaptic vesicle
+          exocytosis.
+- term:
+    id: GO:0046928
+    label: regulation of neurotransmitter secretion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      TreeGrafter-predicted involvement in regulation of neurotransmitter secretion.
+      This is well supported by experimental evidence. Tokumaru et al. (2001)
+      demonstrated that complexin is essential for neurotransmitter release at the
+      squid giant synapse, and that blocking complexin-syntaxin interaction inhibits
+      neurotransmitter release [PMID:11239399]. This term is acceptable but slightly
+      less specific than positive regulation of synaptic vesicle exocytosis
+      (GO:2000302), which better captures the mechanism.
+    action: ACCEPT
+    reason: &gt;-
+      Regulation of neurotransmitter secretion is an accurate annotation for
+      complexin. While GO:2000302 (positive regulation of synaptic vesicle
+      exocytosis) is more mechanistically precise, this broader regulatory term
+      is also correct and captures the physiological outcome. Keeping both provides
+      complementary granularity.
+    supported_by:
+      - reference_id: PMID:11239399
+        supporting_text: &gt;-
+          Injection of this peptide into squid giant presynaptic terminals inhibited
+          neurotransmitter release at a late prefusion step of synaptic vesicle
+          exocytosis.
+- term:
+    id: GO:2000302
+    label: positive regulation of synaptic vesicle exocytosis
+  evidence_type: IDA
+  original_reference_id: PMID:11239399
+  review:
+    summary: &gt;-
+      Proposed new annotation based on direct experimental evidence from the squid
+      giant synapse. Tokumaru et al. (2001) demonstrated that complexin positively
+      regulates synaptic vesicle exocytosis: blocking complexin function with
+      antibodies or inhibitory peptides inhibited neurotransmitter release at a late
+      prefusion step [PMID:11239399]. UniProt also annotates this protein as
+      positively regulating a late step in synaptic vesicle exocytosis. This is the
+      most precise biological process term for complexin function.
+    action: NEW
+    reason: &gt;-
+      This term precisely captures the experimentally demonstrated positive regulatory
+      role of complexin in synaptic vesicle exocytosis, which is the core biological
+      function of this protein. It is more specific than both GO:0016079 (synaptic
+      vesicle exocytosis) and GO:0046928 (regulation of neurotransmitter secretion).
+    supported_by:
+      - reference_id: PMID:11239399
+        supporting_text: &gt;-
+          SNARE complex oligomerization by synaphin/complexin is essential for
+          synaptic vesicle exocytosis.
+      - reference_id: PMID:11239399
+        supporting_text: &gt;-
+          Injection of this peptide into squid giant presynaptic terminals inhibited
+          neurotransmitter release at a late prefusion step of synaptic vesicle
+          exocytosis.
+- term:
+    id: GO:0019905
+    label: syntaxin binding
+  evidence_type: IPI
+  original_reference_id: PMID:11239399
+  review:
+    summary: &gt;-
+      Proposed new annotation for syntaxin binding, which is noted in the UniProt
+      DR lines (from InterPro) but absent from the GOA TSV. Both key publications
+      demonstrate direct complexin-syntaxin interaction. Tokumaru et al. (2001)
+      showed that complexin preferentially binds to syntaxin within the SNARE complex
+      and that a peptide from the syntaxin-binding domain competitively inhibits
+      this interaction [PMID:11239399]. Bracher et al. (2002) resolved the structural
+      basis showing complexin contacts syntaxin around the ionic zero layer
+      [PMID:12004067].
+    action: NEW
+    reason: &gt;-
+      Syntaxin binding is a more specific child term of SNARE binding that is
+      directly demonstrated in this species. It captures the preferential interaction
+      of complexin with syntaxin within the SNARE complex. This complements the
+      broader SNARE binding annotation.
+    supported_by:
+      - reference_id: PMID:11239399
+        supporting_text: &gt;-
+          Synaphin/complexin is a cytosolic protein that preferentially binds to
+          syntaxin within the SNARE complex. We find that synaphin promotes SNAREs
+          to form precomplexes that oligomerize into higher order structures. A
+          peptide from the central, syntaxin binding domain of synaphin competitively
+          inhibits these two proteins from interacting.
+      - reference_id: PMID:12004067
+        supporting_text: &gt;-
+          A helical segment of complexin binds in anti-parallel fashion to the
+          four-helix bundle of the core SNARE complex and interacts at its C terminus
+          with syntaxin and synaptobrevin around the ionic zero layer of the SNARE
+          complex.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: PMID:11239399
+  title: &gt;-
+    SNARE complex oligomerization by synaphin/complexin is essential for synaptic
+    vesicle exocytosis
+  findings:
+    - statement: &gt;-
+        Synaphin/complexin is a cytosolic protein that preferentially binds to syntaxin
+        within the SNARE complex and promotes SNARE complex oligomerization into higher
+        order structures.
+    - statement: &gt;-
+        Injection of an inhibitory peptide from the syntaxin-binding domain of complexin
+        into squid giant presynaptic terminals inhibited neurotransmitter release at a
+        late prefusion step of synaptic vesicle exocytosis.
+    - statement: &gt;-
+        Oligomerization of SNARE complexes into a higher order structure creates a SNARE
+        scaffold for efficient, regulated fusion of synaptic vesicles.
+- id: PMID:12004067
+  title: X-ray structure of a neuronal complexin-SNARE complex from squid
+  findings:
+    - statement: &gt;-
+        Crystal structure at 2.95 angstrom resolution shows a helical segment of squid
+        complexin (residues 25-98) binds in antiparallel fashion to the SNARE four-helix
+        bundle, contacting syntaxin and synaptobrevin at the ionic zero layer.
+    - statement: &gt;-
+        The structure is part of a multiprotein fusion machinery that regulates vesicle
+        fusion at a late pre-fusion stage. Ca2+ may initiate membrane fusion by acting
+        directly or indirectly on complexin.
+    - statement: &gt;-
+        Complexin&#39;s binding position on the SNARE bundle strategically prevents the
+        final zippering of the SNAREs at the membrane-proximal end, blocking fusion
+        until Ca2+ signaling occurs.
+- id: PMID:35377328
+  title: Molecular determinants of complexin clamping and activation function.
+  findings:
+    - statement: &gt;-
+        The accessory-central helical domains of complexin are essential for its inhibitory
+        (clamping) function, and also contribute to rapid Ca2+-synchronized vesicle release.
+    - statement: &gt;-
+        Complexin and synaptotagmin-1 synergistically clamp SNARE assembly, maintaining
+        a pool of docked vesicles ready for fast release upon Ca2+ influx.
+    - statement: &gt;-
+        The C-terminal membrane-binding domain of complexin aids clamping by tethering
+        complexin to membranes, increasing local concentration at release sites.
+- id: PMID:19164750
+  title: Complexin controls the force transfer from SNARE complexes to membranes in fusion.
+  findings:
+    - statement: &gt;-
+        Complexin knockdown in mouse neurons causes a 3-4 fold increase in miniature
+        neurotransmitter release frequency (enhanced spontaneous vesicle fusion).
+    - statement: &gt;-
+        Complexin knockdown reduces evoked EPSC amplitude by ~3-4 fold and specifically
+        abolishes fast synchronous release triggered by action potentials.
+    - statement: &gt;-
+        Deletion of the N-terminal 26 amino acids abolishes complexin&#39;s ability to
+        synchronize rapid release without affecting its SNARE-binding or baseline clamp.
+- id: PMID:37065827
+  title: Genetic disorders of neurotransmitter release machinery.
+  findings:
+    - statement: &gt;-
+        Four disease-associated CPLX1 mutations have been reported: two nonsense (E108*,
+        C105*), one frameshift (D23Rfs*69), and one missense (L128M), causing infantile
+        epileptic encephalopathies classified as SNAREopathies.
+    - statement: &gt;-
+        Priming of a vesicle is completed when SNAREs assemble and complexin binds to
+        the SNARE complex, preventing it from disassembling or fully fusing the membranes.
+    - statement: &gt;-
+        Ca2+ binding to synaptotagmin-1 releases the clamp and allows SNARE complexes
+        to rapidly complete zippering and drive membrane fusion.
+core_functions:
+- description: &gt;-
+    Complexin binds the assembled SNARE core complex containing syntaxin-1,
+    synaptobrevin, and SNAP-25. The central helical region (residues 25-98 in the
+    squid crystal structure) binds antiparallel to the SNARE four-helix bundle,
+    promoting SNARE complex oligomerization into higher-order structures that scaffold
+    vesicle fusion. Complexin has a dual function: (1) the central and accessory helices
+    clamp the SNARE complex in a partially zippered pre-fusion state, preventing
+    spontaneous vesicle fusion (demonstrated by 3-4 fold increase in miniature
+    release frequency upon complexin knockdown in mammals); and (2) the N-terminal
+    tip (~residues 1-26) is critical for activating fast Ca2+-triggered synchronous
+    release, cooperating with the Ca2+ sensor synaptotagmin-1. Complexin and
+    synaptotagmin-1 synergistically maintain docked vesicles in a release-ready state;
+    Ca2+-bound synaptotagmin then releases the clamp to trigger fusion. The C-terminal
+    amphipathic tail targets complexin to curved synaptic vesicle membranes, increasing
+    local concentration at release sites. This protein is essential for the temporal
+    precision of neurotransmitter release.
+  molecular_function:
+    id: GO:0000149
+    label: SNARE binding
+  directly_involved_in:
+  - id: GO:2000302
+    label: positive regulation of synaptic vesicle exocytosis
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  - id: GO:0043195
+    label: terminal bouton
+  supported_by:
+  - reference_id: PMID:11239399
+    supporting_text: &gt;-
+      Synaphin/complexin is a cytosolic protein that preferentially binds to syntaxin
+      within the SNARE complex. We find that synaphin promotes SNAREs to form
+      precomplexes that oligomerize into higher order structures.
+  - reference_id: PMID:12004067
+    supporting_text: &gt;-
+      A helical segment of complexin binds in anti-parallel fashion to the four-helix
+      bundle of the core SNARE complex and interacts at its C terminus with syntaxin
+      and synaptobrevin around the ionic zero layer of the SNARE complex.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

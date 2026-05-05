@@ -67,7 +67,10 @@ def validate_content(
         temp_path = Path(tmpdir) / original_path.name
         temp_path.write_text(content)
 
-        cmd = ["uv", "run", "ai-gene-review", "validate", str(temp_path)]
+        # Pass --no-goa: the temp dir holds only the simulated YAML, not the
+        # sibling <gene>-goa.tsv, so GOA cross-validation can't run here.
+        # GOA cross-validation already runs at PR time via `just validate-all`.
+        cmd = ["uv", "run", "ai-gene-review", "validate", "--no-goa", str(temp_path)]
 
         result = subprocess.run(
             cmd,
