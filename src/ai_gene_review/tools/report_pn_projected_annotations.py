@@ -56,6 +56,7 @@ class MappingSpec:
     mapping_scope: str
     representative_genes: tuple[str, ...]
     conditions: tuple[tuple[str, str], ...]
+    excluded_subjects: tuple[tuple[str, str], ...]
     rationale: str
     notes: str
     references: tuple[str, ...]
@@ -183,6 +184,25 @@ def _matches(row: PNWorkbookRow, spec: MappingSpec) -> bool:
     return True
 
 
+def _matches_level_code(row: PNWorkbookRow, level: str, code: str) -> bool:
+    if _level_value(row, level) == "":
+        return False
+    if "|" in code:
+        return _code_at_level(row, level) == code
+    return _level_value(row, level) == code
+
+
+def _is_excluded(row: PNWorkbookRow, spec: MappingSpec) -> bool:
+    return any(
+        _matches_level_code(row, exclusion_level, exclusion_code)
+        for exclusion_level, exclusion_code in spec.excluded_subjects
+    )
+
+
+def _mapping_applies(row: PNWorkbookRow, spec: MappingSpec) -> bool:
+    return _matches(row, spec) and not _is_excluded(row, spec)
+
+
 def derive_representative_genes(
     workbook_rows: list[PNWorkbookRow],
     mapping_specs: list[MappingSpec],
@@ -202,7 +222,7 @@ def derive_representative_genes(
         for row in sorted_rows:
             if row.gene_symbol in seen:
                 continue
-            if not _matches(row, spec):
+            if not _mapping_applies(row, spec):
                 continue
             seen.add(row.gene_symbol)
             examples.append(row.gene_symbol)
@@ -281,6 +301,7 @@ def load_mapping_specs(mapping_dir: Path) -> list[MappingSpec]:
                         if _clean_value(gene)
                     ),
                     conditions=_normalize_conditions(entry.get("conditions")),
+                    excluded_subjects=_normalize_conditions(entry.get("excluded_subjects")),
                     rationale=_clean_value(entry.get("rationale")),
                     notes=_clean_value(entry.get("notes")),
                     references=tuple(
@@ -515,7 +536,7 @@ def project_annotations(
         for spec in mapping_specs:
             if spec.mapping_scope not in PROPAGATING_MAPPING_SCOPES:
                 continue
-            if not _matches(row, spec):
+            if not _mapping_applies(row, spec):
                 continue
 
             if not has_goa_file:

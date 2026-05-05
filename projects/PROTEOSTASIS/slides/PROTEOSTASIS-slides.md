@@ -86,7 +86,7 @@ These are tracked directly in the branch mapping YAMLs.
 
 ## Projection Output
 
-Projection through current propagating mappings produced 2205 unique gene-GO pairs.
+Projection through current propagating mappings produced 2197 unique gene-GO pairs.
 
 GOA source: `~/repos/go-db/db/goa_human.ddb`
 
@@ -94,12 +94,12 @@ GOA source: `~/repos/go-db/db/goa_human.ddb`
 |--------|------:|
 | already in GOA exactly | 703 |
 | entailed by GOA closure | 403 |
-| more specific than existing GOA | 239 |
+| more specific than existing GOA | 238 |
 | supported by GOA regulation | 77 |
-| new to GOA | 767 |
+| new to GOA | 760 |
 | no local GOA | 16 |
 
-Only the 1083 candidate additions enter manual rereview queues.
+Only the 1075 candidate additions enter manual rereview queues.
 
 ---
 
@@ -167,7 +167,7 @@ Browser: `pages/projects/PROTEOSTASIS-tree.html`
 
 ## Next Work
 
-1. Work the 1083 candidate additions as manual AIGR rereview tasks.
+1. Work the 1075 candidate additions as manual AIGR rereview tasks.
 2. Use unusual-propagation audit as a guardrail.
 3. Promote only evidence-backed gene-level decisions to review YAML.
 4. Keep broad PN membership as project metadata or triage context.

@@ -161,12 +161,12 @@ Projection against the human GOA DuckDB at
 |-------------------|----------------------|
 | already in GOA exactly | 703 |
 | entailed by GOA closure | 403 |
-| more specific than existing GOA | 239 |
+| more specific than existing GOA | 238 |
 | supported by GOA regulation | 77 |
-| new to GOA | 767 |
+| new to GOA | 760 |
 | no local GOA available | 16 |
 
-Only the `1083` candidate additions (`more_specific_than_existing_goa` +
+Only the `1075` candidate additions (`more_specific_than_existing_goa` +
 `supported_by_goa_regulation` + `new_to_goa`) should enter manual AIGR
 rereview queues. The `no_local_goa` class is mostly a data-availability state,
 not biological evidence; with the DuckDB source it is now a small residual
@@ -483,7 +483,7 @@ The PN project is broader:
 ## Next Steps
 
 - Audit the highest-priority genes in [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv).
-- Work through the `1083` projected candidate additions, using the unusual
+- Work through the `1075` projected candidate additions, using the unusual
   propagation report as a blocklist for automatic review edits.
 - Promote only gene-level decisions that survive evidence review into AIGR
   YAML; leave broad PN context as project metadata.

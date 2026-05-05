@@ -257,6 +257,68 @@ def test_pn_projection_reports_existing_new_and_missing_goa(tmp_path: Path) -> N
     assert (output_dir / "pn_projected_status_summary.tsv").exists()
 
 
+def test_pn_projection_excludes_manually_blocked_descendants(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "pn.xlsx"
+    _write_projection_workbook(workbook_path)
+
+    mapping_dir = tmp_path / "mappings"
+    mapping_dir.mkdir()
+    mapping_set = {
+        "id": "pn_mapping_set:test",
+        "label": "Test mapping set",
+        "subject_curations": [
+            {
+                "subject_code": "Cytonuclear proteostasis|Chaperone",
+                "subject_level": "class",
+                "curation_status": "mapped",
+                "target_term": {
+                    "id": "GO:0044183",
+                    "label": "protein folding chaperone",
+                },
+                "mapping_scope": "ok_for_propagation_to_go",
+                "excluded_subjects": [
+                    {"condition_level": "type", "condition_code": "HSP70"},
+                ],
+                "rationale": "Broad chaperone mapping with one blocked descendant.",
+                "references": ["proteostasis-ms1"],
+            },
+            {
+                "subject_code": "HSP70",
+                "subject_level": "type",
+                "curation_status": "mapped",
+                "target_term": {
+                    "id": "GO:0140662",
+                    "label": "ATP-dependent protein folding chaperone",
+                },
+                "mapping_scope": "ok_for_propagation_to_go",
+                "conditions": [
+                    {"condition_level": "class", "condition_code": "Chaperone"},
+                    {"condition_level": "group", "condition_code": "HSP70 system"},
+                ],
+                "rationale": "Test projection mapping.",
+                "references": ["proteostasis-ms1"],
+            },
+        ],
+    }
+    (mapping_dir / "chaperone_systems.yaml").write_text(
+        yaml.safe_dump(mapping_set, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    projected_rows = project_annotations(
+        load_workbook_rows(workbook_path),
+        load_mapping_specs(mapping_dir),
+        tmp_path / "genes" / "human",
+    )
+    projected_gene_go = {
+        (row.gene_symbol, row.target_go_id) for row in projected_rows
+    }
+
+    assert ("GENE1", "GO:0044183") not in projected_gene_go
+    assert ("GENE1", "GO:0140662") in projected_gene_go
+    assert ("GENE3", "GO:0044183") in projected_gene_go
+
+
 def test_pn_projection_can_fetch_missing_goa_into_project_cache(
     tmp_path: Path,
     monkeypatch,

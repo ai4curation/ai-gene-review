@@ -92,6 +92,7 @@ def load_curation_entries(mapping_dir: Path) -> list[dict[str, Any]]:
                     "target_go_label": target_term.get("label", ""),
                     "representative_genes": entry.get("representative_genes", []) or [],
                     "conditions": format_conditions(entry.get("conditions")),
+                    "excluded_subjects": format_conditions(entry.get("excluded_subjects")),
                     "rationale": entry.get("rationale", ""),
                     "notes": entry.get("notes", ""),
                     "references": entry.get("references", []) or [],
@@ -1054,6 +1055,7 @@ HTML_TEMPLATE = """<!doctype html>
           </h4>
           ${item.subject_code !== node.id ? `<div class="kv"><strong>Subject:</strong> ${escapeHtml(item.subject_code)}</div>` : ""}
           ${item.conditions ? `<div class="kv"><strong>Conditions:</strong> ${escapeHtml(item.conditions)}</div>` : ""}
+          ${item.excluded_subjects ? `<div class="kv"><strong>Excluded subjects:</strong> ${escapeHtml(item.excluded_subjects)}</div>` : ""}
           ${item.rationale ? `<div class="kv"><strong>Rationale:</strong> ${escapeHtml(item.rationale)}</div>` : ""}
           ${item.notes ? `<div class="kv"><strong>Notes:</strong> ${escapeHtml(item.notes)}</div>` : ""}
           ${item.references?.length ? `<div class="kv"><strong>References:</strong> ${listValue(item.references)}</div>` : ""}
