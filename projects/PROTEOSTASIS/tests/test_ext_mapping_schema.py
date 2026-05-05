@@ -110,11 +110,11 @@ def test_ext_mapping_sets_use_unified_subject_curations() -> None:
         for status in statuses
     }
     assert status_counts == {
-        "pending_review": 1620,
-        "mapped": 285,
-        "context_only": 8,
-        "no_mapping": 100,
-        "deferred": 16,
+        "pending_review": 1468,
+        "mapped": 362,
+        "context_only": 11,
+        "no_mapping": 174,
+        "deferred": 14,
     }
 
 
@@ -145,7 +145,8 @@ def test_representative_curations_survived_migration() -> None:
         mapping_sets,
         "Translation|Cytosolic translation|Translation initiation|eIF4F complex",
     )
-    assert eif4f["curation_status"] == "deferred"
+    assert eif4f["curation_status"] == "mapped"
+    assert eif4f["target_term"]["id"] == "GO:0016281"
 
     mitochondrial_chaperone = _find_curation(
         mapping_sets,
