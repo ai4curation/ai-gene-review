@@ -21,7 +21,7 @@ graph TD
     D["Stalled / Non-stop 80S"] --> E["PELO + HBS1L:GTP"]
     E -->|"GTP hydrolysis"| F["PELO: ABCE1-binding Surface Exposed"]
 
-    G["ABCE1: Fe-S ABC ATPase (Cytosol)"] --> C
+    G["ABCE1: [4Fe-4S] ABC ATPase (Cytosol)"] --> C
     G --> F
 
     C -->|"ATP hydrolysis"| H["60S Subunit"]
