@@ -36,17 +36,13 @@ CANDIDATE_STATUSES = {
     "new_to_goa",
 }
 STATUS_LABELS = {
+    "pending_review": "Pending review",
     "mapped": "Mapped",
+    "context_only": "Context only",
     "no_mapping": "No mapping",
     "deferred": "Deferred",
-    "pending_review": "Pending review",
-    "uncovered": "Uncovered",
-    "mapped_and_unmapped": "Conflict",
-}
-UNMAPPED_STATUS_LABELS = {
-    "no_mapping_appropriate": "No mapping appropriate",
-    "deferred": "Deferred",
-    "pending_review": "Pending review",
+    "missing_from_yaml": "Missing from YAML",
+    "curation_conflict": "Curation conflict",
 }
 
 
@@ -77,20 +73,20 @@ def format_conditions(raw_conditions: Any) -> str:
     )
 
 
-def load_curation_entries(mapping_dir: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Load direct mapping and explicit-unmapped entries from branch YAML files."""
-    mapping_entries: list[dict[str, Any]] = []
-    unmapped_entries: list[dict[str, Any]] = []
+def load_curation_entries(mapping_dir: Path) -> list[dict[str, Any]]:
+    """Load direct source-node curation entries from branch YAML files."""
+    curation_entries: list[dict[str, Any]] = []
 
     for path in sorted(mapping_dir.glob("*.yaml")):
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        for entry in data.get("mappings", []):
+        for entry in data.get("subject_curations", []):
             target_term = entry.get("target_term") or {}
-            mapping_entries.append(
+            curation_entries.append(
                 {
                     "mapping_file": path.name,
                     "subject_code": entry.get("subject_code", ""),
                     "subject_level": entry.get("subject_level", ""),
+                    "curation_status": entry.get("curation_status", ""),
                     "mapping_scope": entry.get("mapping_scope", ""),
                     "target_go_id": target_term.get("id", ""),
                     "target_go_label": target_term.get("label", ""),
@@ -101,21 +97,8 @@ def load_curation_entries(mapping_dir: Path) -> tuple[list[dict[str, Any]], list
                     "references": entry.get("references", []) or [],
                 }
             )
-        for entry in data.get("unmapped_subjects", []):
-            unmapped_entries.append(
-                {
-                    "mapping_file": path.name,
-                    "subject_code": entry.get("subject_code", ""),
-                    "subject_level": entry.get("subject_level", ""),
-                    "unmapped_status": entry.get("unmapped_status", ""),
-                    "conditions": format_conditions(entry.get("conditions")),
-                    "rationale": entry.get("rationale", ""),
-                    "notes": entry.get("notes", ""),
-                    "references": entry.get("references", []) or [],
-                }
-            )
 
-    return mapping_entries, unmapped_entries
+    return curation_entries
 
 
 def build_data(
@@ -127,15 +110,10 @@ def build_data(
     """Build browser data from PN reports."""
     nodes: dict[str, dict[str, Any]] = {}
     children: dict[str, list[str]] = defaultdict(list)
-    mapping_entries, unmapped_entries = load_curation_entries(mapping_dir)
-    mappings_by_subject = defaultdict(list)
-    unmapped_by_subject = defaultdict(list)
-    for entry in mapping_entries:
-        mappings_by_subject[(entry["mapping_file"], entry["subject_level"], entry["subject_code"])].append(
-            entry
-        )
-    for entry in unmapped_entries:
-        unmapped_by_subject[
+    curation_entries = load_curation_entries(mapping_dir)
+    curations_by_subject = defaultdict(list)
+    for entry in curation_entries:
+        curations_by_subject[
             (entry["mapping_file"], entry["subject_level"], entry["subject_code"])
         ].append(entry)
 
@@ -150,12 +128,9 @@ def build_data(
             "level": row["level"],
             "status": row["status"],
             "status_label": STATUS_LABELS.get(row["status"], row["status"]),
-            "mapping_files": split_semicolon(row["mapping_files"]),
-            "mapping_subjects": split_semicolon(row["mapping_subjects"]),
-            "unmapped_files": split_semicolon(row["unmapped_files"]),
-            "unmapped_subjects": split_semicolon(row["unmapped_subjects"]),
-            "direct_mappings": [],
-            "direct_unmapped": [],
+            "curation_files": split_semicolon(row["curation_files"]),
+            "curation_subjects": split_semicolon(row["curation_subjects"]),
+            "direct_curations": [],
             "direct_mapping_scopes": [],
             "projection_rows": 0,
             "projected_gene_count": 0,
@@ -169,18 +144,13 @@ def build_data(
             "gene_examples": [],
             "children": [],
         }
-        for file_name in nodes[code]["mapping_files"]:
-            for subject_code in nodes[code]["mapping_subjects"]:
-                nodes[code]["direct_mappings"].extend(
-                    mappings_by_subject.get((file_name, row["level"], subject_code), [])
-                )
-        for file_name in nodes[code]["unmapped_files"]:
-            for subject_code in nodes[code]["unmapped_subjects"]:
-                nodes[code]["direct_unmapped"].extend(
-                    unmapped_by_subject.get((file_name, row["level"], subject_code), [])
+        for file_name in nodes[code]["curation_files"]:
+            for subject_code in nodes[code]["curation_subjects"]:
+                nodes[code]["direct_curations"].extend(
+                    curations_by_subject.get((file_name, row["level"], subject_code), [])
                 )
         nodes[code]["direct_mapping_scopes"] = sorted(
-            {entry["mapping_scope"] for entry in nodes[code]["direct_mappings"]}
+            {entry["mapping_scope"] for entry in nodes[code]["direct_curations"] if entry["mapping_scope"]}
         )
         children[parent].append(code)
 
@@ -237,8 +207,8 @@ def build_data(
                 code
                 for code, node in nodes.items()
                 if node["level"] == row["subject_level"]
-                and subject_code in node["mapping_subjects"]
-                and row["mapping_file"] in node["mapping_files"]
+                and subject_code in node["curation_subjects"]
+                and row["mapping_file"] in node["curation_files"]
             ]
             if len(matches) == 1:
                 attached_code = matches[0]
@@ -316,8 +286,10 @@ def build_data(
     leaf_code_count = sum(1 for node in nodes.values() if not node["children"])
     projection_status_counts = Counter(row["goa_status"] for row in projection_rows)
     audit_decision_counts = Counter(row["scrutiny_decision"] for row in audit_rows)
-    mapping_scope_counts = Counter(entry["mapping_scope"] for entry in mapping_entries)
-    unmapped_status_counts = Counter(entry["unmapped_status"] for entry in unmapped_entries)
+    mapping_scope_counts = Counter(
+        entry["mapping_scope"] for entry in curation_entries if entry["mapping_scope"]
+    )
+    curation_status_counts = Counter(entry["curation_status"] for entry in curation_entries)
 
     return {
         "generated_from": {
@@ -350,9 +322,12 @@ def build_data(
             ),
             "projection_status_counts": dict(projection_status_counts),
             "mapping_scope_counts": dict(mapping_scope_counts),
-            "mapping_entries": len(mapping_entries),
-            "unmapped_entries": len(unmapped_entries),
-            "unmapped_status_counts": dict(unmapped_status_counts),
+            "curation_entries": len(curation_entries),
+            "go_curation_entries": sum(1 for entry in curation_entries if entry["target_go_id"]),
+            "non_mapping_curation_entries": sum(
+                1 for entry in curation_entries if not entry["target_go_id"]
+            ),
+            "curation_status_counts": dict(curation_status_counts),
             "audit_rows": len(audit_rows),
             "audit_decision_counts": dict(audit_decision_counts),
         },
@@ -379,7 +354,7 @@ HTML_TEMPLATE = """<!doctype html>
       --line: #d6deea;
       --mapped: #1f7a52;
       --deferred: #9a6700;
-      --uncovered: #b42318;
+      --missing: #b42318;
       --conflict: #7a3db8;
       --accent: #2468b4;
       --soft-blue: #e8f1fb;
@@ -611,11 +586,12 @@ HTML_TEMPLATE = """<!doctype html>
       white-space: nowrap;
     }
     .status-mapped { background: var(--soft-green); color: var(--mapped); }
+    .status-context_only { background: #fff1d1; color: #835600; }
     .status-no_mapping { background: #e8f7ee; color: #27644d; }
     .status-deferred { background: var(--soft-amber); color: var(--deferred); }
     .status-pending_review { background: #eef2f7; color: #526176; }
-    .status-uncovered { background: var(--soft-red); color: var(--uncovered); }
-    .status-mapped_and_unmapped { background: #efe7fb; color: var(--conflict); }
+    .status-missing_from_yaml { background: var(--soft-red); color: var(--missing); }
+    .status-curation_conflict { background: #efe7fb; color: var(--conflict); }
     .pill-neutral { background: #eef2f7; color: #526176; }
     .pill-risk { background: #fdecec; color: #9f1d1d; }
     .scope-exact { background: #dff7ea; color: #16633f; }
@@ -756,14 +732,16 @@ HTML_TEMPLATE = """<!doctype html>
           <dl>
             <dt>mapped</dt>
             <dd>A completed PN-to-GO mapping exists for this source node.</dd>
+            <dt>context_only</dt>
+            <dd>A GO relationship is recorded for context, but is unsafe for gene-level propagation.</dd>
             <dt>no_mapping</dt>
             <dd>Reviewed and concluded that no GO mapping should be made.</dd>
             <dt>deferred</dt>
             <dd>Reviewed, but needs more evidence, a better GO term, or narrower child-level handling.</dd>
             <dt>pending_review</dt>
             <dd>Tracked for coverage, but not yet manually analyzed in depth.</dd>
-            <dt>uncovered</dt>
-            <dd>No mapping or unmapped-status record exists for this node.</dd>
+            <dt>missing_from_yaml</dt>
+            <dd>The workbook contains this node, but no YAML curation record exists. This should stay zero.</dd>
           </dl>
         </section>
         <section class="help-section">
@@ -803,10 +781,11 @@ HTML_TEMPLATE = """<!doctype html>
     <select id="branch"></select>
     <div class="filters">
       <label><input type="checkbox" value="mapped" checked> Mapped</label>
+      <label><input type="checkbox" value="context_only" checked> Context</label>
       <label><input type="checkbox" value="no_mapping" checked> No mapping</label>
       <label><input type="checkbox" value="deferred" checked> Deferred</label>
       <label><input type="checkbox" value="pending_review" checked> Pending</label>
-      <label><input type="checkbox" value="uncovered" checked> Uncovered</label>
+      <label><input type="checkbox" value="missing_from_yaml" checked> Missing</label>
       <label><input type="checkbox" value="too_broad_to_propagate" checked> Too broad</label>
       <label><input type="checkbox" value="risk" checked> Risk</label>
     </div>
@@ -854,7 +833,7 @@ HTML_TEMPLATE = """<!doctype html>
     }
 
     function statusClass(status) {
-      return `status-${status || "uncovered"}`;
+      return `status-${status || "missing_from_yaml"}`;
     }
 
     function scopeClass(scope) {
@@ -878,21 +857,17 @@ HTML_TEMPLATE = """<!doctype html>
         node.id,
         node.level,
         node.status_label,
-        node.mapping_files.join(" "),
-        node.mapping_subjects.join(" "),
-        node.unmapped_files.join(" "),
+        node.curation_files.join(" "),
+        node.curation_subjects.join(" "),
         node.direct_mapping_scopes.join(" "),
-        node.direct_mappings.map(mapping => [
-          mapping.target_go_id,
-          mapping.target_go_label,
-          mapping.rationale,
-          mapping.notes,
-          mapping.representative_genes.join(" ")
-        ].join(" ")).join(" "),
-        node.direct_unmapped.map(item => [
-          item.unmapped_status,
+        node.direct_curations.map(item => [
+          item.curation_status,
+          item.mapping_scope,
+          item.target_go_id,
+          item.target_go_label,
           item.rationale,
-          item.notes
+          item.notes,
+          item.representative_genes.join(" ")
         ].join(" ")).join(" "),
         node.target_terms.map(item => item.term).join(" "),
         node.gene_examples.join(" ")
@@ -925,20 +900,22 @@ HTML_TEMPLATE = """<!doctype html>
       const noMapping = summary.status_counts.no_mapping || 0;
       const deferred = summary.status_counts.deferred || 0;
       const pendingReview = summary.status_counts.pending_review || 0;
-      const uncovered = summary.status_counts.uncovered || 0;
+      const contextOnly = summary.status_counts.context_only || 0;
+      const missing = summary.status_counts.missing_from_yaml || 0;
       const tooBroad = summary.mapping_scope_counts.too_broad_to_propagate || 0;
       const propagating = (summary.mapping_scope_counts.exact || 0) + (summary.mapping_scope_counts.ok_for_propagation_to_go || 0);
       document.getElementById("summary").innerHTML = [
         ["Total nodes", summary.total_codes],
         ["Leaf nodes", summary.leaf_codes],
         ["Mapped codes", mapped],
+        ["Context only", contextOnly],
         ["No mapping", noMapping],
         ["Deferred", deferred],
         ["Pending review", pendingReview],
         ["Propagating mappings", propagating],
         ["Too broad mappings", tooBroad],
         ["Candidate gene-GO", summary.candidate_gene_go_pairs],
-        ["Uncovered", uncovered]
+        ["Missing from YAML", missing]
       ].map(([label, value]) => `<div class="metric"><strong>${compactNumber(value)}</strong><span>${escapeHtml(label)}</span></div>`).join("");
 
       const branchSelect = document.getElementById("branch");
@@ -1067,47 +1044,23 @@ HTML_TEMPLATE = """<!doctype html>
       return (values || []).length ? values.map(value => escapeHtml(value)).join("; ") : "";
     }
 
-    function statusForUnmapped(status) {
-      if (status === "no_mapping_appropriate") return "no_mapping";
-      if (status === "deferred") return "deferred";
-      return "pending_review";
-    }
-
-    function labelForUnmapped(status) {
-      if (status === "no_mapping_appropriate") return "No mapping appropriate";
-      if (status === "deferred") return "Deferred";
-      return "Pending review";
-    }
-
     function renderDirectCuration(node) {
-      const mappingCards = (node.direct_mappings || []).map(mapping => `
+      const cards = (node.direct_curations || []).map(item => `
         <div class="curation-card">
           <h4>
-            <span class="pill ${scopeClass(mapping.mapping_scope)}">${escapeHtml(mapping.mapping_scope)}</span>
-            ${escapeHtml(mapping.target_go_id)} ${escapeHtml(mapping.target_go_label)}
+            <span class="pill ${statusClass(item.curation_status)}">${escapeHtml(item.curation_status)}</span>
+            ${item.mapping_scope ? `<span class="pill ${scopeClass(item.mapping_scope)}">${escapeHtml(item.mapping_scope)}</span>` : ""}
+            ${item.target_go_id ? `${escapeHtml(item.target_go_id)} ${escapeHtml(item.target_go_label)}` : ""}
           </h4>
-          <div class="kv"><strong>Subject:</strong> ${escapeHtml(mapping.subject_code)}</div>
-          <div class="kv"><strong>File:</strong> ${escapeHtml(mapping.mapping_file)}</div>
-          ${mapping.conditions ? `<div class="kv"><strong>Conditions:</strong> ${escapeHtml(mapping.conditions)}</div>` : ""}
-          ${mapping.representative_genes?.length ? `<div class="kv"><strong>Representative genes:</strong> ${listValue(mapping.representative_genes)}</div>` : ""}
-          ${mapping.rationale ? `<div class="kv"><strong>Rationale:</strong> ${escapeHtml(mapping.rationale)}</div>` : ""}
-          ${mapping.notes ? `<div class="kv"><strong>Notes:</strong> ${escapeHtml(mapping.notes)}</div>` : ""}
-          ${mapping.references?.length ? `<div class="kv"><strong>References:</strong> ${listValue(mapping.references)}</div>` : ""}
-        </div>
-      `);
-      const unmappedCards = (node.direct_unmapped || []).map(item => `
-        <div class="curation-card">
-          <h4><span class="pill status-${escapeHtml(statusForUnmapped(item.unmapped_status))}">${escapeHtml(labelForUnmapped(item.unmapped_status))}</span></h4>
           <div class="kv"><strong>Subject:</strong> ${escapeHtml(item.subject_code)}</div>
           <div class="kv"><strong>File:</strong> ${escapeHtml(item.mapping_file)}</div>
-          <div class="kv"><strong>Unmapped status:</strong> ${escapeHtml(item.unmapped_status)}</div>
+          <div class="kv"><strong>Curation status:</strong> ${escapeHtml(item.curation_status)}</div>
           ${item.conditions ? `<div class="kv"><strong>Conditions:</strong> ${escapeHtml(item.conditions)}</div>` : ""}
           ${item.rationale ? `<div class="kv"><strong>Rationale:</strong> ${escapeHtml(item.rationale)}</div>` : ""}
           ${item.notes ? `<div class="kv"><strong>Notes:</strong> ${escapeHtml(item.notes)}</div>` : ""}
           ${item.references?.length ? `<div class="kv"><strong>References:</strong> ${listValue(item.references)}</div>` : ""}
         </div>
       `);
-      const cards = [...mappingCards, ...unmappedCards];
       return cards.length ? cards.join("") : `<div class="empty">No direct curation record on this node.</div>`;
     }
 
@@ -1123,7 +1076,7 @@ HTML_TEMPLATE = """<!doctype html>
       const candidateRows = projectionRows.filter(row => ["more_specific_than_existing_goa", "supported_by_goa_regulation", "new_to_goa"].includes(row.goa_status));
       const auditRows = auditRowsForNode(node.id);
       const mappedCounts = node.subtree_status_counts || {};
-      const mappingFiles = [...new Set([...node.mapping_files, ...node.unmapped_files])];
+      const mappingFiles = [...new Set(node.curation_files)];
       document.getElementById("detail").innerHTML = `
         <h2>${escapeHtml(node.label)}</h2>
         <div class="path">${escapeHtml(node.id)}</div>
@@ -1144,15 +1097,16 @@ HTML_TEMPLATE = """<!doctype html>
         <h3>Subtree Coverage</h3>
         <div class="badges">
           <span class="pill status-mapped">${compactNumber(mappedCounts.mapped || 0)} mapped</span>
+          <span class="pill status-context_only">${compactNumber(mappedCounts.context_only || 0)} context only</span>
           <span class="pill status-no_mapping">${compactNumber(mappedCounts.no_mapping || 0)} no mapping</span>
           <span class="pill status-deferred">${compactNumber(mappedCounts.deferred || 0)} deferred</span>
           <span class="pill status-pending_review">${compactNumber(mappedCounts.pending_review || 0)} pending</span>
-          <span class="pill status-uncovered">${compactNumber(mappedCounts.uncovered || 0)} uncovered</span>
-          ${(mappedCounts.mapped_and_unmapped || 0) ? `<span class="pill status-mapped_and_unmapped">${compactNumber(mappedCounts.mapped_and_unmapped)} conflicts</span>` : ""}
+          <span class="pill status-missing_from_yaml">${compactNumber(mappedCounts.missing_from_yaml || 0)} missing</span>
+          ${(mappedCounts.curation_conflict || 0) ? `<span class="pill status-curation_conflict">${compactNumber(mappedCounts.curation_conflict)} conflicts</span>` : ""}
         </div>
 
         <h3>Mapping Files</h3>
-        ${mappingFiles.length ? `<div class="badges">${mappingFiles.map(file => `<span class="pill pill-neutral">${escapeHtml(file)}</span>`).join("")}</div>` : `<div class="empty">No exact mapping or non-map file on this code.</div>`}
+        ${mappingFiles.length ? `<div class="badges">${mappingFiles.map(file => `<span class="pill pill-neutral">${escapeHtml(file)}</span>`).join("")}</div>` : `<div class="empty">No curation file on this code.</div>`}
 
         <h3>Direct Curation</h3>
         ${renderDirectCuration(node)}

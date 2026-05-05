@@ -46,18 +46,18 @@ README_ROWS = [
     ),
     (
         "Mappings tab",
-        "One row per curated PN to GO mapping. This is the main sheet for review, "
-        "sorting, and filtering.",
+        "One row per GO-bearing PN curation. This includes propagating mappings "
+        "and context-only GO relationships.",
     ),
     (
         "Unmapped tab",
-        "One row per PN subject that has been explicitly reviewed and left unmapped. "
-        "This is different from not-yet-curated PN codes, which do not appear here.",
+        "One row per PN subject without a GO target. curation_status separates "
+        "pending review, deferred decisions, and reviewed no-mapping decisions.",
     ),
     (
         "Summary tab",
-        "Count summary by mapping YAML file, including the number of curated mappings "
-        "and unmapped subjects.",
+        "Count summary by mapping YAML file, including the number of GO-bearing "
+        "curations and non-mapping curations.",
     ),
     (
         "Per-file tabs",
@@ -77,6 +77,14 @@ README_ROWS = [
         "subject_level",
         "The PN level for the subject_code being mapped: branch, class, group, type, "
         "or subtype.",
+    ),
+    (
+        "curation_status",
+        "pending_review means the PN node is accounted for but not yet manually "
+        "analyzed. mapped means a GO mapping is complete. context_only means a GO "
+        "relationship is recorded but unsafe to propagate. no_mapping means reviewed "
+        "and no GO mapping should be made. deferred means review is blocked by "
+        "evidence, taxonomy ambiguity, or a missing/better GO term.",
     ),
     (
         "mapping_scope",
@@ -133,13 +141,14 @@ README_ROWS = [
 
 @dataclass(frozen=True)
 class MappingRow:
-    """Flat exported view of one curated mapping."""
+    """Flat exported view of one GO-bearing curation."""
 
     mapping_file: str
     mapping_set_id: str
     mapping_set_label: str
     subject_level: str
     subject_code: str
+    curation_status: str
     branch: str
     class_name: str
     group: str
@@ -157,14 +166,14 @@ class MappingRow:
 
 @dataclass(frozen=True)
 class UnmappedRow:
-    """Flat exported view of one unmapped subject."""
+    """Flat exported view of one non-mapping curation."""
 
     mapping_file: str
     mapping_set_id: str
     mapping_set_label: str
     subject_level: str
     subject_code: str
-    unmapped_status: str
+    curation_status: str
     branch: str
     class_name: str
     group: str
@@ -227,53 +236,54 @@ def load_mapping_rows(mapping_dir: Path) -> tuple[list[MappingRow], list[Unmappe
         mapping_set_id = _clean_value(data.get("id"))
         mapping_set_label = _clean_value(data.get("label"))
 
-        for entry in data.get("mappings", []):
+        for entry in data.get("subject_curations", []):
+            curation_status = _clean_value(entry.get("curation_status"))
             split = _split_subject_code(_clean_value(entry.get("subject_code")))
             target_term = entry.get("target_term", {}) or {}
-            mapping_rows.append(
-                MappingRow(
-                    mapping_file=path.name,
-                    mapping_set_id=mapping_set_id,
-                    mapping_set_label=mapping_set_label,
-                    subject_level=_clean_value(entry.get("subject_level")),
-                    subject_code=_clean_value(entry.get("subject_code")),
-                    branch=split["branch"],
-                    class_name=split["class"],
-                    group=split["group"],
-                    type_name=split["type"],
-                    subtype=split["subtype"],
-                    mapping_scope=_clean_value(entry.get("mapping_scope")),
-                    target_go_id=_clean_value(target_term.get("id")),
-                    target_go_label=_clean_value(target_term.get("label")),
-                    representative_genes=_format_string_list(entry.get("representative_genes")),
-                    conditions=_format_conditions(entry.get("conditions")),
-                    rationale=_clean_value(entry.get("rationale")),
-                    notes=_clean_value(entry.get("notes")),
-                    references=_format_references(entry.get("references")),
+            if target_term and entry.get("mapping_scope"):
+                mapping_rows.append(
+                    MappingRow(
+                        mapping_file=path.name,
+                        mapping_set_id=mapping_set_id,
+                        mapping_set_label=mapping_set_label,
+                        subject_level=_clean_value(entry.get("subject_level")),
+                        subject_code=_clean_value(entry.get("subject_code")),
+                        curation_status=curation_status,
+                        branch=split["branch"],
+                        class_name=split["class"],
+                        group=split["group"],
+                        type_name=split["type"],
+                        subtype=split["subtype"],
+                        mapping_scope=_clean_value(entry.get("mapping_scope")),
+                        target_go_id=_clean_value(target_term.get("id")),
+                        target_go_label=_clean_value(target_term.get("label")),
+                        representative_genes=_format_string_list(entry.get("representative_genes")),
+                        conditions=_format_conditions(entry.get("conditions")),
+                        rationale=_clean_value(entry.get("rationale")),
+                        notes=_clean_value(entry.get("notes")),
+                        references=_format_references(entry.get("references")),
+                    )
                 )
-            )
-
-        for entry in data.get("unmapped_subjects", []):
-            split = _split_subject_code(_clean_value(entry.get("subject_code")))
-            unmapped_rows.append(
-                UnmappedRow(
-                    mapping_file=path.name,
-                    mapping_set_id=mapping_set_id,
-                    mapping_set_label=mapping_set_label,
-                    subject_level=_clean_value(entry.get("subject_level")),
-                    subject_code=_clean_value(entry.get("subject_code")),
-                    unmapped_status=_clean_value(entry.get("unmapped_status")),
-                    branch=split["branch"],
-                    class_name=split["class"],
-                    group=split["group"],
-                    type_name=split["type"],
-                    subtype=split["subtype"],
-                    conditions=_format_conditions(entry.get("conditions")),
-                    rationale=_clean_value(entry.get("rationale")),
-                    notes=_clean_value(entry.get("notes")),
-                    references=_format_references(entry.get("references")),
+            else:
+                unmapped_rows.append(
+                    UnmappedRow(
+                        mapping_file=path.name,
+                        mapping_set_id=mapping_set_id,
+                        mapping_set_label=mapping_set_label,
+                        subject_level=_clean_value(entry.get("subject_level")),
+                        subject_code=_clean_value(entry.get("subject_code")),
+                        curation_status=curation_status,
+                        branch=split["branch"],
+                        class_name=split["class"],
+                        group=split["group"],
+                        type_name=split["type"],
+                        subtype=split["subtype"],
+                        conditions=_format_conditions(entry.get("conditions")),
+                        rationale=_clean_value(entry.get("rationale")),
+                        notes=_clean_value(entry.get("notes")),
+                        references=_format_references(entry.get("references")),
+                    )
                 )
-            )
 
     return mapping_rows, unmapped_rows
 
@@ -510,6 +520,7 @@ def build_workbook(
         "mapping_set_label",
         "subject_level",
         "subject_code",
+        "curation_status",
         "branch",
         "class",
         "group",
@@ -531,6 +542,7 @@ def build_workbook(
             row.mapping_set_label,
             row.subject_level,
             row.subject_code,
+            row.curation_status,
             row.branch,
             row.class_name,
             row.group,
@@ -556,7 +568,7 @@ def build_workbook(
         "mapping_set_label",
         "subject_level",
         "subject_code",
-        "unmapped_status",
+        "curation_status",
         "branch",
         "class",
         "group",
@@ -574,7 +586,7 @@ def build_workbook(
             row.mapping_set_label,
             row.subject_level,
             row.subject_code,
-            row.unmapped_status,
+            row.curation_status,
             row.branch,
             row.class_name,
             row.group,
@@ -626,7 +638,7 @@ def build_workbook(
     for row in mapping_rows:
         by_file_rows.setdefault(row.mapping_file, []).append(
             [
-                "mapped",
+                row.curation_status,
                 row.subject_level,
                 row.subject_code,
                 row.branch,
@@ -635,7 +647,7 @@ def build_workbook(
                 row.type_name,
                 row.subtype,
                 row.mapping_scope,
-                "",
+                row.curation_status,
                 row.target_go_id,
                 row.target_go_label,
                 row.representative_genes,
@@ -648,7 +660,7 @@ def build_workbook(
     for row in unmapped_rows:
         by_file_rows.setdefault(row.mapping_file, []).append(
             [
-                row.unmapped_status or "unmapped",
+                row.curation_status,
                 row.subject_level,
                 row.subject_code,
                 row.branch,
@@ -657,7 +669,7 @@ def build_workbook(
                 row.type_name,
                 row.subtype,
                 "",
-                row.unmapped_status,
+                row.curation_status,
                 "",
                 "",
                 "",
@@ -678,7 +690,7 @@ def build_workbook(
         "type",
         "subtype",
         "mapping_scope",
-        "unmapped_status",
+        "curation_status",
         "target_go_id",
         "target_go_label",
         "representative_genes",

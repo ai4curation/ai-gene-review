@@ -50,31 +50,35 @@ Every 2026 PN source code is now accounted for.
 
 Total nodes: 2029. Leaf nodes: 1348.
 
-| Level | Total | Mapped | No map | Deferred | Pending | Uncovered |
-|-------|------:|-------:|-------:|---------:|--------:|----------:|
-| Branch | 9 | 1 | 0 | 0 | 8 | 0 |
-| Class | 42 | 11 | 1 | 0 | 30 | 0 |
-| Group | 297 | 62 | 1 | 5 | 229 | 0 |
-| Type | 800 | 121 | 14 | 4 | 661 | 0 |
-| Subtype | 881 | 65 | 14 | 7 | 795 | 0 |
+| Level | Total | Pending | Mapped | Context | No map | Deferred | Missing |
+|-------|------:|--------:|-------:|--------:|-------:|---------:|--------:|
+| Branch | 9 | 8 | 0 | 1 | 0 | 0 | 0 |
+| Class | 42 | 30 | 9 | 2 | 1 | 0 | 0 |
+| Group | 297 | 229 | 60 | 2 | 1 | 5 | 0 |
+| Type | 800 | 661 | 119 | 2 | 14 | 4 | 0 |
+| Subtype | 881 | 795 | 64 | 1 | 14 | 7 | 0 |
 
-Inventory: 241 curated mappings, 1769 unmapped subjects.
+Inventory: 2029 subject curation records, one per PN node.
 
 ---
 
-## Unmapped Status Policy
+## Curation Status Policy
 
-Unmapped does not mean a final non-map.
+Every PN node has a curator-facing status.
 
-- no mapping appropriate: reviewed, no GO mapping should be made
-- deferred: reviewed, but needs better evidence, a better GO term, or narrower handling
-- pending review: tracked for coverage, not yet manually analyzed in depth
+- pending review: accounted for, not yet manually analyzed in depth
+- mapped: reviewed and mapped to GO
+- context only: GO relationship recorded, but unsafe to propagate
+- no mapping: reviewed, no GO mapping should be made
+- deferred: reviewed, but blocked by evidence, taxonomy ambiguity, or a term gap
 
-Current unmapped inventory:
+Current curation inventory:
 
-- 30 no mapping appropriate
-- 16 deferred
 - 1723 pending review
+- 252 mapped
+- 8 context only
+- 30 no mapping
+- 16 deferred
 
 These are tracked directly in the branch mapping YAMLs.
 
@@ -101,14 +105,14 @@ Only the 1083 candidate additions enter manual rereview queues.
 
 ## Extra Scrutiny Audit
 
-The current mapping set is intentionally conservative, but 172 mappings are
+The current mapping set is intentionally conservative, but 180 GO-bearing records are
 flagged as requiring gene-level review before changing AIGR YAML.
 
 Top flag types:
 
-- 153 contextual or regulatory source labels
-- 37 broad or context-losing GO targets
-- 15 domain or family metadata labels
+- 151 contextual or regulatory source labels
+- 73 broad or context-losing GO targets
+- 44 domain or family metadata labels
 - 12 branch/class-level mappings
 - 8 `too_broad_to_propagate` mappings excluded from projections
 

@@ -119,37 +119,35 @@ Annotation 4.3.11` workbook release dated `2026-04-17`.
 
 Coverage after the completion pass:
 
-| Level | Total source codes | Mapped | No mapping | Deferred | Pending review | Uncovered |
-|-------|--------------------|--------|------------|----------|----------------|-----------|
-| Branch | 9 | 1 | 0 | 0 | 8 | 0 |
-| Class | 42 | 11 | 1 | 0 | 30 | 0 |
-| Group | 297 | 62 | 1 | 5 | 229 | 0 |
-| Type | 800 | 121 | 14 | 4 | 661 | 0 |
-| Subtype | 881 | 65 | 14 | 7 | 795 | 0 |
+| Level | Total source codes | Pending review | Mapped | Context only | No mapping | Deferred | Missing from YAML |
+|-------|--------------------|----------------|--------|--------------|------------|----------|-------------------|
+| Branch | 9 | 8 | 0 | 1 | 0 | 0 | 0 |
+| Class | 42 | 30 | 9 | 2 | 1 | 0 | 0 |
+| Group | 297 | 229 | 60 | 2 | 1 | 5 | 0 |
+| Type | 800 | 661 | 119 | 2 | 14 | 4 | 0 |
+| Subtype | 881 | 795 | 64 | 1 | 14 | 7 | 0 |
 
-This means every `2026-04-17` PN source code is now accounted for as either:
+Every `2026-04-17` PN source code now has exactly one `subject_curations`
+record in a branch mapping YAML. `missing_from_yaml` is now a QA failure state,
+not a normal curator bucket, and should remain zero.
 
-- a curated PN-to-GO mapping in one of the branch mapping sets, with a
-  `mapping_scope` category
-- an unmapped item in that same branch mapping set, with explicit
-  `unmapped_status`
+The current hierarchy has `2029` total source nodes and `1348` leaf nodes.
+The YAML inventory contains:
 
-The current hierarchy has `2029` total source nodes and `1348` leaf nodes. The
-completed YAML inventory contains `241` curated mapping records and `1769`
-unmapped subjects:
-
-| Unmapped status | Records | Meaning |
+| Curation status | Records | Meaning |
 |-----------------|---------|---------|
-| `no_mapping_appropriate` | 30 | Reviewed and concluded that no GO mapping should be made |
-| `deferred` | 16 | Reviewed, but needs more evidence, a better GO term, or narrower handling |
-| `pending_review` | 1723 | Tracked for coverage, but not yet manually analyzed in depth |
+| `pending_review` | 1723 | Accounted for in YAML, but not yet manually analyzed in depth |
+| `mapped` | 252 | Reviewed and mapped to a GO term |
+| `context_only` | 8 | GO relationship recorded, but unsafe for gene-level propagation |
+| `no_mapping` | 30 | Reviewed and concluded that no GO mapping should be made |
+| `deferred` | 16 | Reviewed, but blocked by evidence, taxonomy ambiguity, or a missing/better GO term |
 
 Mapping scopes are:
 
 | Mapping scope | Records | Use |
 |---------------|---------|-----|
 | `exact` | 4 | Direct semantic match |
-| `ok_for_propagation_to_go` | 229 | May produce candidate gene-GO propagations |
+| `ok_for_propagation_to_go` | 248 | May produce candidate gene-GO propagations |
 | `too_broad_to_propagate` | 8 | Real contextual alignment, but excluded from propagation |
 
 Most PN source codes are not yet final non-map calls. They are explicitly
@@ -176,19 +174,19 @@ category.
 
 ### Extra-Scrutiny Findings
 
-The mapping audit flags `172/241` current mappings as requiring manual
+The mapping audit flags `180/260` GO-bearing curation records as requiring manual
 gene-level review before they are used to change a gene review. These are not
 necessarily wrong mappings; they are places where propagation can mislead if the
 projected GO term is treated as an asserted gene function.
 
 Main flagged patterns:
 
-- `153` mappings have regulatory, recruitment, localization, sensing, or other
+- `151` mappings have regulatory, recruitment, localization, sensing, or other
   contextual PN source labels.
-- `37` mappings use broad or context-losing GO targets such as generic
+- `73` mappings use broad or context-losing GO targets such as generic
   translation, protein transport, DNA repair, DNA binding, or stress-response
   terms.
-- `15` mappings include domain, family, or subtype metadata in the source label.
+- `44` mappings include domain, family, or subtype metadata in the source label.
 - `12` mappings are at branch or class level.
 - `8` mappings are explicitly categorized as `too_broad_to_propagate` and are
   excluded from propagation reports.

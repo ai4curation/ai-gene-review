@@ -257,12 +257,16 @@ def load_workbook_rows(
 
 
 def load_mapping_specs(mapping_dir: Path) -> list[MappingSpec]:
-    """Load mapping entries from YAML mapping-set files."""
+    """Load GO-bearing curation entries from YAML mapping-set files."""
     specs: list[MappingSpec] = []
     for path in sorted(mapping_dir.glob("*.yaml")):
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        for entry in data.get("mappings", []):
+        for entry in data.get("subject_curations", []):
+            if entry.get("curation_status") not in {"mapped", "context_only"}:
+                continue
             target_term = entry.get("target_term", {}) or {}
+            if not target_term or not entry.get("mapping_scope"):
+                continue
             specs.append(
                 MappingSpec(
                     file_name=path.name,
@@ -604,7 +608,7 @@ def write_projection_reports(
 
     row_level_path = output_dir / "pn_projected_annotations.tsv"
     with row_level_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle, delimiter="\t")
+        writer = csv.writer(handle, delimiter="\t", lineterminator="\n")
         writer.writerow(
             [
                 "gene_symbol",
@@ -662,6 +666,7 @@ def write_projection_reports(
         writer = csv.DictWriter(
             handle,
             delimiter="\t",
+            lineterminator="\n",
             fieldnames=[
                 "gene_symbol",
                 "gene_name",
@@ -673,8 +678,8 @@ def write_projection_reports(
                 "mapping_subjects",
                 "pn_codes",
                 "representative_genes",
-                "projection_count",
                 "supporting_goa_terms",
+                "projection_count",
             ],
         )
         writer.writeheader()
@@ -685,6 +690,7 @@ def write_projection_reports(
         writer = csv.DictWriter(
             handle,
             delimiter="\t",
+            lineterminator="\n",
             fieldnames=[
                 "gene_symbol",
                 "gene_name",
@@ -696,8 +702,8 @@ def write_projection_reports(
                 "mapping_subjects",
                 "pn_codes",
                 "representative_genes",
-                "projection_count",
                 "supporting_goa_terms",
+                "projection_count",
             ],
         )
         writer.writeheader()
@@ -708,6 +714,7 @@ def write_projection_reports(
         writer = csv.DictWriter(
             handle,
             delimiter="\t",
+            lineterminator="\n",
             fieldnames=[
                 "gene_symbol",
                 "gene_name",
@@ -719,8 +726,8 @@ def write_projection_reports(
                 "mapping_subjects",
                 "pn_codes",
                 "representative_genes",
-                "projection_count",
                 "supporting_goa_terms",
+                "projection_count",
             ],
         )
         writer.writeheader()
@@ -740,7 +747,7 @@ def write_projection_reports(
         status_counts[row["goa_status"]] = status_counts.get(row["goa_status"], 0) + 1
     status_summary_path = output_dir / "pn_projected_status_summary.tsv"
     with status_summary_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle, delimiter="\t")
+        writer = csv.writer(handle, delimiter="\t", lineterminator="\n")
         writer.writerow(["metric", "value"])
         writer.writerow(["row_level_projections", str(len(projected_rows))])
         writer.writerow(["unique_gene_go_pairs", str(len(summary_rows))])

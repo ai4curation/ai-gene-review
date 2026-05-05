@@ -160,10 +160,11 @@ def test_pn_projection_reports_existing_new_and_missing_goa(tmp_path: Path) -> N
     mapping_set = {
         "id": "pn_mapping_set:test",
         "label": "Test mapping set",
-        "mappings": [
+        "subject_curations": [
             {
                 "subject_code": "Cytonuclear proteostasis|Chaperone",
                 "subject_level": "class",
+                "curation_status": "mapped",
                 "target_term": {
                     "id": "GO:0044183",
                     "label": "protein folding chaperone",
@@ -176,6 +177,7 @@ def test_pn_projection_reports_existing_new_and_missing_goa(tmp_path: Path) -> N
             {
                 "subject_code": "HSP70",
                 "subject_level": "type",
+                "curation_status": "mapped",
                 "target_term": {
                     "id": "GO:0140662",
                     "label": "ATP-dependent protein folding chaperone",
@@ -267,10 +269,11 @@ def test_pn_projection_can_fetch_missing_goa_into_project_cache(
     mapping_set = {
         "id": "pn_mapping_set:test",
         "label": "Test mapping set",
-        "mappings": [
+        "subject_curations": [
             {
                 "subject_code": "HSP70",
                 "subject_level": "type",
+                "curation_status": "mapped",
                 "target_term": {
                     "id": "GO:0140662",
                     "label": "ATP-dependent protein folding chaperone",
