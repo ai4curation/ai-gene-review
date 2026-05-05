@@ -12,6 +12,13 @@ from typing import Any
 
 import yaml
 
+from ai_gene_review.tools.report_pn_projected_annotations import (
+    DEFAULT_GOA_DUCKDB,
+    PNWorkbookRow,
+    _deepest_code,
+    load_workbook_rows,
+)
+
 
 DEFAULT_COVERAGE_PATH = Path(
     "projects/PROTEOSTASIS/reports/pn_mapping_coverage/pn_mapping_code_coverage.tsv"
@@ -23,6 +30,10 @@ DEFAULT_AUDIT_PATH = Path(
     "projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv"
 )
 DEFAULT_MAPPING_DIR = Path("projects/PROTEOSTASIS/mappings")
+DEFAULT_WORKBOOK_PATH = Path(
+    "projects/PROTEOSTASIS/references/proteostasis_network_annotation_4_3_11_2026_0417.xlsx"
+)
+DEFAULT_WORKBOOK_SHEET = "DENSE"
 DEFAULT_OUTPUT_PATH = Path("projects/PROTEOSTASIS/pn.html")
 PROJECT_PAGE_PATH = Path("pages/projects/PROTEOSTASIS.html")
 UNUSUAL_PROPAGATIONS_PATH = Path(
@@ -61,6 +72,28 @@ def prefixes(code: str) -> list[str]:
 def split_semicolon(value: str) -> list[str]:
     """Split semicolon-separated report values."""
     return [part.strip() for part in value.split(";") if part.strip()]
+
+
+def display_path(path: Path | None) -> str:
+    """Render a path for embedded provenance without leaking machine-specific home dirs."""
+    if path is None:
+        return ""
+    path_string = str(path)
+    home = str(Path.home())
+    if path_string == home:
+        return "~"
+    if path_string.startswith(f"{home}{os.sep}"):
+        return f"~/{path_string[len(home) + 1:]}"
+    return path_string
+
+
+def aspect_label(aspect: str) -> str:
+    """Return a compact display label for a GO aspect code."""
+    return {
+        "F": "MF",
+        "P": "BP",
+        "C": "CC",
+    }.get(aspect, aspect)
 
 
 def format_conditions(raw_conditions: Any) -> str:
@@ -102,11 +135,141 @@ def load_curation_entries(mapping_dir: Path) -> list[dict[str, Any]]:
     return curation_entries
 
 
+def build_workbook_context(
+    workbook_path: Path | None,
+    workbook_sheet: str,
+) -> tuple[list[PNWorkbookRow], dict[str, str], dict[str, str], dict[str, list[PNWorkbookRow]]]:
+    """Load PN workbook rows and derive gene/link lookup tables for the browser."""
+    if workbook_path is None or not workbook_path.exists():
+        return [], {}, {}, {}
+
+    workbook_rows = load_workbook_rows(workbook_path, sheet_name=workbook_sheet)
+    gene_accessions: dict[str, str] = {}
+    gene_names: dict[str, str] = {}
+    leaf_rows: dict[str, list[PNWorkbookRow]] = defaultdict(list)
+
+    for row in workbook_rows:
+        if row.gene_symbol and row.uniprot_id:
+            gene_accessions.setdefault(row.gene_symbol, row.uniprot_id)
+        if row.gene_symbol and row.gene_name:
+            gene_names.setdefault(row.gene_symbol, row.gene_name)
+        leaf_code = _deepest_code(row)
+        if leaf_code:
+            leaf_rows[leaf_code].append(row)
+
+    return workbook_rows, gene_accessions, gene_names, leaf_rows
+
+
+def load_existing_iba_annotations(
+    workbook_rows: list[PNWorkbookRow],
+    duckdb_path: Path | None,
+) -> dict[tuple[str, str], list[dict[str, str]]]:
+    """Load existing IBA GO annotations for PN workbook genes from local GOA DuckDB."""
+    if duckdb_path is None or not duckdb_path.exists() or not workbook_rows:
+        return {}
+
+    import duckdb
+
+    requested_keys = sorted(
+        {
+            (row.gene_symbol, row.uniprot_id)
+            for row in workbook_rows
+            if row.gene_symbol
+        }
+    )
+    if not requested_keys:
+        return {}
+
+    con = duckdb.connect(str(duckdb_path), read_only=True)
+    con.execute("create temp table pn_browser_genes(gene_symbol varchar, uniprot_id varchar)")
+    con.executemany("insert into pn_browser_genes values (?, ?)", requested_keys)
+
+    query_template = """
+        select
+            p.gene_symbol,
+            p.uniprot_id,
+            ga.ontology_class_ref,
+            coalesce(tl.label, ga.ontology_class_ref) as go_label,
+            ga.aspect,
+            ga.supporting_references
+        from pn_browser_genes as p
+        join gaf_association as ga
+          on {join_condition}
+        left join term_label as tl
+          on tl.id = ga.ontology_class_ref
+        where ga.evidence_type = 'IBA'
+          and coalesce(ga.is_negation, false) = false
+        order by p.gene_symbol, ga.aspect, ga.ontology_class_ref
+    """
+    by_uniprot_rows = con.execute(
+        query_template.format(
+            join_condition="p.uniprot_id <> '' and ga.db_object_id = p.uniprot_id"
+        )
+    ).fetchall()
+    by_symbol_rows = con.execute(
+        query_template.format(
+            join_condition="p.gene_symbol <> '' and ga.db_object_symbol = p.gene_symbol"
+        )
+    ).fetchall()
+
+    def collect(rows: list[tuple[str, str, str, str, str, str]]) -> dict[
+        tuple[str, str], dict[tuple[str, str], dict[str, Any]]
+    ]:
+        collected: dict[tuple[str, str], dict[tuple[str, str], dict[str, Any]]] = defaultdict(dict)
+        for gene_symbol, uniprot_id, go_id, go_label, aspect, references in rows:
+            key = (gene_symbol, uniprot_id)
+            term_key = (go_id, aspect or "")
+            term = collected[key].setdefault(
+                term_key,
+                {
+                    "go_id": go_id,
+                    "go_label": go_label,
+                    "aspect": aspect_label(aspect or ""),
+                    "references": set(),
+                },
+            )
+            for reference in split_semicolon(references or ""):
+                term["references"].add(reference)
+        return collected
+
+    by_uniprot = collect(by_uniprot_rows)
+    by_symbol = collect(by_symbol_rows)
+    resolved: dict[tuple[str, str], list[dict[str, str]]] = {}
+    aspect_order = {"BP": 0, "MF": 1, "CC": 2}
+
+    for key in requested_keys:
+        terms_by_key = by_uniprot.get(key) or by_symbol.get(key) or {}
+        rows = []
+        for term in terms_by_key.values():
+            rows.append(
+                {
+                    "go_id": term["go_id"],
+                    "go_label": term["go_label"],
+                    "aspect": term["aspect"],
+                    "references": "; ".join(sorted(term["references"])),
+                }
+            )
+        if rows:
+            resolved[key] = sorted(
+                rows,
+                key=lambda row: (
+                    aspect_order.get(row["aspect"], 99),
+                    row["go_id"],
+                    row["go_label"],
+                ),
+            )
+
+    return resolved
+
+
 def build_data(
     coverage_rows: list[dict[str, str]],
     projection_rows: list[dict[str, str]],
     audit_rows: list[dict[str, str]],
     mapping_dir: Path = DEFAULT_MAPPING_DIR,
+    workbook_path: Path | None = DEFAULT_WORKBOOK_PATH,
+    workbook_sheet: str = DEFAULT_WORKBOOK_SHEET,
+    goa_duckdb: Path | None = DEFAULT_GOA_DUCKDB,
 ) -> dict[str, Any]:
     """Build browser data from PN reports."""
     nodes: dict[str, dict[str, Any]] = {}
@@ -117,6 +280,11 @@ def build_data(
         curations_by_subject[
             (entry["mapping_file"], entry["subject_level"], entry["subject_code"])
         ].append(entry)
+    workbook_rows, gene_accessions, gene_names, workbook_rows_by_leaf = build_workbook_context(
+        workbook_path,
+        workbook_sheet,
+    )
+    iba_terms_by_gene = load_existing_iba_annotations(workbook_rows, goa_duckdb)
 
     for row in coverage_rows:
         code = row["code"]
@@ -143,6 +311,9 @@ def build_data(
             "scrutiny_decision_counts": {},
             "target_terms": [],
             "gene_examples": [],
+            "existing_iba_by_gene": [],
+            "existing_iba_gene_count": 0,
+            "existing_iba_annotation_count": 0,
             "children": [],
         }
         for file_name in nodes[code]["curation_files"]:
@@ -168,6 +339,7 @@ def build_data(
             {
                 "gene_symbol": row["gene_symbol"],
                 "gene_name": row["gene_name"],
+                "uniprot_id": gene_accessions.get(row["gene_symbol"], ""),
                 "pn_code": row["pn_code"],
                 "target_go_id": row["target_go_id"],
                 "target_go_label": row["target_go_label"],
@@ -196,6 +368,33 @@ def build_data(
                 node_goa_counts[prefix][goa_status] += 1
             if go_id:
                 node_target_counts[prefix][f"{go_id} {go_label}".strip()] += 1
+
+    for code, rows in workbook_rows_by_leaf.items():
+        if code not in nodes:
+            continue
+        seen_genes: set[tuple[str, str]] = set()
+        iba_by_gene_rows: list[dict[str, Any]] = []
+        for row in sorted(rows, key=lambda item: (item.order is None, item.order or 0, item.gene_symbol)):
+            key = (row.gene_symbol, row.uniprot_id)
+            if key in seen_genes:
+                continue
+            seen_genes.add(key)
+            terms = iba_terms_by_gene.get(key, [])
+            if not terms:
+                continue
+            iba_by_gene_rows.append(
+                {
+                    "gene_symbol": row.gene_symbol,
+                    "gene_name": row.gene_name or gene_names.get(row.gene_symbol, ""),
+                    "uniprot_id": row.uniprot_id or gene_accessions.get(row.gene_symbol, ""),
+                    "terms": terms,
+                }
+            )
+        nodes[code]["existing_iba_by_gene"] = iba_by_gene_rows
+        nodes[code]["existing_iba_gene_count"] = len(iba_by_gene_rows)
+        nodes[code]["existing_iba_annotation_count"] = sum(
+            len(row["terms"]) for row in iba_by_gene_rows
+        )
 
     compact_audit_rows: list[dict[str, str]] = []
     for row in audit_rows:
@@ -298,6 +497,8 @@ def build_data(
             "projection": str(DEFAULT_PROJECTION_PATH),
             "audit": str(DEFAULT_AUDIT_PATH),
             "mappings": str(mapping_dir),
+            "workbook": display_path(workbook_path),
+            "goa_duckdb": display_path(goa_duckdb),
         },
         "summary": {
             "total_codes": len(coverage_rows),
@@ -331,6 +532,12 @@ def build_data(
             "curation_status_counts": dict(curation_status_counts),
             "audit_rows": len(audit_rows),
             "audit_decision_counts": dict(audit_decision_counts),
+            "existing_iba_genes_on_leaf_nodes": sum(
+                node["existing_iba_gene_count"] for node in nodes.values()
+            ),
+            "existing_iba_annotations_on_leaf_nodes": sum(
+                node["existing_iba_annotation_count"] for node in nodes.values()
+            ),
         },
         "root_codes": root_codes,
         "tree": [public_tree(code) for code in root_codes],
@@ -621,6 +828,30 @@ HTML_TEMPLATE = """<!doctype html>
       overflow-wrap: anywhere;
     }
     .kv strong { color: var(--muted); }
+    .gene-cell strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+    .gene-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+      margin: 2px 0 3px;
+    }
+    .term-list {
+      display: grid;
+      gap: 5px;
+    }
+    .term-line {
+      align-items: baseline;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .aspect-bp { background: #e7f5ee; color: #1f7a52; }
+    .aspect-mf { background: #e8f1fb; color: #1f5d99; }
+    .aspect-cc { background: #fff1d1; color: #835600; }
     .detail {
       max-height: calc(100vh - 248px);
       overflow: auto;
@@ -849,6 +1080,35 @@ HTML_TEMPLATE = """<!doctype html>
       return Number(value || 0).toLocaleString();
     }
 
+    function uniprotUrl(uniprotId) {
+      return `https://www.uniprot.org/uniprotkb/${encodeURIComponent(uniprotId)}/entry`;
+    }
+
+    function functionomeUrl(uniprotId) {
+      return `https://functionome.geneontology.org/gene/UniProtKB:${encodeURIComponent(uniprotId)}`;
+    }
+
+    function renderGeneCell(geneSymbol, geneName = "", uniprotId = "") {
+      const safeSymbol = escapeHtml(geneSymbol || "");
+      const safeName = escapeHtml(geneName || "");
+      if (!uniprotId) {
+        return `<div class="gene-cell"><strong>${safeSymbol}</strong>${safeName ? `<small>${safeName}</small>` : ""}</div>`;
+      }
+      const safeId = escapeHtml(uniprotId);
+      return `<div class="gene-cell">
+        <strong>${safeSymbol}</strong>
+        <div class="gene-links">
+          <a href="${uniprotUrl(uniprotId)}" target="_blank" rel="noopener">UniProt ${safeId}</a>
+          <a href="${functionomeUrl(uniprotId)}" target="_blank" rel="noopener">Functionome</a>
+        </div>
+        ${safeName ? `<small>${safeName}</small>` : ""}
+      </div>`;
+    }
+
+    function aspectClass(aspect) {
+      return `aspect-${String(aspect || "").toLowerCase()}`;
+    }
+
     function selectedStatuses() {
       return new Set([...document.querySelectorAll(".filters input[type=checkbox]:checked")].map(input => input.value));
     }
@@ -871,7 +1131,12 @@ HTML_TEMPLATE = """<!doctype html>
           item.representative_genes.join(" ")
         ].join(" ")).join(" "),
         node.target_terms.map(item => item.term).join(" "),
-        node.gene_examples.join(" ")
+        node.gene_examples.join(" "),
+        (node.existing_iba_by_gene || []).map(item => [
+          item.gene_symbol,
+          item.uniprot_id,
+          item.terms.map(term => `${term.go_id} ${term.go_label} ${term.aspect}`).join(" ")
+        ].join(" ")).join(" ")
       ].join(" ").toLowerCase();
     }
 
@@ -1009,7 +1274,7 @@ HTML_TEMPLATE = """<!doctype html>
         <thead><tr><th>Gene</th><th>PN code</th><th>GO target</th><th>Status</th></tr></thead>
         <tbody>${limited.map(row => `
           <tr>
-            <td><strong>${escapeHtml(row.gene_symbol)}</strong><br>${escapeHtml(row.gene_name)}</td>
+            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id)}</td>
             <td>${escapeHtml(row.pn_code)}</td>
             <td>${escapeHtml(row.target_go_id)} ${escapeHtml(row.target_go_label)}</td>
             <td>${escapeHtml(row.goa_status)}</td>
@@ -1038,6 +1303,24 @@ HTML_TEMPLATE = """<!doctype html>
         <thead><tr><th>GO target</th><th>Rows</th></tr></thead>
         <tbody>${node.target_terms.map(item => `
           <tr><td>${escapeHtml(item.term)}</td><td>${compactNumber(item.count)}</td></tr>`).join("")}</tbody>
+      </table>`;
+    }
+
+    function renderExistingIba(node) {
+      const rows = node.existing_iba_by_gene || [];
+      if (!rows.length) return `<div class="empty">No existing IBA annotations found for genes at this leaf.</div>`;
+      return `<table>
+        <thead><tr><th>Gene</th><th>Existing IBA GO annotations</th></tr></thead>
+        <tbody>${rows.map(row => `
+          <tr>
+            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id)}</td>
+            <td><div class="term-list">${(row.terms || []).map(term => `
+              <div class="term-line">
+                <span class="pill ${aspectClass(term.aspect)}">${escapeHtml(term.aspect)}</span>
+                <span>${escapeHtml(term.go_id)} ${escapeHtml(term.go_label)}</span>
+                ${term.references ? `<small>${escapeHtml(term.references)}</small>` : ""}
+              </div>`).join("")}</div></td>
+          </tr>`).join("")}</tbody>
       </table>`;
     }
 
@@ -1081,6 +1364,10 @@ HTML_TEMPLATE = """<!doctype html>
           <div class="mini"><strong>${compactNumber(node.subtree_total_codes || 1)}</strong><span>codes in subtree</span></div>
           <div class="mini"><strong>${compactNumber(node.subtree_leaf_codes || 0)}</strong><span>leaf nodes in subtree</span></div>
       `;
+      const existingIbaMetric = isLeaf ? `
+          <div class="mini"><strong>${compactNumber(node.existing_iba_gene_count || 0)}</strong><span>genes with existing IBA</span></div>
+          <div class="mini"><strong>${compactNumber(node.existing_iba_annotation_count || 0)}</strong><span>existing IBA terms</span></div>
+      ` : "";
       const subtreeCoverage = isLeaf ? "" : `
         <h3>Subtree Coverage</h3>
         <div class="badges">
@@ -1107,6 +1394,7 @@ HTML_TEMPLATE = """<!doctype html>
           <div class="mini"><strong>${compactNumber(node.projected_gene_count)}</strong><span>projected genes</span></div>
           <div class="mini"><strong>${compactNumber(node.projected_gene_go_count)}</strong><span>gene-GO pairs</span></div>
           <div class="mini"><strong>${compactNumber(node.candidate_gene_go_count)}</strong><span>candidate pairs</span></div>
+          ${existingIbaMetric}
         </div>
 
         ${subtreeCoverage}
@@ -1122,6 +1410,8 @@ HTML_TEMPLATE = """<!doctype html>
 
         <h3>Candidate Additions</h3>
         ${renderProjectionTable(candidateRows)}
+
+        ${isLeaf ? `<h3>Existing IBA GO Annotations</h3>${renderExistingIba(node)}` : ""}
 
         <h3>Scrutiny Audit</h3>
         ${renderAuditTable(auditRows)}
@@ -1206,6 +1496,23 @@ def build_argument_parser() -> argparse.ArgumentParser:
         help=f"Mapping YAML directory (default: {DEFAULT_MAPPING_DIR})",
     )
     parser.add_argument(
+        "--workbook",
+        type=Path,
+        default=DEFAULT_WORKBOOK_PATH,
+        help=f"PN workbook path for gene links and existing IBA annotations (default: {DEFAULT_WORKBOOK_PATH})",
+    )
+    parser.add_argument(
+        "--sheet",
+        default=DEFAULT_WORKBOOK_SHEET,
+        help=f"Workbook sheet to read for gene links and existing IBA annotations (default: {DEFAULT_WORKBOOK_SHEET})",
+    )
+    parser.add_argument(
+        "--goa-duckdb",
+        type=Path,
+        default=DEFAULT_GOA_DUCKDB,
+        help=f"Local GOA DuckDB used to load existing IBA annotations (default: {DEFAULT_GOA_DUCKDB})",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=DEFAULT_OUTPUT_PATH,
@@ -1224,6 +1531,9 @@ def main() -> None:
         projection_rows=load_tsv(args.projection),
         audit_rows=load_tsv(args.audit),
         mapping_dir=args.mapping_dir,
+        workbook_path=args.workbook,
+        workbook_sheet=args.sheet,
+        goa_duckdb=args.goa_duckdb,
     )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
