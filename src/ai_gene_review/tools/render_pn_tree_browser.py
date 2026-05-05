@@ -1052,9 +1052,7 @@ HTML_TEMPLATE = """<!doctype html>
             ${item.mapping_scope ? `<span class="pill ${scopeClass(item.mapping_scope)}">${escapeHtml(item.mapping_scope)}</span>` : ""}
             ${item.target_go_id ? `${escapeHtml(item.target_go_id)} ${escapeHtml(item.target_go_label)}` : ""}
           </h4>
-          <div class="kv"><strong>Subject:</strong> ${escapeHtml(item.subject_code)}</div>
-          <div class="kv"><strong>File:</strong> ${escapeHtml(item.mapping_file)}</div>
-          <div class="kv"><strong>Curation status:</strong> ${escapeHtml(item.curation_status)}</div>
+          ${item.subject_code !== node.id ? `<div class="kv"><strong>Subject:</strong> ${escapeHtml(item.subject_code)}</div>` : ""}
           ${item.conditions ? `<div class="kv"><strong>Conditions:</strong> ${escapeHtml(item.conditions)}</div>` : ""}
           ${item.rationale ? `<div class="kv"><strong>Rationale:</strong> ${escapeHtml(item.rationale)}</div>` : ""}
           ${item.notes ? `<div class="kv"><strong>Notes:</strong> ${escapeHtml(item.notes)}</div>` : ""}
@@ -1076,24 +1074,12 @@ HTML_TEMPLATE = """<!doctype html>
       const candidateRows = projectionRows.filter(row => ["more_specific_than_existing_goa", "supported_by_goa_regulation", "new_to_goa"].includes(row.goa_status));
       const auditRows = auditRowsForNode(node.id);
       const mappedCounts = node.subtree_status_counts || {};
-      const mappingFiles = [...new Set(node.curation_files)];
-      document.getElementById("detail").innerHTML = `
-        <h2>${escapeHtml(node.label)}</h2>
-        <div class="path">${escapeHtml(node.id)}</div>
-        <div class="badges">
-          <span class="pill ${statusClass(node.status)}">${escapeHtml(node.status_label)}</span>
-          <span class="pill pill-neutral">${escapeHtml(node.level)}</span>
-          ${node.manual_review_count ? `<span class="pill pill-risk">${compactNumber(node.manual_review_count)} manual-review flags</span>` : ""}
-        </div>
-
-        <div class="detail-grid">
+      const isLeaf = !(node.children || []).length;
+      const subtreeMetrics = isLeaf ? "" : `
           <div class="mini"><strong>${compactNumber(node.subtree_total_codes || 1)}</strong><span>codes in subtree</span></div>
           <div class="mini"><strong>${compactNumber(node.subtree_leaf_codes || 0)}</strong><span>leaf nodes in subtree</span></div>
-          <div class="mini"><strong>${compactNumber(node.projected_gene_count)}</strong><span>projected genes</span></div>
-          <div class="mini"><strong>${compactNumber(node.projected_gene_go_count)}</strong><span>gene-GO pairs</span></div>
-          <div class="mini"><strong>${compactNumber(node.candidate_gene_go_count)}</strong><span>candidate pairs</span></div>
-        </div>
-
+      `;
+      const subtreeCoverage = isLeaf ? "" : `
         <h3>Subtree Coverage</h3>
         <div class="badges">
           <span class="pill status-mapped">${compactNumber(mappedCounts.mapped || 0)} mapped</span>
@@ -1104,9 +1090,24 @@ HTML_TEMPLATE = """<!doctype html>
           <span class="pill status-missing_from_yaml">${compactNumber(mappedCounts.missing_from_yaml || 0)} missing</span>
           ${(mappedCounts.curation_conflict || 0) ? `<span class="pill status-curation_conflict">${compactNumber(mappedCounts.curation_conflict)} conflicts</span>` : ""}
         </div>
+      `;
+      document.getElementById("detail").innerHTML = `
+        <h2>${escapeHtml(node.label)}</h2>
+        <div class="path">${escapeHtml(node.id)}</div>
+        <div class="badges">
+          <span class="pill ${statusClass(node.status)}">${escapeHtml(node.status_label)}</span>
+          <span class="pill pill-neutral">${escapeHtml(node.level)}</span>
+          ${node.manual_review_count ? `<span class="pill pill-risk">${compactNumber(node.manual_review_count)} manual-review flags</span>` : ""}
+        </div>
 
-        <h3>Mapping Files</h3>
-        ${mappingFiles.length ? `<div class="badges">${mappingFiles.map(file => `<span class="pill pill-neutral">${escapeHtml(file)}</span>`).join("")}</div>` : `<div class="empty">No curation file on this code.</div>`}
+        <div class="detail-grid">
+          ${subtreeMetrics}
+          <div class="mini"><strong>${compactNumber(node.projected_gene_count)}</strong><span>projected genes</span></div>
+          <div class="mini"><strong>${compactNumber(node.projected_gene_go_count)}</strong><span>gene-GO pairs</span></div>
+          <div class="mini"><strong>${compactNumber(node.candidate_gene_go_count)}</strong><span>candidate pairs</span></div>
+        </div>
+
+        ${subtreeCoverage}
 
         <h3>Direct Curation</h3>
         ${renderDirectCuration(node)}
