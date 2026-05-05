@@ -78,7 +78,8 @@ add files without confirming the UniProt accession from the UniProt API.
 ### Mammalian Extended Synaptotagmins (E-Syts)
 
 1. **ESYT1** (human) — extended synaptotagmin-1; major Ca²⁺-regulated ER–PM
-   tether at junctions stabilized at low cytosolic Ca²⁺.
+   tether; recruited to junctions at elevated cytosolic Ca²⁺ (Ca²⁺-dependent
+   MCS expansion).
 2. **ESYT2** (human) — extended synaptotagmin-2; constitutive ER–PM tether
    active at resting Ca²⁺.
 3. **ESYT3** (human) — extended synaptotagmin-3; constitutive ER–PM tether,
