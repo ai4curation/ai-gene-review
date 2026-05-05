@@ -110,11 +110,11 @@ def test_ext_mapping_sets_use_unified_subject_curations() -> None:
         for status in statuses
     }
     assert status_counts == {
-        "pending_review": 1468,
-        "mapped": 362,
-        "context_only": 11,
-        "no_mapping": 174,
-        "deferred": 14,
+        "pending_review": 1227,
+        "mapped": 401,
+        "context_only": 64,
+        "no_mapping": 337,
+        "deferred": 0,
     }
 
 
@@ -126,9 +126,9 @@ def test_representative_curations_survived_migration() -> None:
         mapping_sets,
         "Autophagy-Lysosome Pathway|Autophagophore initiation and elongation",
     )
-    assert alp_class["curation_status"] == "mapped"
+    assert alp_class["curation_status"] == "context_only"
     assert alp_class["target_term"]["id"] == "GO:0016236"
-    assert alp_class["mapping_scope"] == "ok_for_propagation_to_go"
+    assert alp_class["mapping_scope"] == "too_broad_to_propagate"
 
     hsp90 = _find_curation(
         mapping_sets,
