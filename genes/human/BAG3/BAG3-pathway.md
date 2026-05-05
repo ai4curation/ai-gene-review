@@ -12,7 +12,7 @@ BAG3 binds the HSP70/HSC70 nucleotide-binding domain through its BAG domain and 
 BAG3 nucleates a stable cytosolic complex with HSC70/HSPA8 and the small heat-shock protein HSPB8, and recruits the chaperone-associated E3 ubiquitin ligase STUB1/CHIP and the autophagy adaptor SQSTM1/p62 to polyubiquitinate the bound client and capture it on LC3-decorated autophagosomes [PMID:20060297]. When client load exceeds local autophagosome capacity, BAG3 also engages dynein and routes HSP70 substrates along microtubules to the aggresome for bulk autophagic clearance [PMID:21252941]. The HSPB8–BAG3 module is required for autophagic clearance of poly-Q-expanded huntingtin and other aggregation-prone clients, establishing CASA as a major aggrephagy route [PMID:18006506].
 
 ### Mechanotransduction-Coupled Z-Disc Proteostasis
-At the striated-muscle Z-disc, BAG3 in complex with HSC70 and HSPB8 senses mechanical unfolding of the actin-crosslinker filamin and, through its WW-domain interaction with the actin-bundling protein SYNPO2, recruits the autophagosome biogenesis machinery to nucleate autophagosomes that clear damaged filamin and other Z-disc components [PMID:23434281, PMID:20060297]. Loss of BAG3 or disease-causing BAG3 mutations (e.g., p.Pro209Leu) disrupt this CASA pathway and produce myofibrillar myopathy with Z-disc disintegration and aggresome-like deposits, demonstrating that CASA is essential for muscle Z-disc maintenance [PMID:19085932, PMID:20060297].
+At the striated-muscle Z-disc, BAG3 in complex with HSC70 and HSPB8 senses mechanical unfolding of the actin-crosslinker filamin and, through its WW-domain interaction with the actin-bundling protein SYNPO2, recruits the autophagosome biogenesis machinery to nucleate autophagosomes that clear damaged filamin and other Z-disc components [PMID:23434281, PMID:20060297]. Loss of BAG3 or disease-causing BAG3 mutations (e.g., p.Pro209Leu) disrupt this CASA pathway and produce myofibrillar myopathy with Z-disc disintegration and ectopic protein aggregates/inclusions, demonstrating that CASA is essential for muscle Z-disc maintenance [PMID:19085932, PMID:20060297].
 
 ## Pathway Diagram
 
@@ -28,7 +28,7 @@ graph TD
     D --> F["SYNPO2 bound at WW (Z-disc)"]
     D --> G["STUB1 / CHIP recruited via HSC70"]
 
-    G -->|"K63-Ub of client"| H["Polyubiquitinated Client"]
+    G -->|"polyUb of client"| H["Polyubiquitinated Client"]
     H --> I["SQSTM1 / p62 adaptor"]
     I --> J["LC3-positive Autophagosome"]
 
