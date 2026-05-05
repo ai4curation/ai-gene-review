@@ -1,0 +1,64 @@
+# Arabidopsis 50-Gene Review Manifest
+
+Objective: review 50 previously unreviewed Arabidopsis genes in ten five-gene batches. Each gene must have Falcon deep research, GOA-derived annotations reviewed, relevant PANTHER family context considered, subagent review before PR, validation/rendering, positive PR review, passing checks, and no merge conflicts.
+
+Selection criteria:
+- Organism: `ARATH` / Arabidopsis thaliana.
+- Not already present as a reviewed `genes/ARATH/<symbol>/<symbol>-ai-review.yaml` on `main` when selected.
+- Protein-coding genes with available UniProt and GOA GAF annotations.
+- Batches are themed where practical; batch 01 focuses on floral meristem/floral identity genes.
+
+GOA source note: QuickGO annotation search returned server 500 errors during batch 01 setup, so batch 01 GOA TSVs were populated from the EBI bulk file `goa_arabidopsis.gaf.gz` downloaded 2026-05-04. The TSV rows preserve UniProt accessions, GO IDs, evidence codes, references, with/from, dates, and assigned-by values, with GO labels filled from the local GO term cache.
+
+| Batch | Gene | UniProt accession | GOA rows | Experimental rows | Functional area | Status |
+|---|---|---:|---:|---:|---|---|
+| 01 | AP1 | P35631 | 49 | 36 | Floral meristem/floral organ identity MADS-box TF | Reviewed; local validate/render/test pass |
+| 01 | LFY | Q00958 | 24 | 15 | Floral meristem identity TF | Reviewed; local validate/render/test pass |
+| 01 | AP2 | P47927 | 24 | 8 | Floral organ identity AP2/ERF TF | Reviewed; local validate/render/test pass |
+| 01 | AG | P17839 | 33 | 18 | Floral organ identity MADS-box TF | Reviewed; local validate/render/test pass |
+| 01 | TFL1 | P93003 | 13 | 11 | Floral transition/inflorescence identity PEBP | Reviewed; local validate/render/test pass |
+| 02 | SOC1 | O64645 | 43 | 25 | Flowering integrator MADS-box TF | Planned |
+| 02 | SVP | Q9FVC1 | 40 | 24 | Flowering repression MADS-box TF | Planned |
+| 02 | CO | Q39057 | 35 | 28 | Photoperiod flowering zinc-finger TF | Planned |
+| 02 | GI | Q9SQI2 | 39 | 34 | Circadian/photoperiod flowering regulator | Planned |
+| 02 | SEP3 | O22456 | 61 | 45 | Floral organ identity MADS-box TF | Planned |
+| 03 | STM | Q38874 | 58 | 38 | Shoot meristem homeobox TF | Planned |
+| 03 | CLV1 | Q9SYQ8 | 57 | 47 | Meristem receptor kinase | Planned |
+| 03 | PHYA | P14712 | 70 | 52 | Phytochrome photoreceptor | Planned |
+| 03 | CRY1 | Q43125 | 121 | 89 | Cryptochrome photoreceptor | Planned |
+| 03 | CRY2 | Q96524 | 113 | 82 | Cryptochrome photoreceptor | Planned |
+| 04 | EIN2 | Q9S814 | 65 | 52 | Ethylene signaling | Planned |
+| 04 | BAK1 | Q94F62 | 94 | 85 | LRR receptor kinase co-receptor | Planned |
+| 04 | FLS2 | Q9FL28 | 69 | 52 | Pattern-recognition receptor kinase | Planned |
+| 04 | MYC2 | Q39204 | 80 | 70 | Jasmonate-responsive bHLH TF | Planned |
+| 04 | ABI1 | P49597 | 118 | 104 | ABA PP2C signaling | Planned |
+| 05 | PYR1 | O49686 | 70 | 56 | ABA receptor | Planned |
+| 05 | SRK2E | Q940H6 | 104 | 89 | ABA SnRK2 kinase / OST1 | Planned |
+| 05 | RGA | Q9SLH3 | 110 | 102 | DELLA gibberellin signaling repressor | Planned |
+| 05 | GAI | Q9LQT8 | 108 | 97 | DELLA gibberellin signaling repressor | Planned |
+| 05 | TPL | Q94AI7 | 119 | 115 | Transcriptional corepressor | Planned |
+| 06 | KIN10 | Q38997 | 127 | 112 | SnRK1 energy signaling kinase | Planned |
+| 06 | KIN11 | P92958 | 74 | 60 | SnRK1 energy signaling kinase | Planned |
+| 06 | CDKA-1 | P24100 | 110 | 97 | Cell-cycle CDK | Planned |
+| 06 | MPK3 | Q39023 | 63 | 47 | MAP kinase signaling | Planned |
+| 06 | MPK6 | Q39026 | 93 | 80 | MAP kinase signaling | Planned |
+| 07 | PIN1 | Q9SL42 | 65 | 52 | Auxin efflux carrier | Planned |
+| 07 | PIN2 | Q9LU77 | 29 | 21 | Auxin efflux carrier | Planned |
+| 07 | AUX1 | Q96247 | 22 | 16 | Auxin influx transporter | Planned |
+| 07 | TIR1 | Q570C0 | 46 | 35 | Auxin receptor F-box protein | Planned |
+| 07 | ARF7 | P93022 | 45 | 35 | Auxin response factor | Planned |
+| 08 | AGO1 | O04379 | 47 | 40 | Argonaute / small RNA silencing | Planned |
+| 08 | DCL1 | Q9SP32 | 42 | 26 | Dicer homolog / miRNA processing | Planned |
+| 08 | RDR6 | Q9SG02 | 27 | 15 | RNA-dependent RNA polymerase | Planned |
+| 08 | HEN1 | Q9C5Q8 | 22 | 12 | Small RNA methyltransferase | Planned |
+| 08 | DRB1 | O04492 | 53 | 47 | dsRNA-binding miRNA processing factor | Planned |
+| 09 | PAD4 | Q9S745 | 54 | 44 | Plant immunity EDS1/PAD4 module | Planned |
+| 09 | EDS1 | Q9SU72 | 52 | 41 | Plant immunity EDS1/PAD4 module | Planned |
+| 09 | RPS2 | Q42484 | 29 | 12 | Disease-resistance NLR | Planned |
+| 09 | RPM1 | Q39214 | 20 | 12 | Disease-resistance NLR | Planned |
+| 09 | WRKY70 | Q9LY00 | 64 | 57 | Immune/stress WRKY TF | Planned |
+| 10 | GL1 | P27900 | 28 | 17 | Trichome differentiation MYB TF | Planned |
+| 10 | GL2 | P46607 | 20 | 10 | Trichome/root hair HD-ZIP TF | Planned |
+| 10 | GL3 | Q9FN69 | 40 | 31 | Trichome bHLH TF | Planned |
+| 10 | TTG1 | Q9XGN1 | 29 | 27 | WD40 trichome/anthocyanin regulator | Planned |
+| 10 | TT8 | Q9FT81 | 29 | 22 | Seed coat flavonoid bHLH TF | Planned |
