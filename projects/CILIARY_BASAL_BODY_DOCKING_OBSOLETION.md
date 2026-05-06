@@ -146,8 +146,10 @@ confirm UniProt accessions. None are currently in the repo.
    obsoletions** ([#6379](https://github.com/geneontology/go-annotation/issues/6379)
    and [#6375](https://github.com/geneontology/go-annotation/issues/6375)) — the
    ciliary-vesicle-tethering biology that the obsoleted term partially captured
-   may be better represented by the new MF GO:7770062 vesicle membrane
-   tethering activity once that is in production.
+   may be better represented by a prospective "vesicle membrane tethering
+   activity" molecular function term (tracked in
+   [geneontology/go-annotation#6381](https://github.com/geneontology/go-annotation/issues/6381);
+   no GO identifier assigned yet) once that is in production.
 
 ## Priority
 
