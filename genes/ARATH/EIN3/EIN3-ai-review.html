@@ -1,0 +1,2983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EIN3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>EIN3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O24606" target="_blank" class="term-link">
+                        O24606
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "EIN3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O24606" data-a="DESCRIPTION: EIN3 is a nuclear ETHYLENE INSENSITIVE 3 family tr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>EIN3 is a nuclear ETHYLENE INSENSITIVE 3 family transcription factor and a central positive regulator of Arabidopsis ethylene responses. EIN3 binds ethylene-response cis-regulatory DNA elements, activates ERF1 and other early ethylene-response genes, and also participates in ethylene-dependent chromatin state through EIN2/ENAP1-dependent ethylene responses. Kinase, defense, chromatin, ascorbate, sugar, and hypoxia annotations describe regulatory inputs or downstream contexts rather than replacing the core DNA-binding transcription factor role.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9215635" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9215635
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activation of the ethylene gas response pathway in Arabidops...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0005634" data-r="PMID:9215635" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 is a nuclear protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is the correct compartment for EIN3 transcriptional regulation.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003682" target="_blank" class="term-link">
+                                    GO:0003682
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28874528" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28874528
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    EIN2 mediates direct regulation of histone acetylation in th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0003682" data-r="PMID:28874528" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 is recruited to ethylene-responsive loci in an EIN2/ENAP1 chromatin context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Chromatin association is supported as part of ethylene transcriptional regulation, but EIN3&#39;s core molecular function is DNA-binding transcription factor activity.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26352699" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26352699
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biochemical and Structural Insights into the Mechanism of DN...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0003677" data-r="PMID:26352699" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 binds DNA, but a cis-regulatory-region binding term is more informative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The evidence supports sequence/cis-regulatory DNA binding by a transcription factor rather than generic DNA binding.
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    transcription cis-regulatory region binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18466304" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18466304
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ethylene signaling in Arabidopsis involves feedback regulati...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0003700" data-r="PMID:18466304" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 functions as a DNA-binding transcription factor in ethylene signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of EIN3.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23795294" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23795294
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Temporal transcriptional response to ethylene gas drives gro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0003700" data-r="PMID:23795294" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ethylene transcriptional response studies support EIN3 transcription factor activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of EIN3.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23795294" target="_blank" class="term-link">
+                                        PMID:23795294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identifying targets of the master regulator of the ethylene signaling pathway, ETHYLENE INSENSITIVE3 (EIN3), using chromatin immunoprecipitation sequencing</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9851977" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9851977
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear events in ethylene signaling: a transcriptional casc...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0003700" data-r="PMID:9851977" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 directly regulates ethylene-response transcription.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of EIN3.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042393" target="_blank" class="term-link">
+                                    GO:0042393
+                                </a>
+                            </span>
+                            <span class="term-label">histone binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28874528" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28874528
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    EIN2 mediates direct regulation of histone acetylation in th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0042393" data-r="PMID:28874528" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The histone-binding evidence is strongest for ENAP1/EIN2-associated machinery, not direct EIN3 histone binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EIN3 contributes to ethylene transcriptional activation at chromatin, but the cached evidence does not show EIN3 itself as the direct histone-binding protein.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019900" target="_blank" class="term-link">
+                                    GO:0019900
+                                </a>
+                            </span>
+                            <span class="term-label">kinase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28600557" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28600557
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulatory Functions of Cellular Energy Sensor SNF1-Related ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0019900" data-r="PMID:28600557" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 binds the energy-sensor kinase KIN10, which regulates EIN3 stability.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Kinase binding is a regulatory input to EIN3 rather than EIN3&#39;s core transcriptional activity.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26134166" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26134166
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ethylene Regulates the Arabidopsis Microtubule-Associated Pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0000976" data-r="PMID:26134166" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 binds cis-regulatory DNA in ethylene-response promoters.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a specific molecular description of EIN3&#39;s transcription factor role.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042742" target="_blank" class="term-link">
+                                    GO:0042742
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to bacterium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19717619" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19717619
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ETHYLENE INSENSITIVE3 and ETHYLENE INSENSITIVE3-LIKE1 repres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0042742" data-r="PMID:19717619" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3/EIL1 modulate salicylic-acid-dependent bacterial defense outputs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Defense response is a downstream signaling context, not the primary EIN3 molecular function.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040029" target="_blank" class="term-link">
+                                    GO:0040029
+                                </a>
+                            </span>
+                            <span class="term-label">epigenetic regulation of gene expression</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28874528" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28874528
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    EIN2 mediates direct regulation of histone acetylation in th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0040029" data-r="PMID:28874528" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3/EIL1 are required for transcriptional activation in the EIN2/ENAP1 histone-acetylation response.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The epigenetic response is an important chromatin context for EIN3 target activation, but the direct histone-acetylation mechanism is mediated mainly by EIN2/ENAP1-associated machinery.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009873" target="_blank" class="term-link">
+                                    GO:0009873
+                                </a>
+                            </span>
+                            <span class="term-label">ethylene-activated signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28874528" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28874528
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    EIN2 mediates direct regulation of histone acetylation in th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0009873" data-r="PMID:28874528" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 is a central positive regulator of ethylene signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Ethylene-activated signaling is the core biological pathway in which EIN3 functions.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9851977" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9851977
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear events in ethylene signaling: a transcriptional casc...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0006355" data-r="PMID:9851977" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 regulates transcription of ethylene-responsive genes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is an appropriate biological-process level annotation for the transcription factor role.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000082" target="_blank" class="term-link">
+                                    GO:2000082
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of L-ascorbic acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30723177" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30723177
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ascorbic Acid Integrates the Antagonistic Modulation of Ethy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:2000082" data-r="PMID:30723177" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 affects ascorbic-acid biology through hormone and ROS response networks.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a downstream physiological output rather than the core ethylene transcription factor function.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009723" target="_blank" class="term-link">
+                                    GO:0009723
+                                </a>
+                            </span>
+                            <span class="term-label">response to ethylene</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19717619" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19717619
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ETHYLENE INSENSITIVE3 and ETHYLENE INSENSITIVE3-LIKE1 repres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0009723" data-r="PMID:19717619" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 loss and regulation alter ethylene response phenotypes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The response term is correct but less informative than ethylene-activated signaling and transcriptional regulation.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001666" target="_blank" class="term-link">
+                                    GO:0001666
+                                </a>
+                            </span>
+                            <span class="term-label">response to hypoxia</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25284079" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25284079
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Arabidopsis acyl-CoA-binding protein ACBP3 participates in p...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0001666" data-r="PMID:25284079" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EIN3 is stabilized or engaged during hypoxia/submergence-related ethylene signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Hypoxia/submergence studies support EIN3 stabilization through ceramide-CTR1 ethylene signaling, but this is a stress context rather than the central EIN3 transcription factor function.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25822663" target="_blank" class="term-link">
+                                        PMID:25822663
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">stabilization of EIN3-GFP in vivo, suggests a role of ceramides in modulating CTR1-mediated ethylene signaling</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010182" target="_blank" class="term-link">
+                                    GO:0010182
+                                </a>
+                            </span>
+                            <span class="term-label">sugar mediated signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12663220" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12663220
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sugar and hormone connections.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="O24606" data-a="GO:0010182" data-r="PMID:12663220" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sugar-hormone cross-talk is relevant to ethylene signaling, but the cached PMID:12663220 abstract does not verify an EIN3-specific annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The accessible source discusses sugar, ABA, and ethylene signaling generally without naming EIN3.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Nuclear DNA-binding transcription factor activity in the ethylene pathway, including binding ethylene-response cis-regulatory elements and activating transcription of primary ethylene-response genes such as ERF1.</h3>
+                <span class="vote-buttons" data-g="O24606" data-a="FUNCTION: Nuclear DNA-binding transcription factor activity ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009873" target="_blank" class="term-link">
+                                ethylene-activated signaling pathway
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                regulation of DNA-templated transcription
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:ARATH/EIN3/EIN3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Transcription factor acting as a positive regulator in the</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:ARATH/EIN3/EIN3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Binds DNA (PubMed:26352699).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9851977" target="_blank" class="term-link">
+                                PMID:9851977
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">EIN3 and EILs comprise a family of novel sequence-specific DNA-binding proteins</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:interpro/panther/PTHR33305/PTHR33305-entries.csv
+
+                        </span>
+
+                        <div class="finding-text">O24606,Protein ETHYLENE INSENSITIVE 3</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12663220" target="_blank" class="term-link">
+                            PMID:12663220
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sugar and hormone connections.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18273012" target="_blank" class="term-link">
+                            PMID:18273012
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual control of nuclear EIN3 by bifurcate MAPK cascades in C2H4 signalling.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18466304" target="_blank" class="term-link">
+                            PMID:18466304
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ethylene signaling in Arabidopsis involves feedback regulation via the elaborate control of EBF2 expression by EIN3.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19717619" target="_blank" class="term-link">
+                            PMID:19717619
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ETHYLENE INSENSITIVE3 and ETHYLENE INSENSITIVE3-LIKE1 repress SALICYLIC ACID INDUCTION DEFICIENT2 expression to negatively regulate plant innate immunity in Arabidopsis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23795294" target="_blank" class="term-link">
+                            PMID:23795294
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Temporal transcriptional response to ethylene gas drives growth hormone cross-regulation in Arabidopsis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25284079" target="_blank" class="term-link">
+                            PMID:25284079
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Arabidopsis acyl-CoA-binding protein ACBP3 participates in plant response to hypoxia by modulating very-long-chain fatty acid metabolism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25822663" target="_blank" class="term-link">
+                            PMID:25822663
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Unsaturation of very-long-chain ceramides protects plant from hypoxia-induced damages by modulating ethylene signaling in Arabidopsis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26134166" target="_blank" class="term-link">
+                            PMID:26134166
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ethylene Regulates the Arabidopsis Microtubule-Associated Protein WAVE-DAMPENED2-LIKE5 in Etiolated Hypocotyl Elongation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26352699" target="_blank" class="term-link">
+                            PMID:26352699
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Biochemical and Structural Insights into the Mechanism of DNA Recognition by Arabidopsis ETHYLENE INSENSITIVE3.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27694846" target="_blank" class="term-link">
+                            PMID:27694846
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">EIN2-dependent regulation of acetylation of histone H3K14 and non-canonical histone H3K23 in ethylene signalling.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28600557" target="_blank" class="term-link">
+                            PMID:28600557
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulatory Functions of Cellular Energy Sensor SNF1-Related Kinase1 for Leaf Senescence Delay through ETHYLENE- INSENSITIVE3 Repression.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28874528" target="_blank" class="term-link">
+                            PMID:28874528
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">EIN2 mediates direct regulation of histone acetylation in the ethylene response.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30723177" target="_blank" class="term-link">
+                            PMID:30723177
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ascorbic Acid Integrates the Antagonistic Modulation of Ethylene and Abscisic Acid in the Accumulation of Reactive Oxygen Species.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9215635" target="_blank" class="term-link">
+                            PMID:9215635
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Activation of the ethylene gas response pathway in Arabidopsis by the nuclear protein ETHYLENE-INSENSITIVE3 and related proteins.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9851977" target="_blank" class="term-link">
+                            PMID:9851977
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Nuclear events in ethylene signaling: a transcriptional cascade mediated by ETHYLENE-INSENSITIVE3 and ETHYLENE-RESPONSE-FACTOR1.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:ARATH/EIN3/EIN3-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for Arabidopsis EIN3</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">EIN3 is described as a nuclear transcription factor in ethylene signaling.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR33305/PTHR33305-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER PTHR33305 entries</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">EIN3 is placed in subfamily PTHR33305:SF11, protein ETHYLENE INSENSITIVE 3.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which EIN3 chromatin-binding annotations should be represented directly versus as part of EIN2/ENAP1-mediated histone acetylation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O24606" data-a="Q: Which EIN3 chromatin-binding annotations should be..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should kinase-binding annotations for KIN10/MPK inputs remain on EIN3 or be captured only in pathway models?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O24606" data-a="Q: Should kinase-binding annotations for KIN10/MPK in..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Combine native EIN3 ChIP-seq with rapid ethylene treatment and ein2/enap1 perturbation to distinguish direct DNA-binding targets from chromatin-state effects.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O24606" data-a="EXPERIMENT: Combine native EIN3 ChIP-seq with rapid ethylene t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantitatively test KIN10, MPK3, and MPK6 effects on EIN3 target occupancy and transcriptional activation.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O24606" data-a="EXPERIMENT: Quantitatively test KIN10, MPK3, and MPK6 effects ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(EIN3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O24606" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ein3-review-notes">EIN3 review notes</h1>
+<p>Deep research provider status, 2026-05-06: Falcon timed out on CTR1 and the batch run was stopped before repeated timeouts; Perplexity returned 401 insufficient_quota; OpenAI timed out on CTR1. I reviewed EIN3 manually from UniProt, cached publications, and PANTHER family context.</p>
+<p>QuickGO annotation/search returned HTTP 500 for this accession on 2026-05-06, including with a <code>UniProtKB:</code> prefix. The GOA TSV in this branch was populated from UniProtKB REST GO cross-references so the existing-annotation validator has PMID/GO_REF provenance rather than treating known annotations as new.</p>
+<p>Core interpretation: EIN3 is a nuclear ethylene-pathway transcription factor. It binds ethylene-response cis-regulatory elements and activates ERF1 and other ethylene-responsive transcriptional programs [PMID:9215635; PMID:9851977; PMID:26352699]. EIN3 also participates in ethylene-dependent chromatin/histone acetylation through ENAP1/EIN2-related signaling [PMID:27694846; PMID:28874528]. Defense, hypoxia, sugar, ascorbate, and kinase-binding annotations are contextual outputs or regulation rather than the central evolved function.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O24606
+gene_symbol: EIN3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: &gt;-
+  EIN3 is a nuclear ETHYLENE INSENSITIVE 3 family transcription factor and a
+  central positive regulator of Arabidopsis ethylene responses. EIN3 binds
+  ethylene-response cis-regulatory DNA elements, activates ERF1 and other early
+  ethylene-response genes, and also participates in ethylene-dependent
+  chromatin state through EIN2/ENAP1-dependent ethylene responses. Kinase,
+  defense, chromatin, ascorbate, sugar, and hypoxia annotations describe
+  regulatory inputs or downstream contexts rather than replacing the core
+  DNA-binding transcription factor role.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:9215635
+  review:
+    summary: EIN3 is a nuclear protein.
+    action: ACCEPT
+    reason: Nuclear localization is the correct compartment for EIN3 transcriptional regulation.
+- term:
+    id: GO:0003682
+    label: chromatin binding
+  evidence_type: IDA
+  original_reference_id: PMID:28874528
+  review:
+    summary: EIN3 is recruited to ethylene-responsive loci in an EIN2/ENAP1 chromatin context.
+    action: KEEP_AS_NON_CORE
+    reason: Chromatin association is supported as part of ethylene transcriptional regulation, but EIN3&#39;s core molecular function is DNA-binding transcription factor activity.
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:26352699
+  review:
+    summary: EIN3 binds DNA, but a cis-regulatory-region binding term is more informative.
+    action: MODIFY
+    reason: The evidence supports sequence/cis-regulatory DNA binding by a transcription factor rather than generic DNA binding.
+    proposed_replacement_terms:
+    - id: GO:0000976
+      label: transcription cis-regulatory region binding
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IDA
+  original_reference_id: PMID:18466304
+  review:
+    summary: EIN3 functions as a DNA-binding transcription factor in ethylene signaling.
+    action: ACCEPT
+    reason: This is the core molecular function of EIN3.
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IDA
+  original_reference_id: PMID:23795294
+  review:
+    summary: Ethylene transcriptional response studies support EIN3 transcription factor activity.
+    action: ACCEPT
+    reason: This is the core molecular function of EIN3.
+    supported_by:
+    - reference_id: PMID:23795294
+      supporting_text: identifying targets of the master regulator of the ethylene signaling pathway, ETHYLENE INSENSITIVE3 (EIN3), using chromatin immunoprecipitation sequencing
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IDA
+  original_reference_id: PMID:9851977
+  review:
+    summary: EIN3 directly regulates ethylene-response transcription.
+    action: ACCEPT
+    reason: This is the core molecular function of EIN3.
+- term:
+    id: GO:0042393
+    label: histone binding
+  evidence_type: IDA
+  original_reference_id: PMID:28874528
+  review:
+    summary: The histone-binding evidence is strongest for ENAP1/EIN2-associated machinery, not direct EIN3 histone binding.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: EIN3 contributes to ethylene transcriptional activation at chromatin, but the cached evidence does not show EIN3 itself as the direct histone-binding protein.
+- term:
+    id: GO:0019900
+    label: kinase binding
+  evidence_type: IPI
+  original_reference_id: PMID:28600557
+  review:
+    summary: EIN3 binds the energy-sensor kinase KIN10, which regulates EIN3 stability.
+    action: KEEP_AS_NON_CORE
+    reason: Kinase binding is a regulatory input to EIN3 rather than EIN3&#39;s core transcriptional activity.
+- term:
+    id: GO:0000976
+    label: transcription cis-regulatory region binding
+  evidence_type: IDA
+  original_reference_id: PMID:26134166
+  review:
+    summary: EIN3 binds cis-regulatory DNA in ethylene-response promoters.
+    action: ACCEPT
+    reason: This is a specific molecular description of EIN3&#39;s transcription factor role.
+- term:
+    id: GO:0042742
+    label: defense response to bacterium
+  evidence_type: IGI
+  original_reference_id: PMID:19717619
+  review:
+    summary: EIN3/EIL1 modulate salicylic-acid-dependent bacterial defense outputs.
+    action: KEEP_AS_NON_CORE
+    reason: Defense response is a downstream signaling context, not the primary EIN3 molecular function.
+- term:
+    id: GO:0040029
+    label: epigenetic regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:28874528
+  review:
+    summary: EIN3/EIL1 are required for transcriptional activation in the EIN2/ENAP1 histone-acetylation response.
+    action: KEEP_AS_NON_CORE
+    reason: The epigenetic response is an important chromatin context for EIN3 target activation, but the direct histone-acetylation mechanism is mediated mainly by EIN2/ENAP1-associated machinery.
+- term:
+    id: GO:0009873
+    label: ethylene-activated signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:28874528
+  review:
+    summary: EIN3 is a central positive regulator of ethylene signaling.
+    action: ACCEPT
+    reason: Ethylene-activated signaling is the core biological pathway in which EIN3 functions.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: TAS
+  original_reference_id: PMID:9851977
+  review:
+    summary: EIN3 regulates transcription of ethylene-responsive genes.
+    action: ACCEPT
+    reason: This is an appropriate biological-process level annotation for the transcription factor role.
+- term:
+    id: GO:2000082
+    label: regulation of L-ascorbic acid biosynthetic process
+  evidence_type: IEP
+  original_reference_id: PMID:30723177
+  review:
+    summary: EIN3 affects ascorbic-acid biology through hormone and ROS response networks.
+    action: KEEP_AS_NON_CORE
+    reason: This is a downstream physiological output rather than the core ethylene transcription factor function.
+- term:
+    id: GO:0009723
+    label: response to ethylene
+  evidence_type: IMP
+  original_reference_id: PMID:19717619
+  review:
+    summary: EIN3 loss and regulation alter ethylene response phenotypes.
+    action: KEEP_AS_NON_CORE
+    reason: The response term is correct but less informative than ethylene-activated signaling and transcriptional regulation.
+- term:
+    id: GO:0001666
+    label: response to hypoxia
+  evidence_type: IMP
+  original_reference_id: PMID:25284079
+  review:
+    summary: EIN3 is stabilized or engaged during hypoxia/submergence-related ethylene signaling.
+    action: KEEP_AS_NON_CORE
+    reason: Hypoxia/submergence studies support EIN3 stabilization through ceramide-CTR1 ethylene signaling, but this is a stress context rather than the central EIN3 transcription factor function.
+    supported_by:
+    - reference_id: PMID:25822663
+      supporting_text: stabilization of EIN3-GFP in vivo, suggests a role of ceramides in modulating CTR1-mediated ethylene signaling
+- term:
+    id: GO:0010182
+    label: sugar mediated signaling pathway
+  evidence_type: TAS
+  original_reference_id: PMID:12663220
+  review:
+    summary: Sugar-hormone cross-talk is relevant to ethylene signaling, but the cached PMID:12663220 abstract does not verify an EIN3-specific annotation.
+    action: UNDECIDED
+    reason: The accessible source discusses sugar, ABA, and ethylene signaling generally without naming EIN3.
+references:
+- id: PMID:12663220
+  title: Sugar and hormone connections.
+  findings: []
+- id: PMID:18273012
+  title: Dual control of nuclear EIN3 by bifurcate MAPK cascades in C2H4 signalling.
+  findings: []
+- id: PMID:18466304
+  title: Ethylene signaling in Arabidopsis involves feedback regulation via the elaborate control of EBF2 expression by EIN3.
+  findings: []
+- id: PMID:19717619
+  title: ETHYLENE INSENSITIVE3 and ETHYLENE INSENSITIVE3-LIKE1 repress SALICYLIC ACID INDUCTION DEFICIENT2 expression to negatively regulate plant innate immunity in Arabidopsis.
+  findings: []
+- id: PMID:23795294
+  title: Temporal transcriptional response to ethylene gas drives growth hormone cross-regulation in Arabidopsis.
+  findings: []
+- id: PMID:25284079
+  title: Arabidopsis acyl-CoA-binding protein ACBP3 participates in plant response to hypoxia by modulating very-long-chain fatty acid metabolism.
+  findings: []
+- id: PMID:25822663
+  title: Unsaturation of very-long-chain ceramides protects plant from hypoxia-induced damages by modulating ethylene signaling in Arabidopsis.
+  findings: []
+- id: PMID:26134166
+  title: Ethylene Regulates the Arabidopsis Microtubule-Associated Protein WAVE-DAMPENED2-LIKE5 in Etiolated Hypocotyl Elongation.
+  findings: []
+- id: PMID:26352699
+  title: Biochemical and Structural Insights into the Mechanism of DNA Recognition by Arabidopsis ETHYLENE INSENSITIVE3.
+  findings: []
+- id: PMID:27694846
+  title: EIN2-dependent regulation of acetylation of histone H3K14 and non-canonical histone H3K23 in ethylene signalling.
+  findings: []
+- id: PMID:28600557
+  title: Regulatory Functions of Cellular Energy Sensor SNF1-Related Kinase1 for Leaf Senescence Delay through ETHYLENE- INSENSITIVE3 Repression.
+  findings: []
+- id: PMID:28874528
+  title: EIN2 mediates direct regulation of histone acetylation in the ethylene response.
+  findings: []
+- id: PMID:30723177
+  title: Ascorbic Acid Integrates the Antagonistic Modulation of Ethylene and Abscisic Acid in the Accumulation of Reactive Oxygen Species.
+  findings: []
+- id: PMID:9215635
+  title: Activation of the ethylene gas response pathway in Arabidopsis by the nuclear protein ETHYLENE-INSENSITIVE3 and related proteins.
+  findings: []
+- id: PMID:9851977
+  title: &#39;Nuclear events in ethylene signaling: a transcriptional cascade mediated by ETHYLENE-INSENSITIVE3 and ETHYLENE-RESPONSE-FACTOR1.&#39;
+  findings: []
+- id: file:ARATH/EIN3/EIN3-uniprot.txt
+  title: UniProt record for Arabidopsis EIN3
+  findings:
+  - statement: EIN3 is described as a nuclear transcription factor in ethylene signaling.
+- id: file:interpro/panther/PTHR33305/PTHR33305-entries.csv
+  title: PANTHER PTHR33305 entries
+  findings:
+  - statement: EIN3 is placed in subfamily PTHR33305:SF11, protein ETHYLENE INSENSITIVE 3.
+core_functions:
+- description: &gt;-
+    Nuclear DNA-binding transcription factor activity in the ethylene pathway,
+    including binding ethylene-response cis-regulatory elements and activating
+    transcription of primary ethylene-response genes such as ERF1.
+  molecular_function:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  directly_involved_in:
+  - id: GO:0009873
+    label: ethylene-activated signaling pathway
+  - id: GO:0006355
+    label: regulation of DNA-templated transcription
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:ARATH/EIN3/EIN3-uniprot.txt
+    supporting_text: Transcription factor acting as a positive regulator in the
+  - reference_id: file:ARATH/EIN3/EIN3-uniprot.txt
+    supporting_text: Binds DNA (PubMed:26352699).
+  - reference_id: PMID:9851977
+    supporting_text: EIN3 and EILs comprise a family of novel sequence-specific DNA-binding proteins
+    reference_section_type: ABSTRACT
+  - reference_id: file:interpro/panther/PTHR33305/PTHR33305-entries.csv
+    supporting_text: O24606,Protein ETHYLENE INSENSITIVE 3
+proposed_new_terms: []
+suggested_questions:
+- question: Which EIN3 chromatin-binding annotations should be represented directly versus as part of EIN2/ENAP1-mediated histone acetylation?
+- question: Should kinase-binding annotations for KIN10/MPK inputs remain on EIN3 or be captured only in pathway models?
+suggested_experiments:
+- description: Combine native EIN3 ChIP-seq with rapid ethylene treatment and ein2/enap1 perturbation to distinguish direct DNA-binding targets from chromatin-state effects.
+- description: Quantitatively test KIN10, MPK3, and MPK6 effects on EIN3 target occupancy and transcriptional activation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAZ1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>JAZ1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9LMA8" target="_blank" class="term-link">
+                        Q9LMA8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "JAZ1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9LMA8" data-a="DESCRIPTION: JAZ1, also known as TIFY10A, is a nuclear JASMONAT..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>JAZ1, also known as TIFY10A, is a nuclear JASMONATE ZIM-domain repressor in Arabidopsis jasmonate signaling. In low-jasmonate states, JAZ proteins repress MYC transcription factors and recruit co-repressor machinery through the TIFY/ZIM domain. JA-Ile promotes COI1-JAZ1 interaction and JAZ1 degradation, releasing jasmonate-responsive transcription. Defense, flower, pollen, wounding, and alkaline-stress annotations are downstream or specialized outputs of this core jasmonate-repressor module.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17637677" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17637677
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    JAZ repressor proteins are targets of the SCF(COI1) complex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0005634" data-r="PMID:17637677" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JAZ1 is nuclear, consistent with its transcriptional repressor role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is the correct cellular context for JAZ1 repression of transcription factors.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19309455" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19309455
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The ZIM domain mediates homo- and heteromeric interactions b...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0042802" data-r="PMID:19309455" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The JAZ ZIM/TIFY domain mediates homo- and heteromeric JAZ interactions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> JAZ dimerization/oligomerization is a supported molecular interaction relevant to repression complexes.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21798944" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21798944
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evidence for network evolution in an Arabidopsis interactome...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0042802" data-r="PMID:21798944" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput interactome evidence supports JAZ1 self or family protein interaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is consistent with the established JAZ interaction module.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/JAZ1/JAZ1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9LMA8; Q9LMA8: TIFY10A; NbExp=7</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32612234" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32612234
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive signal integration by the phytohormone protein net...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0042802" data-r="PMID:32612234" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phytohormone network evidence supports JAZ1 protein interaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is consistent with the established JAZ interaction module.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/JAZ1/JAZ1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9LMA8; Q9LMA8: TIFY10A; NbExp=7</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042742" target="_blank" class="term-link">
+                                    GO:0042742
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to bacterium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18547396" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18547396
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A critical role of two positively charged amino acids in the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0042742" data-r="PMID:18547396" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JAZ1 affects bacterial/coronatine defense responses through jasmonate signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Defense response is a downstream output of JAZ1 regulation of JA signaling.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009908" target="_blank" class="term-link">
+                                    GO:0009908
+                                </a>
+                            </span>
+                            <span class="term-label">flower development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17637677" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17637677
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    JAZ repressor proteins are targets of the SCF(COI1) complex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0009908" data-r="PMID:17637677" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JAZ1 affects flower development through JA signaling outputs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Flower development is a downstream physiological output rather than JAZ1&#39;s core repressor function.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009867" target="_blank" class="term-link">
+                                    GO:0009867
+                                </a>
+                            </span>
+                            <span class="term-label">jasmonic acid mediated signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17637677" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17637677
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    JAZ repressor proteins are targets of the SCF(COI1) complex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0009867" data-r="PMID:17637677" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JAZ1 is part of jasmonate signaling, but its specific role is regulation/repression of that pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The more precise process term for JAZ1 is regulation of jasmonic acid mediated signaling.
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000022" target="_blank" class="term-link">
+                                    regulation of jasmonic acid mediated signaling pathway
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009555" target="_blank" class="term-link">
+                                    GO:0009555
+                                </a>
+                            </span>
+                            <span class="term-label">pollen development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17637677" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17637677
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    JAZ repressor proteins are targets of the SCF(COI1) complex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0009555" data-r="PMID:17637677" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JAZ1 affects pollen-related JA developmental outputs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Pollen development is a downstream phenotype of JA signaling.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900067" target="_blank" class="term-link">
+                                    GO:1900067
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cellular response to alkaline pH</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25375909" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25375909
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The positive regulatory roles of the TIFY10 proteins in plan...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:1900067" data-r="PMID:25375909" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TIFY10 proteins have reported roles in alkaline-stress response.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a specialized organismal stress-output annotation, not a direct molecular mechanism or the central JAZ1 JA-repressor role.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009753" target="_blank" class="term-link">
+                                    GO:0009753
+                                </a>
+                            </span>
+                            <span class="term-label">response to jasmonic acid</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17637677" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17637677
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    JAZ repressor proteins are targets of the SCF(COI1) complex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0009753" data-r="PMID:17637677" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JAZ1 expression and stability respond to jasmonate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The response term is correct but less mechanistic than regulation of JA signaling by a nuclear repressor.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031347" target="_blank" class="term-link">
+                                    GO:0031347
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of defense response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0031347" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JAZ1 family context supports regulation of defense outputs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Defense regulation is downstream of JAZ1 control of jasmonate transcriptional signaling.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000022" target="_blank" class="term-link">
+                                    GO:2000022
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of jasmonic acid mediated signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:2000022" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JAZ1 regulates jasmonate signaling as a repressor degraded by SCF(COI1).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This captures the core biological process controlled by JAZ1.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009611" target="_blank" class="term-link">
+                                    GO:0009611
+                                </a>
+                            </span>
+                            <span class="term-label">response to wounding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0009611" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JAZ1 participates in wound-responsive JA signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Wound response is a downstream JA output rather than the core repressor mechanism.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003714" target="_blank" class="term-link">
+                                    GO:0003714
+                                </a>
+                            </span>
+                            <span class="term-label">transcription corepressor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20360743" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20360743
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NINJA connects the co-repressor TOPLESS to jasmonate signall...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LMA8" data-a="GO:0003714" data-r="PMID:20360743" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> JAZ proteins repress MYC transcription factors through corepressor machinery.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The seeded GO annotations do not capture JAZ1&#39;s direct transcriptional corepressor role.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/JAZ1/JAZ1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Repressor of jasmonate responses.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20360743" target="_blank" class="term-link">
+                                        PMID:20360743
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In an unelicited state, JAZ proteins bind the transcription factor MYC2 and inactivate its function</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Nuclear transcriptional corepressor activity in jasmonate signaling. JAZ1 represses MYC-centered JA-responsive transcriptional output in the unelicited state and is removed by COI1-dependent degradation after JA-Ile perception; TIFY-mediated homo/heteromeric interactions support these repressor assemblies.</h3>
+                <span class="vote-buttons" data-g="Q9LMA8" data-a="FUNCTION: Nuclear transcriptional corepressor activity in ja..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003714" target="_blank" class="term-link">
+                            transcription corepressor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000022" target="_blank" class="term-link">
+                                regulation of jasmonic acid mediated signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:ARATH/JAZ1/JAZ1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Repressor of jasmonate responses.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:ARATH/JAZ1/JAZ1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Interacts with COI1, MYC2, MYC3, MYC4, MYB21 and MYB24.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20360743" target="_blank" class="term-link">
+                                PMID:20360743
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">In an unelicited state, JAZ proteins bind the transcription factor MYC2 and inactivate its function</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:interpro/panther/PTHR33077/PTHR33077-entries.csv
+
+                        </span>
+
+                        <div class="finding-text">Q9LMA8,Protein TIFY 10A</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17637675" target="_blank" class="term-link">
+                            PMID:17637675
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The JAZ family of repressors is the missing link in jasmonate signalling.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17637677" target="_blank" class="term-link">
+                            PMID:17637677
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">JAZ repressor proteins are targets of the SCF(COI1) complex during jasmonate signalling.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18547396" target="_blank" class="term-link">
+                            PMID:18547396
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A critical role of two positively charged amino acids in the Jas motif of Arabidopsis JAZ proteins in mediating coronatine- and jasmonoyl isoleucine-dependent interactions with the COI1 F-box protein.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19151223" target="_blank" class="term-link">
+                            PMID:19151223
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A critical role for the TIFY motif in repression of jasmonate signaling by a stabilized splice variant of the JASMONATE ZIM-domain protein JAZ10 in Arabidopsis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19309455" target="_blank" class="term-link">
+                            PMID:19309455
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The ZIM domain mediates homo- and heteromeric interactions between Arabidopsis JAZ proteins.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20360743" target="_blank" class="term-link">
+                            PMID:20360743
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NINJA connects the co-repressor TOPLESS to jasmonate signalling.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20927106" target="_blank" class="term-link">
+                            PMID:20927106
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Jasmonate perception by inositol-phosphate-potentiated COI1-JAZ co-receptor.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21798944" target="_blank" class="term-link">
+                            PMID:21798944
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Evidence for network evolution in an Arabidopsis interactome map.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25375909" target="_blank" class="term-link">
+                            PMID:25375909
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The positive regulatory roles of the TIFY10 proteins in plant responses to alkaline stress.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32612234" target="_blank" class="term-link">
+                            PMID:32612234
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive signal integration by the phytohormone protein network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:ARATH/JAZ1/JAZ1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for Arabidopsis JAZ1/TIFY10A</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">JAZ1 is described as a jasmonate-response repressor and COI1/JAZ co-receptor component.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR33077/PTHR33077-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER PTHR33077 entries</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">JAZ1/TIFY10A is placed in the TIFY/JAZ PANTHER family subfamily PTHR33077:SF154.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should JAZ-family annotations use transcription corepressor activity directly, or should this be represented through a more specific JAZ-NINJA-TOPLESS complex model?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9LMA8" data-a="Q: Should JAZ-family annotations use transcription co..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which JAZ1 defense and alkaline-stress annotations remain direct enough for gene-level GO annotation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9LMA8" data-a="Q: Which JAZ1 defense and alkaline-stress annotations..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Test native JAZ1 occupancy and MYC transcriptional repression before and after JA-Ile treatment using time-resolved chromatin and proteomics assays.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9LMA8" data-a="EXPERIMENT: Test native JAZ1 occupancy and MYC transcriptional..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Separate TIFY-domain dimerization effects from NINJA/TOPLESS recruitment using JAZ1 domain mutants in native expression contexts.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9LMA8" data-a="EXPERIMENT: Separate TIFY-domain dimerization effects from NIN..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(JAZ1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9LMA8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="jaz1-review-notes">JAZ1 review notes</h1>
+<p>Deep research provider status, 2026-05-06: Falcon timed out on CTR1 and the batch run was stopped before repeated timeouts; Perplexity returned 401 insufficient_quota; OpenAI timed out on CTR1. I reviewed JAZ1 manually from UniProt, cached publications, and PANTHER family context.</p>
+<p>QuickGO annotation/search returned HTTP 500 for this accession on 2026-05-06, including with a <code>UniProtKB:</code> prefix. The GOA TSV in this branch was populated from UniProtKB REST GO cross-references so the existing-annotation validator has PMID/GO_REF provenance rather than treating known annotations as new.</p>
+<p>Core interpretation: JAZ1/TIFY10A is a nuclear JAZ repressor in jasmonate signaling. JA-Ile promotes COI1-JAZ1 interaction and JAZ1 degradation; in the unelicited state, JAZ proteins repress MYC transcription factors and recruit the NINJA/TOPLESS corepressor module [PMID:17637675; PMID:17637677; PMID:19151223; PMID:20360743]. Developmental and defense phenotypes are downstream consequences of JA signaling control.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9LMA8
+gene_symbol: JAZ1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: &gt;-
+  JAZ1, also known as TIFY10A, is a nuclear JASMONATE ZIM-domain repressor in
+  Arabidopsis jasmonate signaling. In low-jasmonate states, JAZ proteins repress
+  MYC transcription factors and recruit co-repressor machinery through the
+  TIFY/ZIM domain. JA-Ile promotes COI1-JAZ1 interaction and JAZ1 degradation,
+  releasing jasmonate-responsive transcription. Defense, flower, pollen,
+  wounding, and alkaline-stress annotations are downstream or specialized
+  outputs of this core jasmonate-repressor module.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:17637677
+  review:
+    summary: JAZ1 is nuclear, consistent with its transcriptional repressor role.
+    action: ACCEPT
+    reason: Nuclear localization is the correct cellular context for JAZ1 repression of transcription factors.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19309455
+  review:
+    summary: The JAZ ZIM/TIFY domain mediates homo- and heteromeric JAZ interactions.
+    action: ACCEPT
+    reason: JAZ dimerization/oligomerization is a supported molecular interaction relevant to repression complexes.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21798944
+  review:
+    summary: High-throughput interactome evidence supports JAZ1 self or family protein interaction.
+    action: ACCEPT
+    reason: This is consistent with the established JAZ interaction module.
+    supported_by:
+    - reference_id: file:ARATH/JAZ1/JAZ1-uniprot.txt
+      supporting_text: &#39;Q9LMA8; Q9LMA8: TIFY10A; NbExp=7&#39;
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32612234
+  review:
+    summary: Phytohormone network evidence supports JAZ1 protein interaction.
+    action: ACCEPT
+    reason: This is consistent with the established JAZ interaction module.
+    supported_by:
+    - reference_id: file:ARATH/JAZ1/JAZ1-uniprot.txt
+      supporting_text: &#39;Q9LMA8; Q9LMA8: TIFY10A; NbExp=7&#39;
+- term:
+    id: GO:0042742
+    label: defense response to bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:18547396
+  review:
+    summary: JAZ1 affects bacterial/coronatine defense responses through jasmonate signaling.
+    action: KEEP_AS_NON_CORE
+    reason: Defense response is a downstream output of JAZ1 regulation of JA signaling.
+- term:
+    id: GO:0009908
+    label: flower development
+  evidence_type: IMP
+  original_reference_id: PMID:17637677
+  review:
+    summary: JAZ1 affects flower development through JA signaling outputs.
+    action: KEEP_AS_NON_CORE
+    reason: Flower development is a downstream physiological output rather than JAZ1&#39;s core repressor function.
+- term:
+    id: GO:0009867
+    label: jasmonic acid mediated signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:17637677
+  review:
+    summary: JAZ1 is part of jasmonate signaling, but its specific role is regulation/repression of that pathway.
+    action: MODIFY
+    reason: The more precise process term for JAZ1 is regulation of jasmonic acid mediated signaling.
+    proposed_replacement_terms:
+    - id: GO:2000022
+      label: regulation of jasmonic acid mediated signaling pathway
+- term:
+    id: GO:0009555
+    label: pollen development
+  evidence_type: IMP
+  original_reference_id: PMID:17637677
+  review:
+    summary: JAZ1 affects pollen-related JA developmental outputs.
+    action: KEEP_AS_NON_CORE
+    reason: Pollen development is a downstream phenotype of JA signaling.
+- term:
+    id: GO:1900067
+    label: regulation of cellular response to alkaline pH
+  evidence_type: IMP
+  original_reference_id: PMID:25375909
+  review:
+    summary: TIFY10 proteins have reported roles in alkaline-stress response.
+    action: KEEP_AS_NON_CORE
+    reason: This is a specialized organismal stress-output annotation, not a direct molecular mechanism or the central JAZ1 JA-repressor role.
+- term:
+    id: GO:0009753
+    label: response to jasmonic acid
+  evidence_type: IEP
+  original_reference_id: PMID:17637677
+  review:
+    summary: JAZ1 expression and stability respond to jasmonate.
+    action: KEEP_AS_NON_CORE
+    reason: The response term is correct but less mechanistic than regulation of JA signaling by a nuclear repressor.
+- term:
+    id: GO:0031347
+    label: regulation of defense response
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: JAZ1 family context supports regulation of defense outputs.
+    action: KEEP_AS_NON_CORE
+    reason: Defense regulation is downstream of JAZ1 control of jasmonate transcriptional signaling.
+- term:
+    id: GO:2000022
+    label: regulation of jasmonic acid mediated signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: JAZ1 regulates jasmonate signaling as a repressor degraded by SCF(COI1).
+    action: ACCEPT
+    reason: This captures the core biological process controlled by JAZ1.
+- term:
+    id: GO:0009611
+    label: response to wounding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: JAZ1 participates in wound-responsive JA signaling.
+    action: KEEP_AS_NON_CORE
+    reason: Wound response is a downstream JA output rather than the core repressor mechanism.
+- term:
+    id: GO:0003714
+    label: transcription corepressor activity
+  evidence_type: IDA
+  original_reference_id: PMID:20360743
+  review:
+    summary: JAZ proteins repress MYC transcription factors through corepressor machinery.
+    action: NEW
+    reason: The seeded GO annotations do not capture JAZ1&#39;s direct transcriptional corepressor role.
+    supported_by:
+    - reference_id: file:ARATH/JAZ1/JAZ1-uniprot.txt
+      supporting_text: Repressor of jasmonate responses.
+    - reference_id: PMID:20360743
+      supporting_text: In an unelicited state, JAZ proteins bind the transcription factor MYC2 and inactivate its function
+      reference_section_type: ABSTRACT
+references:
+- id: PMID:17637675
+  title: The JAZ family of repressors is the missing link in jasmonate signalling.
+  findings: []
+- id: PMID:17637677
+  title: JAZ repressor proteins are targets of the SCF(COI1) complex during jasmonate signalling.
+  findings: []
+- id: PMID:18547396
+  title: A critical role of two positively charged amino acids in the Jas motif of Arabidopsis JAZ proteins in mediating coronatine- and jasmonoyl isoleucine-dependent interactions with the COI1 F-box protein.
+  findings: []
+- id: PMID:19151223
+  title: A critical role for the TIFY motif in repression of jasmonate signaling by a stabilized splice variant of the JASMONATE ZIM-domain protein JAZ10 in Arabidopsis.
+  findings: []
+- id: PMID:19309455
+  title: The ZIM domain mediates homo- and heteromeric interactions between Arabidopsis JAZ proteins.
+  findings: []
+- id: PMID:20360743
+  title: NINJA connects the co-repressor TOPLESS to jasmonate signalling.
+  findings: []
+- id: PMID:20927106
+  title: Jasmonate perception by inositol-phosphate-potentiated COI1-JAZ co-receptor.
+  findings: []
+- id: PMID:21798944
+  title: Evidence for network evolution in an Arabidopsis interactome map.
+  findings: []
+- id: PMID:25375909
+  title: The positive regulatory roles of the TIFY10 proteins in plant responses to alkaline stress.
+  findings: []
+- id: PMID:32612234
+  title: Extensive signal integration by the phytohormone protein network.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: file:ARATH/JAZ1/JAZ1-uniprot.txt
+  title: UniProt record for Arabidopsis JAZ1/TIFY10A
+  findings:
+  - statement: JAZ1 is described as a jasmonate-response repressor and COI1/JAZ co-receptor component.
+- id: file:interpro/panther/PTHR33077/PTHR33077-entries.csv
+  title: PANTHER PTHR33077 entries
+  findings:
+  - statement: JAZ1/TIFY10A is placed in the TIFY/JAZ PANTHER family subfamily PTHR33077:SF154.
+core_functions:
+- description: &gt;-
+    Nuclear transcriptional corepressor activity in jasmonate signaling. JAZ1
+    represses MYC-centered JA-responsive transcriptional output in the
+    unelicited state and is removed by COI1-dependent degradation after JA-Ile
+    perception; TIFY-mediated homo/heteromeric interactions support these
+    repressor assemblies.
+  molecular_function:
+    id: GO:0003714
+    label: transcription corepressor activity
+  directly_involved_in:
+  - id: GO:2000022
+    label: regulation of jasmonic acid mediated signaling pathway
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:ARATH/JAZ1/JAZ1-uniprot.txt
+    supporting_text: Repressor of jasmonate responses.
+  - reference_id: file:ARATH/JAZ1/JAZ1-uniprot.txt
+    supporting_text: Interacts with COI1, MYC2, MYC3, MYC4, MYB21 and MYB24.
+  - reference_id: PMID:20360743
+    supporting_text: In an unelicited state, JAZ proteins bind the transcription factor MYC2 and inactivate its function
+    reference_section_type: ABSTRACT
+  - reference_id: file:interpro/panther/PTHR33077/PTHR33077-entries.csv
+    supporting_text: Q9LMA8,Protein TIFY 10A
+proposed_new_terms: []
+suggested_questions:
+- question: Should JAZ-family annotations use transcription corepressor activity directly, or should this be represented through a more specific JAZ-NINJA-TOPLESS complex model?
+- question: Which JAZ1 defense and alkaline-stress annotations remain direct enough for gene-level GO annotation?
+suggested_experiments:
+- description: Test native JAZ1 occupancy and MYC transcriptional repression before and after JA-Ile treatment using time-resolved chromatin and proteomics assays.
+- description: Separate TIFY-domain dimerization effects from NINJA/TOPLESS recruitment using JAZ1 domain mutants in native expression contexts.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
