@@ -1864,7 +1864,6 @@ ui-legacy port="5123":
     @echo "For better performance, use 'just ui' with API server"
     uv run python -m ai4cui --legacy --port {{port}}
 
-<<<<<<< HEAD
 # ============ Publication-centric annotation review (Option 3 subproject) ============
 
 # Generate a publication-centric annotation review file filtered by gene symbol.
