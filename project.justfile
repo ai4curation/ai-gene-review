@@ -9,11 +9,10 @@ ref_validator := "scripts/run_reference_validator.sh"
 
 all: validate-all test
 
-# Sync fork with upstream (ai4curation/ai-gene-review) and push to myfork/main
+# Sync local branch with upstream (ai4curation/ai-gene-review)
 sync-upstream:
     git fetch upstream
     git merge upstream/main --no-edit
-    git push myfork new-branch:main
 
 # Sync Claude Code commands into Codex custom prompts (namespaced).
 sync-codex-prompts:
