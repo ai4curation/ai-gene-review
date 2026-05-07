@@ -1,0 +1,4073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEN1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HEN1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9C5Q8" target="_blank" class="term-link">
+                        Q9C5Q8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HEN1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9C5Q8" data-a="DESCRIPTION: HEN1 is the Arabidopsis SAM-dependent small RNA 3&#39;..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HEN1 is the Arabidopsis SAM-dependent small RNA 3&#39; terminal 2&#39;-O-methyltransferase. It methylates the 2&#39;-OH of the 3&#39;-terminal ribose on miRNA/miRNA-star and siRNA/siRNA-star duplexes after Dicer-like processing, protecting small RNAs from uridylation, trimming, and degradation. HEN1 acts in the DCL1/HYL1-associated small-RNA maturation context and supports miRNA, siRNA, ta-siRNA, and antiviral silencing outputs; floral and leaf patterning phenotypes are downstream consequences of destabilized small RNAs.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034587" target="_blank" class="term-link">
+                                    GO:0034587
+                                </a>
+                            </span>
+                            <span class="term-label">piRNA processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0034587" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1-family proteins include animal piRNA methyltransferases, but Arabidopsis HEN1 methylates plant miRNA and siRNA duplexes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> piRNA processing is an over-transfer from metazoan HEN1/HENMT1 family context and is not supported for Arabidopsis HEN1.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008171" target="_blank" class="term-link">
+                                    GO:0008171
+                                </a>
+                            </span>
+                            <span class="term-label">O-methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0008171" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 is an RNA methyltransferase, but O-methyltransferase activity is less specific than the small-RNA 2-prime-O-ribose methyltransferase term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Use the small-RNA terminal 2-prime-O-methyltransferase term to capture HEN1 substrate and reaction specificity.
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090486" target="_blank" class="term-link">
+                                    small RNA 2&#39;-O-ribose methyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003755" target="_blank" class="term-link">
+                                    GO:0003755
+                                </a>
+                            </span>
+                            <span class="term-label">peptidyl-prolyl cis-trans isomerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0003755" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 includes a PPIase-like/FKBP-like domain, but its curated function is small-RNA methyltransferase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The PPIase-like/FKBP-like domain is present, but no evidence supports HEN1 peptidyl-prolyl isomerase catalytic activity; the supported biochemical function is small-RNA methyltransferase activity.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 is associated with the nuclear DCL1/HYL1 small-RNA maturation context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The best-supported site for HEN1 action is nuclear small-RNA processing/methylation before or around AGO loading.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">Direct interaction mapping and mechanistic models place HEN1 in the nuclear miRNA-processing context.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008171" target="_blank" class="term-link">
+                                    GO:0008171
+                                </a>
+                            </span>
+                            <span class="term-label">O-methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0008171" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 is an RNA methyltransferase, but O-methyltransferase activity is less specific than the small-RNA 2-prime-O-ribose methyltransferase term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Use the small-RNA terminal 2-prime-O-methyltransferase term to capture HEN1 substrate and reaction specificity.
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090486" target="_blank" class="term-link">
+                                    small RNA 2&#39;-O-ribose methyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008173" target="_blank" class="term-link">
+                                    GO:0008173
+                                </a>
+                            </span>
+                            <span class="term-label">RNA methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0008173" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 is an RNA methyltransferase, but RNA methyltransferase activity is less specific than the small-RNA 2-prime-O-ribose methyltransferase term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Use the small-RNA terminal 2-prime-O-methyltransferase term to capture HEN1 substrate and reaction specificity.
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090486" target="_blank" class="term-link">
+                                    small RNA 2&#39;-O-ribose methyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016070" target="_blank" class="term-link">
+                                    GO:0016070
+                                </a>
+                            </span>
+                            <span class="term-label">RNA metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0016070" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 participates in small-RNA metabolism by methylating mature miRNA/siRNA duplexes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RNA metabolic process is too broad; small-RNA methylation and miRNA/siRNA processing-stabilization outputs are more informative.
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090486" target="_blank" class="term-link">
+                                    small RNA 2&#39;-O-ribose methyltransferase activity
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035196" target="_blank" class="term-link">
+                                    miRNA processing
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090486" target="_blank" class="term-link">
+                                    GO:0090486
+                                </a>
+                            </span>
+                            <span class="term-label">small RNA 2&#39;-O-ribose methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0090486" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 catalyzes terminal 2-prime-O-ribose methylation of plant small RNAs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the most specific molecular-function term for Arabidopsis HEN1.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">HEN1 is a small RNA 3-prime-terminal 2-prime-O-methyltransferase.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=small RNA 3&#39;-end nucleotide + S-adenosyl-L-methionine = small RNA 3&#39;-end 2&#39;-O-methylnucleotide + S-adenosyl-L-homocysteine + H(+);</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR21404/PTHR21404-entries.csv
+
+                                </span>
+
+                                <div class="support-text">Q9C5Q8,Small RNA 2&#39;-O-methyltransferase</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090486" target="_blank" class="term-link">
+                                    GO:0090486
+                                </a>
+                            </span>
+                            <span class="term-label">small RNA 2&#39;-O-ribose methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0090486" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 catalyzes terminal 2-prime-O-ribose methylation of plant small RNAs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the most specific molecular-function term for Arabidopsis HEN1.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">HEN1 is a small RNA 3-prime-terminal 2-prime-O-methyltransferase.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=small RNA 3&#39;-end nucleotide + S-adenosyl-L-methionine = small RNA 3&#39;-end 2&#39;-O-methylnucleotide + S-adenosyl-L-homocysteine + H(+);</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR21404/PTHR21404-entries.csv
+
+                                </span>
+
+                                <div class="support-text">Q9C5Q8,Small RNA 2&#39;-O-methyltransferase</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010267" target="_blank" class="term-link">
+                                    GO:0010267
+                                </a>
+                            </span>
+                            <span class="term-label">ta-siRNA processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15469823" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15469823
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Endogenous trans-acting siRNAs regulate the accumulation of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0010267" data-r="PMID:15469823" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 supports ta-siRNA processing by methylating and stabilizing the small-RNA duplexes that feed these pathways.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HEN1 is required for stable miRNA/siRNA pathway outputs, but the direct catalytic step is small-RNA 2-prime-O-methylation rather than Dicer cleavage or AGO-mediated target repression.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Can methylate 3&#39;-end of microRNAs (miRNAs), small interfering RNAs (siRNas) and trans-acting small interfering RNAs (ta-siRNAs).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000122
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0005737" data-r="GO_REF:0000122" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The AtSubP-inferred cytoplasm row lacks positive experimental support for HEN1 cytoplasmic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HEN1&#39;s best-supported context is small-RNA methylation around nuclear miRNA/siRNA maturation; downstream cytoplasmic small-RNA turnover is not sufficient evidence for a cytoplasm localization annotation.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010305" target="_blank" class="term-link">
+                                    GO:0010305
+                                </a>
+                            </span>
+                            <span class="term-label">leaf vascular tissue pattern formation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22623415" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22623415
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The microRNA pathway genes AGO1, HEN1 and HYL1 participate i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0010305" data-r="PMID:22623415" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> hen1 mutants affect leaf vascular tissue pattern formation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The developmental process is a downstream phenotype of altered miRNA/siRNA stability rather than a direct HEN1 function.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010589" target="_blank" class="term-link">
+                                    GO:0010589
+                                </a>
+                            </span>
+                            <span class="term-label">leaf proximal/distal pattern formation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22623415" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22623415
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The microRNA pathway genes AGO1, HEN1 and HYL1 participate i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0010589" data-r="PMID:22623415" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> hen1 mutants affect leaf proximal/distal pattern formation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The developmental process is a downstream phenotype of altered miRNA/siRNA stability rather than a direct HEN1 function.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009616" target="_blank" class="term-link">
+                                    GO:0009616
+                                </a>
+                            </span>
+                            <span class="term-label">RNAi-mediated antiviral immune response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17090584" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17090584
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Four plant Dicers mediate viral small RNA biogenesis and DNA...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0009616" data-r="PMID:17090584" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 contributes to virus-induced silencing and viral-small-RNA stability through terminal small-RNA methylation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The antiviral role is a pathway output of HEN1-mediated small-RNA stabilization; the direct catalytic function remains small-RNA 2-prime-O-methylation rather than Dicing or Argonaute effector activity.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17090584" target="_blank" class="term-link">
+                                        PMID:17090584
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DCL4 in conjunction with RDR6 and HEN1 specifically facilitates extensive virus-induced silencing in new growth.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17442570" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17442570
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of nuclear dicing bodies containing proteins ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0005634" data-r="PMID:17442570" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cited D-body paper places plant miRNA processing in the nucleus but directly images DCL1/HYL1/SE rather than HEN1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HEN1 has independent support for nuclear miRNA-processing context, but this source-specific IDA annotation is not directly supported by PMID:17442570.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17442570" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17442570
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of nuclear dicing bodies containing proteins ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0005737" data-r="PMID:17442570" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cited D-body paper contrasts animal cytoplasmic miRNA processing with plant nuclear processing and does not directly support HEN1 cytoplasmic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HEN1 may influence cytoplasmic small-RNA turnover indirectly, but PMID:17442570 does not provide direct HEN1 cytoplasm evidence.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008173" target="_blank" class="term-link">
+                                    GO:0008173
+                                </a>
+                            </span>
+                            <span class="term-label">RNA methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15705854" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15705854
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Methylation as a crucial step in plant microRNA biogenesis.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0008173" data-r="PMID:15705854" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental Arabidopsis work supports HEN1-dependent methylation/protection of miRNAs and siRNAs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Use the small-RNA terminal 2-prime-O-methyltransferase term to capture HEN1 substrate and reaction specificity.
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090486" target="_blank" class="term-link">
+                                    small RNA 2&#39;-O-ribose methyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">HEN1 catalyzes transfer of a methyl group from AdoMet to the 2-prime-OH of the 3-prime-terminal nucleotide of small RNAs.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Methyltransferase that adds a methyl group to the ribose of the last nucleotide of small RNAs (sRNAs).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008173" target="_blank" class="term-link">
+                                    GO:0008173
+                                </a>
+                            </span>
+                            <span class="term-label">RNA methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16111943" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16111943
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Methylation protects miRNAs and siRNAs from a 3&#39;-end uridyla...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0008173" data-r="PMID:16111943" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental Arabidopsis work supports HEN1-dependent methylation/protection of miRNAs and siRNAs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Use the small-RNA terminal 2-prime-O-methyltransferase term to capture HEN1 substrate and reaction specificity.
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090486" target="_blank" class="term-link">
+                                    small RNA 2&#39;-O-ribose methyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">HEN1 catalyzes transfer of a methyl group from AdoMet to the 2-prime-OH of the 3-prime-terminal nucleotide of small RNAs.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Methyltransferase that adds a methyl group to the ribose of the last nucleotide of small RNAs (sRNAs).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035279" target="_blank" class="term-link">
+                                    GO:0035279
+                                </a>
+                            </span>
+                            <span class="term-label">miRNA-mediated gene silencing by mRNA destabilization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15851028" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15851028
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    microRNA-directed phasing during trans-acting siRNA biogenes...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0035279" data-r="PMID:15851028" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 supports miRNA-mediated gene silencing by mRNA destabilization by methylating and stabilizing the small-RNA duplexes that feed these pathways.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HEN1 is required for stable miRNA/siRNA pathway outputs, but the direct catalytic step is small-RNA 2-prime-O-methylation rather than Dicer cleavage or AGO-mediated target repression.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Can methylate 3&#39;-end of microRNAs (miRNAs), small interfering RNAs (siRNas) and trans-acting small interfering RNAs (ta-siRNAs).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035196" target="_blank" class="term-link">
+                                    GO:0035196
+                                </a>
+                            </span>
+                            <span class="term-label">miRNA processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12747833" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12747833
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Arabidopsis HEN1: a genetic link between endogenous miRNA co...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0035196" data-r="PMID:12747833" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEN1 supports miRNA processing by methylating and stabilizing the small-RNA duplexes that feed these pathways.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HEN1 is required for stable miRNA/siRNA pathway outputs, but the direct catalytic step is small-RNA 2-prime-O-methylation rather than Dicer cleavage or AGO-mediated target repression.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:ARATH/HEN1/HEN1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Can methylate 3&#39;-end of microRNAs (miRNAs), small interfering RNAs (siRNas) and trans-acting small interfering RNAs (ta-siRNAs).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009909" target="_blank" class="term-link">
+                                    GO:0009909
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of flower development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11917084" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11917084
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Formation of corymb-like inflorescences due to delay in bolt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0009909" data-r="PMID:11917084" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> hen1 mutants affect regulation of flower development.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The developmental process is a downstream phenotype of altered miRNA/siRNA stability rather than a direct HEN1 function.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010093" target="_blank" class="term-link">
+                                    GO:0010093
+                                </a>
+                            </span>
+                            <span class="term-label">specification of floral organ identity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11874905" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11874905
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HEN1 functions pleiotropically in Arabidopsis development an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C5Q8" data-a="GO:0010093" data-r="PMID:11874905" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> hen1 mutants affect specification of floral organ identity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The developmental process is a downstream phenotype of altered miRNA/siRNA stability rather than a direct HEN1 function.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Small-RNA terminal 2-prime-O-methyltransferase activity. HEN1 transfers a methyl group from SAM to the 2-prime-OH of the 3-prime-terminal ribose of miRNA/miRNA-star and siRNA/siRNA-star duplexes.</h3>
+                <span class="vote-buttons" data-g="Q9C5Q8" data-a="FUNCTION: Small-RNA terminal 2-prime-O-methyltransferase act..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090486" target="_blank" class="term-link">
+                            small RNA 2&#39;-O-ribose methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035196" target="_blank" class="term-link">
+                                miRNA processing
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:ARATH/HEN1/HEN1-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">HEN1 is a small RNA 3-prime-terminal 2-prime-O-methyltransferase.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:ARATH/HEN1/HEN1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Methyltransferase that adds a methyl group to the ribose of the last nucleotide of small RNAs (sRNAs).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:interpro/panther/PTHR21404/PTHR21404-entries.csv
+
+                        </span>
+
+                        <div class="finding-text">Q9C5Q8,Small RNA 2&#39;-O-methyltransferase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Protection and stabilization of plant small RNAs. HEN1-installed methylation protects miRNAs and siRNAs from HESO1/URT1-dependent uridylation, trimming, and degradation, preserving RNA-silencing competence.</h3>
+                <span class="vote-buttons" data-g="Q9C5Q8" data-a="FUNCTION: Protection and stabilization of plant small RNAs. ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090486" target="_blank" class="term-link">
+                            small RNA 2&#39;-O-ribose methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035196" target="_blank" class="term-link">
+                                miRNA processing
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:ARATH/HEN1/HEN1-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">HEN1 methylation is a defining post-dicing step in plants that stabilizes miRNAs and siRNAs.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:ARATH/HEN1/HEN1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">This protects the 3&#39;-end of sRNAs from uridylation activity and subsequent degradation.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000122.md" target="_blank" class="term-link">
+                            GO_REF:0000122
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">AtSubP analysis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11874905" target="_blank" class="term-link">
+                            PMID:11874905
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HEN1 functions pleiotropically in Arabidopsis development and acts in C function in the flower.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11917084" target="_blank" class="term-link">
+                            PMID:11917084
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Formation of corymb-like inflorescences due to delay in bolting and flower development in the corymbosa2 mutant of Arabidopsis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12747833" target="_blank" class="term-link">
+                            PMID:12747833
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Arabidopsis HEN1: a genetic link between endogenous miRNA controlling development and siRNA controlling transgene silencing and virus resistance.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">This source links HEN1 genetically to endogenous miRNA and siRNA silencing pathways.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15469823" target="_blank" class="term-link">
+                            PMID:15469823
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Endogenous trans-acting siRNAs regulate the accumulation of Arabidopsis mRNAs.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15705854" target="_blank" class="term-link">
+                            PMID:15705854
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Methylation as a crucial step in plant microRNA biogenesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">This source supports HEN1-dependent methylation as a crucial step in plant miRNA biogenesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15851028" target="_blank" class="term-link">
+                            PMID:15851028
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">microRNA-directed phasing during trans-acting siRNA biogenesis in plants.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16111943" target="_blank" class="term-link">
+                            PMID:16111943
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Methylation protects miRNAs and siRNAs from a 3&#39;-end uridylation activity in Arabidopsis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">This source supports HEN1 methylation protecting miRNAs and siRNAs from 3-prime uridylation/degradation.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17090584" target="_blank" class="term-link">
+                            PMID:17090584
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Four plant Dicers mediate viral small RNA biogenesis and DNA virus induced silencing.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">This source supports Dicer-mediated viral small RNA production and a DCL4/RDR6/HEN1 requirement for extensive virus-induced silencing in new growth; HEN1 involvement should be interpreted as small-RNA stabilization rather than antiviral Dicer activity.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17442570" target="_blank" class="term-link">
+                            PMID:17442570
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of nuclear dicing bodies containing proteins for microRNA biogenesis in living Arabidopsis plants.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">This source supports DCL1/HYL1/SE nuclear dicing bodies but does not directly image HEN1 localization.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22623415" target="_blank" class="term-link">
+                            PMID:22623415
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The microRNA pathway genes AGO1, HEN1 and HYL1 participate in leaf proximal-distal, venation and stomatal patterning in Arabidopsis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:ARATH/HEN1/HEN1-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon deep research for Arabidopsis HEN1</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HEN1 is a SAM-dependent small-RNA 3-prime-terminal 2-prime-O-methyltransferase that protects miRNAs and siRNAs from uridylation/trimming.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:ARATH/HEN1/HEN1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for Arabidopsis HEN1</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes HEN1 as methylating the last nucleotide of miRNAs, siRNAs, and ta-siRNAs to protect small RNAs from uridylation and degradation.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR21404/PTHR21404-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER PTHR21404 HEN1 family entries</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Arabidopsis HEN1 is the single Arabidopsis member in this HEN1/small RNA 2-prime-O-methyltransferase family context.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should piRNA-processing IBA transfer be excluded systematically for plant HEN1 proteins without piRNA pathway evidence?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9C5Q8" data-a="Q: Should piRNA-processing IBA transfer be excluded s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should HEN1 GO curation include a process term for protection of small RNAs from uridylation/decay, if available or proposed?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9C5Q8" data-a="Q: Should HEN1 GO curation include a process term for..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify methylation efficiency of Arabidopsis HEN1 on defined miRNA, siRNA, and ta-siRNA duplex substrates with varying overhang geometry.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9C5Q8" data-a="EXPERIMENT: Quantify methylation efficiency of Arabidopsis HEN..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Map the compartment and timing of HEN1 methylation relative to DCL1/HYL1 processing and AGO1 loading using endogenous tagged proteins.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9C5Q8" data-a="EXPERIMENT: Map the compartment and timing of HEN1 methylation..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(HEN1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9C5Q8" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-05-06T21:50:54.928008'<br />
+end_time: '2026-05-06T22:05:23.903604'<br />
+duration_seconds: 868.98<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ARATH<br />
+  gene_id: HEN1<br />
+  gene_symbol: HEN1<br />
+  uniprot_accession: Q9C5Q8<br />
+  protein_description: 'RecName: Full=Small RNA 2''-O-methyltransferase; EC=2.1.1.386<br />
+    {ECO:0000305}; AltName: Full=Protein CORYMBOSA 2; AltName: Full=Protein HUA ENHANCER<br />
+    1; AltName: Full=S-adenosylmethionine-dependent RNA methyltransferase HEN1;'<br />
+  gene_info: Name=HEN1; Synonyms=CRM2; OrderedLocusNames=At4g20910; ORFNames=T13K14.70;<br />
+  organism_full: Arabidopsis thaliana (Mouse-ear cress).<br />
+  protein_family: Belongs to the methyltransferase superfamily. HEN1 family.<br />
+  protein_domains: DSRM_2. (IPR056755); Hen1. (IPR026610); HEN1_dsRBD2. (IPR040870);<br />
+    Hen1_Lam_C. (IPR040813); La_HTH. (IPR006630)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 29</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9C5Q8</li>
+<li><strong>Protein Description:</strong> RecName: Full=Small RNA 2'-O-methyltransferase; EC=2.1.1.386 {ECO:0000305}; AltName: Full=Protein CORYMBOSA 2; AltName: Full=Protein HUA ENHANCER 1; AltName: Full=S-adenosylmethionine-dependent RNA methyltransferase HEN1;</li>
+<li><strong>Gene Information:</strong> Name=HEN1; Synonyms=CRM2; OrderedLocusNames=At4g20910; ORFNames=T13K14.70;</li>
+<li><strong>Organism (full):</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Protein Family:</strong> Belongs to the methyltransferase superfamily. HEN1 family.</li>
+<li><strong>Key Domains:</strong> DSRM_2. (IPR056755); Hen1. (IPR026610); HEN1_dsRBD2. (IPR040870); Hen1_Lam_C. (IPR040813); La_HTH. (IPR006630)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "HEN1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'HEN1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>HEN1</strong> (gene ID: HEN1, UniProt: Q9C5Q8) in ARATH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9C5Q8</li>
+<li><strong>Protein Description:</strong> RecName: Full=Small RNA 2'-O-methyltransferase; EC=2.1.1.386 {ECO:0000305}; AltName: Full=Protein CORYMBOSA 2; AltName: Full=Protein HUA ENHANCER 1; AltName: Full=S-adenosylmethionine-dependent RNA methyltransferase HEN1;</li>
+<li><strong>Gene Information:</strong> Name=HEN1; Synonyms=CRM2; OrderedLocusNames=At4g20910; ORFNames=T13K14.70;</li>
+<li><strong>Organism (full):</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Protein Family:</strong> Belongs to the methyltransferase superfamily. HEN1 family.</li>
+<li><strong>Key Domains:</strong> DSRM_2. (IPR056755); Hen1. (IPR026610); HEN1_dsRBD2. (IPR040870); Hen1_Lam_C. (IPR040813); La_HTH. (IPR006630)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "HEN1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'HEN1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>HEN1</strong> (gene ID: HEN1, UniProt: Q9C5Q8) in ARATH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-arabidopsis-thaliana-hen1-uniprot-q9c5q8-at4g20910-functional-annotation">Research Report: Arabidopsis thaliana <strong>HEN1</strong> (UniProt Q9C5Q8; At4g20910) — Functional Annotation</h1>
+<h2 id="0-target-verification-critical-geneprotein-identity">0) Target verification (critical gene/protein identity)</h2>
+<p>The research target matches the UniProt-provided identity: <strong>Arabidopsis thaliana HEN1 (HUA ENHANCER 1)</strong> is a <strong>small RNA 3′-terminal 2′-O-methyltransferase</strong> (EC 2.1.1.386) that uses <strong>S-adenosyl-L-methionine (SAM/AdoMet)</strong> to methylate the <strong>2′-OH</strong> of the <strong>3′-terminal ribose</strong> of plant small RNAs. Structural and biochemical work confirms the multidomain architecture expected for plant HEN1, including <strong>two dsRNA-binding domains (dsRBDs)</strong> and a <strong>La-motif-containing domain</strong>, plus a C-terminal Rossmann-like methyltransferase domain. (huang2009structuralinsightsinto pages 1-2, huang2009structuralinsightsinto pages 2-4, ji2012regulationofsmall pages 1-3)</p>
+<p>Plant HEN1 is distinct from the <strong>metazoan homolog HENMT1</strong> (primarily piRNA methyltransferase) and from <strong>bacterial Hen1</strong> proteins (different domain architecture and biological context), avoiding symbol ambiguity. (peng2018identificationofsubstrates pages 1-2, ji2012regulationofsmall pages 1-3)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-2-o-methylation-nm-at-the-3-end-of-small-rnas">1.1 2′-O-methylation (Nm) at the 3′ end of small RNAs</h3>
+<p>In plants, miRNAs and many siRNAs acquire a <strong>2′-O-methyl group at the 3′ terminal nucleotide</strong>. This is a post-processing stabilization step that is central to small RNA metabolism because it alters susceptibility to 3′ end modification and degradation. (ji2012regulationofsmall pages 1-3, ding2023micrornaproductionin pages 1-2)</p>
+<h3 id="12-what-hen1-does-reaction-and-product">1.2 What HEN1 does (reaction and product)</h3>
+<p>HEN1 catalyzes transfer of a methyl group from <strong>AdoMet</strong> to the <strong>2′-OH</strong> of the <strong>3′-terminal nucleotide</strong> of small RNAs; <strong>AdoHcy</strong> is produced as the cofactor product. Importantly, <strong>plant HEN1 methylates both strands</strong> of the miRNA/miRNA<em> or siRNA/siRNA</em> duplex (in succession) rather than only a single guide strand. (baranauske2015functionalmappingof pages 1-2, ji2012regulationofsmall pages 3-4, huang2009structuralinsightsinto pages 1-2)</p>
+<h2 id="2-primary-function-substrates-specificity-and-catalytic-mechanism">2) Primary function: substrates, specificity, and catalytic mechanism</h2>
+<h3 id="21-substrate-identity-and-substrate-determinants">2.1 Substrate identity and substrate determinants</h3>
+<p><strong>Substrates</strong>: HEN1 acts on <strong>21–24 nt small RNA duplexes</strong> (miRNA/miRNA<em> and siRNA/siRNA</em>) with the typical <strong>2-nt 3′ overhangs</strong> generated by Dicer-like processing. (ji2012regulationofsmall pages 3-4, huang2009structuralinsightsinto pages 1-2)</p>
+<p><strong>Specificity</strong>: HEN1 is broadly <strong>non-sequence-specific</strong>; recognition is driven by RNA duplex geometry and terminal features (overhangs and ribose hydroxyls) rather than nucleobases. (huang2009structuralinsightsinto pages 2-4, kaldis2024molecularbasisof pages 11-12)</p>
+<h3 id="22-structural-basis-of-recognition-and-catalysis-authoritative-primary-evidence">2.2 Structural basis of recognition and catalysis (authoritative primary evidence)</h3>
+<p>A landmark structure solved the <strong>full-length Arabidopsis HEN1</strong> in complex with a <strong>22-nt RNA duplex</strong> and <strong>AdoHcy</strong> at <strong>3.1 Å resolution</strong>, showing that HEN1 binds the duplex as a <strong>monomer</strong> and uses multiple RNA-binding modules to measure and engage duplex ends. The La-motif-containing domain recognizes one duplex terminus/overhang, while the methylated strand’s 3′-terminal nucleotide is positioned into the MTase active site. (huang2009structuralinsightsinto pages 1-2, huang2009structuralinsightsinto pages 2-4)</p>
+<p>The retrieved structural figure provides direct visual evidence for these domain arrangements and RNA-end recognition principles. (huang2009structuralinsightsinto media 62c0a606, huang2009structuralinsightsinto media 867c9cf3)</p>
+<h3 id="23-quantitative-enzymology-and-active-site-features">2.3 Quantitative enzymology and active-site features</h3>
+<p>A recent mechanistic analysis reports kinetic parameters for full-length plant HEN1 of approximately <strong>KRNA ≈ 0.22 mM</strong>, <strong>KSAM ≈ 1.7 mM</strong>, and <strong>kcat ≈ 3.0 min−1</strong>, and supports a model in which active-site chemistry involves conserved residues coordinating a divalent metal and engaging the 2′/3′ hydroxyls at the terminal ribose. This work also reinforces that the N-terminal region enhances substrate/cofactor binding compared with the isolated C-terminal MTase domain. (kaldis2024molecularbasisof pages 11-12)</p>
+<h2 id="3-biological-roles-and-pathways">3) Biological roles and pathways</h2>
+<h3 id="31-role-in-mirnasirna-biogenesis-and-stabilization">3.1 Role in miRNA/siRNA biogenesis and stabilization</h3>
+<p>HEN1 methylation is a defining post-dicing step in plants that <strong>stabilizes miRNAs/siRNAs</strong> and preserves silencing competence. In the absence of HEN1 activity (hen1 mutants), small RNAs exhibit <strong>reduced abundance</strong> and <strong>3′ end heterogeneity</strong>, including <strong>3′ truncation</strong> and <strong>uridine-rich tailing</strong>. (ji2012regulationofsmall pages 1-3, ding2023micrornaproductionin pages 6-7)</p>
+<h3 id="32-protection-against-uridylation-and-exonucleolytic-decay-turnover-logic">3.2 Protection against uridylation and exonucleolytic decay (turnover logic)</h3>
+<p>A central consequence of losing HEN1-installed methylation is enhanced susceptibility of small RNAs to 3′-end remodeling:</p>
+<ul>
+<li><strong>Uridylation (“tailing”)</strong>: terminal nucleotidyltransferases <strong>HESO1</strong> and <strong>URT1</strong> uridylate <strong>unmethylated</strong> miRNAs, which is associated with destabilization and turnover. (ding2023micrornaproductionin pages 6-7, chen2024functionsandmechanisms pages 2-3)</li>
+<li><strong>Trimming</strong>: <strong>SDN-family 3′→5′ exonucleases</strong> trim small RNAs and act more rapidly on unmethylated substrates, consistent with methylation acting as a protective mark. (louis2024determinationofgenesa pages 25-28, ding2023micrornaproductionin pages 6-7)</li>
+</ul>
+<p>Genetic evidence ties these reactions to the methylation state: <strong>heso1</strong> mutations can partially suppress <strong>hen1</strong> phenotypes and reduce uridylation, and <strong>hen1 heso1 urt1</strong> backgrounds can abolish U-tailed miRNAs, indicating that HESO1/URT1 are major uridylases acting when HEN1 protection is absent. (ding2023micrornaproductionin pages 7-8, louis2024determinationofgenesa pages 25-28)</p>
+<h3 id="33-relationship-to-ago-loading-and-risc-biology">3.3 Relationship to AGO loading and RISC biology</h3>
+<p>Recent syntheses emphasize that methylation is integrated with AGO biology: a subset of miRNAs is loaded into <strong>AGO1 in the nucleus</strong> and exported as AGO1–miRNA complexes (via CRM1/EXPO1), while other miRNAs appear in the cytoplasm unbound, consistent with multiple export routes (e.g., export of methylated duplexes). This situates HEN1’s action in a broader, spatially organized small-RNA maturation-to-effector continuum. (bajczyk2023recentinsightsinto pages 13-14, ding2023micrornaproductionin pages 1-2)</p>
+<h2 id="4-subcellular-localization-and-molecular-interactions">4) Subcellular localization and molecular interactions</h2>
+<h3 id="41-best-supported-cellular-site-of-action">4.1 Best-supported cellular site of action</h3>
+<p>Direct interaction mapping and mechanistic models place HEN1 in the <strong>nuclear miRNA-processing context</strong>, associated with the DCL1/HYL1 machinery that resides in <strong>nuclear dicing bodies (D-bodies)</strong>. (baranauske2015functionalmappingof pages 1-2, baranauske2015functionalmappingof pages 9-10)</p>
+<h3 id="42-proteinprotein-interactions-experimental-evidence">4.2 Protein–protein interactions (experimental evidence)</h3>
+<p>A functional mapping study using <strong>GST pull-downs</strong>, <strong>yeast two-hybrid</strong>, and complex-formation assays demonstrates that HEN1 physically interacts with:</p>
+<ul>
+<li><strong>HYL1</strong> (direct binding; mapped interaction surfaces involving HEN1 domains and HYL1 dsRBD2) (baranauske2015functionalmappingof pages 6-8, baranauske2015functionalmappingof pages 8-9)</li>
+<li><strong>DCL1</strong> (complex formation and domain-level binding evidence) (baranauske2015functionalmappingof pages 1-2, baranauske2015functionalmappingof pages 8-9)</li>
+</ul>
+<p>In the same mapping study, <strong>no direct interaction</strong> between HEN1 and <strong>SERRATE</strong> was detectable, supporting a model in which HEN1 associates with a DCL1/HYL1-containing assembly while excluding SE at the methylation stage. (baranauske2015functionalmappingof pages 1-2, baranauske2015functionalmappingof pages 8-9)</p>
+<h2 id="5-recent-developments-prioritizing-20232024">5) Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="51-2023-updated-systems-view-of-mirna-production-and-turnover">5.1 2023: updated systems view of miRNA production and turnover</h3>
+<p>A 2023 review consolidates a now-standard turnover framework in which HEN1 methylation stabilizes mature miRNAs, while downstream decay involves SDN trimming and HESO1/URT1 uridylation, acting on both AGO-bound and free miRNAs in the cytoplasm. (ding2023micrornaproductionin pages 1-2)</p>
+<p>Another 2023 review emphasizes that AGO1 does not simply bind miRNAs but interacts with turnover factors (including uridylation-related enzymes), and highlights multiple routes and constraints for AGO1 loading and miRNA export—context that refines where HEN1’s protective mark matters most. (bajczyk2023recentinsightsinto pages 13-14)</p>
+<h3 id="52-2024-expanded-emphasis-on-rna-tailing-networks-and-functional-consequences">5.2 2024: expanded emphasis on RNA tailing networks and functional consequences</h3>
+<p>A 2024 review focused on plant RNA tailing frames HEN1 methylation as the upstream “gatekeeper” modification that prevents uridylation/trimming; it also highlights the distinct substrate biases of <strong>HESO1 vs URT1</strong>, and documents cases where uridylation can alter miRNA functional properties (e.g., reduced repression or slicing activity) and even generate 22-nt forms linked to amplified silencing outputs. (chen2024functionsandmechanisms pages 2-3, chen2024functionsandmechanisms pages 3-5)</p>
+<p>A 2024 synthesis of small RNA biogenesis reiterates HEN1’s five-domain architecture and structural model for duplex measurement/recognition, and explicitly connects methylation loss to HESO1-mediated uridylation and SDN-linked destabilization. (li2024thebiosynthesisprocess pages 7-8)</p>
+<h2 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h2>
+<h3 id="61-biotechnology-and-engineering-logic">6.1 Biotechnology and engineering logic</h3>
+<p>Although the retrieved 2023–2024 sources are largely mechanistic/review-oriented, they collectively justify an applied principle: <strong>small RNA stability and silencing persistence in plants can be tuned by manipulating the HEN1 methylation state and/or downstream tailing enzymes (HESO1/URT1) and trimming exonucleases (SDNs)</strong>, because these factors directly control whether small RNAs are protected or routed into decay. (chen2024functionsandmechanisms pages 2-3, ding2023micrornaproductionin pages 1-2, bajczyk2023recentinsightsinto pages 13-14)</p>
+<h3 id="62-antiviral-silencing-interface">6.2 Antiviral silencing interface</h3>
+<p>Virus–host interactions commonly target small RNA pathways. A plant-focused review notes that loss of methylation predisposes to uridylation-dependent destabilization and that genetic suppression by heso1 supports the functional importance of tailing in this context; this underpins why viral suppression strategies that impair HEN1 can reprogram small-RNA-mediated defense outputs. (ding2023micrornaproductionin pages 7-8, chen2024functionsandmechanisms pages 2-3)</p>
+<h2 id="7-expert-opinions-and-analysis-authoritative-synthesis">7) Expert opinions and analysis (authoritative synthesis)</h2>
+<h3 id="71-consensus-view-of-why-hen1-is-essential-in-plants">7.1 Consensus view of why HEN1 is essential in plants</h3>
+<p>Across authoritative sources, a consistent interpretation emerges:</p>
+<ul>
+<li>Plants rely on <strong>duplex methylation</strong> by HEN1 as an essential stabilization step that is coupled to the plant-specific miRNA/siRNA maturation program (as opposed to metazoan strategies where methylation is restricted to particular small-RNA classes). (ji2012regulationofsmall pages 1-3, peng2018identificationofsubstrates pages 1-2)</li>
+<li>The dominant mechanistic rationale is chemical: a 2′-O-methyl at the 3′ end <strong>blocks uridylation and slows trimming</strong>, insulating small RNAs from “tailing/trimming” turnover pathways and supporting correct effector complex formation. (huang2009structuralinsightsinto pages 1-2, chen2024functionsandmechanisms pages 2-3, ding2023micrornaproductionin pages 1-2)</li>
+</ul>
+<h3 id="72-structure-informed-perspective">7.2 Structure-informed perspective</h3>
+<p>Structural evidence supports the expert consensus that HEN1 is specialized for <strong>A-form duplex substrates with 2-nt 3′ overhangs</strong> and uses modular RNA-binding domains to “measure” the duplex and position a terminal ribose for catalysis—an architecture that explains plant HEN1’s ability to methylate miRNA/siRNA duplexes broadly and non-sequence-specifically. (huang2009structuralinsightsinto pages 1-2, huang2009structuralinsightsinto pages 2-4, huang2009structuralinsightsinto media 62c0a606)</p>
+<h2 id="8-key-statistics-and-data-points-from-the-retrieved-literature">8) Key statistics and data points (from the retrieved literature)</h2>
+<ul>
+<li><strong>Structure</strong>: full-length Arabidopsis HEN1 in complex with a <strong>22-nt RNA duplex</strong> and <strong>AdoHcy</strong> solved at <strong>3.1 Å</strong>. (huang2009structuralinsightsinto pages 1-2)</li>
+<li><strong>Enzyme kinetics (reported)</strong>: <strong>KRNA ≈ 0.22 mM</strong>, <strong>KSAM ≈ 1.7 mM</strong>, <strong>kcat ≈ 3.0 min−1</strong> for full-length plant HEN1 in one mechanistic analysis. (kaldis2024molecularbasisof pages 11-12)</li>
+<li><strong>Substrate class/size</strong>: <strong>21–24 nt</strong> duplex small RNAs with <strong>2-nt 3′ overhangs</strong> are the canonical substrates. (ji2012regulationofsmall pages 3-4, huang2009structuralinsightsinto pages 1-2)</li>
+</ul>
+<h2 id="summary">Summary</h2>
+<p>Arabidopsis <strong>HEN1 (Q9C5Q8; At4g20910)</strong> is a multidomain, SAM-dependent <strong>small RNA 3′ 2′-O-methyltransferase</strong> that methylates both strands of miRNA/miRNA<em> and siRNA/siRNA</em> duplexes. The modification is a central stabilizing mark that prevents downstream <strong>uridylation (HESO1/URT1)</strong> and limits <strong>trimming (SDNs)</strong>, thereby protecting small RNAs and ensuring robust RNA silencing. Structural and interaction studies place HEN1 in the nuclear miRNA-processing context (DCL1/HYL1-associated), and 2023–2024 syntheses refine its role within an integrated, compartmentalized miRNA maturation–loading–turnover network and highlight practical levers for tuning small RNA stability and function. (huang2009structuralinsightsinto pages 1-2, baranauske2015functionalmappingof pages 1-2, ding2023micrornaproductionin pages 1-2, chen2024functionsandmechanisms pages 2-3)</p>
+<hr />
+<h2 id="quick-reference-evidence-table">Quick-reference evidence table</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Summary</th>
+<th>Key evidence/citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/domains</td>
+<td>• <strong>Verified target</strong>: <em>Arabidopsis thaliana</em> <strong>HEN1 / HUA ENHANCER 1</strong> = At4g20910, a plant small-RNA 3'-terminal <strong>2'-O-methyltransferase</strong>.<br>• Multidomain architecture: <strong>dsRBD1, dsRBD2, La-motif-containing domain (LCD), PPIase-like/FKBP-like domain, C-terminal MTase domain</strong>.<br>• Distinct from metazoan HENMT1 and bacterial Hen1 homologs, which differ in size/domain architecture and substrate class.</td>
+<td>(ji2012regulationofsmall pages 1-3, huang2009structuralinsightsinto pages 1-2, peng2018identificationofsubstrates pages 1-2, baranauske2015functionalmappingof pages 1-2)</td>
+</tr>
+<tr>
+<td>Enzymatic reaction</td>
+<td>• Catalyzes transfer of a methyl group from <strong>SAM/AdoMet</strong> to the <strong>2'-OH of the 3'-terminal ribose</strong> of small RNAs; <strong>AdoHcy</strong> is the product.<br>• In plants, HEN1 methylates <strong>both strands</strong> of miRNA/miRNA<em> or siRNA/siRNA</em> duplexes in succession.<br>• Reaction is described as <strong>metal-dependent</strong> in structural/biochemical studies.</td>
+<td>(ji2012regulationofsmall pages 3-4, huang2009structuralinsightsinto pages 1-2, huang2009structuralinsightsinto pages 2-4, baranauske2015functionalmappingof pages 1-2)</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>• Preferred substrates are <strong>21–24 nt A-form small-RNA duplexes with 2-nt 3' overhangs</strong>.<br>• Recognition is largely <strong>non-sequence-specific</strong>; HEN1 reads RNA backbone geometry and terminal ribose chemistry rather than bases.<br>• Plant HEN1 acts on <strong>miRNA/miRNA</strong><em> and </em><em>siRNA/siRNA</em><strong> duplexes, unlike animal HEN1/HENMT1, which mainly methylate </strong>piRNAs** or AGO2-associated small RNAs.</td>
+<td>(ji2012regulationofsmall pages 3-4, huang2009structuralinsightsinto pages 1-2, huang2009structuralinsightsinto pages 2-4, peng2018identificationofsubstrates pages 1-2)</td>
+</tr>
+<tr>
+<td>Mechanism/structure determinants</td>
+<td>• Crystal structure shows HEN1 binds RNA as a <strong>monomer</strong> and uses multiple RNA-binding modules to <strong>measure duplex length</strong> and position one 3' end into the catalytic pocket.<br>• <strong>dsRBD1</strong> has a major role in substrate recognition; the <strong>LCD/La-motif</strong> recognizes the opposite duplex terminus/2-nt overhang; MTase active site engages the methylated strand terminus.<br>• Active-site residues and a coordinated divalent metal support catalysis; plant-specific residues also contribute to <strong>5'-phosphate recognition</strong>.</td>
+<td>(huang2009structuralinsightsinto pages 1-2, huang2009structuralinsightsinto pages 2-4, huang2009structuralinsightsinto media 62c0a606)</td>
+</tr>
+<tr>
+<td>Biological role in pathways</td>
+<td>• HEN1 acts in <strong>miRNA and siRNA biogenesis</strong>, stabilizing nascent duplexes before/around AGO loading.<br>• 2'-O-methylation protects small RNAs from <strong>3' uridylation</strong> and <strong>3'→5' degradation</strong>, thereby preserving silencing competence.<br>• It is functionally linked to miRNA maturation, RISC assembly, and pathways requiring stable plant small RNAs, including 24-nt siRNA-associated silencing contexts.</td>
+<td>(ji2012regulationofsmall pages 1-3, huang2009structuralinsightsinto pages 1-2, baranauske2015functionalmappingof pages 1-2, ding2023micrornaproductionin pages 1-2)</td>
+</tr>
+<tr>
+<td>Localization &amp; interactions</td>
+<td>• Best-supported context is <strong>nuclear miRNA-processing/dicing bodies (D-bodies)</strong>, where HEN1 joins the DCL1/HYL1 processing assembly after duplex excision.<br>• Direct physical interactions shown with <strong>HYL1</strong> and <strong>DCL1</strong> by GST pull-down and yeast two-hybrid; <strong>no direct interaction detected with SERRATE</strong> in the cited study.<br>• No strong direct HEN1–AGO1 interaction is established in the provided evidence, though methylation is tightly coupled to AGO loading/stability pathways.</td>
+<td>(baranauske2015functionalmappingof pages 9-10, baranauske2015functionalmappingof pages 1-2, baranauske2015functionalmappingof pages 8-9, baranauske2015functionalmappingof pages 6-8)</td>
+</tr>
+<tr>
+<td>Loss-of-function consequences</td>
+<td>• <strong>hen1</strong> mutants show <strong>reduced miRNA abundance</strong>, <strong>size heterogeneity</strong>, <strong>3' truncation</strong>, and <strong>U-rich tailing/uridylation</strong> of small RNAs.<br>• Developmental phenotypes include pleiotropic growth defects such as altered organ size/shape, late flowering, reduced fertility, and light hypersensitivity.<br>• Genetic suppression data show that blocking uridylation pathways (especially <strong>HESO1</strong>, sometimes <strong>URT1</strong>) partially rescues hen1 defects.</td>
+<td>(ji2012regulationofsmall pages 1-3, ding2023micrornaproductionin pages 6-7, louis2024determinationofgenesa pages 21-25, louis2024determinationofgenesa pages 25-28, chen2024functionsandmechanisms pages 2-3)</td>
+</tr>
+<tr>
+<td>Recent 2023-2024 updates</td>
+<td>• Recent reviews emphasize that HEN1 methylation is integrated with <strong>nuclear AGO1 loading</strong>, nucleo-cytoplasmic trafficking, and downstream turnover pathways.<br>• 2024 work/refined models highlight additional turnover factors for unmethylated small RNAs, including <strong>ATRM2</strong>, and expanded roles for <strong>HESO1/URT1/NTPs</strong> in tailing, repair, and secondary siRNA regulation.<br>• 2024–2025 modification studies/methods underscore persistent interest in plant small-RNA chemical marks and their dynamics.</td>
+<td>(ding2023micrornaproductionin pages 1-2, louis2024determinationofgenesa pages 21-25, louis2024determinationofgenes pages 21-25, chen2024functionsandmechanisms pages 2-3, chen2024functionsandmechanisms pages 3-5)</td>
+</tr>
+<tr>
+<td>Applications/biotech relevance</td>
+<td>• HEN1 is a key <strong>engineering lever for small-RNA stability</strong> in plants because methylation status determines susceptibility to uridylation and decay.<br>• It is also a <strong>virus-host interface</strong>: potyviral <strong>HC-Pro</strong> can inhibit HEN1, helping explain suppression of antiviral/post-transcriptional silencing.<br>• Knowledge of HEN1 informs crop or synthetic-biology strategies aimed at tuning miRNA/siRNA persistence and silencing output.</td>
+<td>(chen2024functionsandmechanisms pages 2-3, chen2024functionsandmechanisms pages 3-5, ding2023micrornaproductionin pages 7-8)</td>
+</tr>
+<tr>
+<td>Key quantitative data</td>
+<td>• Full-length plant HEN1 kinetics reported as approximately <strong>KRNA ≈ 0.22 mM, KSAM ≈ 1.7 mM, kcat ≈ 3.0 min⁻¹</strong> in one mechanistic analysis.<br>• Nature structure solved at <strong>3.1 Å</strong> with a <strong>22-nt RNA duplex</strong> bound to AdoHcy.<br>• Structural model includes a metal–oxygen distance of about <strong>2.2 Å</strong> in active-site coordination in mechanistic modeling.</td>
+<td>(kaldis2024molecularbasisof pages 11-12, huang2009structuralinsightsinto pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table condenses the main facts about Arabidopsis thaliana HEN1, including verified identity, catalytic function, pathway role, localization, recent updates, and quantitative evidence. It is designed as a quick-reference summary anchored to the cited context IDs.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(huang2009structuralinsightsinto pages 1-2): Ying Huang, Lijuan Ji, Qichen Huang, Dmitry G. Vassylyev, Xuemei Chen, and Jin-Biao Ma. Structural insights into mechanisms of the small rna methyltransferase hen1. Nature, 461:823-827, Oct 2009. URL: https://doi.org/10.1038/nature08433, doi:10.1038/nature08433. This article has 184 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(huang2009structuralinsightsinto pages 2-4): Ying Huang, Lijuan Ji, Qichen Huang, Dmitry G. Vassylyev, Xuemei Chen, and Jin-Biao Ma. Structural insights into mechanisms of the small rna methyltransferase hen1. Nature, 461:823-827, Oct 2009. URL: https://doi.org/10.1038/nature08433, doi:10.1038/nature08433. This article has 184 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ji2012regulationofsmall pages 1-3): Lijuan Ji and Xuemei Chen. Regulation of small rna stability: methylation and beyond. Cell Research, 22:624-636, Mar 2012. URL: https://doi.org/10.1038/cr.2012.36, doi:10.1038/cr.2012.36. This article has 328 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(peng2018identificationofsubstrates pages 1-2): Ling Peng, Fengjuan Zhang, Renfu Shang, Xueyan Wang, Jiayi Chen, James J. Chou, Jinbiao Ma, Ligang Wu, and Ying Huang. Identification of substrates of the small rna methyltransferase hen1 in mouse spermatogonial stem cells and analysis of its methyl-transfer domain. Journal of Biological Chemistry, 293:9981-9994, Jun 2018. URL: https://doi.org/10.1074/jbc.ra117.000837, doi:10.1074/jbc.ra117.000837. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ding2023micrornaproductionin pages 1-2): Ning Ding and Bailong Zhang. Microrna production in arabidopsis. Frontiers in Plant Science, Jan 2023. URL: https://doi.org/10.3389/fpls.2023.1096772, doi:10.3389/fpls.2023.1096772. This article has 29 citations.</p>
+</li>
+<li>
+<p>(baranauske2015functionalmappingof pages 1-2): Simona Baranauskė, Milda Mickutė, Alexandra Plotnikova, Andreas Finke, Česlovas Venclovas, Saulius Klimašauskas, and Giedrius Vilkaitis. Functional mapping of the plant small rna methyltransferase: hen1 physically interacts with hyl1 and dicer-like 1 proteins. Nucleic Acids Research, 43:2802-2812, Feb 2015. URL: https://doi.org/10.1093/nar/gkv102, doi:10.1093/nar/gkv102. This article has 103 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ji2012regulationofsmall pages 3-4): Lijuan Ji and Xuemei Chen. Regulation of small rna stability: methylation and beyond. Cell Research, 22:624-636, Mar 2012. URL: https://doi.org/10.1038/cr.2012.36, doi:10.1038/cr.2012.36. This article has 328 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kaldis2024molecularbasisof pages 11-12): Philipp Kaldis and Li Na Zhao. Molecular basis of the reaction mechanism of the methyltransferase henmt1. PLOS ONE, 19:e0293243, Jan 2024. URL: https://doi.org/10.1371/journal.pone.0293243, doi:10.1371/journal.pone.0293243. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(huang2009structuralinsightsinto media 62c0a606): Ying Huang, Lijuan Ji, Qichen Huang, Dmitry G. Vassylyev, Xuemei Chen, and Jin-Biao Ma. Structural insights into mechanisms of the small rna methyltransferase hen1. Nature, 461:823-827, Oct 2009. URL: https://doi.org/10.1038/nature08433, doi:10.1038/nature08433. This article has 184 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(huang2009structuralinsightsinto media 867c9cf3): Ying Huang, Lijuan Ji, Qichen Huang, Dmitry G. Vassylyev, Xuemei Chen, and Jin-Biao Ma. Structural insights into mechanisms of the small rna methyltransferase hen1. Nature, 461:823-827, Oct 2009. URL: https://doi.org/10.1038/nature08433, doi:10.1038/nature08433. This article has 184 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ding2023micrornaproductionin pages 6-7): Ning Ding and Bailong Zhang. Microrna production in arabidopsis. Frontiers in Plant Science, Jan 2023. URL: https://doi.org/10.3389/fpls.2023.1096772, doi:10.3389/fpls.2023.1096772. This article has 29 citations.</p>
+</li>
+<li>
+<p>(chen2024functionsandmechanisms pages 2-3): Jiwei Chen, Xiaozhen Li, Xianxin Dong, and Xiaoyan Wang. Functions and mechanisms of rna tailing by nucleotidyl transferase proteins in plants. Frontiers in Plant Science, Oct 2024. URL: https://doi.org/10.3389/fpls.2024.1452347, doi:10.3389/fpls.2024.1452347. This article has 3 citations.</p>
+</li>
+<li>
+<p>(louis2024determinationofgenesa pages 25-28): F Louis. Determination of genes involved in the microrna turnover in arabidopsis thaliana. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(ding2023micrornaproductionin pages 7-8): Ning Ding and Bailong Zhang. Microrna production in arabidopsis. Frontiers in Plant Science, Jan 2023. URL: https://doi.org/10.3389/fpls.2023.1096772, doi:10.3389/fpls.2023.1096772. This article has 29 citations.</p>
+</li>
+<li>
+<p>(bajczyk2023recentinsightsinto pages 13-14): Mateusz Bajczyk, Artur Jarmolowski, Monika Jozwiak, Andrzej Pacak, Halina Pietrykowska, Izabela Sierocka, Aleksandra Swida-Barteczka, Lukasz Szewc, and Zofia Szweykowska-Kulinska. Recent insights into plant mirna biogenesis: multiple layers of mirna level regulation. Plants, 12:342, Jan 2023. URL: https://doi.org/10.3390/plants12020342, doi:10.3390/plants12020342. This article has 79 citations.</p>
+</li>
+<li>
+<p>(baranauske2015functionalmappingof pages 9-10): Simona Baranauskė, Milda Mickutė, Alexandra Plotnikova, Andreas Finke, Česlovas Venclovas, Saulius Klimašauskas, and Giedrius Vilkaitis. Functional mapping of the plant small rna methyltransferase: hen1 physically interacts with hyl1 and dicer-like 1 proteins. Nucleic Acids Research, 43:2802-2812, Feb 2015. URL: https://doi.org/10.1093/nar/gkv102, doi:10.1093/nar/gkv102. This article has 103 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(baranauske2015functionalmappingof pages 6-8): Simona Baranauskė, Milda Mickutė, Alexandra Plotnikova, Andreas Finke, Česlovas Venclovas, Saulius Klimašauskas, and Giedrius Vilkaitis. Functional mapping of the plant small rna methyltransferase: hen1 physically interacts with hyl1 and dicer-like 1 proteins. Nucleic Acids Research, 43:2802-2812, Feb 2015. URL: https://doi.org/10.1093/nar/gkv102, doi:10.1093/nar/gkv102. This article has 103 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(baranauske2015functionalmappingof pages 8-9): Simona Baranauskė, Milda Mickutė, Alexandra Plotnikova, Andreas Finke, Česlovas Venclovas, Saulius Klimašauskas, and Giedrius Vilkaitis. Functional mapping of the plant small rna methyltransferase: hen1 physically interacts with hyl1 and dicer-like 1 proteins. Nucleic Acids Research, 43:2802-2812, Feb 2015. URL: https://doi.org/10.1093/nar/gkv102, doi:10.1093/nar/gkv102. This article has 103 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2024functionsandmechanisms pages 3-5): Jiwei Chen, Xiaozhen Li, Xianxin Dong, and Xiaoyan Wang. Functions and mechanisms of rna tailing by nucleotidyl transferase proteins in plants. Frontiers in Plant Science, Oct 2024. URL: https://doi.org/10.3389/fpls.2024.1452347, doi:10.3389/fpls.2024.1452347. This article has 3 citations.</p>
+</li>
+<li>
+<p>(li2024thebiosynthesisprocess pages 7-8): Quan Li, Yanan Wang, Zhihui Sun, Haiyang Li, and Huan Liu. The biosynthesis process of small rna and its pivotal roles in plant development. International Journal of Molecular Sciences, 25:7680, Jul 2024. URL: https://doi.org/10.3390/ijms25147680, doi:10.3390/ijms25147680. This article has 21 citations.</p>
+</li>
+<li>
+<p>(louis2024determinationofgenesa pages 21-25): F Louis. Determination of genes involved in the microrna turnover in arabidopsis thaliana. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(louis2024determinationofgenes pages 21-25): F Louis. Determination of genes involved in the microrna turnover in arabidopsis thaliana. Unknown journal, 2024.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kaldis2024molecularbasisof pages 11-12</li>
+<li>ding2023micrornaproductionin pages 1-2</li>
+<li>bajczyk2023recentinsightsinto pages 13-14</li>
+<li>li2024thebiosynthesisprocess pages 7-8</li>
+<li>huang2009structuralinsightsinto pages 1-2</li>
+<li>huang2009structuralinsightsinto pages 2-4</li>
+<li>ji2012regulationofsmall pages 1-3</li>
+<li>peng2018identificationofsubstrates pages 1-2</li>
+<li>baranauske2015functionalmappingof pages 1-2</li>
+<li>ji2012regulationofsmall pages 3-4</li>
+<li>ding2023micrornaproductionin pages 6-7</li>
+<li>chen2024functionsandmechanisms pages 2-3</li>
+<li>louis2024determinationofgenesa pages 25-28</li>
+<li>ding2023micrornaproductionin pages 7-8</li>
+<li>baranauske2015functionalmappingof pages 9-10</li>
+<li>baranauske2015functionalmappingof pages 6-8</li>
+<li>baranauske2015functionalmappingof pages 8-9</li>
+<li>chen2024functionsandmechanisms pages 3-5</li>
+<li>louis2024determinationofgenesa pages 21-25</li>
+<li>louis2024determinationofgenes pages 21-25</li>
+<li>https://doi.org/10.1038/nature08433,</li>
+<li>https://doi.org/10.1038/cr.2012.36,</li>
+<li>https://doi.org/10.1074/jbc.ra117.000837,</li>
+<li>https://doi.org/10.3389/fpls.2023.1096772,</li>
+<li>https://doi.org/10.1093/nar/gkv102,</li>
+<li>https://doi.org/10.1371/journal.pone.0293243,</li>
+<li>https://doi.org/10.3389/fpls.2024.1452347,</li>
+<li>https://doi.org/10.3390/plants12020342,</li>
+<li>https://doi.org/10.3390/ijms25147680,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9C5Q8
+gene_symbol: HEN1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: HEN1 is the Arabidopsis SAM-dependent small RNA 3&#39; terminal 2&#39;-O-methyltransferase. It methylates
+  the 2&#39;-OH of the 3&#39;-terminal ribose on miRNA/miRNA-star and siRNA/siRNA-star duplexes after Dicer-like
+  processing, protecting small RNAs from uridylation, trimming, and degradation. HEN1 acts in the DCL1/HYL1-associated
+  small-RNA maturation context and supports miRNA, siRNA, ta-siRNA, and antiviral silencing outputs; floral
+  and leaf patterning phenotypes are downstream consequences of destabilized small RNAs.
+existing_annotations:
+- term:
+    id: GO:0034587
+    label: piRNA processing
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: HEN1-family proteins include animal piRNA methyltransferases, but Arabidopsis HEN1 methylates
+      plant miRNA and siRNA duplexes.
+    action: REMOVE
+    reason: piRNA processing is an over-transfer from metazoan HEN1/HENMT1 family context and is not supported
+      for Arabidopsis HEN1.
+- term:
+    id: GO:0008171
+    label: O-methyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: HEN1 is an RNA methyltransferase, but O-methyltransferase activity is less specific than
+      the small-RNA 2-prime-O-ribose methyltransferase term.
+    action: MODIFY
+    reason: Use the small-RNA terminal 2-prime-O-methyltransferase term to capture HEN1 substrate and
+      reaction specificity.
+    proposed_replacement_terms:
+    - &amp;id001
+      id: GO:0090486
+      label: small RNA 2&#39;-O-ribose methyltransferase activity
+- term:
+    id: GO:0003755
+    label: peptidyl-prolyl cis-trans isomerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: HEN1 includes a PPIase-like/FKBP-like domain, but its curated function is small-RNA methyltransferase
+      activity.
+    action: REMOVE
+    reason: The PPIase-like/FKBP-like domain is present, but no evidence supports HEN1 peptidyl-prolyl
+      isomerase catalytic activity; the supported biochemical function is small-RNA methyltransferase
+      activity.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: HEN1 is associated with the nuclear DCL1/HYL1 small-RNA maturation context.
+    action: ACCEPT
+    reason: The best-supported site for HEN1 action is nuclear small-RNA processing/methylation before
+      or around AGO loading.
+    supported_by:
+    - reference_id: file:ARATH/HEN1/HEN1-deep-research-falcon.md
+      supporting_text: Direct interaction mapping and mechanistic models place HEN1 in the nuclear miRNA-processing
+        context.
+- term:
+    id: GO:0008171
+    label: O-methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: HEN1 is an RNA methyltransferase, but O-methyltransferase activity is less specific than
+      the small-RNA 2-prime-O-ribose methyltransferase term.
+    action: MODIFY
+    reason: Use the small-RNA terminal 2-prime-O-methyltransferase term to capture HEN1 substrate and
+      reaction specificity.
+    proposed_replacement_terms:
+    - *id001
+- term:
+    id: GO:0008173
+    label: RNA methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: HEN1 is an RNA methyltransferase, but RNA methyltransferase activity is less specific than
+      the small-RNA 2-prime-O-ribose methyltransferase term.
+    action: MODIFY
+    reason: Use the small-RNA terminal 2-prime-O-methyltransferase term to capture HEN1 substrate and
+      reaction specificity.
+    proposed_replacement_terms:
+    - *id001
+- term:
+    id: GO:0016070
+    label: RNA metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: HEN1 participates in small-RNA metabolism by methylating mature miRNA/siRNA duplexes.
+    action: MODIFY
+    reason: RNA metabolic process is too broad; small-RNA methylation and miRNA/siRNA processing-stabilization
+      outputs are more informative.
+    proposed_replacement_terms:
+    - *id001
+    - id: GO:0035196
+      label: miRNA processing
+- term:
+    id: GO:0090486
+    label: small RNA 2&#39;-O-ribose methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: HEN1 catalyzes terminal 2-prime-O-ribose methylation of plant small RNAs.
+    action: ACCEPT
+    reason: This is the most specific molecular-function term for Arabidopsis HEN1.
+    supported_by:
+    - reference_id: file:ARATH/HEN1/HEN1-deep-research-falcon.md
+      supporting_text: HEN1 is a small RNA 3-prime-terminal 2-prime-O-methyltransferase.
+    - reference_id: file:ARATH/HEN1/HEN1-uniprot.txt
+      supporting_text: Reaction=small RNA 3&#39;-end nucleotide + S-adenosyl-L-methionine = small RNA 3&#39;-end
+        2&#39;-O-methylnucleotide + S-adenosyl-L-homocysteine + H(+);
+    - reference_id: file:interpro/panther/PTHR21404/PTHR21404-entries.csv
+      supporting_text: Q9C5Q8,Small RNA 2&#39;-O-methyltransferase
+- term:
+    id: GO:0090486
+    label: small RNA 2&#39;-O-ribose methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  review:
+    summary: HEN1 catalyzes terminal 2-prime-O-ribose methylation of plant small RNAs.
+    action: ACCEPT
+    reason: This is the most specific molecular-function term for Arabidopsis HEN1.
+    supported_by:
+    - reference_id: file:ARATH/HEN1/HEN1-deep-research-falcon.md
+      supporting_text: HEN1 is a small RNA 3-prime-terminal 2-prime-O-methyltransferase.
+    - reference_id: file:ARATH/HEN1/HEN1-uniprot.txt
+      supporting_text: Reaction=small RNA 3&#39;-end nucleotide + S-adenosyl-L-methionine = small RNA 3&#39;-end
+        2&#39;-O-methylnucleotide + S-adenosyl-L-homocysteine + H(+);
+    - reference_id: file:interpro/panther/PTHR21404/PTHR21404-entries.csv
+      supporting_text: Q9C5Q8,Small RNA 2&#39;-O-methyltransferase
+- term:
+    id: GO:0010267
+    label: ta-siRNA processing
+  evidence_type: IMP
+  original_reference_id: PMID:15469823
+  review:
+    summary: HEN1 supports ta-siRNA processing by methylating and stabilizing the small-RNA duplexes that
+      feed these pathways.
+    action: KEEP_AS_NON_CORE
+    reason: HEN1 is required for stable miRNA/siRNA pathway outputs, but the direct catalytic step is
+      small-RNA 2-prime-O-methylation rather than Dicer cleavage or AGO-mediated target repression.
+    supported_by:
+    - reference_id: file:ARATH/HEN1/HEN1-uniprot.txt
+      supporting_text: Can methylate 3&#39;-end of microRNAs (miRNAs), small interfering RNAs (siRNas) and
+        trans-acting small interfering RNAs (ta-siRNAs).
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISM
+  original_reference_id: GO_REF:0000122
+  review:
+    summary: The AtSubP-inferred cytoplasm row lacks positive experimental support for HEN1 cytoplasmic
+      localization.
+    action: UNDECIDED
+    reason: HEN1&#39;s best-supported context is small-RNA methylation around nuclear miRNA/siRNA maturation;
+      downstream cytoplasmic small-RNA turnover is not sufficient evidence for a cytoplasm localization
+      annotation.
+- term:
+    id: GO:0010305
+    label: leaf vascular tissue pattern formation
+  evidence_type: IMP
+  original_reference_id: PMID:22623415
+  review:
+    summary: hen1 mutants affect leaf vascular tissue pattern formation.
+    action: KEEP_AS_NON_CORE
+    reason: The developmental process is a downstream phenotype of altered miRNA/siRNA stability rather
+      than a direct HEN1 function.
+- term:
+    id: GO:0010589
+    label: leaf proximal/distal pattern formation
+  evidence_type: IMP
+  original_reference_id: PMID:22623415
+  review:
+    summary: hen1 mutants affect leaf proximal/distal pattern formation.
+    action: KEEP_AS_NON_CORE
+    reason: The developmental process is a downstream phenotype of altered miRNA/siRNA stability rather
+      than a direct HEN1 function.
+- term:
+    id: GO:0009616
+    label: RNAi-mediated antiviral immune response
+  evidence_type: IMP
+  original_reference_id: PMID:17090584
+  review:
+    summary: HEN1 contributes to virus-induced silencing and viral-small-RNA stability through terminal
+      small-RNA methylation.
+    action: KEEP_AS_NON_CORE
+    reason: The antiviral role is a pathway output of HEN1-mediated small-RNA stabilization; the direct
+      catalytic function remains small-RNA 2-prime-O-methylation rather than Dicing or Argonaute effector
+      activity.
+    supported_by:
+    - reference_id: PMID:17090584
+      supporting_text: DCL4 in conjunction with RDR6 and HEN1 specifically facilitates extensive virus-induced
+        silencing in new growth.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:17442570
+  review:
+    summary: The cited D-body paper places plant miRNA processing in the nucleus but directly images
+      DCL1/HYL1/SE rather than HEN1.
+    action: UNDECIDED
+    reason: HEN1 has independent support for nuclear miRNA-processing context, but this source-specific
+      IDA annotation is not directly supported by PMID:17442570.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:17442570
+  review:
+    summary: The cited D-body paper contrasts animal cytoplasmic miRNA processing with plant nuclear
+      processing and does not directly support HEN1 cytoplasmic localization.
+    action: UNDECIDED
+    reason: HEN1 may influence cytoplasmic small-RNA turnover indirectly, but PMID:17442570 does not provide
+      direct HEN1 cytoplasm evidence.
+- term:
+    id: GO:0008173
+    label: RNA methyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15705854
+  review:
+    summary: Experimental Arabidopsis work supports HEN1-dependent methylation/protection of miRNAs and
+      siRNAs.
+    action: MODIFY
+    reason: Use the small-RNA terminal 2-prime-O-methyltransferase term to capture HEN1 substrate and
+      reaction specificity.
+    proposed_replacement_terms:
+    - *id001
+    supported_by:
+    - reference_id: file:ARATH/HEN1/HEN1-deep-research-falcon.md
+      supporting_text: HEN1 catalyzes transfer of a methyl group from AdoMet to the 2-prime-OH of the
+        3-prime-terminal nucleotide of small RNAs.
+    - reference_id: file:ARATH/HEN1/HEN1-uniprot.txt
+      supporting_text: Methyltransferase that adds a methyl group to the ribose of the last nucleotide
+        of small RNAs (sRNAs).
+- term:
+    id: GO:0008173
+    label: RNA methyltransferase activity
+  evidence_type: IMP
+  original_reference_id: PMID:16111943
+  review:
+    summary: Experimental Arabidopsis work supports HEN1-dependent methylation/protection of miRNAs and
+      siRNAs.
+    action: MODIFY
+    reason: Use the small-RNA terminal 2-prime-O-methyltransferase term to capture HEN1 substrate and
+      reaction specificity.
+    proposed_replacement_terms:
+    - *id001
+    supported_by:
+    - reference_id: file:ARATH/HEN1/HEN1-deep-research-falcon.md
+      supporting_text: HEN1 catalyzes transfer of a methyl group from AdoMet to the 2-prime-OH of the
+        3-prime-terminal nucleotide of small RNAs.
+    - reference_id: file:ARATH/HEN1/HEN1-uniprot.txt
+      supporting_text: Methyltransferase that adds a methyl group to the ribose of the last nucleotide
+        of small RNAs (sRNAs).
+- term:
+    id: GO:0035279
+    label: miRNA-mediated gene silencing by mRNA destabilization
+  evidence_type: IMP
+  original_reference_id: PMID:15851028
+  review:
+    summary: HEN1 supports miRNA-mediated gene silencing by mRNA destabilization by methylating and stabilizing
+      the small-RNA duplexes that feed these pathways.
+    action: KEEP_AS_NON_CORE
+    reason: HEN1 is required for stable miRNA/siRNA pathway outputs, but the direct catalytic step is
+      small-RNA 2-prime-O-methylation rather than Dicer cleavage or AGO-mediated target repression.
+    supported_by:
+    - reference_id: file:ARATH/HEN1/HEN1-uniprot.txt
+      supporting_text: Can methylate 3&#39;-end of microRNAs (miRNAs), small interfering RNAs (siRNas) and
+        trans-acting small interfering RNAs (ta-siRNAs).
+- term:
+    id: GO:0035196
+    label: miRNA processing
+  evidence_type: IMP
+  original_reference_id: PMID:12747833
+  review:
+    summary: HEN1 supports miRNA processing by methylating and stabilizing the small-RNA duplexes that
+      feed these pathways.
+    action: ACCEPT
+    reason: HEN1 is required for stable miRNA/siRNA pathway outputs, but the direct catalytic step is
+      small-RNA 2-prime-O-methylation rather than Dicer cleavage or AGO-mediated target repression.
+    supported_by:
+    - reference_id: file:ARATH/HEN1/HEN1-uniprot.txt
+      supporting_text: Can methylate 3&#39;-end of microRNAs (miRNAs), small interfering RNAs (siRNas) and
+        trans-acting small interfering RNAs (ta-siRNAs).
+- term:
+    id: GO:0009909
+    label: regulation of flower development
+  evidence_type: IMP
+  original_reference_id: PMID:11917084
+  review:
+    summary: hen1 mutants affect regulation of flower development.
+    action: KEEP_AS_NON_CORE
+    reason: The developmental process is a downstream phenotype of altered miRNA/siRNA stability rather
+      than a direct HEN1 function.
+- term:
+    id: GO:0010093
+    label: specification of floral organ identity
+  evidence_type: IMP
+  original_reference_id: PMID:11874905
+  review:
+    summary: hen1 mutants affect specification of floral organ identity.
+    action: KEEP_AS_NON_CORE
+    reason: The developmental process is a downstream phenotype of altered miRNA/siRNA stability rather
+      than a direct HEN1 function.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000122
+  title: AtSubP analysis
+  findings: []
+- id: PMID:11874905
+  title: HEN1 functions pleiotropically in Arabidopsis development and acts in C function in the flower.
+  findings: []
+- id: PMID:11917084
+  title: Formation of corymb-like inflorescences due to delay in bolting and flower development in the
+    corymbosa2 mutant of Arabidopsis.
+  findings: []
+- id: PMID:12747833
+  title: &#39;Arabidopsis HEN1: a genetic link between endogenous miRNA controlling development and siRNA
+    controlling transgene silencing and virus resistance.&#39;
+  findings:
+  - statement: This source links HEN1 genetically to endogenous miRNA and siRNA silencing pathways.
+- id: PMID:15469823
+  title: Endogenous trans-acting siRNAs regulate the accumulation of Arabidopsis mRNAs.
+  findings: []
+- id: PMID:15705854
+  title: Methylation as a crucial step in plant microRNA biogenesis.
+  findings:
+  - statement: This source supports HEN1-dependent methylation as a crucial step in plant miRNA biogenesis.
+- id: PMID:15851028
+  title: microRNA-directed phasing during trans-acting siRNA biogenesis in plants.
+  findings: []
+- id: PMID:16111943
+  title: Methylation protects miRNAs and siRNAs from a 3&#39;-end uridylation activity in Arabidopsis.
+  findings:
+  - statement: This source supports HEN1 methylation protecting miRNAs and siRNAs from 3-prime uridylation/degradation.
+- id: PMID:17090584
+  title: Four plant Dicers mediate viral small RNA biogenesis and DNA virus induced silencing.
+  findings:
+  - statement: This source supports Dicer-mediated viral small RNA production and a DCL4/RDR6/HEN1 requirement
+      for extensive virus-induced silencing in new growth; HEN1 involvement should be interpreted as small-RNA
+      stabilization rather than antiviral Dicer activity.
+- id: PMID:17442570
+  title: Identification of nuclear dicing bodies containing proteins for microRNA biogenesis in living
+    Arabidopsis plants.
+  findings:
+  - statement: This source supports DCL1/HYL1/SE nuclear dicing bodies but does not directly image HEN1
+      localization.
+- id: PMID:22623415
+  title: The microRNA pathway genes AGO1, HEN1 and HYL1 participate in leaf proximal-distal, venation
+    and stomatal patterning in Arabidopsis.
+  findings: []
+- id: file:ARATH/HEN1/HEN1-deep-research-falcon.md
+  title: Falcon deep research for Arabidopsis HEN1
+  findings:
+  - statement: HEN1 is a SAM-dependent small-RNA 3-prime-terminal 2-prime-O-methyltransferase that protects
+      miRNAs and siRNAs from uridylation/trimming.
+- id: file:ARATH/HEN1/HEN1-uniprot.txt
+  title: UniProt record for Arabidopsis HEN1
+  findings:
+  - statement: UniProt describes HEN1 as methylating the last nucleotide of miRNAs, siRNAs, and ta-siRNAs
+      to protect small RNAs from uridylation and degradation.
+- id: file:interpro/panther/PTHR21404/PTHR21404-entries.csv
+  title: PANTHER PTHR21404 HEN1 family entries
+  findings:
+  - statement: Arabidopsis HEN1 is the single Arabidopsis member in this HEN1/small RNA 2-prime-O-methyltransferase
+      family context.
+core_functions:
+- description: Small-RNA terminal 2-prime-O-methyltransferase activity. HEN1 transfers a methyl group
+    from SAM to the 2-prime-OH of the 3-prime-terminal ribose of miRNA/miRNA-star and siRNA/siRNA-star
+    duplexes.
+  molecular_function: *id001
+  directly_involved_in:
+  - id: GO:0035196
+    label: miRNA processing
+  supported_by:
+  - reference_id: file:ARATH/HEN1/HEN1-deep-research-falcon.md
+    supporting_text: HEN1 is a small RNA 3-prime-terminal 2-prime-O-methyltransferase.
+  - reference_id: file:ARATH/HEN1/HEN1-uniprot.txt
+    supporting_text: Methyltransferase that adds a methyl group to the ribose of the last nucleotide of
+      small RNAs (sRNAs).
+  - reference_id: file:interpro/panther/PTHR21404/PTHR21404-entries.csv
+    supporting_text: Q9C5Q8,Small RNA 2&#39;-O-methyltransferase
+- description: Protection and stabilization of plant small RNAs. HEN1-installed methylation protects miRNAs
+    and siRNAs from HESO1/URT1-dependent uridylation, trimming, and degradation, preserving RNA-silencing
+    competence.
+  molecular_function:
+    id: GO:0090486
+    label: small RNA 2&#39;-O-ribose methyltransferase activity
+  directly_involved_in:
+  - id: GO:0035196
+    label: miRNA processing
+  supported_by:
+  - reference_id: file:ARATH/HEN1/HEN1-deep-research-falcon.md
+    supporting_text: HEN1 methylation is a defining post-dicing step in plants that stabilizes miRNAs
+      and siRNAs.
+  - reference_id: file:ARATH/HEN1/HEN1-uniprot.txt
+    supporting_text: This protects the 3&#39;-end of sRNAs from uridylation activity and subsequent degradation.
+proposed_new_terms: []
+suggested_questions:
+- question: Should piRNA-processing IBA transfer be excluded systematically for plant HEN1 proteins without
+    piRNA pathway evidence?
+- question: Should HEN1 GO curation include a process term for protection of small RNAs from uridylation/decay,
+    if available or proposed?
+suggested_experiments:
+- description: Quantify methylation efficiency of Arabidopsis HEN1 on defined miRNA, siRNA, and ta-siRNA
+    duplex substrates with varying overhang geometry.
+- description: Map the compartment and timing of HEN1 methylation relative to DCL1/HYL1 processing and
+    AGO1 loading using endogenous tagged proteins.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

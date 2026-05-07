@@ -8,7 +8,7 @@ Selection criteria:
 - Protein-coding genes with available UniProt and GOA GAF annotations.
 - Batches are themed where practical; batch 01 focuses on floral meristem/floral identity genes.
 
-GOA source note: QuickGO annotation search returned server 500 errors during batch 01 setup, so batch 01 GOA TSVs were populated from the EBI bulk file `goa_arabidopsis.gaf.gz` downloaded 2026-05-04. The TSV rows preserve UniProt accessions, GO IDs, evidence codes, references, with/from, dates, and assigned-by values, with GO labels filled from the local GO term cache.
+GOA source note: QuickGO annotation search returned server 500 errors during batch 01 and batch 08 setup, so those GOA TSVs were populated from the EBI bulk file `goa_arabidopsis.gaf.gz`. The TSV rows preserve UniProt accessions, GO IDs, evidence codes, references, with/from, dates, and assigned-by values, with GO labels filled from the local GO term cache.
 
 | Batch | Gene | UniProt accession | GOA rows | Experimental rows | Functional area | Status |
 |---|---|---:|---:|---:|---|---|
@@ -47,11 +47,11 @@ GOA source note: QuickGO annotation search returned server 500 errors during bat
 | 07 | AUX1 | Q96247 | 22 | 16 | Auxin influx transporter | Planned |
 | 07 | TIR1 | Q570C0 | 46 | 35 | Auxin receptor F-box protein | Planned |
 | 07 | ARF7 | P93022 | 45 | 35 | Auxin response factor | Planned |
-| 08 | AGO1 | O04379 | 47 | 40 | Argonaute / small RNA silencing | Planned |
-| 08 | DCL1 | Q9SP32 | 42 | 26 | Dicer homolog / miRNA processing | Planned |
-| 08 | RDR6 | Q9SG02 | 27 | 15 | RNA-dependent RNA polymerase | Planned |
-| 08 | HEN1 | Q9C5Q8 | 22 | 12 | Small RNA methyltransferase | Planned |
-| 08 | DRB1 | O04492 | 53 | 47 | dsRNA-binding miRNA processing factor | Planned |
+| 08 | AGO1 | O04379 | 47 | 40 | Argonaute / small RNA silencing | Reviewed; local validate/render/subagent review pass |
+| 08 | DCL1 | Q9SP32 | 42 | 26 | Dicer homolog / miRNA processing | Reviewed; local validate/render/subagent review pass |
+| 08 | RDR6 | Q9SG02 | 27 | 15 | RNA-dependent RNA polymerase | Reviewed; local validate/render/subagent review pass |
+| 08 | HEN1 | Q9C5Q8 | 22 | 12 | Small RNA methyltransferase | Reviewed; local validate/render/subagent review pass |
+| 08 | DRB1 | O04492 | 53 | 47 | dsRNA-binding miRNA processing factor | Reviewed; local validate/render/subagent review pass |
 | 09 | PAD4 | Q9S745 | 54 | 44 | Plant immunity EDS1/PAD4 module | Planned |
 | 09 | EDS1 | Q9SU72 | 52 | 41 | Plant immunity EDS1/PAD4 module | Planned |
 | 09 | RPS2 | Q42484 | 29 | 12 | Disease-resistance NLR | Planned |
