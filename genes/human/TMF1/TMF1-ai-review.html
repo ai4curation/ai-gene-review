@@ -1,0 +1,4206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMF1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TMF1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P82094" target="_blank" class="term-link">
+                        P82094
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TMF1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P82094" data-a="DESCRIPTION: Trans-Golgi golgin (TATA element modulatory factor..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Trans-Golgi golgin (TATA element modulatory factor 1 / ARA160). A long coiled-coil peripheral membrane protein recruited to the Golgi rim via a C-terminal Rab6-binding region, where it acts as a vesicle-tethering factor. Captures intra-Golgi transport vesicles via a conserved N-terminal motif (M-S-W-L/F, shared with the related intra-Golgi golgins GMAP-210 and golgin-84) and cooperates with the COG complex to dock retrograde vesicles. Required for Rab6-dependent retrograde transport from endosomes to the trans-Golgi network and from the Golgi to the ER (Shiga-toxin trafficking, GalNAc-T2 retention). Loss in mouse and Drosophila causes male-sterility acrosome biogenesis defects and altered Golgi-derived mucin glycosylation, consistent with a primary role in Golgi vesicle traffic. Despite the historical name and a small set of late-1990s overexpression studies that suggested a moonlighting role as a TBP-binding/androgen-receptor coactivator and a BC-box adaptor that targets STAT3 for proteasomal degradation, the bulk of mechanistically validated biology is at the Golgi and not in transcription.
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>vesicle tethering activity</h3>
+                <span class="vote-buttons" data-g="P82094" data-a="vesicle tethering activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Binding activity of a long coiled-coil or multisubunit factor that bridges a transport vesicle membrane and a target organelle membrane prior to SNARE-mediated fusion. The molecular function counterpart of GO:0099022 vesicle tethering. Required for capturing incoming vesicles by golgins (e.g. TMF1, GMAP-210, golgin-84, the GRIP-domain golgins) at the Golgi and by analogous coiled-coil tethers at other compartments.</p>
+            
+
+            
+            <p><strong>Justification:</strong> GO currently has the biological-process term GO:0099022 vesicle tethering and the cellular-component term GO:0099023 vesicle tethering complex, but no molecular-function term that captures the binding/bridging activity of an individual tether. Without such an MF, golgins like TMF1 default to GO:0005515 protein binding, which is explicitly discouraged. Per geneontology/go-annotation#6381 a &#34;vesicle membrane tethering activity&#34; term is being requested by curators (V. Wood, H. Attrill); GO:7770062 was referenced in that issue but is not yet present in GO at the time of this review (2026-05-02). Recording here so the term-request progress can be tracked alongside this review.</p>
+            
+
+            
+
+            
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005794" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA from PAINT. TMF1 is a canonical golgin and the Golgi rim is its primary, conserved localization (UniProt SUBCELLULAR LOCATION; PMID:17698061; PMID:23239882; PMID:28122620). Accept as core localization.
+
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17698061" target="_blank" class="term-link">
+                                        PMID:17698061
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">TMF signal surrounded Rab6-positive Golgi structures and immunoelectron microscopy revealed that TMF is concentrated at the budding structures localized at the tips of cisternae.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA from PAINT. TMF1 mediates Rab6-dependent retrograde transport from Golgi to ER (PMID:17698061), so it is transiently associated with ER-directed retrograde carriers, but it is not a steady-state ER-resident protein. Microscopy consistently shows the trans-Golgi rim, not the ER, as the primary localization. The annotation likely reflects over-propagation of yeast/fungal homolog data. Mark as over-annotated.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0000139" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA from UniProt SubCell mapping. TMF1 is a peripheral Golgi-membrane protein concentrated at the tips of cisternae (UniProt SUBCELLULAR LOCATION; PMID:17698061). More precise than the bare Golgi apparatus annotation. Accept as core.
+
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17698061" target="_blank" class="term-link">
+                                        PMID:17698061
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">TMF is concentrated at the budding structures localized at the tips of cisternae.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA from UniProt SubCell mapping. A nuclear pool of one TMF isoform was reported (PMID:12044884), but the dominant localization in every cell type examined is the Golgi (PMID:15467733 explicitly describes TMF/ARA160 as a Golgi-resident protein). The IEA over-emphasizes a minor, isoform-restricted fraction; the primary biology of the protein is not nuclear. Mark as over-annotated.
+
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12044884" target="_blank" class="term-link">
+                                        PMID:12044884
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">TMF isoforms differentially localize in the Golgi apparatus and the nucleus.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA from UniProt SubCell mapping. Generic parent term subsumed by the more specific Golgi membrane / cytosol annotations. Keep as non-core.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20195357" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20195357
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A comprehensive resource of interacting protein regions for ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005515" data-r="PMID:20195357" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mRNA-display interactome screen reporting TMF1-NR3C1 binding. &#34;Protein binding&#34; is uninformative per project curation guidelines (CLAUDE.md). The relevant biology (interactions with Rab6, COG, AR, STAT3, FER, Elongin) is captured by more specific annotations. Mark as over-annotated.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput Y2H reference map (HuRI). Reports binding to CMTM5 isoform Q96DZ9-2; no functional follow-up. Uninformative MF per project guidelines. Mark as over-annotated.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005783" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA via Ensembl ortholog transfer from mouse Tmf1 (UniProtKB:B9EKI3). Same concern as the IBA ER annotation: TMF1 mediates retrograde traffic to the ER but is not an ER-resident protein. Mark as over-annotated.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005794" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA via Ensembl ortholog transfer from mouse Tmf1. Redundant with the direct human IBA/IDA Golgi annotations but still correct. Accept.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061136" target="_blank" class="term-link">
+                                    GO:0061136
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of proteasomal protein catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0061136" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA via Ensembl ortholog transfer from mouse Tmf1. Reflects PMID:15467733, which showed that the BC-box motif of TMF/ARA160 mediates its binding to Elongin C and that ectopic expression in serum-starved C2C12 cells drives Stat3 ubiquitination and proteasomal degradation. This is a discrete, mechanistically supported moonlighting activity at the Golgi cytoplasmic face but is not the protein&#39;s core function. Keep as non-core.
+
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15467733" target="_blank" class="term-link">
+                                        PMID:15467733
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Amino-acid sequence analysis identified a BC-box element in TMF/ARA160 that mediated the binding of this protein to elongin C. Ectopic expression of TMF/ARA160 in serum-starved C2C12 cells drove the ubiquitination and proteasomal degradation of Stat3.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005794" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA from Human Protein Atlas immunofluorescence. Direct experimental confirmation of Golgi localization. Accept as core.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003713" target="_blank" class="term-link">
+                                    GO:0003713
+                                </a>
+                            </span>
+                            <span class="term-label">transcription coactivator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10428808" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10428808
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and characterization of ARA160 as the first androg...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0003713" data-r="PMID:10428808" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA based on a single 1999 transient-transfection / reporter study in PC-3 cells. The same paper notes that a Gal4-DBD fusion to TMF1 fails to transactivate reporter genes (data not shown), which is inconsistent with a bona fide transcription coactivator (GO:0003713) sensu stricto - the authors propose that TMF acts only together with the AF-1 domain of steroid receptors. The mechanistically established function of TMF1 is at the Golgi (PMID:17698061; PMID:23239882; PMID:28122620); TMF1 has no DNA-binding domain (its &#34;TMF_DNA_bd&#34;/&#34;TMF_TATA_bd&#34; Pfam domains are operationally defined from the original 1992 HIV-1 LTR study and have not been validated as endogenous DNA-binding modules). The Pharos target development level is &#34;Tbio&#34; (no validated function). Down-rate from a core MF; flag as over-annotation pending orthogonal validation, but do not delete outright because a low-level moonlighting role at the AR cannot be formally excluded.
+
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10428808" target="_blank" class="term-link">
+                                        PMID:10428808
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transient transfection assays demonstrated that ARA160 might function as a coactivator for AR-mediated transactivation in human prostate cancer PC-3 cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030521" target="_blank" class="term-link">
+                                    GO:0030521
+                                </a>
+                            </span>
+                            <span class="term-label">androgen receptor signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10428808" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10428808
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and characterization of ARA160 as the first androg...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0030521" data-r="PMID:10428808" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA from the same single 1999 overexpression study (PMID:10428808). The mouse TMF-/- testosterone/spermatogenesis phenotype (PMID:23000399) is more compatible with disrupted Leydig cell secretion / Golgi-dependent acrosome biogenesis than with cell-autonomous loss of an AR coregulator. Mark as over-annotated.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10428808" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10428808
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and characterization of ARA160 as the first androg...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0045944" data-r="PMID:10428808" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA inferred from the same single transient transfection assay on an AR-responsive reporter in PC-3 cells. Not validated by orthogonal assays (ChIP-seq, KO RNA-seq) or independent groups. Mark as over-annotated.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050681" target="_blank" class="term-link">
+                                    GO:0050681
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear androgen receptor binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10428808" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10428808
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and characterization of ARA160 as the first androg...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0050681" data-r="PMID:10428808" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI based on far-Western blotting and co-immunoprecipitation between AR N-terminal peptide and TMF1/ARA160 (PMID:10428808). The physical interaction is reproducibly observed, but in the context of TMF1&#39;s overall biology the AR-binding role is a moonlighting feature of a Golgi protein, not a core function. Keep as non-core.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-6811431
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005829" data-r="Reactome:R-HSA-6811431" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS from Reactome &#34;RAB6:GTP binds the GARP and COG complexes, t-SNAREs and endosome-derived vesicles&#34;. Reflects the Reactome cytosolic-pool placeholder for tethering factors. The diffuse cytoplasmic distribution observed under low-serum conditions (PMID:15467733) is real but the protein is concentrated at Golgi membranes. Keep as non-core.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-6814091
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005829" data-r="Reactome:R-HSA-6814091" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS from Reactome &#34;ARL1 recruits TGN Golgin homodimers&#34;. Same comment as the previous cytosol annotation - reflects the Reactome cytosolic-pool placeholder. Keep as non-core.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-6814682
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0005829" data-r="Reactome:R-HSA-6814682" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS from Reactome &#34;Fusion of early-endosome derived vesicles at the TGN&#34;. Same comment - Reactome placeholder for the cytosolic tethering pool. Keep as non-core.
+
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061136" target="_blank" class="term-link">
+                                    GO:0061136
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of proteasomal protein catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0061136" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS from manual transfer of mouse Tmf1 (UniProtKB:B9EKI3). Reflects PMID:15467733 (TMF/ARA160 BC-box-Elongin C-mediated Stat3 ubiquitination). Mechanistically supported but is a moonlighting activity of the Golgi pool, not the core function. Keep as non-core.
+
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15467733" target="_blank" class="term-link">
+                                        PMID:15467733
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Amino-acid sequence analysis identified a BC-box element in TMF/ARA160 that mediated the binding of this protein to elongin C.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                                    GO:0060090
+                                </a>
+                            </span>
+                            <span class="term-label">molecular adaptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0060090" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Added to align core_functions with existing annotations. Captures the vesicle-tethering bridging activity of TMF1 (closest existing MF; a more specific &#34;vesicle tethering activity&#34; term is requested in proposed_new_terms).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function term not present in existing_annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28122620" target="_blank" class="term-link">
+                                        PMID:28122620
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">When relocated to mitochondria, TMF captures intra-Golgi transport vesicles.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099041" target="_blank" class="term-link">
+                                    GO:0099041
+                                </a>
+                            </span>
+                            <span class="term-label">vesicle tethering to Golgi</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0099041" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Added to align core_functions with existing annotations. Direct demonstration by mitochondrial-relocation assay (PMID:28122620) and by interaction with the COG complex (PMID:23239882).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function term not present in existing_annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28122620" target="_blank" class="term-link">
+                                        PMID:28122620
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">When relocated to mitochondria, TMF captures intra-Golgi transport vesicles.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006891" target="_blank" class="term-link">
+                                    GO:0006891
+                                </a>
+                            </span>
+                            <span class="term-label">intra-Golgi vesicle-mediated transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0006891" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Added to align core_functions with existing annotations. Supported by vesicle-capture assays (PMID:28122620), COG-TMF tethering model (PMID:23239882), and Drosophila in vivo data (PMID:36103876).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function term not present in existing_annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23239882" target="_blank" class="term-link">
+                                        PMID:23239882
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We find that the COG complex interacts with two different Rabs in addition to each end of the golgin &#34;TATA element modulatory factor&#34; (TMF).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031267" target="_blank" class="term-link">
+                                    GO:0031267
+                                </a>
+                            </span>
+                            <span class="term-label">small GTPase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0031267" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Added to align core_functions with existing annotations. Captures the Rab6-GTP binding activity that recruits TMF1 to the trans-Golgi.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function term not present in existing_annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17698061" target="_blank" class="term-link">
+                                        PMID:17698061
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">TMF signal surrounded Rab6-positive Golgi structures.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042147" target="_blank" class="term-link">
+                                    GO:0042147
+                                </a>
+                            </span>
+                            <span class="term-label">retrograde transport, endosome to Golgi</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0042147" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Added to align core_functions with existing annotations. TMF1 knockdown blocks Rab6-dependent retrograde transport of Shiga toxin from early/recycling endosomes to the trans-Golgi network (PMID:17698061).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function term not present in existing_annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17698061" target="_blank" class="term-link">
+                                        PMID:17698061
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The knockdown of either TMF or Rab6 by RNA interference blocked retrograde transport of endocytosed Shiga toxin from early/recycling endosomes to the trans-Golgi network.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006890" target="_blank" class="term-link">
+                                    GO:0006890
+                                </a>
+                            </span>
+                            <span class="term-label">retrograde vesicle-mediated transport, Golgi to endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P82094" data-a="GO:0006890" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Added to align core_functions with existing annotations. PMID:17698061 establishes a role for TMF1 in Rab6-dependent Golgi-to-ER retrograde traffic.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function term not present in existing_annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17698061" target="_blank" class="term-link">
+                                        PMID:17698061
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">critical roles for TMF in two Rab6-dependent retrograde transport processes - one from endosomes to the Golgi and the other from the Golgi to the ER.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as a long coiled-coil vesicle-tethering factor (golgin) at the trans-Golgi rim that bridges incoming transport vesicles and the Golgi membrane prior to SNARE-mediated fusion. The N-terminal disordered region (~residues 1-36, containing the conserved M-S-W-L/F motif shared with golgin-84 and GMAP-210) and the central/C-terminal coiled-coil each independently capture intra-Golgi transport vesicles in the mitochondrial-relocation assay; the C-terminal Rab6-binding coiled-coil recruits TMF1 to the Golgi membrane and cooperates with the COG complex to dock retrograde vesicles. (A specific MF &#34;vesicle tethering activity&#34; is requested in proposed_new_terms; GO:0060090 is used here as the closest available existing MF.)</h3>
+                <span class="vote-buttons" data-g="P82094" data-a="FUNCTION: Acts as a long coiled-coil vesicle-tethering facto..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                            molecular adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099041" target="_blank" class="term-link">
+                                vesicle tethering to Golgi
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006891" target="_blank" class="term-link">
+                                intra-Golgi vesicle-mediated transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28122620" target="_blank" class="term-link">
+                                PMID:28122620
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">When relocated to mitochondria, TMF captures intra-Golgi transport vesicles.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23239882" target="_blank" class="term-link">
+                                PMID:23239882
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We find that the COG complex interacts with two different Rabs in addition to each end of the golgin &#34;TATA element modulatory factor&#34; (TMF).</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds Rab6 in its GTP-bound active state via the C-terminal coiled-coil region; this interaction is required for recruitment of TMF1 to the trans-Golgi rim and for its function in Rab6-dependent retrograde transport from endosomes to the trans-Golgi network and from the Golgi to the ER.</h3>
+                <span class="vote-buttons" data-g="P82094" data-a="FUNCTION: Binds Rab6 in its GTP-bound active state via the C..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031267" target="_blank" class="term-link">
+                            small GTPase binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042147" target="_blank" class="term-link">
+                                retrograde transport, endosome to Golgi
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006890" target="_blank" class="term-link">
+                                retrograde vesicle-mediated transport, Golgi to endoplasmic reticulum
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17698061" target="_blank" class="term-link">
+                                PMID:17698061
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">TMF signal surrounded Rab6-positive Golgi structures... critical roles for TMF in two Rab6-dependent retrograde transport processes - one from endosomes to the Golgi and the other from the Golgi to the ER.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1409643" target="_blank" class="term-link">
+                            PMID:1409643
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cloning and chromosomal mapping of a human immunodeficiency virus 1 &#34;TATA&#34; element modulatory factor.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMF was originally identified as a 123 kDa cellular protein that binds the HIV-1 LTR TATA element in gel-retardation assays and inhibits TBP-mediated transcriptional activation in vitro.</div>
+                        
+                        <div class="finding-text">"TMF binds to the human immunodeficiency virus 1 TATA element in gel-retardation assays and inhibits activation of the viral long terminal repeat by the TATA-binding protein in in vitro transcription assays."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The original characterisation was a viral-promoter / in vitro context; no endogenous cellular target genes were demonstrated.</div>
+                        
+                        <div class="finding-text">"TMF is a transcription factor that likely regulates the expression of both viral and cellular genes."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10428808" target="_blank" class="term-link">
+                            PMID:10428808
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Isolation and characterization of ARA160 as the first androgen receptor N-terminal-associated coactivator in human prostate cells.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AR N-terminal peptide directly binds TMF1/ARA160 in far-Western and co-IP assays in vitro.</div>
+                        
+                        <div class="finding-text">"The far-Western blotting and co-immunoprecipitation assays demonstrate that the AR can interact directly with ARA160/TMF."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A transient transfection AR-reporter assay in PC-3 cells suggests TMF1/ARA160 enhances AR transactivation.</div>
+                        
+                        <div class="finding-text">"Transient transfection assays demonstrated that ARA160 might function as a coactivator for AR-mediated transactivation in human prostate cancer PC-3 cells."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12044884" target="_blank" class="term-link">
+                            PMID:12044884
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A putative nuclear receptor coactivator (TMF/ARA160) associates with hbrm/hSNF2 alpha and BRG-1/hSNF2 beta and localizes in the Golgi apparatus.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMF1 isoforms differentially localize between Golgi and nucleus; the Golgi pool is dominant.</div>
+                        
+                        <div class="finding-text">"Immunofluorescence and Western blot studies revealed that the TMF isoforms differentially localize in the Golgi apparatus and the nucleus."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The C-terminal region of TMF1 binds the conserved N-terminal regions of the SWI/SNF ATPases hbrm/hSNF2alpha and BRG-1/hSNF2beta in vitro and in vivo.</div>
+                        
+                        <div class="finding-text">"hbrm/hSNF2 alpha and BRG-1/hSNF2 beta, the ATPase subunits of the human SNF/SWI complexes, specifically associate in vitro and in vivo with TATA element modulatory factor (TMF)/ARA160."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15467733" target="_blank" class="term-link">
+                            PMID:15467733
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TMF/ARA160 is a BC-box-containing protein that mediates the degradation of Stat3.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMF/ARA160 is described as a Golgi-resident protein.</div>
+                        
+                        <div class="finding-text">"TMF/ARA160 is a Golgi resident protein whose cellular functions have not been conclusively revealed."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMF/ARA160 contains a BC-box motif that binds Elongin C and directs Stat3 ubiquitination/proteasomal degradation in serum-starved C2C12 cells.</div>
+                        
+                        <div class="finding-text">"Amino-acid sequence analysis identified a BC-box element in TMF/ARA160 that mediated the binding of this protein to elongin C. Ectopic expression of TMF/ARA160 in serum-starved C2C12 cells drove the ubiquitination and proteasomal degradation of Stat3."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17698061" target="_blank" class="term-link">
+                            PMID:17698061
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional involvement of TMF/ARA160 in Rab6-dependent retrograde membrane traffic.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMF1 surrounds Rab6-positive Golgi structures and is concentrated at cisternal-tip budding structures.</div>
+                        
+                        <div class="finding-text">"TMF signal surrounded Rab6-positive Golgi structures and immunoelectron microscopy revealed that TMF is concentrated at the budding structures localized at the tips of cisternae."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMF1 knockdown phenocopies Rab6 knockdown for retrograde transport of Shiga toxin from early/recycling endosomes to the trans-Golgi network.</div>
+                        
+                        <div class="finding-text">"The knockdown of either TMF or Rab6 by RNA interference blocked retrograde transport of endocytosed Shiga toxin from early/recycling endosomes to the trans-Golgi network, causing missorting of the toxin to late endosomes/lysosomes."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMF1 is required for Golgi retention of GalNAc-T2 (but not GalT), and is implicated in Rab6-dependent retrograde transport from Golgi to ER.</div>
+                        
+                        <div class="finding-text">"These observations suggest critical roles for TMF in two Rab6-dependent retrograde transport processes - one from endosomes to the Golgi and the other from the Golgi to the ER."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20195357" target="_blank" class="term-link">
+                            PMID:20195357
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A comprehensive resource of interacting protein regions for refining human transcription factor networks.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput mRNA-display screen reports a TMF1-NR3C1 (glucocorticoid receptor) interaction; no functional follow-up.</div>
+                        
+                        <div class="finding-text">"present the first large-scale IR data set obtained using mRNA display for 50 human transcription factors (TFs)."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23000399" target="_blank" class="term-link">
+                            PMID:23000399
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Testosterone deficiency accompanied by testicular and epididymal abnormalities in TMF(-/-) mice.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMF/ARA160 is a Golgi-associated protein essential for spermiogenesis; its loss in mouse causes Leydig-cell proliferation, testosterone deficiency and epididymal apoptosis - a phenotype consistent with disrupted Golgi-derived acrosome biogenesis and secretion rather than loss of an AR coregulator.</div>
+                        
+                        <div class="finding-text">"TMF/ARA160 is a Golgi-associated protein, which is essential for spermiogenesis. In this study, we show that lack of TMF/ARA160 leads to defects in both the testis and the epididymis."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23239882" target="_blank" class="term-link">
+                            PMID:23239882
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular insights into vesicle tethering at the Golgi by the conserved oligomeric Golgi (COG) complex and the golgin TATA element modulatory factor (TMF).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMF1 is a Golgi-tethering coiled-coil (&#34;golgin&#34;) that binds the COG complex at both ends and to Golgi membranes via its central coiled-coil after COPI uncoating.</div>
+                        
+                        <div class="finding-text">"We find that the COG complex interacts with two different Rabs in addition to each end of the golgin &#34;TATA element modulatory factor&#34; (TMF). This allows COG to potentially bridge the distance between the distal end of the golgin and the target membrane thereby promoting tighter docking. Concurrently we show that the central portion of TMF can bind to Golgi membranes that are liberated of their COPI cover."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24639530" target="_blank" class="term-link">
+                            PMID:24639530
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Reprogrammed and transmissible intestinal microbiota confer diminished susceptibility to induced colitis in TMF-/- mice.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMF/ARA160 is referred to as a multifunctional Golgi-associated protein; TMF-/- colon shows altered MUC2 mucin oligomerisation, consistent with disrupted Golgi-dependent glycosylation/secretion.</div>
+                        
+                        <div class="finding-text">"Tata Element Modulatory Factor (TMF/ARA160) is a multifunctional Golgi-associated protein, which accumulates in colonic enterocytes and goblet cells."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28122620" target="_blank" class="term-link">
+                            PMID:28122620
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The golgin coiled-coil proteins capture different types of transport carriers via distinct N-terminal motifs.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMF1, when relocated to mitochondria, captures intra-Golgi transport vesicles - direct demonstration of vesicle-tethering activity.</div>
+                        
+                        <div class="finding-text">"When relocated to mitochondria, TMF captures intra-Golgi transport vesicles, but these contain some proteins from later in the stack than those captured by GMAP-210 and golgin-84."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A short N-terminal motif (M-S-W-L/F, conserved across metazoa and shared with golgin-84 and GMAP-210) and a central/C-terminal coiled-coil region both contribute vesicle-capture activity.</div>
+                        
+                        <div class="finding-text">"The first 36 residues of the protein are necessary for the capture activity of the N-terminal half, and sufficient to confer capture activity when attached to two different heterologous coiled-coil proteins."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HuRI Y2H interactome map reports a TMF1-CMTM5 (isoform Q96DZ9-2) binary interaction; no functional follow-up.</div>
+                        
+                        <div class="finding-text">"A reference map of the human binary protein interactome."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36103876" target="_blank" class="term-link">
+                            PMID:36103876
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">In vivo characterization of Drosophila golgins reveals redundancy and plasticity of vesicle capture at the Golgi apparatus.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In Drosophila, ectopic TMF captures intra-Golgi transport vesicles and the loss-of-function mutant recapitulates the male-fertility phenotype seen in mouse Tmf1 knockouts, supporting a conserved role in Golgi vesicle traffic.</div>
+                        
+                        <div class="finding-text">"We show that ectopic forms can capture intra-Golgi transport vesicles, but strikingly, the cargo present in the vesicles captured by each golgin varies between tissues. Loss-of-function mutants show that the golgins are individually dispensable, although the loss of TMF recapitulates the male fertility defects observed in mice."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-6811431
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RAB6:GTP binds the GARP and COG complexes, t-SNAREs and endosome-derived vesicles</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-6814091
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ARL1 recruits TGN Golgin homodimers</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-6814682
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Fusion of early-endosome derived vesicles at the TGN</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/TMF1/TMF1-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TMF1 research notes (this review)</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the apparent transcription-coactivator activity of TMF1 (PMID:10428808) a true endogenous function or an overexpression artefact? Has it been validated by AR ChIP-seq or by RNA-seq of TMF1 KO prostate cells?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: GO Consortium (R. Lovering, A. Lock, ARUK-UCL), Steroid-receptor coactivator field (e.g. C. Chang lab)</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P82094" data-a="Q: Is the apparent transcription-coactivator activity..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does any tissue/cell type maintain a functional nuclear pool of TMF1, and if so what is its target-gene repertoire?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: SWI/SNF / chromatin-remodeling researchers, Neuro-andrology / prostate-cancer transcription researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P82094" data-a="Q: Does any tissue/cell type maintain a functional nu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq for endogenous TMF1 in LNCaP/22Rv1 (AR-positive prostate) cells +/- DHT, paired with AR ChIP-seq. Compute peak overlap with AR cistrome and motif enrichment. Validate top putative TMF1 chromatin sites by ChIP-qPCR after TMF1 knockdown. Couple with RNA-seq of TMF1 KO cells +/- DHT to ask whether AR target genes are preferentially affected.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: If TMF1 is an endogenous AR coactivator, AR-target promoters should be enriched among TMF1 ChIP-seq peaks; if not, TMF1 should occupy few or no chromatin sites and the existing IDA annotations to GO:0003713/GO:0045944/GO:0030521 should be retired rather than merely demoted.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Genome-wide ChIP-seq for TMF1 in AR-positive prostate cells</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P82094" data-a="EXPERIMENT: ChIP-seq for endogenous TMF1 in LNCaP/22Rv1 (AR-po..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate stable lines expressing TurboID-TMF1 (full length and isoform P82094-2) at near-endogenous level. Perform 10-min biotin labelling, streptavidin enrichment and TMT-MS3 quantitation. Compare with TurboID-only and a TurboID-Rab6 control. Quantify the relative enrichment of trafficking vs. chromatin/transcription GO categories.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TMF1 BioID interactomes will be dominated by Golgi-tethering machinery (Rab6, COG subunits, intra-Golgi cargo, glycosyltransferases) rather than by transcription/chromatin factors, reinforcing that the core function is at the Golgi.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Quantitative proximity labelling (BioID/TurboID) at the trans-Golgi rim and at chromatin</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P82094" data-a="EXPERIMENT: Generate stable lines expressing TurboID-TMF1 (ful..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Cryo-electron tomography of vitrified Golgi-membrane-enriched HeLa extracts immuno-labelled for TMF1, with sub-tomogram averaging of TMF1-decorated vesicle-Golgi contacts. Compare WT to a TMF1 N-terminal motif (M-S-W-L/F) mutant and to Rab6-knockdown.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TMF1 will be observed as elongated coiled-coil bridges between intra-Golgi transport vesicles and cisternal rims, with Rab6-binding ends anchored at the Golgi, providing a structural counterpart of the mitochondrial-relocation capture assay (PMID:28122620).</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Cryo-ET of TMF1 at intra-Golgi vesicle tethering sites</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P82094" data-a="EXPERIMENT: Cryo-electron tomography of vitrified Golgi-membra..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TMF1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P82094" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="tmf1-tata-element-modulatory-factor-1-research-notes">TMF1 (TATA element modulatory factor 1) — research notes</h1>
+<h2 id="context">Context</h2>
+<p>This review was triggered by <a href="https://github.com/geneontology/go-annotation/issues/6381">geneontology/go-annotation#6381</a> ("TMF1 annotation review"). Curators (V. Wood, H. Attrill, S. Munro group, L. Breuza, R. Lovering, P. Gaudet) flagged that the human TMF1 GO annotations are still dominated by transcription-related terms (transcription coactivator activity, androgen receptor signaling, positive regulation of transcription by RNA Pol II) that trace back to a small set of late-1990s/early-2000s overexpression studies, while the well-supported biology is now Golgi vesicle tethering (golgin) in retrograde and intra-Golgi vesicle traffic.</p>
+<p>FlyBase already updated the <em>D. melanogaster</em> TMF1 ortholog to "vesicle membrane tethering activity" via P2GO (per @hattrill in #6381).</p>
+<h2 id="summary-of-evidence">Summary of evidence</h2>
+<h3 id="tmf1-is-a-golgin-vesicle-tethering-factor-on-the-trans-golgi-rim">TMF1 is a golgin (vesicle tethering factor) on the trans-Golgi rim</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/17698061" title="TMF signal surrounded Rab6-positive Golgi structures and immunoelectron microscopy revealed that TMF is concentrated at the budding structures localized at the tips of cisternae">PMID:17698061</a>. Knockdown of TMF or Rab6 blocks retrograde transport of Shiga toxin from early/recycling endosomes to the TGN and causes Rab6-dependent displacement of GalNAc-T2 (but not GalT) from the Golgi. The authors conclude "critical roles for TMF in two Rab6-dependent retrograde transport processes: one from endosomes to the Golgi and the other from the Golgi to the ER."</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/23239882" title="the COG complex interacts with two different Rabs in addition to each end of the golgin 'TATA element modulatory factor' (TMF). This allows COG to potentially bridge the distance between the distal end of the golgin and the target membrane thereby promoting tighter docking. Concurrently we show that the central portion of TMF can bind to Golgi membranes that are liberated of their COPI cover.">PMID:23239882</a>. Establishes TMF as the long coiled-coil tether that, together with the COG complex, mediates retrograde tethering of intra-Golgi vesicles.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/28122620" title="for six different golgins, the capture of carriers is mediated by a short region at the N-terminus of the protein... When relocated to mitochondria, TMF captures intra-Golgi transport vesicles, but these contain some proteins from later in the stack than those captured by GMAP-210 and golgin-84.">PMID:28122620</a>. Mitochondrial-relocation assay shows that TMF1 acts as a vesicle-capture (tethering) golgin. The first 36 residues of TMF are necessary and sufficient for intra-Golgi vesicle capture; the C-terminal coiled-coil with the Rab6-binding region also contributes capture activity.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/36103876" title="loss-of-function mutants show that the golgins are individually dispensable, although the loss of TMF recapitulates the male fertility defects observed in mice">PMID:36103876</a>. Drosophila <em>in vivo</em> characterisation reaffirms TMF as an intra-Golgi vesicle-capturing golgin with conserved tissue-level functions.</li>
+</ul>
+<h3 id="mechanism-structure">Mechanism / structure</h3>
+<ul>
+<li>TMF is recruited to the Golgi membrane via a C-terminal Rab6-binding coiled-coil (UniProt SUBCELLULAR LOCATION; PMID:17698061; PMID:23239882; PMID:28122620). It contains predicted disordered N-terminus (~residues 1–400) followed by extensive coiled-coil (residues 439–922, 984–1092 per UniProt feature table).</li>
+<li>The N-terminal region has a conserved M-S-W-L/F motif shared with the other intra-Golgi tethering golgins GMAP-210 and golgin-84 <a href="https://pubmed.ncbi.nlm.nih.gov/28122620" title="the three golgins that capture intra-Golgi vesicles (golgin-84, GMAP-210 and TMF) share a short motif (M-S-W-L/F) at the very N-terminus">PMID:28122620</a>.</li>
+</ul>
+<h3 id="mouse-phenotype-consistent-with-golgisecretion-role-not-transcription">Mouse phenotype consistent with Golgi/secretion role, not transcription</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/23000399" title="TMF/ARA160 is a Golgi-associated protein, which is essential for spermiogenesis... lack of TMF/ARA160 leads to defects in both the testis and the epididymis... serum testosterone levels of TMF(-/-) mice were significantly lower than those of wt mice">PMID:23000399</a>. The endocrine phenotype is consistent with disrupted Leydig cell secretion / spermiogenesis acrosome biogenesis (a Golgi-derived organelle), not with loss of a transcription coactivator.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/24639530" title="TMF/ARA160 is a multifunctional Golgi-associated protein, which accumulates in colonic enterocytes and goblet cells. Mice lacking TMF/ARA160 (TMF-/-) produce thick and uniform colonic mucus that resists adherent bacterial colonization">PMID:24639530</a>. The colon mucus phenotype is consistent with disrupted Golgi-mediated mucin glycosylation/secretion.</li>
+</ul>
+<h3 id="transcription-related-claims-are-weak-and-mostly-overexpression-based">Transcription-related claims are weak and mostly overexpression-based</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/1409643" title="TMF binds to the human immunodeficiency virus 1 TATA element in gel-retardation assays and inhibits activation of the viral long terminal repeat by the TATA-binding protein in in vitro transcription assays">PMID:1409643</a>. The original cloning paper used HIV-1 LTR reporter and <em>in vitro</em> TBP assays; the protein was characterised in a viral context, not in regulation of endogenous cellular genes.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/10428808" title="Transient transfection assays demonstrated that ARA160 might function as a coactivator for AR-mediated transactivation in human prostate cancer PC-3 cells... ARA160 might represent the first identified androgen-enhanced N-terminal coactivator for the AR">PMID:10428808</a>. Hedged language ("might function"); transient overexpression in PC-3 cells; a Gal4-DNA binding domain fusion to TMF1 reportedly does not work as a dbTF (data not shown), inconsistent with a <em>bona fide</em> transcription coactivator activity (GO:0003713 sensu stricto).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/12044884" title="TMF isoforms differentially localize in the Golgi apparatus and the nucleus">PMID:12044884</a>. Reports interaction with hbrm/hSNF2α and BRG-1/hSNF2β SWI/SNF subunits. The bulk of TMF1 is at the Golgi; nuclear pool is a minor fraction.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15467733" title="TMF/ARA160 is a Golgi resident protein whose cellular functions have not been conclusively revealed... TMF/ARA160 can direct the proteasomal degradation of the key cell growth regulator - Stat3">PMID:15467733</a>. Reports a BC-box-mediated role in Stat3 ubiquitination; this is the basis of the regulation-of-proteasomal-protein-catabolic-process annotations.</li>
+<li>The 2025 Pharos status for TMF1 is "Tbio" (proteins with virtually no functional/drug characterisation), reflecting the field's view that transcription coactivator function is not solidly established.</li>
+</ul>
+<h2 id="implications-for-go-annotation">Implications for GO annotation</h2>
+<table>
+<thead>
+<tr>
+<th>Existing annotation (Aspect)</th>
+<th>Recommendation</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0005794 Golgi apparatus, GO:0000139 Golgi membrane (CC)</td>
+<td>ACCEPT — core</td>
+<td>Multiple IDA/IBA studies; UniProt SUBCELLULAR LOCATION; canonical golgin localization.</td>
+</tr>
+<tr>
+<td>GO:0005829 cytosol (CC, TAS Reactome)</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>Reflects diffuse cytoplasmic pool described in PMID:15467733; TMF is concentrated at Golgi.</td>
+</tr>
+<tr>
+<td>GO:0005634 nucleus (CC, IEA)</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+<td>A minor isoform-dependent nuclear pool was reported (PMID:12044884) but the protein's primary localization is Golgi; the SubCell-derived IEA over-emphasizes this fraction.</td>
+</tr>
+<tr>
+<td>GO:0005737 cytoplasm (CC, IEA)</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>Generic; subsumed by Golgi/cytosol.</td>
+</tr>
+<tr>
+<td>GO:0005783 endoplasmic reticulum (IBA, IEA-Ensembl)</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+<td>TMF mediates retrograde traffic <em>to</em> the ER but is not a steady-state ER-resident protein.</td>
+</tr>
+<tr>
+<td>GO:0006891 intra-Golgi vesicle-mediated transport (NEW)</td>
+<td>NEW</td>
+<td>Strongly supported by PMID:28122620, PMID:23239882, PMID:36103876.</td>
+</tr>
+<tr>
+<td>GO:0099041 vesicle tethering to Golgi (NEW)</td>
+<td>NEW</td>
+<td>Best existing BP for the golgin tethering activity (PMID:23239882, PMID:28122620).</td>
+</tr>
+<tr>
+<td>GO:0006895 retrograde transport, Golgi to endoplasmic reticulum (NEW)</td>
+<td>NEW</td>
+<td>Established by PMID:17698061 (Rab6-dependent retrograde traffic).</td>
+</tr>
+<tr>
+<td>GO:0042147 retrograde transport, endosome to Golgi (NEW)</td>
+<td>NEW</td>
+<td>Established by PMID:17698061 (Shiga toxin retrograde trafficking).</td>
+</tr>
+<tr>
+<td>GO:0003713 transcription coactivator activity (IDA, PMID:10428808)</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+<td>Single overexpression study with hedged conclusions; Gal4-DBD fusion fails to transactivate; primary biology is at the Golgi. Demote from core; do not delete because a low-level moonlighting role cannot be excluded.</td>
+</tr>
+<tr>
+<td>GO:0030521 androgen receptor signaling pathway (IDA, PMID:10428808)</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+<td>Same single overexpression study; mouse KO testosterone phenotype is more compatible with disrupted Leydig/spermiogenesis secretion than with cell-autonomous loss of an AR coregulator.</td>
+</tr>
+<tr>
+<td>GO:0045944 positive regulation of transcription by RNA Pol II (IDA, PMID:10428808)</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+<td>Inferred from the same single transient transfection assay; not validated by orthogonal assays.</td>
+</tr>
+<tr>
+<td>GO:0050681 nuclear androgen receptor binding (IPI, PMID:10428808)</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>The far-Western/co-IP interaction is real, but is a moonlighting feature, not a core function.</td>
+</tr>
+<tr>
+<td>GO:0061136 regulation of proteasomal protein catabolic process (ISS/IEA)</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>PMID:15467733 supports a BC-box/Elongin-C-mediated role in Stat3 ubiquitination; this is a discrete moonlighting activity at the Golgi, not the core function.</td>
+</tr>
+<tr>
+<td>GO:0005515 protein binding (IPI x2)</td>
+<td>REMOVE / MARK_AS_OVER_ANNOTATED</td>
+<td>Uninformative per project guideline.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="suggested-new-term">Suggested new term</h2>
+<p>A molecular-function counterpart of GO:0099022 ("vesicle tethering" — currently a BP) would let us annotate golgins like TMF1, GMAP-210, golgin-84 and the GRIP-domain golgins to a meaningful MF beyond "protein binding". ValWood (#6381) referred to a prospective "vesicle membrane tethering activity" term (not yet present in GO at time of writing — GO:7770062 returned 404 from the GO API on 2026-05-02). Until such a term is added, GO:0099041 (vesicle tethering to Golgi) is the most informative existing BP, and we record the missing MF in <code>proposed_new_terms</code>.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P82094
+gene_symbol: TMF1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;Trans-Golgi golgin (TATA element modulatory factor 1 / ARA160). A long
+  coiled-coil peripheral membrane protein recruited to the Golgi rim via a C-terminal
+  Rab6-binding region, where it acts as a vesicle-tethering factor. Captures intra-Golgi
+  transport vesicles via a conserved N-terminal motif (M-S-W-L/F, shared with the
+  related intra-Golgi golgins GMAP-210 and golgin-84) and cooperates with the COG
+  complex to dock retrograde vesicles. Required for Rab6-dependent retrograde transport
+  from endosomes to the trans-Golgi network and from the Golgi to the ER (Shiga-toxin
+  trafficking, GalNAc-T2 retention). Loss in mouse and Drosophila causes male-sterility
+  acrosome biogenesis defects and altered Golgi-derived mucin glycosylation, consistent
+  with a primary role in Golgi vesicle traffic. Despite the historical name and a
+  small set of late-1990s overexpression studies that suggested a moonlighting role
+  as a TBP-binding/androgen-receptor coactivator and a BC-box adaptor that targets
+  STAT3 for proteasomal degradation, the bulk of mechanistically validated biology
+  is at the Golgi and not in transcription.
+
+  &#39;
+alternative_products:
+- name: &#39;1&#39;
+  id: P82094-1
+- name: &#39;2&#39;
+  id: P82094-2
+  sequence_note: VSP_037411
+existing_annotations:
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;IBA from PAINT. TMF1 is a canonical golgin and the Golgi rim is its
+      primary, conserved localization (UniProt SUBCELLULAR LOCATION; PMID:17698061;
+      PMID:23239882; PMID:28122620). Accept as core localization.
+
+      &#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17698061
+      supporting_text: TMF signal surrounded Rab6-positive Golgi structures and immunoelectron
+        microscopy revealed that TMF is concentrated at the budding structures localized
+        at the tips of cisternae.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;IBA from PAINT. TMF1 mediates Rab6-dependent retrograde transport from
+      Golgi to ER (PMID:17698061), so it is transiently associated with ER-directed
+      retrograde carriers, but it is not a steady-state ER-resident protein. Microscopy
+      consistently shows the trans-Golgi rim, not the ER, as the primary localization.
+      The annotation likely reflects over-propagation of yeast/fungal homolog data.
+      Mark as over-annotated.
+
+      &#39;
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;IEA from UniProt SubCell mapping. TMF1 is a peripheral Golgi-membrane
+      protein concentrated at the tips of cisternae (UniProt SUBCELLULAR LOCATION;
+      PMID:17698061). More precise than the bare Golgi apparatus annotation. Accept
+      as core.
+
+      &#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17698061
+      supporting_text: TMF is concentrated at the budding structures localized at
+        the tips of cisternae.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;IEA from UniProt SubCell mapping. A nuclear pool of one TMF isoform
+      was reported (PMID:12044884), but the dominant localization in every cell type
+      examined is the Golgi (PMID:15467733 explicitly describes TMF/ARA160 as a Golgi-resident
+      protein). The IEA over-emphasizes a minor, isoform-restricted fraction; the
+      primary biology of the protein is not nuclear. Mark as over-annotated.
+
+      &#39;
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:12044884
+      supporting_text: TMF isoforms differentially localize in the Golgi apparatus
+        and the nucleus.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;IEA from UniProt SubCell mapping. Generic parent term subsumed by the
+      more specific Golgi membrane / cytosol annotations. Keep as non-core.
+
+      &#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20195357
+  review:
+    summary: &#39;High-throughput mRNA-display interactome screen reporting TMF1-NR3C1
+      binding. &#34;Protein binding&#34; is uninformative per project curation guidelines
+      (CLAUDE.md). The relevant biology (interactions with Rab6, COG, AR, STAT3, FER,
+      Elongin) is captured by more specific annotations. Mark as over-annotated.
+
+      &#39;
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: &#39;High-throughput Y2H reference map (HuRI). Reports binding to CMTM5 isoform
+      Q96DZ9-2; no functional follow-up. Uninformative MF per project guidelines.
+      Mark as over-annotated.
+
+      &#39;
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &#39;IEA via Ensembl ortholog transfer from mouse Tmf1 (UniProtKB:B9EKI3).
+      Same concern as the IBA ER annotation: TMF1 mediates retrograde traffic to the
+      ER but is not an ER-resident protein. Mark as over-annotated.
+
+      &#39;
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &#39;IEA via Ensembl ortholog transfer from mouse Tmf1. Redundant with the
+      direct human IBA/IDA Golgi annotations but still correct. Accept.
+
+      &#39;
+    action: ACCEPT
+- term:
+    id: GO:0061136
+    label: regulation of proteasomal protein catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &#39;IEA via Ensembl ortholog transfer from mouse Tmf1. Reflects PMID:15467733,
+      which showed that the BC-box motif of TMF/ARA160 mediates its binding to Elongin
+      C and that ectopic expression in serum-starved C2C12 cells drives Stat3 ubiquitination
+      and proteasomal degradation. This is a discrete, mechanistically supported moonlighting
+      activity at the Golgi cytoplasmic face but is not the protein&#39;&#39;s core function.
+      Keep as non-core.
+
+      &#39;
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:15467733
+      supporting_text: Amino-acid sequence analysis identified a BC-box element in
+        TMF/ARA160 that mediated the binding of this protein to elongin C. Ectopic
+        expression of TMF/ARA160 in serum-starved C2C12 cells drove the ubiquitination
+        and proteasomal degradation of Stat3.
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: &#39;IDA from Human Protein Atlas immunofluorescence. Direct experimental
+      confirmation of Golgi localization. Accept as core.
+
+      &#39;
+    action: ACCEPT
+- term:
+    id: GO:0003713
+    label: transcription coactivator activity
+  evidence_type: IDA
+  original_reference_id: PMID:10428808
+  review:
+    summary: &#39;IDA based on a single 1999 transient-transfection / reporter study in
+      PC-3 cells. The same paper notes that a Gal4-DBD fusion to TMF1 fails to transactivate
+      reporter genes (data not shown), which is inconsistent with a bona fide transcription
+      coactivator (GO:0003713) sensu stricto - the authors propose that TMF acts only
+      together with the AF-1 domain of steroid receptors. The mechanistically established
+      function of TMF1 is at the Golgi (PMID:17698061; PMID:23239882; PMID:28122620);
+      TMF1 has no DNA-binding domain (its &#34;TMF_DNA_bd&#34;/&#34;TMF_TATA_bd&#34; Pfam domains
+      are operationally defined from the original 1992 HIV-1 LTR study and have not
+      been validated as endogenous DNA-binding modules). The Pharos target development
+      level is &#34;Tbio&#34; (no validated function). Down-rate from a core MF; flag as over-annotation
+      pending orthogonal validation, but do not delete outright because a low-level
+      moonlighting role at the AR cannot be formally excluded.
+
+      &#39;
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:10428808
+      supporting_text: Transient transfection assays demonstrated that ARA160 might
+        function as a coactivator for AR-mediated transactivation in human prostate
+        cancer PC-3 cells.
+- term:
+    id: GO:0030521
+    label: androgen receptor signaling pathway
+  evidence_type: IDA
+  original_reference_id: PMID:10428808
+  review:
+    summary: &#39;IDA from the same single 1999 overexpression study (PMID:10428808).
+      The mouse TMF-/- testosterone/spermatogenesis phenotype (PMID:23000399) is more
+      compatible with disrupted Leydig cell secretion / Golgi-dependent acrosome biogenesis
+      than with cell-autonomous loss of an AR coregulator. Mark as over-annotated.
+
+      &#39;
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IDA
+  original_reference_id: PMID:10428808
+  review:
+    summary: &#39;IDA inferred from the same single transient transfection assay on an
+      AR-responsive reporter in PC-3 cells. Not validated by orthogonal assays (ChIP-seq,
+      KO RNA-seq) or independent groups. Mark as over-annotated.
+
+      &#39;
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0050681
+    label: nuclear androgen receptor binding
+  evidence_type: IPI
+  original_reference_id: PMID:10428808
+  review:
+    summary: &#39;IPI based on far-Western blotting and co-immunoprecipitation between
+      AR N-terminal peptide and TMF1/ARA160 (PMID:10428808). The physical interaction
+      is reproducibly observed, but in the context of TMF1&#39;&#39;s overall biology the
+      AR-binding role is a moonlighting feature of a Golgi protein, not a core function.
+      Keep as non-core.
+
+      &#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6811431
+  review:
+    summary: &#39;TAS from Reactome &#34;RAB6:GTP binds the GARP and COG complexes, t-SNAREs
+      and endosome-derived vesicles&#34;. Reflects the Reactome cytosolic-pool placeholder
+      for tethering factors. The diffuse cytoplasmic distribution observed under low-serum
+      conditions (PMID:15467733) is real but the protein is concentrated at Golgi
+      membranes. Keep as non-core.
+
+      &#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6814091
+  review:
+    summary: &#39;TAS from Reactome &#34;ARL1 recruits TGN Golgin homodimers&#34;. Same comment
+      as the previous cytosol annotation - reflects the Reactome cytosolic-pool placeholder.
+      Keep as non-core.
+
+      &#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6814682
+  review:
+    summary: &#39;TAS from Reactome &#34;Fusion of early-endosome derived vesicles at the
+      TGN&#34;. Same comment - Reactome placeholder for the cytosolic tethering pool.
+      Keep as non-core.
+
+      &#39;
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0061136
+    label: regulation of proteasomal protein catabolic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &#39;ISS from manual transfer of mouse Tmf1 (UniProtKB:B9EKI3). Reflects
+      PMID:15467733 (TMF/ARA160 BC-box-Elongin C-mediated Stat3 ubiquitination). Mechanistically
+      supported but is a moonlighting activity of the Golgi pool, not the core function.
+      Keep as non-core.
+
+      &#39;
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:15467733
+      supporting_text: Amino-acid sequence analysis identified a BC-box element in
+        TMF/ARA160 that mediated the binding of this protein to elongin C.
+- term:
+    id: GO:0060090
+    label: molecular adaptor activity
+  evidence_type: NAS
+  review:
+    summary: &#39;Added to align core_functions with existing annotations. Captures the
+      vesicle-tethering bridging activity of TMF1 (closest existing MF; a more specific
+      &#34;vesicle tethering activity&#34; term is requested in proposed_new_terms).
+
+      &#39;
+    action: NEW
+    reason: Core function term not present in existing_annotations.
+    supported_by:
+    - reference_id: PMID:28122620
+      supporting_text: When relocated to mitochondria, TMF captures intra-Golgi transport
+        vesicles.
+- term:
+    id: GO:0099041
+    label: vesicle tethering to Golgi
+  evidence_type: NAS
+  review:
+    summary: &#39;Added to align core_functions with existing annotations. Direct demonstration
+      by mitochondrial-relocation assay (PMID:28122620) and by interaction with the
+      COG complex (PMID:23239882).
+
+      &#39;
+    action: NEW
+    reason: Core function term not present in existing_annotations.
+    supported_by:
+    - reference_id: PMID:28122620
+      supporting_text: When relocated to mitochondria, TMF captures intra-Golgi transport
+        vesicles.
+- term:
+    id: GO:0006891
+    label: intra-Golgi vesicle-mediated transport
+  evidence_type: NAS
+  review:
+    summary: &#39;Added to align core_functions with existing annotations. Supported by
+      vesicle-capture assays (PMID:28122620), COG-TMF tethering model (PMID:23239882),
+      and Drosophila in vivo data (PMID:36103876).
+
+      &#39;
+    action: NEW
+    reason: Core function term not present in existing_annotations.
+    supported_by:
+    - reference_id: PMID:23239882
+      supporting_text: We find that the COG complex interacts with two different Rabs
+        in addition to each end of the golgin &#34;TATA element modulatory factor&#34; (TMF).
+- term:
+    id: GO:0031267
+    label: small GTPase binding
+  evidence_type: NAS
+  review:
+    summary: &#39;Added to align core_functions with existing annotations. Captures the
+      Rab6-GTP binding activity that recruits TMF1 to the trans-Golgi.
+
+      &#39;
+    action: NEW
+    reason: Core function term not present in existing_annotations.
+    supported_by:
+    - reference_id: PMID:17698061
+      supporting_text: TMF signal surrounded Rab6-positive Golgi structures.
+- term:
+    id: GO:0042147
+    label: retrograde transport, endosome to Golgi
+  evidence_type: NAS
+  review:
+    summary: &#39;Added to align core_functions with existing annotations. TMF1 knockdown
+      blocks Rab6-dependent retrograde transport of Shiga toxin from early/recycling
+      endosomes to the trans-Golgi network (PMID:17698061).
+
+      &#39;
+    action: NEW
+    reason: Core function term not present in existing_annotations.
+    supported_by:
+    - reference_id: PMID:17698061
+      supporting_text: The knockdown of either TMF or Rab6 by RNA interference blocked
+        retrograde transport of endocytosed Shiga toxin from early/recycling endosomes
+        to the trans-Golgi network.
+- term:
+    id: GO:0006890
+    label: retrograde vesicle-mediated transport, Golgi to endoplasmic reticulum
+  evidence_type: NAS
+  review:
+    summary: &#39;Added to align core_functions with existing annotations. PMID:17698061
+      establishes a role for TMF1 in Rab6-dependent Golgi-to-ER retrograde traffic.
+
+      &#39;
+    action: NEW
+    reason: Core function term not present in existing_annotations.
+    supported_by:
+    - reference_id: PMID:17698061
+      supporting_text: critical roles for TMF in two Rab6-dependent retrograde transport
+        processes - one from endosomes to the Golgi and the other from the Golgi to
+        the ER.
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: PMID:1409643
+  title: Cloning and chromosomal mapping of a human immunodeficiency virus 1 &#34;TATA&#34;
+    element modulatory factor.
+  findings:
+  - statement: TMF was originally identified as a 123 kDa cellular protein that binds
+      the HIV-1 LTR TATA element in gel-retardation assays and inhibits TBP-mediated
+      transcriptional activation in vitro.
+    supporting_text: TMF binds to the human immunodeficiency virus 1 TATA element
+      in gel-retardation assays and inhibits activation of the viral long terminal
+      repeat by the TATA-binding protein in in vitro transcription assays.
+  - statement: The original characterisation was a viral-promoter / in vitro context;
+      no endogenous cellular target genes were demonstrated.
+    supporting_text: TMF is a transcription factor that likely regulates the expression
+      of both viral and cellular genes.
+- id: PMID:10428808
+  title: Isolation and characterization of ARA160 as the first androgen receptor N-terminal-associated
+    coactivator in human prostate cells.
+  findings:
+  - statement: AR N-terminal peptide directly binds TMF1/ARA160 in far-Western and
+      co-IP assays in vitro.
+    supporting_text: The far-Western blotting and co-immunoprecipitation assays demonstrate
+      that the AR can interact directly with ARA160/TMF.
+  - statement: A transient transfection AR-reporter assay in PC-3 cells suggests TMF1/ARA160
+      enhances AR transactivation.
+    supporting_text: Transient transfection assays demonstrated that ARA160 might
+      function as a coactivator for AR-mediated transactivation in human prostate
+      cancer PC-3 cells.
+- id: PMID:12044884
+  title: A putative nuclear receptor coactivator (TMF/ARA160) associates with hbrm/hSNF2
+    alpha and BRG-1/hSNF2 beta and localizes in the Golgi apparatus.
+  findings:
+  - statement: TMF1 isoforms differentially localize between Golgi and nucleus; the
+      Golgi pool is dominant.
+    supporting_text: Immunofluorescence and Western blot studies revealed that the
+      TMF isoforms differentially localize in the Golgi apparatus and the nucleus.
+  - statement: The C-terminal region of TMF1 binds the conserved N-terminal regions
+      of the SWI/SNF ATPases hbrm/hSNF2alpha and BRG-1/hSNF2beta in vitro and in vivo.
+    supporting_text: hbrm/hSNF2 alpha and BRG-1/hSNF2 beta, the ATPase subunits of
+      the human SNF/SWI complexes, specifically associate in vitro and in vivo with
+      TATA element modulatory factor (TMF)/ARA160.
+- id: PMID:15467733
+  title: TMF/ARA160 is a BC-box-containing protein that mediates the degradation of
+    Stat3.
+  findings:
+  - statement: TMF/ARA160 is described as a Golgi-resident protein.
+    supporting_text: TMF/ARA160 is a Golgi resident protein whose cellular functions
+      have not been conclusively revealed.
+  - statement: TMF/ARA160 contains a BC-box motif that binds Elongin C and directs
+      Stat3 ubiquitination/proteasomal degradation in serum-starved C2C12 cells.
+    supporting_text: Amino-acid sequence analysis identified a BC-box element in TMF/ARA160
+      that mediated the binding of this protein to elongin C. Ectopic expression of
+      TMF/ARA160 in serum-starved C2C12 cells drove the ubiquitination and proteasomal
+      degradation of Stat3.
+- id: PMID:17698061
+  title: Functional involvement of TMF/ARA160 in Rab6-dependent retrograde membrane
+    traffic.
+  findings:
+  - statement: TMF1 surrounds Rab6-positive Golgi structures and is concentrated at
+      cisternal-tip budding structures.
+    supporting_text: TMF signal surrounded Rab6-positive Golgi structures and immunoelectron
+      microscopy revealed that TMF is concentrated at the budding structures localized
+      at the tips of cisternae.
+  - statement: TMF1 knockdown phenocopies Rab6 knockdown for retrograde transport
+      of Shiga toxin from early/recycling endosomes to the trans-Golgi network.
+    supporting_text: The knockdown of either TMF or Rab6 by RNA interference blocked
+      retrograde transport of endocytosed Shiga toxin from early/recycling endosomes
+      to the trans-Golgi network, causing missorting of the toxin to late endosomes/lysosomes.
+  - statement: TMF1 is required for Golgi retention of GalNAc-T2 (but not GalT), and
+      is implicated in Rab6-dependent retrograde transport from Golgi to ER.
+    supporting_text: These observations suggest critical roles for TMF in two Rab6-dependent
+      retrograde transport processes - one from endosomes to the Golgi and the other
+      from the Golgi to the ER.
+- id: PMID:20195357
+  title: A comprehensive resource of interacting protein regions for refining human
+    transcription factor networks.
+  findings:
+  - statement: High-throughput mRNA-display screen reports a TMF1-NR3C1 (glucocorticoid
+      receptor) interaction; no functional follow-up.
+    supporting_text: present the first large-scale IR data set obtained using mRNA
+      display for 50 human transcription factors (TFs).
+- id: PMID:23000399
+  title: Testosterone deficiency accompanied by testicular and epididymal abnormalities
+    in TMF(-/-) mice.
+  findings:
+  - statement: TMF/ARA160 is a Golgi-associated protein essential for spermiogenesis;
+      its loss in mouse causes Leydig-cell proliferation, testosterone deficiency
+      and epididymal apoptosis - a phenotype consistent with disrupted Golgi-derived
+      acrosome biogenesis and secretion rather than loss of an AR coregulator.
+    supporting_text: TMF/ARA160 is a Golgi-associated protein, which is essential
+      for spermiogenesis. In this study, we show that lack of TMF/ARA160 leads to
+      defects in both the testis and the epididymis.
+- id: PMID:23239882
+  title: Molecular insights into vesicle tethering at the Golgi by the conserved oligomeric
+    Golgi (COG) complex and the golgin TATA element modulatory factor (TMF).
+  findings:
+  - statement: TMF1 is a Golgi-tethering coiled-coil (&#34;golgin&#34;) that binds the COG
+      complex at both ends and to Golgi membranes via its central coiled-coil after
+      COPI uncoating.
+    supporting_text: We find that the COG complex interacts with two different Rabs
+      in addition to each end of the golgin &#34;TATA element modulatory factor&#34; (TMF).
+      This allows COG to potentially bridge the distance between the distal end of
+      the golgin and the target membrane thereby promoting tighter docking. Concurrently
+      we show that the central portion of TMF can bind to Golgi membranes that are
+      liberated of their COPI cover.
+- id: PMID:24639530
+  title: Reprogrammed and transmissible intestinal microbiota confer diminished susceptibility
+    to induced colitis in TMF-/- mice.
+  findings:
+  - statement: TMF/ARA160 is referred to as a multifunctional Golgi-associated protein;
+      TMF-/- colon shows altered MUC2 mucin oligomerisation, consistent with disrupted
+      Golgi-dependent glycosylation/secretion.
+    supporting_text: Tata Element Modulatory Factor (TMF/ARA160) is a multifunctional
+      Golgi-associated protein, which accumulates in colonic enterocytes and goblet
+      cells.
+- id: PMID:28122620
+  title: The golgin coiled-coil proteins capture different types of transport carriers
+    via distinct N-terminal motifs.
+  findings:
+  - statement: TMF1, when relocated to mitochondria, captures intra-Golgi transport
+      vesicles - direct demonstration of vesicle-tethering activity.
+    supporting_text: When relocated to mitochondria, TMF captures intra-Golgi transport
+      vesicles, but these contain some proteins from later in the stack than those
+      captured by GMAP-210 and golgin-84.
+  - statement: A short N-terminal motif (M-S-W-L/F, conserved across metazoa and shared
+      with golgin-84 and GMAP-210) and a central/C-terminal coiled-coil region both
+      contribute vesicle-capture activity.
+    supporting_text: The first 36 residues of the protein are necessary for the capture
+      activity of the N-terminal half, and sufficient to confer capture activity when
+      attached to two different heterologous coiled-coil proteins.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: HuRI Y2H interactome map reports a TMF1-CMTM5 (isoform Q96DZ9-2) binary
+      interaction; no functional follow-up.
+    supporting_text: A reference map of the human binary protein interactome.
+- id: PMID:36103876
+  title: In vivo characterization of Drosophila golgins reveals redundancy and plasticity
+    of vesicle capture at the Golgi apparatus.
+  findings:
+  - statement: In Drosophila, ectopic TMF captures intra-Golgi transport vesicles
+      and the loss-of-function mutant recapitulates the male-fertility phenotype seen
+      in mouse Tmf1 knockouts, supporting a conserved role in Golgi vesicle traffic.
+    supporting_text: We show that ectopic forms can capture intra-Golgi transport
+      vesicles, but strikingly, the cargo present in the vesicles captured by each
+      golgin varies between tissues. Loss-of-function mutants show that the golgins
+      are individually dispensable, although the loss of TMF recapitulates the male
+      fertility defects observed in mice.
+- id: Reactome:R-HSA-6811431
+  title: RAB6:GTP binds the GARP and COG complexes, t-SNAREs and endosome-derived
+    vesicles
+  findings: []
+- id: Reactome:R-HSA-6814091
+  title: ARL1 recruits TGN Golgin homodimers
+  findings: []
+- id: Reactome:R-HSA-6814682
+  title: Fusion of early-endosome derived vesicles at the TGN
+  findings: []
+- id: file:human/TMF1/TMF1-notes.md
+  title: TMF1 research notes (this review)
+  findings: []
+core_functions:
+- molecular_function:
+    id: GO:0060090
+    label: molecular adaptor activity
+  description: Acts as a long coiled-coil vesicle-tethering factor (golgin) at the
+    trans-Golgi rim that bridges incoming transport vesicles and the Golgi membrane
+    prior to SNARE-mediated fusion. The N-terminal disordered region (~residues 1-36,
+    containing the conserved M-S-W-L/F motif shared with golgin-84 and GMAP-210) and
+    the central/C-terminal coiled-coil each independently capture intra-Golgi transport
+    vesicles in the mitochondrial-relocation assay; the C-terminal Rab6-binding coiled-coil
+    recruits TMF1 to the Golgi membrane and cooperates with the COG complex to dock
+    retrograde vesicles. (A specific MF &#34;vesicle tethering activity&#34; is requested
+    in proposed_new_terms; GO:0060090 is used here as the closest available existing
+    MF.)
+  directly_involved_in:
+  - id: GO:0099041
+    label: vesicle tethering to Golgi
+  - id: GO:0006891
+    label: intra-Golgi vesicle-mediated transport
+  supported_by:
+  - reference_id: PMID:28122620
+    supporting_text: When relocated to mitochondria, TMF captures intra-Golgi transport
+      vesicles.
+  - reference_id: PMID:23239882
+    supporting_text: We find that the COG complex interacts with two different Rabs
+      in addition to each end of the golgin &#34;TATA element modulatory factor&#34; (TMF).
+- molecular_function:
+    id: GO:0031267
+    label: small GTPase binding
+  description: Binds Rab6 in its GTP-bound active state via the C-terminal coiled-coil
+    region; this interaction is required for recruitment of TMF1 to the trans-Golgi
+    rim and for its function in Rab6-dependent retrograde transport from endosomes
+    to the trans-Golgi network and from the Golgi to the ER.
+  directly_involved_in:
+  - id: GO:0042147
+    label: retrograde transport, endosome to Golgi
+  - id: GO:0006890
+    label: retrograde vesicle-mediated transport, Golgi to endoplasmic reticulum
+  supported_by:
+  - reference_id: PMID:17698061
+    supporting_text: TMF signal surrounded Rab6-positive Golgi structures... critical
+      roles for TMF in two Rab6-dependent retrograde transport processes - one from
+      endosomes to the Golgi and the other from the Golgi to the ER.
+proposed_new_terms:
+- proposed_name: vesicle tethering activity
+  proposed_definition: Binding activity of a long coiled-coil or multisubunit factor
+    that bridges a transport vesicle membrane and a target organelle membrane prior
+    to SNARE-mediated fusion. The molecular function counterpart of GO:0099022 vesicle
+    tethering. Required for capturing incoming vesicles by golgins (e.g. TMF1, GMAP-210,
+    golgin-84, the GRIP-domain golgins) at the Golgi and by analogous coiled-coil
+    tethers at other compartments.
+  justification: GO currently has the biological-process term GO:0099022 vesicle tethering
+    and the cellular-component term GO:0099023 vesicle tethering complex, but no molecular-function
+    term that captures the binding/bridging activity of an individual tether. Without
+    such an MF, golgins like TMF1 default to GO:0005515 protein binding, which is
+    explicitly discouraged. Per geneontology/go-annotation#6381 a &#34;vesicle membrane
+    tethering activity&#34; term is being requested by curators (V. Wood, H. Attrill);
+    GO:7770062 was referenced in that issue but is not yet present in GO at the time
+    of this review (2026-05-02). Recording here so the term-request progress can be
+    tracked alongside this review.
+suggested_questions:
+- question: Is the apparent transcription-coactivator activity of TMF1 (PMID:10428808)
+    a true endogenous function or an overexpression artefact? Has it been validated
+    by AR ChIP-seq or by RNA-seq of TMF1 KO prostate cells?
+  experts:
+  - GO Consortium (R. Lovering, A. Lock, ARUK-UCL)
+  - Steroid-receptor coactivator field (e.g. C. Chang lab)
+- question: Does any tissue/cell type maintain a functional nuclear pool of TMF1,
+    and if so what is its target-gene repertoire?
+  experts:
+  - SWI/SNF / chromatin-remodeling researchers
+  - Neuro-andrology / prostate-cancer transcription researchers
+suggested_experiments:
+- experiment_type: Genome-wide ChIP-seq for TMF1 in AR-positive prostate cells
+  hypothesis: If TMF1 is an endogenous AR coactivator, AR-target promoters should
+    be enriched among TMF1 ChIP-seq peaks; if not, TMF1 should occupy few or no chromatin
+    sites and the existing IDA annotations to GO:0003713/GO:0045944/GO:0030521 should
+    be retired rather than merely demoted.
+  description: ChIP-seq for endogenous TMF1 in LNCaP/22Rv1 (AR-positive prostate)
+    cells +/- DHT, paired with AR ChIP-seq. Compute peak overlap with AR cistrome
+    and motif enrichment. Validate top putative TMF1 chromatin sites by ChIP-qPCR
+    after TMF1 knockdown. Couple with RNA-seq of TMF1 KO cells +/- DHT to ask whether
+    AR target genes are preferentially affected.
+- experiment_type: Quantitative proximity labelling (BioID/TurboID) at the trans-Golgi
+    rim and at chromatin
+  hypothesis: TMF1 BioID interactomes will be dominated by Golgi-tethering machinery
+    (Rab6, COG subunits, intra-Golgi cargo, glycosyltransferases) rather than by transcription/chromatin
+    factors, reinforcing that the core function is at the Golgi.
+  description: Generate stable lines expressing TurboID-TMF1 (full length and isoform
+    P82094-2) at near-endogenous level. Perform 10-min biotin labelling, streptavidin
+    enrichment and TMT-MS3 quantitation. Compare with TurboID-only and a TurboID-Rab6
+    control. Quantify the relative enrichment of trafficking vs. chromatin/transcription
+    GO categories.
+- experiment_type: Cryo-ET of TMF1 at intra-Golgi vesicle tethering sites
+  hypothesis: TMF1 will be observed as elongated coiled-coil bridges between intra-Golgi
+    transport vesicles and cisternal rims, with Rab6-binding ends anchored at the
+    Golgi, providing a structural counterpart of the mitochondrial-relocation capture
+    assay (PMID:28122620).
+  description: Cryo-electron tomography of vitrified Golgi-membrane-enriched HeLa
+    extracts immuno-labelled for TMF1, with sub-tomogram averaging of TMF1-decorated
+    vesicle-Golgi contacts. Compare WT to a TMF1 N-terminal motif (M-S-W-L/F) mutant
+    and to Rab6-knockdown.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
