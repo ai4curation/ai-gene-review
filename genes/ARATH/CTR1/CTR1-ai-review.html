@@ -1,0 +1,3368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTR1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CTR1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q05609" target="_blank" class="term-link">
+                        Q05609
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CTR1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q05609" data-a="DESCRIPTION: CTR1 is an Arabidopsis Raf-like protein serine/thr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CTR1 is an Arabidopsis Raf-like protein serine/threonine kinase that acts as a central negative regulator of ethylene signaling. In the absence of ethylene, CTR1 is associated with the ER-localized ethylene receptor complex and phosphorylates EIN2, preventing downstream EIN2/EIN3 signaling. Ethylene perception relieves CTR1 inhibition, allowing EIN2 signaling to activate nuclear ethylene responses. Root, stem cell, floral transition, sugar, gibberellin, and hypoxia phenotypes are retained as downstream or cross-talk outputs, but the core function is ER-associated protein kinase control of the ethylene pathway.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12821658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12821658
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Localization of the Raf-like kinase CTR1 to the endoplasmic ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0005789" data-r="PMID:12821658" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTR1 localizes to the ER receptor signaling complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ER membrane association is the correct cellular context for CTR1&#39;s role upstream of EIN2.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004674" target="_blank" class="term-link">
+                                    GO:0004674
+                                </a>
+                            </span>
+                            <span class="term-label">protein serine/threonine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12535337" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12535337
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biochemical and functional analysis of CTR1, a protein kinas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0004674" data-r="PMID:12535337" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTR1 is an active Raf-like protein serine/threonine kinase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein serine/threonine kinase activity is the core molecular function of CTR1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/CTR1/CTR1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004712" target="_blank" class="term-link">
+                                    GO:0004712
+                                </a>
+                            </span>
+                            <span class="term-label">protein serine/threonine/tyrosine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16429265" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16429265
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genome-wide analysis and experimentation of plant serine/ th...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0004712" data-r="PMID:16429265" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broader serine/threonine/tyrosine kinase annotation is less precise than the established Ser/Thr kinase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CTR1 is a Raf-like Ser/Thr kinase, and the direct experimental annotation should be preferred.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004674" target="_blank" class="term-link">
+                                    protein serine/threonine kinase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009686" target="_blank" class="term-link">
+                                    GO:0009686
+                                </a>
+                            </span>
+                            <span class="term-label">gibberellin biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17389366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17389366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The plant stress hormone ethylene controls floral transition...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0009686" data-r="PMID:17389366" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ctr1 alleles alter bioactive gibberellin levels through ethylene pathway cross-talk, but CTR1 is not a gibberellin biosynthetic enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The paper supports CTR1/EIN3-dependent ethylene effects on GA-DELLA signaling, not a direct CTR1 role in gibberellin biosynthesis.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010105" target="_blank" class="term-link">
+                                    GO:0010105
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of ethylene-activated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12535337" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12535337
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biochemical and functional analysis of CTR1, a protein kinas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0010105" data-r="PMID:12535337" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTR1 negatively regulates ethylene signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This directly captures CTR1&#39;s central biological role upstream of EIN2.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010105" target="_blank" class="term-link">
+                                    GO:0010105
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of ethylene-activated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12821658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12821658
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Localization of the Raf-like kinase CTR1 to the endoplasmic ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0010105" data-r="PMID:12821658" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTR1 negatively regulates ethylene signaling from the ER receptor complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This directly captures CTR1&#39;s central biological role upstream of EIN2.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010105" target="_blank" class="term-link">
+                                    GO:0010105
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of ethylene-activated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8431946" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8431946
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CTR1, a negative regulator of the ethylene response pathway ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0010105" data-r="PMID:8431946" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The original ctr1 genetic study established CTR1 as a negative regulator of ethylene responses.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This directly captures CTR1&#39;s central biological role upstream of EIN2.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010105" target="_blank" class="term-link">
+                                    GO:0010105
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of ethylene-activated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9560288" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9560288
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Association of the Arabidopsis CTR1 Raf-like kinase with the...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0010105" data-r="PMID:9560288" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTR1 association with ethylene receptors supports its negative regulatory position in the pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This directly captures CTR1&#39;s central biological role upstream of EIN2.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9560288" target="_blank" class="term-link">
+                                        PMID:9560288
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The pathway also contains a negative regulator of ethylene responses, CTR1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000069" target="_blank" class="term-link">
+                                    GO:2000069
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of post-embryonic root development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17656722" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17656722
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ethylene modulates stem cell division in the Arabidopsis tha...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:2000069" data-r="PMID:17656722" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ethylene modulates post-embryonic root stem-cell behavior, but the cached abstract does not verify the CTR1-specific IMP annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The accessible PMID:17656722 abstract supports ethylene effects on root development but does not mention CTR1/ctr1 specifically.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000035" target="_blank" class="term-link">
+                                    GO:2000035
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of stem cell division</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17656722" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17656722
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ethylene modulates stem cell division in the Arabidopsis tha...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:2000035" data-r="PMID:17656722" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ethylene modulates root stem-cell division, but the cached abstract does not verify the CTR1-specific IMP annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The accessible PMID:17656722 abstract supports ethylene effects on quiescent-center division but does not mention CTR1/ctr1 specifically.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048510" target="_blank" class="term-link">
+                                    GO:0048510
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of timing of transition from vegetative to reproductive phase</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17389366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17389366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The plant stress hormone ethylene controls floral transition...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0048510" data-r="PMID:17389366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTR1 affects floral transition timing through ethylene and DELLA-related pathway cross-talk.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a pathway output rather than CTR1&#39;s direct kinase or signaling-regulator role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009723" target="_blank" class="term-link">
+                                    GO:0009723
+                                </a>
+                            </span>
+                            <span class="term-label">response to ethylene</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8431946" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8431946
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CTR1, a negative regulator of the ethylene response pathway ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0009723" data-r="PMID:8431946" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ctr1 mutants show constitutive ethylene-response phenotypes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The response phenotype is correct, but the more informative core term is negative regulation of ethylene signaling.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009750" target="_blank" class="term-link">
+                                    GO:0009750
+                                </a>
+                            </span>
+                            <span class="term-label">response to fructose</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21253566" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21253566
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Signaling role of fructose mediated by FINS1/FBP in Arabidop...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0009750" data-r="PMID:21253566" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTR1/sis1 alleles affect fructose signaling through hormone cross-talk.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Fructose response is a downstream/cross-talk phenotype, not the core molecular function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001666" target="_blank" class="term-link">
+                                    GO:0001666
+                                </a>
+                            </span>
+                            <span class="term-label">response to hypoxia</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25284079" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25284079
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Arabidopsis acyl-CoA-binding protein ACBP3 participates in p...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0001666" data-r="PMID:25284079" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTR1 participates in hypoxia-related ethylene signaling modulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Hypoxia response is a context-specific output of ethylene pathway regulation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009744" target="_blank" class="term-link">
+                                    GO:0009744
+                                </a>
+                            </span>
+                            <span class="term-label">response to sucrose</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11162499" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11162499
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The sugar-insensitive1 (sis1) mutant of Arabidopsis is allel...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0009744" data-r="PMID:11162499" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTR1/sis1 alleles affect sucrose response through hormone signaling cross-talk.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sucrose response is a downstream phenotype rather than the core CTR1 kinase function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010182" target="_blank" class="term-link">
+                                    GO:0010182
+                                </a>
+                            </span>
+                            <span class="term-label">sugar mediated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12663220" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12663220
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sugar and hormone connections.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0010182" data-r="PMID:12663220" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sugar-hormone signaling reviews describe sugar/ethylene cross-talk, but the cached PMID:12663220 abstract does not verify a CTR1-specific pathway annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CTR1/sis1 sucrose-response evidence exists from PMID:11162499, but the cached PMID:12663220 entry is abstract-only and lacks accessible CTR1-specific support for this broader sugar-mediated signaling annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q05609" data-a="GO:0007165" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic signal transduction under-describes the CTR1-specific ethylene pathway role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The specific, supported process is negative regulation of ethylene-activated signaling.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010105" target="_blank" class="term-link">
+                                    negative regulation of ethylene-activated signaling pathway
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ER-associated Raf-like protein serine/threonine kinase activity that keeps the ethylene pathway off in the absence of ethylene by phosphorylating EIN2 and preventing downstream EIN2/EIN3 signaling.</h3>
+                <span class="vote-buttons" data-g="Q05609" data-a="FUNCTION: ER-associated Raf-like protein serine/threonine ki..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004674" target="_blank" class="term-link">
+                            protein serine/threonine kinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010105" target="_blank" class="term-link">
+                                negative regulation of ethylene-activated signaling pathway
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ARATH/CTR1/CTR1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Acts as a negative regulator in the ethylene response pathway</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ARATH/CTR1/CTR1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Phosphorylates the cytosolic C-terminal domain of EIN2</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23132950" target="_blank" class="term-link">
+                                PMID:23132950
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">CTR1 interacts with and directly phosphorylates the cytosolic C-terminal domain of EIN2.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:interpro/panther/PTHR44329/PTHR44329-entries.csv
+                            
+                        </span>
+                        
+                        <div class="finding-text">Q05609,Serine/threonine-protein kinase CTR1</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11162499" target="_blank" class="term-link">
+                            PMID:11162499
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The sugar-insensitive1 (sis1) mutant of Arabidopsis is allelic to ctr1.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12535337" target="_blank" class="term-link">
+                            PMID:12535337
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Biochemical and functional analysis of CTR1, a protein kinase that negatively regulates ethylene signaling in Arabidopsis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12663220" target="_blank" class="term-link">
+                            PMID:12663220
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Sugar and hormone connections.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12821658" target="_blank" class="term-link">
+                            PMID:12821658
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Localization of the Raf-like kinase CTR1 to the endoplasmic reticulum of Arabidopsis through participation in ethylene receptor signaling complexes.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16429265" target="_blank" class="term-link">
+                            PMID:16429265
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genome-wide analysis and experimentation of plant serine/ threonine/tyrosine-specific protein kinases.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17389366" target="_blank" class="term-link">
+                            PMID:17389366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The plant stress hormone ethylene controls floral transition via DELLA-dependent regulation of floral meristem-identity genes.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17656722" target="_blank" class="term-link">
+                            PMID:17656722
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ethylene modulates stem cell division in the Arabidopsis thaliana root.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21253566" target="_blank" class="term-link">
+                            PMID:21253566
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Signaling role of fructose mediated by FINS1/FBP in Arabidopsis thaliana.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23132950" target="_blank" class="term-link">
+                            PMID:23132950
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CTR1 phosphorylates the central regulator EIN2 to control ethylene hormone signaling from the ER membrane to the nucleus in Arabidopsis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25284079" target="_blank" class="term-link">
+                            PMID:25284079
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Arabidopsis acyl-CoA-binding protein ACBP3 participates in plant response to hypoxia by modulating very-long-chain fatty acid metabolism.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8431946" target="_blank" class="term-link">
+                            PMID:8431946
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CTR1, a negative regulator of the ethylene response pathway in Arabidopsis, encodes a member of the raf family of protein kinases.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9560288" target="_blank" class="term-link">
+                            PMID:9560288
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Association of the Arabidopsis CTR1 Raf-like kinase with the ETR1 and ERS ethylene receptors.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ARATH/CTR1/CTR1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt record for Arabidopsis CTR1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CTR1 is described as a negative regulator of ethylene signaling that phosphorylates EIN2.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ARATH/CTR1/CTR1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for Arabidopsis CTR1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon research supports CTR1 as an ER-associated Raf-like Ser/Thr kinase that regulates ethylene signaling through EIN2 phosphorylation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:interpro/panther/PTHR44329/PTHR44329-entries.csv
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PANTHER PTHR44329 entries</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CTR1 is placed in subfamily PTHR44329:SF281, serine/threonine-protein kinase CTR1.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GOA add an explicit phosphorylation-of-EIN2 annotation using an extension to represent CTR1&#39;s direct substrate?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q05609" data-a="Q: Should GOA add an explicit phosphorylation-of-EIN2..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which sugar and hypoxia annotations should remain on CTR1 versus being represented only as ethylene pathway outputs?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q05609" data-a="Q: Which sugar and hypoxia annotations should remain ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantitatively map CTR1-dependent EIN2 phosphorylation in ethylene receptor complex mutants and hypoxia/ceramide perturbations.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q05609" data-a="EXPERIMENT: Quantitatively map CTR1-dependent EIN2 phosphoryla..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test whether sugar-response phenotypes in ctr1 alleles are fully EIN2/EIN3-dependent.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q05609" data-a="EXPERIMENT: Test whether sugar-response phenotypes in ctr1 all..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CTR1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q05609" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-05-07T08:14:21.253648'<br />
+end_time: '2026-05-07T08:28:18.885889'<br />
+duration_seconds: 837.63<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ARATH<br />
+  gene_id: CTR1<br />
+  gene_symbol: CTR1<br />
+  uniprot_accession: Q05609<br />
+  protein_description: 'RecName: Full=Serine/threonine-protein kinase CTR1 {ECO:0000303|PubMed:8431946};<br />
+    EC=2.7.11.1 {ECO:0000305}; AltName: Full=Protein CONSTITUTIVE TRIPLE RESPONSE1<br />
+    {ECO:0000303|PubMed:8431946};'<br />
+  gene_info: Name=CTR1 {ECO:0000303|PubMed:8431946}; OrderedLocusNames=At5g03730 {ECO:0000312|Araport:AT5G03730};<br />
+    ORFNames=F17C15_150 {ECO:0000312|EMBL:CAB82938.1};<br />
+  organism_full: Arabidopsis thaliana (Mouse-ear cress).<br />
+  protein_family: Belongs to the protein kinase superfamily. TKL Ser/Thr<br />
+  protein_domains: EDR1/CTR1/ARMC3-like_pept-like. (IPR055164); Kinase-like_dom_sf.<br />
+    (IPR011009); Prot_kinase_dom. (IPR000719); Protein_kinase_ATP_BS. (IPR017441);<br />
+    Ser-Thr/Tyr_kinase_cat_dom. (IPR001245)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 29</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q05609</li>
+<li><strong>Protein Description:</strong> RecName: Full=Serine/threonine-protein kinase CTR1 {ECO:0000303|PubMed:8431946}; EC=2.7.11.1 {ECO:0000305}; AltName: Full=Protein CONSTITUTIVE TRIPLE RESPONSE1 {ECO:0000303|PubMed:8431946};</li>
+<li><strong>Gene Information:</strong> Name=CTR1 {ECO:0000303|PubMed:8431946}; OrderedLocusNames=At5g03730 {ECO:0000312|Araport:AT5G03730}; ORFNames=F17C15_150 {ECO:0000312|EMBL:CAB82938.1};</li>
+<li><strong>Organism (full):</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Protein Family:</strong> Belongs to the protein kinase superfamily. TKL Ser/Thr</li>
+<li><strong>Key Domains:</strong> EDR1/CTR1/ARMC3-like_pept-like. (IPR055164); Kinase-like_dom_sf. (IPR011009); Prot_kinase_dom. (IPR000719); Protein_kinase_ATP_BS. (IPR017441); Ser-Thr/Tyr_kinase_cat_dom. (IPR001245)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "CTR1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'CTR1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>CTR1</strong> (gene ID: CTR1, UniProt: Q05609) in ARATH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q05609</li>
+<li><strong>Protein Description:</strong> RecName: Full=Serine/threonine-protein kinase CTR1 {ECO:0000303|PubMed:8431946}; EC=2.7.11.1 {ECO:0000305}; AltName: Full=Protein CONSTITUTIVE TRIPLE RESPONSE1 {ECO:0000303|PubMed:8431946};</li>
+<li><strong>Gene Information:</strong> Name=CTR1 {ECO:0000303|PubMed:8431946}; OrderedLocusNames=At5g03730 {ECO:0000312|Araport:AT5G03730}; ORFNames=F17C15_150 {ECO:0000312|EMBL:CAB82938.1};</li>
+<li><strong>Organism (full):</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Protein Family:</strong> Belongs to the protein kinase superfamily. TKL Ser/Thr</li>
+<li><strong>Key Domains:</strong> EDR1/CTR1/ARMC3-like_pept-like. (IPR055164); Kinase-like_dom_sf. (IPR011009); Prot_kinase_dom. (IPR000719); Protein_kinase_ATP_BS. (IPR017441); Ser-Thr/Tyr_kinase_cat_dom. (IPR001245)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "CTR1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'CTR1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>CTR1</strong> (gene ID: CTR1, UniProt: Q05609) in ARATH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-arabidopsis-thaliana-ctr1-uniprot-q05609-at5g03730">Research Report: Arabidopsis thaliana CTR1 (UniProt Q05609; At5g03730)</h2>
+<h3 id="0-target-verification-mandatory-disambiguation">0) Target verification (mandatory disambiguation)</h3>
+<p>The symbol <strong>CTR1</strong> is used for unrelated proteins in other organisms (e.g., copper transporters), but the target specified by <strong>UniProt Q05609</strong> is <strong>Arabidopsis thaliana CONSTITUTIVE TRIPLE RESPONSE1 (CTR1)</strong>, a <strong>Raf-like serine/threonine protein kinase</strong> that is a core regulator of the <strong>ethylene signaling pathway</strong>. This identity is consistent with primary biochemical/genetic characterization and authoritative pathway syntheses describing CTR1 as a Raf-like Ser/Thr kinase acting <strong>downstream of ethylene receptors</strong> and <strong>upstream of EIN2</strong>, physically associating with receptors such as <strong>ETR1</strong> at the ER. (zhong2012ethylenesignallingthe pages 1-4, huang2003biochemicalandfunctional pages 1-2, zhong2012ethylenesignallingthe pages 10-13)</p>
+<h3 id="1-key-concepts-and-current-understanding-definitions-and-mechanistic-framework">1) Key concepts and current understanding (definitions and mechanistic framework)</h3>
+<h4 id="11-ethylene-signaling-overview-and-ctr1s-canonical-role">1.1 Ethylene signaling overview and CTR1’s canonical role</h4>
+<p>Ethylene is a gaseous phytohormone perceived by a family of <strong>ER membrane-localized ethylene receptors</strong>. In the <strong>absence</strong> of ethylene, receptors maintain signaling in an “off” state by activating/recruiting CTR1, which suppresses downstream responses. A central feature of this canonical model is that <strong>CTR1 negatively regulates ethylene signaling</strong>: loss-of-function <strong>ctr1</strong> mutants show constitutive ethylene responses (“triple response”), and genetic epistasis places CTR1 downstream of receptors and upstream of <strong>EIN2</strong>. (zhong2012ethylenesignallingthe pages 1-4)</p>
+<h4 id="12-ctr1-protein-definition-domain-architecture-and-family-context">1.2 CTR1 protein definition, domain architecture, and family context</h4>
+<p>CTR1 is a <strong>two-domain</strong> protein composed of an <strong>N-terminal regulatory region</strong> and a <strong>C-terminal protein kinase domain</strong> with homology to <strong>Raf family kinases</strong> (TKL/Ser–Thr kinase-like). The N-terminus is critical for receptor association and appropriate subcellular targeting, while the kinase domain carries the catalytic function required for its classical negative regulatory role. (park2023ethylenetriggeredsubcellulartrafficking pages 2-3, huang2003biochemicalandfunctional pages 3-3)</p>
+<h4 id="13-subcellular-localization-er-tethering-and-receptor-dependent-recruitment">1.3 Subcellular localization: ER tethering and receptor-dependent recruitment</h4>
+<p>CTR1 lacks its own transmembrane segment and is recruited to the <strong>endoplasmic reticulum (ER)</strong> through physical association with ethylene receptors. Biochemical and genetic evidence supports receptor-dependent localization: CTR1 associates with ER fractions and co-localizes with the ER receptor <strong>ETR1</strong>, and receptor loss disrupts CTR1’s ER association, consistent with membrane recruitment by the receptor complex. (zhong2012ethylenesignallingthe pages 10-13)</p>
+<h4 id="14-molecular-interactions-and-pathway-position">1.4 Molecular interactions and pathway position</h4>
+<p><strong>ETR1–CTR1 interaction:</strong> The CTR1 <strong>N-terminal domain</strong> physically interacts with the ethylene receptor <strong>ETR1</strong>, supported by yeast two-hybrid and in vitro binding assays; a key N-terminal mutation (<strong>ctr1-8; G354E</strong>) disrupts receptor association while not necessarily abolishing intrinsic kinase activity in vitro, underscoring receptor interaction as a regulatory layer. (huang2003biochemicalandfunctional pages 2-3, park2023ethylenetriggeredsubcellulartrafficking pages 2-3)</p>
+<p><strong>CTR1–EIN2 relationship:</strong> In the canonical pathway, receptor-activated CTR1 <strong>phosphorylates EIN2</strong> at the ER to restrain ethylene signaling; when ethylene is present, receptor/CTR1 inactivation reduces EIN2 phosphorylation, enabling downstream EIN2 processing/activation and transcriptional responses. (park2023ethylenetriggeredsubcellulartrafficking pages 1-2)</p>
+<h4 id="15-enzymatic-function-and-specificity">1.5 Enzymatic function and specificity</h4>
+<p>CTR1 is a <strong>protein-serine/threonine kinase</strong> (EC 2.7.11.1). Purified CTR1 shows autophosphorylation and <strong>Ser/Thr</strong> activity with <strong>no detectable Tyr phosphorylation</strong> under the tested conditions, consistent with its annotation as a Ser/Thr kinase. (huang2003biochemicalandfunctional pages 4-5)</p>
+<p>Biochemical assays using generic substrates show CTR1 phosphorylates <strong>myelin basic protein (MBP)</strong> robustly, while phosphorylation of an Arabidopsis MEK homolog (<strong>AtMEK1</strong>) is weak (~5% of MBP phosphorylation in vitro), suggesting AtMEK1 is unlikely to be the primary physiological substrate. (huang2003biochemicalandfunctional pages 4-5, huang2003biochemicalandfunctional pages 9-9)</p>
+<h3 id="2-recent-developments-prioritizing-20232024">2) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="21-2023-ctr1-er-to-nucleus-translocation-and-a-noncanonical-nuclear-function">2.1 2023: CTR1 ER-to-nucleus translocation and a noncanonical nuclear function</h4>
+<p>A major 2023 advance is the demonstration that ethylene/ACC triggers <strong>CTR1 translocation from the ER to the nucleus</strong>. Nuclear accumulation is detectable by ~<strong>30 min</strong> and increases by ~<strong>60 min</strong> after ACC/ethylene exposure, and is reported to be independent of EIN2 and EIN3/EIL1. (park2023ethylenetriggeredsubcellulartrafficking pages 1-2)</p>
+<p>This work also proposed a noncanonical signaling mode: once in the nucleus, CTR1 can <strong>stabilize EIN3</strong> by interacting with and inhibiting <strong>EBF</strong> proteins, thereby enhancing ethylene responses and influencing recovery dynamics after ethylene removal. Importantly, this nuclear function is reported to be <strong>kinase-activity independent</strong>, implying a scaffold/adaptor-like role distinct from CTR1’s ER kinase function. (park2023ethylenetriggeredsubcellulartrafficking pages 1-2)</p>
+<p>A schematic model capturing this updated framework (ER repression vs nuclear potentiation) is shown in Park et al. 2023 (Figure 7). (park2023ethylenetriggeredsubcellulartrafficking media 7bb954f2)</p>
+<h4 id="22-2024-review-synthesis-subcellular-dynamics-as-a-regulatory-axis">2.2 2024 review synthesis: subcellular dynamics as a regulatory axis</h4>
+<p>A 2024 expert review emphasizes CTR1 as a dynamic signaling hub whose <strong>spatiotemporal localization</strong> (ER vs nucleus and potentially other compartments) can rewire functional outputs, and frames CTR1 trafficking as central to stress plasticity. The review explicitly highlights that ER-to-nucleus CTR1 movement can convert CTR1 from a negative regulator into a positive regulator of ethylene responses and links this to improved drought and salinity resilience. (chien2024subcellulardynamicsof pages 1-2)</p>
+<h4 id="23-2024-ctr1-turnover-controlled-by-autophagy-preprint">2.3 2024: CTR1 turnover controlled by autophagy (preprint)</h4>
+<p>A 2024 preprint proposes that CTR1 protein abundance is controlled by <strong>autophagy</strong>, with CTR1 interacting with <strong>ATG8</strong> and being targeted as autophagic cargo. Autophagy-deficient mutants accumulate higher CTR1 protein despite similar/reduced transcripts, indicating post-transcriptional regulation. The study further suggests reciprocal regulation: ethylene signaling and autophagy modulate each other through CTR1, with proteasomal degradation also contributing to CTR1 turnover (e.g., proteasome inhibitor blocking CTR1 degradation after cycloheximide). (park2024autophagymediatedctr1turnover pages 1-4, park2024autophagymediatedctr1turnover pages 7-10)</p>
+<h4 id="24-2024-updated-residue-level-mapping-and-uncertainty-in-ein2-phosphorylation-models-preprint">2.4 2024: Updated residue-level mapping and uncertainty in EIN2 phosphorylation models (preprint)</h4>
+<p>A 2024 preprint/re-synthesis summarizes evidence that CTR1 phosphorylates multiple EIN2 residues (e.g., <strong>S645, S739, T742, S743, S744, S747, S757, S923/S924, S1283</strong>). In vitro kinase + MS analyses identified multiple phosphopeptides, and mutation of <strong>S645 and S924</strong> to alanine reduced phosphorylation of an EIN2 fragment by <strong>&gt;85%</strong>, supporting these as major sites. This source also highlights ongoing disagreements about mechanistic interpretation (e.g., how phosphorylation controls cleavage/localization), reflecting active debate in the field. (zhao2024embracinguncertaintyreshapes pages 1-4)</p>
+<h3 id="3-current-applications-and-real-world-implementations">3) Current applications and real-world implementations</h3>
+<h4 id="31-engineering-stress-resilience-by-tuning-ctr1-localization">3.1 Engineering stress resilience by tuning CTR1 localization</h4>
+<p>A concrete translational direction emerging from 2023 work is that enhancing CTR1 nuclear localization can improve abiotic stress tolerance. Transgenic lines with increased nuclear CTR1 showed markedly improved <strong>salt tolerance</strong> (example statistic below) and improved <strong>drought resilience</strong>, consistent with a model where nuclear CTR1 stabilizes EIN3 to reinforce adaptive transcriptional programs. (park2023ethylenetriggeredsubcellulartrafficking pages 9-11, park2023ethylenetriggeredsubcellulartrafficking pages 11-12)</p>
+<h4 id="32-expert-perspective-ctr1-as-a-lever-for-pathway-crosstalk-and-chemical-tools">3.2 Expert perspective: CTR1 as a lever for pathway crosstalk and chemical tools</h4>
+<p>The 2024 review argues that manipulating CTR1’s compartment-specific functions could enable more precise tuning of ethylene responses and stress crosstalk (e.g., with salt-stress pathways), and notes emerging <strong>small-molecule CTR1 inhibitors</strong> as tools to dissect—and potentially modulate—CTR1 activity in vivo. (chien2024subcellulardynamicsof pages 8-8)</p>
+<h3 id="4-expert-opinions-and-analysis-authoritative-synthesis">4) Expert opinions and analysis (authoritative synthesis)</h3>
+<p>A consistent expert interpretation across primary and review literature is that CTR1 functions as a hub coupling receptor state to downstream signaling, but recent findings require a <strong>dual-role framework</strong>:</p>
+<ul>
+<li><strong>ER-localized CTR1</strong>: kinase-dependent repression of EIN2 activation in the absence of ethylene. (park2023ethylenetriggeredsubcellulartrafficking pages 1-2)</li>
+<li><strong>Nuclear CTR1</strong>: kinase-independent potentiation of ethylene responses via EBF interaction and EIN3 stabilization, tying pathway dynamics to stress acclimation. (park2023ethylenetriggeredsubcellulartrafficking pages 1-2, chien2024subcellulardynamicsof pages 1-2)</li>
+</ul>
+<p>The 2024 review emphasizes that resolving the mechanistic basis of CTR1 trafficking (signals, carriers, compartment partitioning) is critical for converting these insights into predictable engineering strategies. (chien2024subcellulardynamicsof pages 8-8)</p>
+<h3 id="5-relevant-statistics-and-quantitative-data">5) Relevant statistics and quantitative data</h3>
+<h4 id="51-time-scale-of-ctr1-nuclear-accumulation">5.1 Time scale of CTR1 nuclear accumulation</h4>
+<p>Nuclear accumulation of CTR1 becomes detectable at ~<strong>30 min</strong> after ACC/ethylene treatment and increases further by ~<strong>60 min</strong> in live imaging experiments. (park2023ethylenetriggeredsubcellulartrafficking pages 1-2)</p>
+<h4 id="52-stress-tolerance-phenotype-size-salt">5.2 Stress tolerance phenotype size (salt)</h4>
+<p>Arabidopsis lines engineered to enhance nuclear CTR1 showed approximately <strong>47% survival vs ~12% for WT</strong> on <strong>175 mM NaCl</strong> (as reported in the 2023 study’s salt assays), linking CTR1 subcellular dynamics to a sizable, quantifiable stress-resilience phenotype. (park2023ethylenetriggeredsubcellulartrafficking pages 9-11)</p>
+<h4 id="53-ctr1-biochemical-parameters-from-in-vitro-kinase-assays">5.3 CTR1 biochemical parameters from in vitro kinase assays</h4>
+<p>CTR1’s reported enzyme kinetics include <strong>Km(ATP) = 9.1 mM</strong> and <strong>Km(MBP) ≈ 3.36 mM</strong>; CTR1 phosphorylates AtMEK1 weakly (~<strong>5%</strong> of MBP phosphorylation), and the catalytic mutant corresponding to ctr1-1 (<strong>D694E</strong>) retains <strong>&lt;0.1%</strong> of wild-type activity. (huang2003biochemicalandfunctional pages 4-5, huang2003biochemicalandfunctional pages 9-9)</p>
+<h4 id="54-ein2-site-mapping-and-phosphorylation-reduction">5.4 EIN2 site mapping and phosphorylation reduction</h4>
+<p>Residue-level mapping summarized in 2024 indicates that simultaneous alanine substitution of <strong>EIN2 S645 and S924</strong> reduces phosphorylation of an EIN2 fragment by <strong>&gt;85%</strong> in vitro, supporting their prominence among CTR1-targeted phosphosites. (zhao2024embracinguncertaintyreshapes pages 1-4)</p>
+<hr />
+<h2 id="evidence-map-table">Evidence map (table)</h2>
+<p>The table below consolidates key functional-annotation statements, evidence summaries, dates, and URLs.</p>
+<table>
+<thead>
+<tr>
+<th>Claim/Fact</th>
+<th>Evidence summary</th>
+<th>Source (author year)</th>
+<th>DOI/URL</th>
+<th>Citation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/definition</td>
+<td><strong>CTR1 in this report is Arabidopsis thaliana CONSTITUTIVE TRIPLE RESPONSE1 (At5g03730; UniProt Q05609)</strong>, a <strong>Raf-like serine/threonine protein kinase</strong> and core <strong>negative regulator of ethylene signaling</strong>; loss-of-function mutants show constitutive ethylene responses, placing CTR1 downstream of ethylene receptors and upstream of EIN2.</td>
+<td>Huang et al. 2003; Zhong &amp; Chang 2012</td>
+<td>https://doi.org/10.1046/j.1365-313x.2003.01620.x ; https://doi.org/10.1002/9781118223086.ch6</td>
+<td>(huang2003biochemicalandfunctional pages 1-2, zhong2012ethylenesignallingthe pages 1-4)</td>
+</tr>
+<tr>
+<td>Domains/structure</td>
+<td>CTR1 is a <strong>two-domain protein</strong> with an <strong>N-terminal regulatory/receptor-interaction region</strong> and a <strong>C-terminal kinase domain</strong> homologous to Raf kinases; the N-terminus mediates receptor tethering, while catalytic residues in the kinase domain are required for classical signaling output.</td>
+<td>Park et al. 2023; Huang et al. 2003</td>
+<td>https://doi.org/10.1038/s41467-023-35975-6 ; https://doi.org/10.1046/j.1365-313x.2003.01620.x</td>
+<td>(park2023ethylenetriggeredsubcellulartrafficking pages 2-3, huang2003biochemicalandfunctional pages 3-3)</td>
+</tr>
+<tr>
+<td>ER localization in basal state</td>
+<td>CTR1 lacks a transmembrane segment and is <strong>recruited to the ER by ethylene receptors</strong>; ER association is receptor-dependent, and CTR1 colocalizes with ETR1 in the receptor complex.</td>
+<td>Zhong &amp; Chang 2012; Huang et al. 2003</td>
+<td>https://doi.org/10.1002/9781118223086.ch6 ; https://doi.org/10.1046/j.1365-313x.2003.01620.x</td>
+<td>(zhong2012ethylenesignallingthe pages 10-13, huang2003biochemicalandfunctional pages 2-3)</td>
+</tr>
+<tr>
+<td>Triggered ER-to-nucleus relocalization</td>
+<td><strong>Ethylene/ACC exposure triggers CTR1 movement from the ER to the nucleus</strong>; nuclear accumulation is detectable by ~<strong>30 min</strong> and increases by ~<strong>60 min</strong>. This trafficking occurs independently of EIN2 and EIN3/EIL1.</td>
+<td>Park et al. 2023</td>
+<td>https://doi.org/10.1038/s41467-023-35975-6</td>
+<td>(park2023ethylenetriggeredsubcellulartrafficking pages 1-2)</td>
+</tr>
+<tr>
+<td>Nuclear role differs from classical ER role</td>
+<td>In the nucleus, CTR1 becomes a <strong>positive modulator of ethylene responses</strong> by <strong>interacting with EBF proteins</strong>, stabilizing <strong>EIN3</strong>, and delaying post-ethylene growth recovery; this nuclear function is reported to be <strong>kinase-activity independent</strong>.</td>
+<td>Park et al. 2023; Chien &amp; Yoon 2024</td>
+<td>https://doi.org/10.1038/s41467-023-35975-6 ; https://doi.org/10.1002/bies.202400043</td>
+<td>(park2023ethylenetriggeredsubcellulartrafficking pages 1-2, chien2024subcellulardynamicsof pages 8-8)</td>
+</tr>
+<tr>
+<td>Key receptor interaction</td>
+<td>CTR1 physically interacts with <strong>ETR1</strong> through its <strong>N-terminal domain</strong> (shown by yeast two-hybrid/in vitro binding in earlier work); the <strong>ctr1-8 (G354E)</strong> lesion disrupts receptor association and impairs normal CTR1 localization/function.</td>
+<td>Huang et al. 2003; Park et al. 2023</td>
+<td>https://doi.org/10.1046/j.1365-313x.2003.01620.x ; https://doi.org/10.1038/s41467-023-35975-6</td>
+<td>(huang2003biochemicalandfunctional pages 2-3, park2023ethylenetriggeredsubcellulartrafficking pages 2-3)</td>
+</tr>
+<tr>
+<td>Key downstream target</td>
+<td>At the ER, activated CTR1 <strong>phosphorylates EIN2</strong> to repress ethylene signaling in the absence of hormone; ethylene inactivates the receptor-CTR1 complex, reducing EIN2 phosphorylation and enabling EIN2 signaling.</td>
+<td>Park et al. 2023; Hao et al. 2025</td>
+<td>https://doi.org/10.1038/s41467-023-35975-6 ; https://doi.org/10.48130/ph-0025-0015</td>
+<td>(park2023ethylenetriggeredsubcellulartrafficking pages 1-2, hao2025ethylenesignalingin pages 5-6)</td>
+</tr>
+<tr>
+<td>EIN2 phosphosites linked to CTR1</td>
+<td>Recent synthesis/preprint evidence maps multiple CTR1-linked EIN2 phosphosites, including <strong>S645, S739, T742, S743, S744, S747, S757, S923/S924, and S1283</strong>; mutating <strong>S645 and S924</strong> reduced in vitro phosphorylation of an EIN2 fragment by <strong>&gt;85%</strong>, supporting these as major sites.</td>
+<td>Zhao et al. 2024</td>
+<td>https://doi.org/10.1101/2024.06.13.598799</td>
+<td>(zhao2024embracinguncertaintyreshapes pages 1-4)</td>
+</tr>
+<tr>
+<td>Functional importance of EIN2 phosphorylation state</td>
+<td>Functional analyses summarized in recent review/preprint literature indicate <strong>S645A</strong> can confer constitutive ethylene signaling in EIN2 reporter constructs, supporting the model that CTR1-mediated phosphorylation restrains EIN2 activation.</td>
+<td>Zhao et al. 2024; Hao et al. 2025</td>
+<td>https://doi.org/10.1101/2024.06.13.598799 ; https://doi.org/10.48130/ph-0025-0015</td>
+<td>(zhao2024embracinguncertaintyreshapes pages 1-4, hao2025ethylenesignalingin pages 5-6)</td>
+</tr>
+<tr>
+<td>Biochemical activity class</td>
+<td>Purified CTR1 shows <strong>autophosphorylation</strong> and <strong>Ser/Thr kinase activity</strong>, but <strong>no detectable Tyr kinase activity</strong>; kinase activity is required for its classical negative regulatory function in vivo.</td>
+<td>Huang et al. 2003</td>
+<td>https://doi.org/10.1046/j.1365-313x.2003.01620.x</td>
+<td>(huang2003biochemicalandfunctional pages 4-5, huang2003biochemicalandfunctional pages 1-2)</td>
+</tr>
+<tr>
+<td>Biochemical assay properties</td>
+<td>In vitro, CTR1 phosphorylates <strong>MBP</strong> efficiently and <strong>AtMEK1</strong> weakly (~<strong>5%</strong> of MBP phosphorylation), arguing AtMEK1 is unlikely to be the main physiological substrate. Reported kinetic parameters include <strong>Km(ATP) = 9.1 mM</strong> and <strong>Km(MBP) ≈ 3.36 mM</strong>.</td>
+<td>Huang et al. 2003</td>
+<td>https://doi.org/10.1046/j.1365-313x.2003.01620.x</td>
+<td>(huang2003biochemicalandfunctional pages 4-5, huang2003biochemicalandfunctional pages 9-9)</td>
+</tr>
+<tr>
+<td>Catalytic mutant evidence</td>
+<td>The <strong>ctr1-1 / D694E</strong> catalytic-site mutant has <strong>&lt;0.1%</strong> residual kinase activity versus wild type, supporting the importance of CTR1 catalytic competence for canonical ER-pathway repression.</td>
+<td>Huang et al. 2003</td>
+<td>https://doi.org/10.1046/j.1365-313x.2003.01620.x</td>
+<td>(huang2003biochemicalandfunctional pages 4-5)</td>
+</tr>
+<tr>
+<td>Autophagy interaction and turnover</td>
+<td>2024 work proposes CTR1 is an <strong>autophagic cargo</strong>: CTR1 interacts with <strong>ATG8</strong>, and <strong>atg mutants accumulate more CTR1 protein</strong> despite similar/lower transcripts, indicating <strong>post-transcriptional turnover by autophagy</strong>. Proteasomal degradation also contributes.</td>
+<td>Park et al. 2024</td>
+<td>https://doi.org/10.1101/2024.07.31.606019</td>
+<td>(park2024autophagymediatedctr1turnover pages 1-4, park2024autophagymediatedctr1turnover pages 7-10)</td>
+</tr>
+<tr>
+<td>Ethylene stabilizes CTR1</td>
+<td>Ethylene/ACC treatment <strong>increases CTR1 abundance</strong> in a dose-dependent manner, whereas after ethylene removal, GFP-CTR1 levels decline over about <strong>60 min</strong>, indicating dynamic stabilization/clearance linked to pathway state.</td>
+<td>Park et al. 2023; Park et al. 2024</td>
+<td>https://doi.org/10.1038/s41467-023-35975-6 ; https://doi.org/10.1101/2024.07.31.606019</td>
+<td>(park2023ethylenetriggeredsubcellulartrafficking pages 1-2, park2024autophagymediatedctr1turnover pages 7-10)</td>
+</tr>
+<tr>
+<td>Quantitative stress phenotype from nuclear CTR1</td>
+<td>Genotypes with enhanced nuclear CTR1 accumulation showed improved salt tolerance, with about <strong>47% survival</strong> on <strong>175 mM NaCl</strong> versus about <strong>12%</strong> for wild type; drought resilience was also improved. Forced NLS-driven nuclear localization of CTR1-8 restored salt resistance.</td>
+<td>Park et al. 2023</td>
+<td>https://doi.org/10.1038/s41467-023-35975-6</td>
+<td>(park2023ethylenetriggeredsubcellulartrafficking pages 9-11, park2023ethylenetriggeredsubcellulartrafficking pages 11-12)</td>
+</tr>
+<tr>
+<td>2023–2024 conceptual advance</td>
+<td>The major recent shift is that CTR1 is no longer viewed only as an ER-tethered negative regulator: <strong>spatiotemporal relocalization to the nucleus</strong> and <strong>turnover through autophagy</strong> now place CTR1 as a dynamic signaling hub coupling ethylene responses to stress acclimation.</td>
+<td>Chien &amp; Yoon 2024; Park et al. 2024</td>
+<td>https://doi.org/10.1002/bies.202400043 ; https://doi.org/10.1101/2024.07.31.606019</td>
+<td>(chien2024subcellulardynamicsof pages 1-2, park2024autophagymediatedctr1turnover pages 1-4)</td>
+</tr>
+<tr>
+<td>Visual mechanistic model</td>
+<td>A 2023 schematic summarizes the updated model: <strong>ER-localized CTR1 represses signaling pre-ethylene; ethylene releases CTR1, which enters the nucleus and acts through EBFs to stabilize EIN3</strong>.</td>
+<td>Park et al. 2023</td>
+<td>https://doi.org/10.1038/s41467-023-35975-6</td>
+<td>(park2023ethylenetriggeredsubcellulartrafficking media 7bb954f2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes identity, mechanism, localization, interactions, biochemical properties, quantitative data, and recent 2023–2024 advances for Arabidopsis thaliana CTR1 (UniProt Q05609). It is designed as a compact evidence map for functional annotation with source-linked citation IDs.</em></p>
+<hr />
+<h2 id="figure-visual-evidence">Figure (visual evidence)</h2>
+<p>A mechanistic schematic model of CTR1’s ethylene-triggered ER-to-nucleus trafficking and nuclear EBF/EIN3 stabilization mechanism is available from Park et al. 2023 (Figure 7). (park2023ethylenetriggeredsubcellulartrafficking media 7bb954f2)</p>
+<hr />
+<h2 id="summary-functional-annotation-concise">Summary functional annotation (concise)</h2>
+<p><strong>CTR1 (Q05609) is an ER-associated Raf-like Ser/Thr protein kinase that, when tethered to ethylene receptors, represses ethylene signaling by phosphorylating EIN2; ethylene inactivates this ER complex and can trigger CTR1 relocalization to the nucleus, where CTR1 can act (apparently kinase-independently) through EBF proteins to stabilize EIN3, thereby enhancing ethylene responses and improving drought/salinity tolerance in engineered lines.</strong> (park2023ethylenetriggeredsubcellulartrafficking pages 1-2, park2023ethylenetriggeredsubcellulartrafficking pages 9-11, park2023ethylenetriggeredsubcellulartrafficking media 7bb954f2)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(zhong2012ethylenesignallingthe pages 1-4): Silin Zhong and Caren Chang. Ethylene signalling: the ctr1 protein kinase. ArXiv, pages 147-168, Feb 2012. URL: https://doi.org/10.1002/9781118223086.ch6, doi:10.1002/9781118223086.ch6. This article has 24 citations.</p>
+</li>
+<li>
+<p>(huang2003biochemicalandfunctional pages 1-2): Yafan Huang, Hui Li, Claire E. Hutchison, James Laskey, and Joseph J. Kieber. Biochemical and functional analysis of ctr1, a protein kinase that negatively regulates ethylene signaling in arabidopsis. The Plant journal : for cell and molecular biology, 33 2:221-33, Jan 2003. URL: https://doi.org/10.1046/j.1365-313x.2003.01620.x, doi:10.1046/j.1365-313x.2003.01620.x. This article has 525 citations.</p>
+</li>
+<li>
+<p>(zhong2012ethylenesignallingthe pages 10-13): Silin Zhong and Caren Chang. Ethylene signalling: the ctr1 protein kinase. ArXiv, pages 147-168, Feb 2012. URL: https://doi.org/10.1002/9781118223086.ch6, doi:10.1002/9781118223086.ch6. This article has 24 citations.</p>
+</li>
+<li>
+<p>(park2023ethylenetriggeredsubcellulartrafficking pages 2-3): Hye Lin Park, Dong Hye Seo, Han Yong Lee, Arkadipta Bakshi, Chanung Park, Yuan-Chi Chien, Joseph J. Kieber, Brad M. Binder, and Gyeong Mee Yoon. Ethylene-triggered subcellular trafficking of ctr1 enhances the response to ethylene gas. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35975-6, doi:10.1038/s41467-023-35975-6. This article has 64 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(huang2003biochemicalandfunctional pages 3-3): Yafan Huang, Hui Li, Claire E. Hutchison, James Laskey, and Joseph J. Kieber. Biochemical and functional analysis of ctr1, a protein kinase that negatively regulates ethylene signaling in arabidopsis. The Plant journal : for cell and molecular biology, 33 2:221-33, Jan 2003. URL: https://doi.org/10.1046/j.1365-313x.2003.01620.x, doi:10.1046/j.1365-313x.2003.01620.x. This article has 525 citations.</p>
+</li>
+<li>
+<p>(huang2003biochemicalandfunctional pages 2-3): Yafan Huang, Hui Li, Claire E. Hutchison, James Laskey, and Joseph J. Kieber. Biochemical and functional analysis of ctr1, a protein kinase that negatively regulates ethylene signaling in arabidopsis. The Plant journal : for cell and molecular biology, 33 2:221-33, Jan 2003. URL: https://doi.org/10.1046/j.1365-313x.2003.01620.x, doi:10.1046/j.1365-313x.2003.01620.x. This article has 525 citations.</p>
+</li>
+<li>
+<p>(park2023ethylenetriggeredsubcellulartrafficking pages 1-2): Hye Lin Park, Dong Hye Seo, Han Yong Lee, Arkadipta Bakshi, Chanung Park, Yuan-Chi Chien, Joseph J. Kieber, Brad M. Binder, and Gyeong Mee Yoon. Ethylene-triggered subcellular trafficking of ctr1 enhances the response to ethylene gas. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35975-6, doi:10.1038/s41467-023-35975-6. This article has 64 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(huang2003biochemicalandfunctional pages 4-5): Yafan Huang, Hui Li, Claire E. Hutchison, James Laskey, and Joseph J. Kieber. Biochemical and functional analysis of ctr1, a protein kinase that negatively regulates ethylene signaling in arabidopsis. The Plant journal : for cell and molecular biology, 33 2:221-33, Jan 2003. URL: https://doi.org/10.1046/j.1365-313x.2003.01620.x, doi:10.1046/j.1365-313x.2003.01620.x. This article has 525 citations.</p>
+</li>
+<li>
+<p>(huang2003biochemicalandfunctional pages 9-9): Yafan Huang, Hui Li, Claire E. Hutchison, James Laskey, and Joseph J. Kieber. Biochemical and functional analysis of ctr1, a protein kinase that negatively regulates ethylene signaling in arabidopsis. The Plant journal : for cell and molecular biology, 33 2:221-33, Jan 2003. URL: https://doi.org/10.1046/j.1365-313x.2003.01620.x, doi:10.1046/j.1365-313x.2003.01620.x. This article has 525 citations.</p>
+</li>
+<li>
+<p>(park2023ethylenetriggeredsubcellulartrafficking media 7bb954f2): Hye Lin Park, Dong Hye Seo, Han Yong Lee, Arkadipta Bakshi, Chanung Park, Yuan-Chi Chien, Joseph J. Kieber, Brad M. Binder, and Gyeong Mee Yoon. Ethylene-triggered subcellular trafficking of ctr1 enhances the response to ethylene gas. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35975-6, doi:10.1038/s41467-023-35975-6. This article has 64 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chien2024subcellulardynamicsof pages 1-2): Yuan‐Chi Chien and Gyeong Mee Yoon. Subcellular dynamics of ethylene signaling drive plant plasticity to growth and stress. BioEssays, Apr 2024. URL: https://doi.org/10.1002/bies.202400043, doi:10.1002/bies.202400043. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(park2024autophagymediatedctr1turnover pages 1-4): Hye Lin Park, Weiwei Zhang, Yuan-Chi Chien, Chanung Park, and Gyeong Mee Yoon. Autophagy-mediated ctr1 turnover orchestrates the reciprocal interaction between autophagy and ethylene signaling. bioRxiv, Aug 2024. URL: https://doi.org/10.1101/2024.07.31.606019, doi:10.1101/2024.07.31.606019. This article has 1 citations.</p>
+</li>
+<li>
+<p>(park2024autophagymediatedctr1turnover pages 7-10): Hye Lin Park, Weiwei Zhang, Yuan-Chi Chien, Chanung Park, and Gyeong Mee Yoon. Autophagy-mediated ctr1 turnover orchestrates the reciprocal interaction between autophagy and ethylene signaling. bioRxiv, Aug 2024. URL: https://doi.org/10.1101/2024.07.31.606019, doi:10.1101/2024.07.31.606019. This article has 1 citations.</p>
+</li>
+<li>
+<p>(zhao2024embracinguncertaintyreshapes pages 1-4): Hangwei Zhao, Ying Zhang, Yuying Chen, Chenrunshu Wang, Qian Liu, Jingyi Zhang, and Chi-Kuang Wen. Embracing uncertainty reshapes the ethylene insensitive2-activated ethylene signaling framework. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.13.598799, doi:10.1101/2024.06.13.598799. This article has 0 citations.</p>
+</li>
+<li>
+<p>(park2023ethylenetriggeredsubcellulartrafficking pages 9-11): Hye Lin Park, Dong Hye Seo, Han Yong Lee, Arkadipta Bakshi, Chanung Park, Yuan-Chi Chien, Joseph J. Kieber, Brad M. Binder, and Gyeong Mee Yoon. Ethylene-triggered subcellular trafficking of ctr1 enhances the response to ethylene gas. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35975-6, doi:10.1038/s41467-023-35975-6. This article has 64 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(park2023ethylenetriggeredsubcellulartrafficking pages 11-12): Hye Lin Park, Dong Hye Seo, Han Yong Lee, Arkadipta Bakshi, Chanung Park, Yuan-Chi Chien, Joseph J. Kieber, Brad M. Binder, and Gyeong Mee Yoon. Ethylene-triggered subcellular trafficking of ctr1 enhances the response to ethylene gas. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35975-6, doi:10.1038/s41467-023-35975-6. This article has 64 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chien2024subcellulardynamicsof pages 8-8): Yuan‐Chi Chien and Gyeong Mee Yoon. Subcellular dynamics of ethylene signaling drive plant plasticity to growth and stress. BioEssays, Apr 2024. URL: https://doi.org/10.1002/bies.202400043, doi:10.1002/bies.202400043. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hao2025ethylenesignalingin pages 5-6): Dongdong Hao, Wenyang Li, and Hongwei Guo. Ethylene signaling in &lt;i&gt;arabidopsis&lt;/i&gt;: a journey from historical discoveries to modern insights. Plant Hormones, 1:0-0, Jan 2025. URL: https://doi.org/10.48130/ph-0025-0015, doi:10.48130/ph-0025-0015. This article has 9 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>zhong2012ethylenesignallingthe pages 1-4</li>
+<li>zhong2012ethylenesignallingthe pages 10-13</li>
+<li>park2023ethylenetriggeredsubcellulartrafficking pages 1-2</li>
+<li>huang2003biochemicalandfunctional pages 4-5</li>
+<li>chien2024subcellulardynamicsof pages 1-2</li>
+<li>zhao2024embracinguncertaintyreshapes pages 1-4</li>
+<li>chien2024subcellulardynamicsof pages 8-8</li>
+<li>park2023ethylenetriggeredsubcellulartrafficking pages 9-11</li>
+<li>huang2003biochemicalandfunctional pages 1-2</li>
+<li>park2023ethylenetriggeredsubcellulartrafficking pages 2-3</li>
+<li>huang2003biochemicalandfunctional pages 3-3</li>
+<li>huang2003biochemicalandfunctional pages 2-3</li>
+<li>huang2003biochemicalandfunctional pages 9-9</li>
+<li>park2023ethylenetriggeredsubcellulartrafficking pages 11-12</li>
+<li>hao2025ethylenesignalingin pages 5-6</li>
+<li>https://doi.org/10.1046/j.1365-313x.2003.01620.x</li>
+<li>https://doi.org/10.1002/9781118223086.ch6</li>
+<li>https://doi.org/10.1038/s41467-023-35975-6</li>
+<li>https://doi.org/10.1002/bies.202400043</li>
+<li>https://doi.org/10.48130/ph-0025-0015</li>
+<li>https://doi.org/10.1101/2024.06.13.598799</li>
+<li>https://doi.org/10.1101/2024.07.31.606019</li>
+<li>https://doi.org/10.1002/9781118223086.ch6,</li>
+<li>https://doi.org/10.1046/j.1365-313x.2003.01620.x,</li>
+<li>https://doi.org/10.1038/s41467-023-35975-6,</li>
+<li>https://doi.org/10.1002/bies.202400043,</li>
+<li>https://doi.org/10.1101/2024.07.31.606019,</li>
+<li>https://doi.org/10.1101/2024.06.13.598799,</li>
+<li>https://doi.org/10.48130/ph-0025-0015,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CTR1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q05609" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ctr1-review-notes">CTR1 review notes</h1>
+<p>Deep research provider status, 2026-05-06: Falcon timed out on CTR1 after 600 seconds and a longer retry stalled; the batch Falcon run was stopped before repeating the same failure for the other genes. Perplexity returned 401 insufficient_quota, and OpenAI timed out on CTR1 after 300 seconds. I therefore performed this review manually from the fetched UniProt record, cached publication records, and PANTHER family context.</p>
+<p>QuickGO annotation/search returned HTTP 500 for this accession on 2026-05-06, including with a <code>UniProtKB:</code> prefix. The GOA TSV in this branch was populated from UniProtKB REST GO cross-references so the existing-annotation validator has PMID/GO_REF provenance rather than treating known annotations as new.</p>
+<p>Core interpretation: CTR1 is a Raf-like serine/threonine protein kinase and negative regulator of ethylene signaling. It is associated with the ER-localized ethylene receptor complex and phosphorylates EIN2, preventing downstream ethylene signaling when ethylene is absent [PMID:8431946; PMID:23132950]. Sugar, hypoxia, root, stem cell, floral transition, and gibberellin phenotypes are downstream or cross-talk outputs rather than the core molecular role.</p>
+<p>Falcon retry status, 2026-05-07: Falcon deep research completed in <code>CTR1-deep-research-falcon.md</code>. The report supports the existing review conclusion that CTR1's core function is ER-associated Raf-like Ser/Thr kinase control of ethylene signaling through EIN2 phosphorylation, while newer nuclear-trafficking/autophagy context remains non-core for this review.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q05609
+gene_symbol: CTR1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: &gt;-
+  CTR1 is an Arabidopsis Raf-like protein serine/threonine kinase that acts as a
+  central negative regulator of ethylene signaling. In the absence of ethylene,
+  CTR1 is associated with the ER-localized ethylene receptor complex and
+  phosphorylates EIN2, preventing downstream EIN2/EIN3 signaling. Ethylene
+  perception relieves CTR1 inhibition, allowing EIN2 signaling to activate
+  nuclear ethylene responses. Root, stem cell, floral transition, sugar,
+  gibberellin, and hypoxia phenotypes are retained as downstream or cross-talk
+  outputs, but the core function is ER-associated protein kinase control of the
+  ethylene pathway.
+existing_annotations:
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:12821658
+  review:
+    summary: CTR1 localizes to the ER receptor signaling complex.
+    action: ACCEPT
+    reason: ER membrane association is the correct cellular context for CTR1&#39;s role upstream of EIN2.
+- term:
+    id: GO:0004674
+    label: protein serine/threonine kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12535337
+  review:
+    summary: CTR1 is an active Raf-like protein serine/threonine kinase.
+    action: ACCEPT
+    reason: Protein serine/threonine kinase activity is the core molecular function of CTR1.
+    supported_by:
+    - reference_id: file:ARATH/CTR1/CTR1-deep-research-falcon.md
+- term:
+    id: GO:0004712
+    label: protein serine/threonine/tyrosine kinase activity
+  evidence_type: ISS
+  original_reference_id: PMID:16429265
+  review:
+    summary: The broader serine/threonine/tyrosine kinase annotation is less precise than the established Ser/Thr kinase activity.
+    action: MODIFY
+    reason: CTR1 is a Raf-like Ser/Thr kinase, and the direct experimental annotation should be preferred.
+    proposed_replacement_terms:
+    - id: GO:0004674
+      label: protein serine/threonine kinase activity
+- term:
+    id: GO:0009686
+    label: gibberellin biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:17389366
+  review:
+    summary: ctr1 alleles alter bioactive gibberellin levels through ethylene pathway cross-talk, but CTR1 is not a gibberellin biosynthetic enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The paper supports CTR1/EIN3-dependent ethylene effects on GA-DELLA signaling, not a direct CTR1 role in gibberellin biosynthesis.
+- term:
+    id: GO:0010105
+    label: negative regulation of ethylene-activated signaling pathway
+  evidence_type: TAS
+  original_reference_id: PMID:12535337
+  review:
+    summary: CTR1 negatively regulates ethylene signaling.
+    action: ACCEPT
+    reason: This directly captures CTR1&#39;s central biological role upstream of EIN2.
+- term:
+    id: GO:0010105
+    label: negative regulation of ethylene-activated signaling pathway
+  evidence_type: TAS
+  original_reference_id: PMID:12821658
+  review:
+    summary: CTR1 negatively regulates ethylene signaling from the ER receptor complex.
+    action: ACCEPT
+    reason: This directly captures CTR1&#39;s central biological role upstream of EIN2.
+- term:
+    id: GO:0010105
+    label: negative regulation of ethylene-activated signaling pathway
+  evidence_type: TAS
+  original_reference_id: PMID:8431946
+  review:
+    summary: The original ctr1 genetic study established CTR1 as a negative regulator of ethylene responses.
+    action: ACCEPT
+    reason: This directly captures CTR1&#39;s central biological role upstream of EIN2.
+- term:
+    id: GO:0010105
+    label: negative regulation of ethylene-activated signaling pathway
+  evidence_type: TAS
+  original_reference_id: PMID:9560288
+  review:
+    summary: CTR1 association with ethylene receptors supports its negative regulatory position in the pathway.
+    action: ACCEPT
+    reason: This directly captures CTR1&#39;s central biological role upstream of EIN2.
+    supported_by:
+    - reference_id: PMID:9560288
+      supporting_text: The pathway also contains a negative regulator of ethylene responses, CTR1
+- term:
+    id: GO:2000069
+    label: regulation of post-embryonic root development
+  evidence_type: IMP
+  original_reference_id: PMID:17656722
+  review:
+    summary: Ethylene modulates post-embryonic root stem-cell behavior, but the cached abstract does not verify the CTR1-specific IMP annotation.
+    action: UNDECIDED
+    reason: The accessible PMID:17656722 abstract supports ethylene effects on root development but does not mention CTR1/ctr1 specifically.
+- term:
+    id: GO:2000035
+    label: regulation of stem cell division
+  evidence_type: IMP
+  original_reference_id: PMID:17656722
+  review:
+    summary: Ethylene modulates root stem-cell division, but the cached abstract does not verify the CTR1-specific IMP annotation.
+    action: UNDECIDED
+    reason: The accessible PMID:17656722 abstract supports ethylene effects on quiescent-center division but does not mention CTR1/ctr1 specifically.
+- term:
+    id: GO:0048510
+    label: regulation of timing of transition from vegetative to reproductive phase
+  evidence_type: IMP
+  original_reference_id: PMID:17389366
+  review:
+    summary: CTR1 affects floral transition timing through ethylene and DELLA-related pathway cross-talk.
+    action: KEEP_AS_NON_CORE
+    reason: This is a pathway output rather than CTR1&#39;s direct kinase or signaling-regulator role.
+- term:
+    id: GO:0009723
+    label: response to ethylene
+  evidence_type: IMP
+  original_reference_id: PMID:8431946
+  review:
+    summary: ctr1 mutants show constitutive ethylene-response phenotypes.
+    action: KEEP_AS_NON_CORE
+    reason: The response phenotype is correct, but the more informative core term is negative regulation of ethylene signaling.
+- term:
+    id: GO:0009750
+    label: response to fructose
+  evidence_type: IMP
+  original_reference_id: PMID:21253566
+  review:
+    summary: CTR1/sis1 alleles affect fructose signaling through hormone cross-talk.
+    action: KEEP_AS_NON_CORE
+    reason: Fructose response is a downstream/cross-talk phenotype, not the core molecular function.
+- term:
+    id: GO:0001666
+    label: response to hypoxia
+  evidence_type: IMP
+  original_reference_id: PMID:25284079
+  review:
+    summary: CTR1 participates in hypoxia-related ethylene signaling modulation.
+    action: KEEP_AS_NON_CORE
+    reason: Hypoxia response is a context-specific output of ethylene pathway regulation.
+- term:
+    id: GO:0009744
+    label: response to sucrose
+  evidence_type: IMP
+  original_reference_id: PMID:11162499
+  review:
+    summary: CTR1/sis1 alleles affect sucrose response through hormone signaling cross-talk.
+    action: KEEP_AS_NON_CORE
+    reason: Sucrose response is a downstream phenotype rather than the core CTR1 kinase function.
+- term:
+    id: GO:0010182
+    label: sugar mediated signaling pathway
+  evidence_type: TAS
+  original_reference_id: PMID:12663220
+  review:
+    summary: Sugar-hormone signaling reviews describe sugar/ethylene cross-talk, but the cached PMID:12663220 abstract does not verify a CTR1-specific pathway annotation.
+    action: UNDECIDED
+    reason: CTR1/sis1 sucrose-response evidence exists from PMID:11162499, but the cached PMID:12663220 entry is abstract-only and lacks accessible CTR1-specific support for this broader sugar-mediated signaling annotation.
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Generic signal transduction under-describes the CTR1-specific ethylene pathway role.
+    action: MODIFY
+    reason: The specific, supported process is negative regulation of ethylene-activated signaling.
+    proposed_replacement_terms:
+    - id: GO:0010105
+      label: negative regulation of ethylene-activated signaling pathway
+references:
+- id: PMID:11162499
+  title: The sugar-insensitive1 (sis1) mutant of Arabidopsis is allelic to ctr1.
+  findings: []
+- id: PMID:12535337
+  title: Biochemical and functional analysis of CTR1, a protein kinase that negatively regulates ethylene signaling in Arabidopsis.
+  findings: []
+- id: PMID:12663220
+  title: Sugar and hormone connections.
+  findings: []
+- id: PMID:12821658
+  title: Localization of the Raf-like kinase CTR1 to the endoplasmic reticulum of Arabidopsis through participation in ethylene receptor signaling complexes.
+  findings: []
+- id: PMID:16429265
+  title: Genome-wide analysis and experimentation of plant serine/ threonine/tyrosine-specific protein kinases.
+  findings: []
+- id: PMID:17389366
+  title: The plant stress hormone ethylene controls floral transition via DELLA-dependent regulation of floral meristem-identity genes.
+  findings: []
+- id: PMID:17656722
+  title: Ethylene modulates stem cell division in the Arabidopsis thaliana root.
+  findings: []
+- id: PMID:21253566
+  title: Signaling role of fructose mediated by FINS1/FBP in Arabidopsis thaliana.
+  findings: []
+- id: PMID:23132950
+  title: CTR1 phosphorylates the central regulator EIN2 to control ethylene hormone signaling from the ER membrane to the nucleus in Arabidopsis.
+  findings: []
+- id: PMID:25284079
+  title: Arabidopsis acyl-CoA-binding protein ACBP3 participates in plant response to hypoxia by modulating very-long-chain fatty acid metabolism.
+  findings: []
+- id: PMID:8431946
+  title: CTR1, a negative regulator of the ethylene response pathway in Arabidopsis, encodes a member of the raf family of protein kinases.
+  findings: []
+- id: PMID:9560288
+  title: Association of the Arabidopsis CTR1 Raf-like kinase with the ETR1 and ERS ethylene receptors.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: file:ARATH/CTR1/CTR1-uniprot.txt
+  title: UniProt record for Arabidopsis CTR1
+  findings:
+  - statement: CTR1 is described as a negative regulator of ethylene signaling that phosphorylates EIN2.
+- id: file:ARATH/CTR1/CTR1-deep-research-falcon.md
+  title: Falcon deep research report for Arabidopsis CTR1
+  findings:
+  - statement: Falcon research supports CTR1 as an ER-associated Raf-like Ser/Thr kinase that regulates ethylene signaling through EIN2 phosphorylation.
+- id: file:interpro/panther/PTHR44329/PTHR44329-entries.csv
+  title: PANTHER PTHR44329 entries
+  findings:
+  - statement: CTR1 is placed in subfamily PTHR44329:SF281, serine/threonine-protein kinase CTR1.
+core_functions:
+- description: &gt;-
+    ER-associated Raf-like protein serine/threonine kinase activity that keeps
+    the ethylene pathway off in the absence of ethylene by phosphorylating EIN2
+    and preventing downstream EIN2/EIN3 signaling.
+  molecular_function:
+    id: GO:0004674
+    label: protein serine/threonine kinase activity
+  directly_involved_in:
+  - id: GO:0010105
+    label: negative regulation of ethylene-activated signaling pathway
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: file:ARATH/CTR1/CTR1-uniprot.txt
+    supporting_text: Acts as a negative regulator in the ethylene response pathway
+  - reference_id: file:ARATH/CTR1/CTR1-uniprot.txt
+    supporting_text: Phosphorylates the cytosolic C-terminal domain of EIN2
+  - reference_id: PMID:23132950
+    supporting_text: CTR1 interacts with and directly phosphorylates the cytosolic C-terminal domain of EIN2.
+    reference_section_type: ABSTRACT
+  - reference_id: file:interpro/panther/PTHR44329/PTHR44329-entries.csv
+    supporting_text: Q05609,Serine/threonine-protein kinase CTR1
+proposed_new_terms: []
+suggested_questions:
+- question: Should GOA add an explicit phosphorylation-of-EIN2 annotation using an extension to represent CTR1&#39;s direct substrate?
+- question: Which sugar and hypoxia annotations should remain on CTR1 versus being represented only as ethylene pathway outputs?
+suggested_experiments:
+- description: Quantitatively map CTR1-dependent EIN2 phosphorylation in ethylene receptor complex mutants and hypoxia/ceramide perturbations.
+- description: Test whether sugar-response phenotypes in ctr1 alleles are fully EIN2/EIN3-dependent.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
