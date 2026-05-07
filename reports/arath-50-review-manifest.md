@@ -17,11 +17,11 @@ GOA source note: QuickGO annotation search returned server 500 errors during bat
 | 01 | AP2 | P47927 | 24 | 8 | Floral organ identity AP2/ERF TF | Reviewed; local validate/render/test pass |
 | 01 | AG | P17839 | 33 | 18 | Floral organ identity MADS-box TF | Reviewed; local validate/render/test pass |
 | 01 | TFL1 | P93003 | 13 | 11 | Floral transition/inflorescence identity PEBP | Reviewed; local validate/render/test pass |
-| 02 | SOC1 | O64645 | 43 | 25 | Flowering integrator MADS-box TF | Planned |
-| 02 | SVP | Q9FVC1 | 40 | 24 | Flowering repression MADS-box TF | Planned |
-| 02 | CO | Q39057 | 35 | 28 | Photoperiod flowering zinc-finger TF | Planned |
-| 02 | GI | Q9SQI2 | 39 | 34 | Circadian/photoperiod flowering regulator | Planned |
-| 02 | SEP3 | O22456 | 61 | 45 | Floral organ identity MADS-box TF | Planned |
+| 02 | SOC1 | O64645 | 43 | 25 | Flowering integrator MADS-box TF | Reviewed; local validate/render/test pass |
+| 02 | SVP | Q9FVC1 | 40 | 24 | Flowering repression MADS-box TF | Reviewed; local validate/render/test pass |
+| 02 | CO | Q39057 | 35 | 28 | Photoperiod flowering zinc-finger TF | Reviewed; local validate/render/test pass |
+| 02 | GI | Q9SQI2 | 39 | 34 | Circadian/photoperiod flowering regulator | Reviewed; local validate/render/test pass |
+| 02 | SEP3 | O22456 | 61 | 45 | Floral organ identity MADS-box TF | Reviewed; local validate/render/test pass |
 | 03 | STM | Q38874 | 58 | 38 | Shoot meristem homeobox TF | Planned |
 | 03 | CLV1 | Q9SYQ8 | 57 | 47 | Meristem receptor kinase | Planned |
 | 03 | PHYA | P14712 | 70 | 52 | Phytochrome photoreceptor | Planned |
